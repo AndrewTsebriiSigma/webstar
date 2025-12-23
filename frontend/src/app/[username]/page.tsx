@@ -355,29 +355,42 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
               <h3 className="font-semibold mb-4 text-white text-lg">Connect</h3>
               <div className="grid grid-cols-3 gap-4">
-                {[
-                  { icon: '📧', label: 'Email', url: profile.email },
-                  { icon: '💼', label: 'LinkedIn', url: profile.linkedin_url },
-                  { icon: '📸', label: 'Instagram', url: profile.instagram_url },
-                  { icon: '🎵', label: 'TikTok', url: null },
-                  { icon: '📺', label: 'YouTube', url: null },
-                  { icon: '𝕏', label: 'X', url: null },
-                ].map((link) => (
-                  link.url ? (
-                    <a
-                      key={link.label}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex flex-col items-center gap-2 p-4 bg-gray-800 hover:bg-gray-750 rounded-xl transition"
-                    >
-                      <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center text-2xl">
-                        {link.icon}
-                      </div>
-                      <span className="text-xs text-gray-400">{link.label}</span>
-                    </a>
-                  ) : null
-                ))}
+                {(() => {
+                  // Parse social_links JSON
+                  let socialLinks: any = {};
+                  try {
+                    if (profile.social_links) {
+                      socialLinks = JSON.parse(profile.social_links);
+                    }
+                  } catch (e) {
+                    // If parsing fails, use empty object
+                    socialLinks = {};
+                  }
+
+                  return [
+                    { icon: '📧', label: 'Email', url: socialLinks.email ? `mailto:${socialLinks.email}` : null },
+                    { icon: '💼', label: 'LinkedIn', url: profile.linkedin_url },
+                    { icon: '📸', label: 'Instagram', url: profile.instagram_url },
+                    { icon: '🎵', label: 'TikTok', url: socialLinks.tiktok || null },
+                    { icon: '📺', label: 'YouTube', url: socialLinks.youtube || null },
+                    { icon: '𝕏', label: 'X', url: socialLinks.twitter || null },
+                  ].map((link) => (
+                    link.url ? (
+                      <a
+                        key={link.label}
+                        href={link.url}
+                        target={link.url.startsWith('mailto:') ? '_self' : '_blank'}
+                        rel={link.url.startsWith('mailto:') ? '' : 'noopener noreferrer'}
+                        className="flex flex-col items-center gap-2 p-4 bg-gray-800 hover:bg-gray-750 rounded-xl transition"
+                      >
+                        <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center text-2xl">
+                          {link.icon}
+                        </div>
+                        <span className="text-xs text-gray-400">{link.label}</span>
+                      </a>
+                    ) : null
+                  ));
+                })()}
                 {profile.website && (
                   <a
                     href={profile.website}
