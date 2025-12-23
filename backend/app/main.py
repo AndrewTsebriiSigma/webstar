@@ -28,13 +28,38 @@ app = FastAPI(
 )
 
 # CORS Configuration
+import logging
+logger = logging.getLogger(__name__)
+
+# Helper function to normalize origin URLs
+def normalize_origin(origin: str) -> str:
+    """Normalize origin URL - add https:// if missing protocol."""
+    if not origin:
+        return origin
+    origin = origin.strip()
+    # If it doesn't start with http:// or https://, add https://
+    if not origin.startswith(('http://', 'https://')):
+        origin = f'https://{origin}'
+    return origin
+
+# Get and normalize CORS origins
 cors_origins_list = settings.cors_origins_list.copy()
+
+# Normalize all origins (add protocol if missing)
+cors_origins_list = [normalize_origin(origin) if isinstance(origin, str) else origin for origin in cors_origins_list]
 
 # For production, ensure frontend URL is included
 if settings.ENVIRONMENT.lower() == "production":
-    # If CORS_ORIGINS is a single URL string (from Render), ensure it's in the list
-    if isinstance(settings.CORS_ORIGINS, str) and settings.CORS_ORIGINS not in cors_origins_list:
-        cors_origins_list.append(settings.CORS_ORIGINS)
+    # Check raw CORS_ORIGINS value (before parsing) to see if we got a single hostname from Render
+    raw_cors = settings.CORS_ORIGINS
+    if isinstance(raw_cors, str):
+        # This might be a single hostname from Render (e.g., "webstar-frontend.onrender.com")
+        normalized = normalize_origin(raw_cors)
+        if normalized not in cors_origins_list:
+            cors_origins_list.append(normalized)
+    
+    # Log CORS origins for debugging
+    logger.info(f"CORS origins configured: {cors_origins_list}")
 else:
     # For development, ensure localhost is included
     if "http://localhost:3000" not in cors_origins_list:
@@ -48,7 +73,7 @@ else:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins_list,
-    allow_credentials=False if cors_origins_list == ["*"] else True,
+    allow_credentials=True,  # Always allow credentials for JWT tokens
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
