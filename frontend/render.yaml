@@ -1,0 +1,13 @@
+# Frontend-specific Render configuration
+# This file is optional - the main render.yaml in the root directory is used
+# This can be used for frontend-specific overrides if needed
+
+services:
+  - type: web
+    name: webstar-frontend
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    rootDir: frontend
+

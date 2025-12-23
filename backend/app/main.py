@@ -30,15 +30,20 @@ app = FastAPI(
 # CORS Configuration
 cors_origins_list = settings.cors_origins_list.copy()
 
-# Ensure localhost is included for development
-if "http://localhost:3000" not in cors_origins_list:
-    cors_origins_list.append("http://localhost:3000")
-if "http://127.0.0.1:3000" not in cors_origins_list:
-    cors_origins_list.append("http://127.0.0.1:3000")
-
-# For development, allow all origins
-if settings.ENVIRONMENT.lower() == "development":
-    cors_origins_list = ["*"]
+# For production, ensure frontend URL is included
+if settings.ENVIRONMENT.lower() == "production":
+    # If CORS_ORIGINS is a single URL string (from Render), ensure it's in the list
+    if isinstance(settings.CORS_ORIGINS, str) and settings.CORS_ORIGINS not in cors_origins_list:
+        cors_origins_list.append(settings.CORS_ORIGINS)
+else:
+    # For development, ensure localhost is included
+    if "http://localhost:3000" not in cors_origins_list:
+        cors_origins_list.append("http://localhost:3000")
+    if "http://127.0.0.1:3000" not in cors_origins_list:
+        cors_origins_list.append("http://127.0.0.1:3000")
+    # For development, allow all origins
+    if settings.ENVIRONMENT.lower() == "development":
+        cors_origins_list = ["*"]
 
 app.add_middleware(
     CORSMiddleware,

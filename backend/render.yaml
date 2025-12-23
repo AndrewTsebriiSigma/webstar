@@ -1,0 +1,13 @@
+# Backend-specific Render configuration
+# This file is optional - the main render.yaml in the root directory is used
+# This can be used for backend-specific overrides if needed
+
+services:
+  - type: web
+    name: webstar-backend
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    rootDir: backend
+

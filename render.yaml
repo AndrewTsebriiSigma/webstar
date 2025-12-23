@@ -1,0 +1,95 @@
+services:
+  # PostgreSQL Database
+  - type: pspg
+    name: webstar-database
+    databaseName: webstar_db
+    user: webstar_user
+    plan: free
+    postgresMajorVersion: 15
+
+  # Backend API Service
+  - type: web
+    name: webstar-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: webstar-database
+          property: connectionString
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "480"
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: "30"
+      - key: CORS_ORIGINS
+        fromService:
+          type: web
+          name: webstar-frontend
+          property: host
+      - key: BASE_URL
+        fromService:
+          type: web
+          name: webstar-backend
+          property: host
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        fromService:
+          type: web
+          name: webstar-frontend
+          property: host
+        value: "/auth/callback/google"
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        value: us-east-1
+      - key: S3_BUCKET_NAME
+        sync: false
+      - key: S3_PRESIGNED_URL_EXPIRATION
+        value: "3600"
+      - key: DEFAULT_PAGE_SIZE
+        value: "20"
+      - key: MAX_PAGE_SIZE
+        value: "100"
+
+  # Frontend Web Service
+  - type: web
+    name: webstar-frontend
+    runtime: node
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: webstar-backend
+          property: host
+      - key: NEXT_PUBLIC_APP_NAME
+        value: WebStar
+      - key: NEXT_PUBLIC_APP_URL
+        fromService:
+          type: web
+          name: webstar-frontend
+          property: host
+      - key: NEXT_PUBLIC_GOOGLE_CLIENT_ID
+        sync: false
+

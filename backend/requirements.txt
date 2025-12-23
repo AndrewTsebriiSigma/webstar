@@ -9,6 +9,7 @@ pydantic-settings>=2.1.0
 # Database
 sqlalchemy>=2.0.25
 sqlmodel>=0.0.14
+psycopg2-binary>=2.9.9  # PostgreSQL adapter for production
 
 # Authentication & Security
 passlib[bcrypt]>=1.7.4
