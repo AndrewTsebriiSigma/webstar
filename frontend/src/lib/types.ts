@@ -37,6 +37,8 @@ export interface Profile {
   about: string | null;
   profile_picture: string | null;
   skills: string | null;
+  experience: string | null; // JSON string
+  social_links: string | null; // JSON string
   website: string | null;
   linkedin_url: string | null;
   github_url: string | null;
