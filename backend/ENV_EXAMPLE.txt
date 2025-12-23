@@ -1,0 +1,60 @@
+# WebStar V1 Backend Environment Variables
+
+# Application Settings
+APP_NAME=WebStar API
+DEBUG=False
+ENVIRONMENT=development  # development | staging | production
+BASE_URL=http://localhost:8000
+
+# Database
+# For development: SQLite (default)
+DATABASE_URL=sqlite:///./webstar.db
+
+# For production: PostgreSQL
+# DATABASE_URL=postgresql://user:password@host:port/database
+# Example: postgresql://webstar_user:secure_password@db.example.com:5432/webstar_db
+
+# JWT Authentication
+# IMPORTANT: Generate a secure random key for production!
+# You can generate one with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+SECRET_KEY=your-secret-key-change-in-production-REQUIRED
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=480  # 8 hours
+REFRESH_TOKEN_EXPIRE_DAYS=30
+
+# CORS Settings
+# For development: Allow all origins
+CORS_ORIGINS=["http://localhost:3000", "http://127.0.0.1:3000"]
+
+# For production: Specify exact domains
+# CORS_ORIGINS=["https://webstar.app", "https://www.webstar.app"]
+
+# Google OAuth (Optional)
+# Get credentials from: https://console.cloud.google.com/
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_REDIRECT_URI=http://localhost:3000/auth/callback/google
+
+# AWS S3 Storage (Optional - for production media storage)
+# If not set, files will be stored locally in /uploads directory
+AWS_ACCESS_KEY_ID=your-aws-access-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+AWS_REGION=us-east-1
+S3_BUCKET_NAME=webstar-uploads
+S3_PRESIGNED_URL_EXPIRATION=3600  # 1 hour
+
+# Pagination
+DEFAULT_PAGE_SIZE=20
+MAX_PAGE_SIZE=100
+
+# Email Configuration (Optional - for future features)
+# SMTP_HOST=smtp.gmail.com
+# SMTP_PORT=587
+# SMTP_USER=your-email@gmail.com
+# SMTP_PASSWORD=your-app-password
+# SMTP_FROM_EMAIL=noreply@webstar.app
+# SMTP_FROM_NAME=WebStar
+
+# Logging (Optional)
+# LOG_LEVEL=INFO  # DEBUG | INFO | WARNING | ERROR | CRITICAL
+

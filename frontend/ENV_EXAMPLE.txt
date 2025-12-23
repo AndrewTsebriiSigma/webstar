@@ -1,0 +1,29 @@
+# WebStar V1 Frontend Environment Variables
+
+# Backend API URL
+# For development (local backend)
+NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# For production
+# NEXT_PUBLIC_API_URL=https://api.webstar.app
+
+# Google OAuth Client ID (Optional)
+# Get this from: https://console.cloud.google.com/
+# Make sure to enable the Google OAuth consent screen
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
+
+# Analytics (Optional - for future features)
+# NEXT_PUBLIC_GA_TRACKING_ID=UA-XXXXXXXXX-X
+# NEXT_PUBLIC_MIXPANEL_TOKEN=your-mixpanel-token
+
+# App Configuration
+NEXT_PUBLIC_APP_NAME=WebStar
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# For production
+# NEXT_PUBLIC_APP_URL=https://webstar.app
+
+# Feature Flags (Optional)
+# NEXT_PUBLIC_ENABLE_GOOGLE_AUTH=true
+# NEXT_PUBLIC_ENABLE_ANALYTICS=false
+
