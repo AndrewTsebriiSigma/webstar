@@ -624,8 +624,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
         onClose={() => setShowEditAboutModal(false)}
         onSuccess={loadProfile}
         currentData={{
-          about: profile?.about,
-          skills: profile?.skills,
+          about: profile?.about ?? undefined,
+          skills: profile?.skills ?? undefined,
           experience: profile?.experience ? JSON.parse(profile.experience) : [],
           social_links: profile?.social_links ? JSON.parse(profile.social_links) : {},
         }}
