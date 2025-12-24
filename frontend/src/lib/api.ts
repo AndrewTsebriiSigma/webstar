@@ -75,6 +75,9 @@ export const authAPI = {
   login: (data: { email: string; password: string }) =>
     api.post('/api/auth/login', data),
   
+  verify2FALogin: (tempToken: string, totpCode: string) =>
+    api.post('/api/auth/verify-2fa', { temp_token: tempToken, totp_code: totpCode }),
+  
   googleAuth: (token: string) =>
     api.post('/api/auth/google', { token }),
   
