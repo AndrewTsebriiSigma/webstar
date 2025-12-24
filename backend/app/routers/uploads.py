@@ -1,19 +1,22 @@
 """File upload router."""
 import os
 import uuid
+import logging
 from pathlib import Path
 from typing import Optional
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.db.base import get_session
 from app.db.models import User, Profile, PointsTransaction, UserPoints
 from app.deps.auth import get_current_user
 from app.core.config import settings
+from app.services.s3_service import s3_service
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# Local uploads directory
+# Local uploads directory (fallback for development)
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
@@ -43,7 +46,7 @@ async def upload_profile_picture(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
-    """Upload profile picture."""
+    """Upload profile picture to S3 or local storage."""
     try:
         # Validate file type
         if not file.content_type or not file.content_type.startswith("image/"):
@@ -52,16 +55,38 @@ async def upload_profile_picture(
         # Generate unique filename
         file_ext = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
         filename = f"{uuid.uuid4()}{file_ext}"
-        file_path = UPLOAD_DIR / "profile_pictures" / filename
-        file_path.parent.mkdir(exist_ok=True, parents=True)
         
-        # Save file
+        # Read file content
         content = await file.read()
-        with open(file_path, "wb") as f:
-            f.write(content)
         
-        # Generate URL (relative to uploads directory)
-        file_url = f"/uploads/profile_pictures/{filename}"
+        # Try S3 first (production), fallback to local (development)
+        if s3_service.is_available():
+            # Upload to S3
+            s3_key = f"profile_pictures/{filename}"
+            file_url = s3_service.upload_file(
+                file_content=content,
+                file_key=s3_key,
+                content_type=file.content_type or "image/jpeg"
+            )
+            
+            if not file_url:
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to upload to S3. Please check server logs."
+                )
+            
+            logger.info(f"Profile picture uploaded to S3: {file_url}")
+        else:
+            # Fallback to local storage (development only)
+            logger.warning("S3 not available, using local storage (NOT recommended for production)")
+            file_path = UPLOAD_DIR / "profile_pictures" / filename
+            file_path.parent.mkdir(exist_ok=True, parents=True)
+            
+            with open(file_path, "wb") as f:
+                f.write(content)
+            
+            file_url = f"/uploads/profile_pictures/{filename}"
+            logger.info(f"Profile picture uploaded locally: {file_url}")
         
         # Update profile
         profile = session.exec(select(Profile).where(Profile.user_id == current_user.id)).first()
@@ -96,7 +121,7 @@ async def upload_media(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
-    """Upload media file (photo, video, audio)."""
+    """Upload media file (photo, video, audio) to S3 or local storage."""
     # Validate file type
     valid_types = {
         "photo": ["image/jpeg", "image/png", "image/gif", "image/webp"],
@@ -116,16 +141,38 @@ async def upload_media(
     # Generate unique filename
     file_ext = os.path.splitext(file.filename)[1] if file.filename else ""
     filename = f"{uuid.uuid4()}{file_ext}"
-    file_path = UPLOAD_DIR / media_type / filename
-    file_path.parent.mkdir(exist_ok=True)
     
-    # Save file
+    # Read file content
     content = await file.read()
-    with open(file_path, "wb") as f:
-        f.write(content)
     
-    # Generate URL
-    file_url = f"/uploads/{media_type}/{filename}"
+    # Try S3 first (production), fallback to local (development)
+    if s3_service.is_available():
+        # Upload to S3
+        s3_key = f"{media_type}/{filename}"
+        file_url = s3_service.upload_file(
+            file_content=content,
+            file_key=s3_key,
+            content_type=file.content_type or "application/octet-stream"
+        )
+        
+        if not file_url:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to upload to S3. Please check server logs."
+            )
+        
+        logger.info(f"Media uploaded to S3: {file_url}")
+    else:
+        # Fallback to local storage (development only)
+        logger.warning("S3 not available, using local storage (NOT recommended for production)")
+        file_path = UPLOAD_DIR / media_type / filename
+        file_path.parent.mkdir(exist_ok=True, parents=True)
+        
+        with open(file_path, "wb") as f:
+            f.write(content)
+        
+        file_url = f"/uploads/{media_type}/{filename}"
+        logger.info(f"Media uploaded locally: {file_url}")
     
     return {
         "message": "Media uploaded successfully",
@@ -141,7 +188,7 @@ async def upload_project_cover(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
-    """Upload project cover image."""
+    """Upload project cover image to S3 or local storage."""
     # Validate file type
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
@@ -149,16 +196,38 @@ async def upload_project_cover(
     # Generate unique filename
     file_ext = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
     filename = f"{uuid.uuid4()}{file_ext}"
-    file_path = UPLOAD_DIR / "project_covers" / filename
-    file_path.parent.mkdir(exist_ok=True)
     
-    # Save file
+    # Read file content
     content = await file.read()
-    with open(file_path, "wb") as f:
-        f.write(content)
     
-    # Generate URL
-    file_url = f"/uploads/project_covers/{filename}"
+    # Try S3 first (production), fallback to local (development)
+    if s3_service.is_available():
+        # Upload to S3
+        s3_key = f"project_covers/{filename}"
+        file_url = s3_service.upload_file(
+            file_content=content,
+            file_key=s3_key,
+            content_type=file.content_type or "image/jpeg"
+        )
+        
+        if not file_url:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to upload to S3. Please check server logs."
+            )
+        
+        logger.info(f"Project cover uploaded to S3: {file_url}")
+    else:
+        # Fallback to local storage (development only)
+        logger.warning("S3 not available, using local storage (NOT recommended for production)")
+        file_path = UPLOAD_DIR / "project_covers" / filename
+        file_path.parent.mkdir(exist_ok=True, parents=True)
+        
+        with open(file_path, "wb") as f:
+            f.write(content)
+        
+        file_url = f"/uploads/project_covers/{filename}"
+        logger.info(f"Project cover uploaded locally: {file_url}")
     
     return {
         "message": "Project cover uploaded successfully",
