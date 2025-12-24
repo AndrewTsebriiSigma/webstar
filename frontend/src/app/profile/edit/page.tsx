@@ -144,10 +144,10 @@ export default function EditProfilePage() {
       const response = await profileAPI.updateMe(cleanedFormData);
       
       if (response && response.status === 200) {
-        toast.success('Profile updated successfully!');
+      toast.success('Profile updated successfully!');
         // Wait a bit before redirecting to ensure toast is visible
         setTimeout(() => {
-          router.push(`/${user?.username}`);
+      router.push(`/${user?.username}`);
         }, 500);
       }
     } catch (error: any) {

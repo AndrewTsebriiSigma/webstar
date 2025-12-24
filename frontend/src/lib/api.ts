@@ -197,3 +197,27 @@ export const uploadsAPI = {
   },
 };
 
+// Settings API
+export const settingsAPI = {
+  // 2FA endpoints
+  get2FAStatus: () => api.get('/api/settings/account/2fa/status'),
+  
+  enable2FA: () => api.post('/api/settings/account/2fa/enable'),
+  
+  verify2FASetup: (token: string) => 
+    api.post('/api/settings/account/2fa/verify', { token }),
+  
+  disable2FA: (token: string) => 
+    api.post('/api/settings/account/2fa/disable', { token }),
+  
+  // Account settings
+  changeEmail: (newEmail: string, password: string) =>
+    api.post('/api/settings/account/change-email', { new_email: newEmail, password }),
+  
+  changePassword: (currentPassword: string, newPassword: string) =>
+    api.post('/api/settings/account/change-password', { 
+      current_password: currentPassword, 
+      new_password: newPassword 
+    }),
+};
+

@@ -4,7 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { XMarkIcon, ChevronRightIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/context/AuthContext';
+import { settingsAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
+import Setup2FAModal from './Setup2FAModal';
+import Disable2FAModal from './Disable2FAModal';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -15,6 +18,9 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const router = useRouter();
   const { logout } = useAuth();
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [show2FASetup, setShow2FASetup] = useState(false);
+  const [show2FADisable, setShow2FADisable] = useState(false);
+  const [loading2FAStatus, setLoading2FAStatus] = useState(false);
   const [settings, setSettings] = useState({
     // Account
     email: '',
@@ -29,12 +35,34 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   });
 
   useEffect(() => {
-    // Load user settings from localStorage or API
+    // Load user settings from localStorage
     const savedSettings = localStorage.getItem('userSettings');
     if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
+      const parsed = JSON.parse(savedSettings);
+      setSettings((prev) => ({ ...prev, ...parsed }));
     }
-  }, []);
+    
+    // Load 2FA status from API when modal opens
+    if (isOpen) {
+      load2FAStatus();
+    }
+  }, [isOpen]);
+
+  const load2FAStatus = async () => {
+    setLoading2FAStatus(true);
+    try {
+      const response = await settingsAPI.get2FAStatus();
+      setSettings((prev) => ({
+        ...prev,
+        twoFactorEnabled: response.data.is_enabled,
+      }));
+    } catch (error: any) {
+      console.error('Error loading 2FA status:', error);
+      // Don't show error toast, just fail silently
+    } finally {
+      setLoading2FAStatus(false);
+    }
+  };
 
   const saveSettings = () => {
     localStorage.setItem('userSettings', JSON.stringify(settings));
@@ -46,6 +74,21 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       ...prev,
       [key]: !prev[key],
     }));
+  };
+
+  const handle2FAToggle = () => {
+    if (settings.twoFactorEnabled) {
+      // Disable 2FA - show verification modal
+      setShow2FADisable(true);
+    } else {
+      // Enable 2FA - show setup modal
+      setShow2FASetup(true);
+    }
+  };
+
+  const handle2FASuccess = () => {
+    // Reload 2FA status after successful enable/disable
+    load2FAStatus();
   };
 
   if (!isOpen) return null;
@@ -103,10 +146,16 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </button>
                   
                   <div className="flex items-center justify-between p-4 bg-gray-800 rounded-xl">
-                    <span className="text-white font-medium">2FA</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-medium">2FA</span>
+                      {loading2FAStatus && (
+                        <div className="w-4 h-4 border-2 border-gray-600 border-t-cyan-500 rounded-full animate-spin"></div>
+                      )}
+                    </div>
                     <button
-                      onClick={() => toggleSetting('twoFactorEnabled')}
-                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition ${
+                      onClick={handle2FAToggle}
+                      disabled={loading2FAStatus}
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed ${
                         settings.twoFactorEnabled ? 'bg-cyan-500' : 'bg-gray-600'
                       }`}
                     >
@@ -326,6 +375,18 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           )}
         </div>
       </div>
+
+      {/* 2FA Modals */}
+      <Setup2FAModal 
+        isOpen={show2FASetup} 
+        onClose={() => setShow2FASetup(false)}
+        onSuccess={handle2FASuccess}
+      />
+      <Disable2FAModal 
+        isOpen={show2FADisable} 
+        onClose={() => setShow2FADisable(false)}
+        onSuccess={handle2FASuccess}
+      />
     </div>
   );
 }
