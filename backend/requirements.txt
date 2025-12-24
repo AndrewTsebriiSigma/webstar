@@ -30,3 +30,7 @@ boto3>=1.34.34
 
 # Email validation
 email-validator>=2.0.0
+
+# 2FA / TOTP
+pyotp>=2.9.0
+qrcode[pil]>=7.4.2

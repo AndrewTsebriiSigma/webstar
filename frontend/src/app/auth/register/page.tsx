@@ -57,7 +57,14 @@ export default function RegisterPage() {
       toast.success(`🎉 Welcome! You earned ${response.data.points_earned} points!`);
       router.push(`/${formData.username}`);
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Registration failed');
+      // Handle connection errors more gracefully
+      if (error.message?.includes('Backend server is not running') || 
+          error.code === 'ERR_NETWORK' || 
+          error.code === 'ECONNREFUSED') {
+        toast.error('Backend server is not running. Please start the backend server on port 8000.');
+      } else {
+        toast.error(error.response?.data?.detail || error.message || 'Registration failed');
+      }
     } finally {
       setLoading(false);
     }

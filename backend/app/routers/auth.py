@@ -8,7 +8,9 @@ from app.db.base import get_session
 from app.db.models import User, Profile, OnboardingProgress, UserPoints
 from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token, decode_token
 from app.core.config import settings
-from app.schemas.auth import UserRegister, UserLogin, Token, RefreshToken, GoogleAuth, UserResponse
+from app.schemas.auth import UserRegister, UserLogin, Token, RefreshToken, GoogleAuth, UserResponse, LoginResponse, Verify2FALoginRequest
+from app.services.totp_service import TOTPService
+from datetime import timedelta
 
 router = APIRouter()
 
@@ -76,9 +78,9 @@ async def register(user_data: UserRegister, session: Session = Depends(get_sessi
     )
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=LoginResponse)
 async def login(user_data: UserLogin, session: Session = Depends(get_session)):
-    """Login with email and password."""
+    """Login with email and password. May require 2FA verification."""
     # Find user
     user = session.exec(select(User).where(User.email == user_data.email)).first()
     if not user or not user.hashed_password:
@@ -100,6 +102,21 @@ async def login(user_data: UserLogin, session: Session = Depends(get_session)):
             detail="Inactive user"
         )
     
+    # Check if 2FA is enabled
+    if user.is_2fa_enabled and user.totp_secret:
+        # Generate a temporary token for 2FA verification
+        temp_token = create_access_token(
+            data={"sub": user.id, "type": "pending_2fa"},
+            expires_delta=timedelta(minutes=5)
+        )
+        
+        return LoginResponse(
+            requires_2fa=True,
+            temp_token=temp_token,
+            message="Please enter your 2FA code to complete login"
+        )
+    
+    # No 2FA required, proceed with normal login
     # Check onboarding status
     onboarding = session.exec(select(OnboardingProgress).where(OnboardingProgress.user_id == user.id)).first()
     onboarding_completed = onboarding.completed if onboarding else False
@@ -108,7 +125,8 @@ async def login(user_data: UserLogin, session: Session = Depends(get_session)):
     access_token = create_access_token({"sub": user.id})
     refresh_token = create_refresh_token({"sub": user.id})
     
-    return Token(
+    return LoginResponse(
+        requires_2fa=False,
         access_token=access_token,
         refresh_token=refresh_token,
         user=UserResponse(
@@ -213,6 +231,90 @@ async def google_auth(auth_data: GoogleAuth, session: Session = Depends(get_sess
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid Google token: {str(e)}"
         )
+
+
+@router.post("/verify-2fa", response_model=Token)
+async def verify_2fa_login(
+    request: Verify2FALoginRequest,
+    session: Session = Depends(get_session)
+):
+    """Verify 2FA code and complete login."""
+    # Decode the temporary token
+    payload = decode_token(request.temp_token)
+    
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
+    
+    # Verify it's a pending_2fa token
+    if payload.get("type") != "pending_2fa":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token type"
+        )
+    
+    # Get user ID from token
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token"
+        )
+    
+    try:
+        user_id = int(user_id)
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token"
+        )
+    
+    # Get user from database
+    user = session.get(User, user_id)
+    
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user"
+        )
+    
+    # Verify user has 2FA enabled and has a secret
+    if not user.is_2fa_enabled or not user.totp_secret:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="2FA not enabled for this account"
+        )
+    
+    # Verify the TOTP code
+    if not TOTPService.verify_token(user.totp_secret, request.totp_code):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid 2FA code"
+        )
+    
+    # 2FA verification successful, generate full tokens
+    # Check onboarding status
+    onboarding = session.exec(select(OnboardingProgress).where(OnboardingProgress.user_id == user.id)).first()
+    onboarding_completed = onboarding.completed if onboarding else False
+    
+    access_token = create_access_token({"sub": user.id})
+    refresh_token = create_refresh_token({"sub": user.id})
+    
+    return Token(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        user=UserResponse(
+            id=user.id,
+            email=user.email,
+            username=user.username,
+            full_name=user.full_name,
+            is_active=user.is_active,
+            created_at=user.created_at.isoformat(),
+            onboarding_completed=onboarding_completed
+        )
+    )
 
 
 @router.post("/refresh", response_model=Token)

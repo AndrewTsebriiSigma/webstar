@@ -1,13 +1,14 @@
 """Authentication schemas."""
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr
+from typing import Optional
 
 
 class UserRegister(BaseModel):
     """User registration schema."""
     email: EmailStr
-    username: str = Field(min_length=3, max_length=30)
-    password: str = Field(min_length=8)
-    full_name: str
+    username: str
+    password: str
+    full_name: Optional[str] = None
 
 
 class UserLogin(BaseModel):
@@ -17,20 +18,12 @@ class UserLogin(BaseModel):
 
 
 class GoogleAuth(BaseModel):
-    """Google OAuth token."""
-    token: str  # Google ID token
-
-
-class Token(BaseModel):
-    """Token response."""
-    access_token: str
-    refresh_token: str
-    token_type: str = "bearer"
-    user: "UserResponse"
+    """Google OAuth schema."""
+    token: str
 
 
 class RefreshToken(BaseModel):
-    """Refresh token request."""
+    """Refresh token schema."""
     refresh_token: str
 
 
@@ -39,10 +32,30 @@ class UserResponse(BaseModel):
     id: int
     email: str
     username: str
-    full_name: str | None
+    full_name: Optional[str]
     is_active: bool
     created_at: str
-    
-    # Onboarding status
-    onboarding_completed: bool = False
+    onboarding_completed: bool
 
+
+class LoginResponse(BaseModel):
+    """Login response that may require 2FA."""
+    requires_2fa: bool = False
+    temp_token: Optional[str] = None
+    access_token: Optional[str] = None
+    refresh_token: Optional[str] = None
+    user: Optional[UserResponse] = None
+    message: Optional[str] = None
+
+
+class Verify2FALoginRequest(BaseModel):
+    """Verify 2FA code during login."""
+    temp_token: str
+    totp_code: str
+
+
+class Token(BaseModel):
+    """Token response schema."""
+    access_token: str
+    refresh_token: str
+    user: Optional[UserResponse] = None

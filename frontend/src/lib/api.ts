@@ -28,6 +28,13 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
+    // Handle connection errors
+    if (error.code === 'ERR_NETWORK' || error.code === 'ECONNREFUSED' || error.message?.includes('ERR_CONNECTION_REFUSED')) {
+      console.error('❌ Backend server is not running. Please start the backend server on port 8000.');
+      // Return a more helpful error message
+      return Promise.reject(new Error('Backend server is not running. Please make sure the backend is started on http://localhost:8000'));
+    }
+    
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       

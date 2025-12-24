@@ -7,7 +7,7 @@ from pathlib import Path
 
 from app.core.config import settings
 from app.db.base import create_db_and_tables
-from app.routers import auth, onboarding, profile, portfolio, projects, economy, analytics, uploads
+from app.routers import auth, onboarding, profile, portfolio, projects, economy, analytics, uploads, app_settings
 
 
 @asynccontextmanager
@@ -88,6 +88,7 @@ app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
 app.include_router(economy.router, prefix="/api/economy", tags=["economy"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
 app.include_router(uploads.router, prefix="/api/uploads", tags=["uploads"])
+app.include_router(app_settings.router, prefix="/api/settings", tags=["settings"])
 
 
 @app.get("/health")

@@ -16,6 +16,7 @@ import {
   EyeIcon, 
   PlusIcon,
   LinkIcon,
+  PencilIcon,
   MapPinIcon,
   BriefcaseIcon,
   Squares2X2Icon,
@@ -42,6 +43,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showEditAboutModal, setShowEditAboutModal] = useState(false);
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   
   const isOwnProfile = user?.username === username;
 
@@ -176,8 +178,12 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   <div className="text-xs text-gray-400">MY DASHBOARD</div>
                   <div className="text-cyan-400 font-bold">{profile.total_points?.toLocaleString() || 0}</div>
                 </div>
-                <button className="p-1">
-                  <LinkIcon className="w-5 h-5 text-gray-400" />
+                <button 
+                  onClick={() => router.push('/profile/edit')}
+                  className="p-1 hover:bg-gray-800 rounded transition"
+                  title="Edit profile"
+                >
+                  <PencilIcon className="w-5 h-5 text-gray-400" />
                 </button>
               </div>
             )}
@@ -221,8 +227,12 @@ export default function ProfilePage({ params }: { params: { username: string } }
               <div className="text-xs text-gray-400 uppercase tracking-wide">My Dashboard</div>
               <div className="text-2xl font-bold text-cyan-400">{profile.total_points?.toLocaleString() || '12.5K'}</div>
             </div>
-            <button className="p-2">
-              <LinkIcon className="w-5 h-5 text-gray-400" />
+            <button 
+              onClick={() => router.push('/profile/edit')}
+              className="p-2 hover:bg-gray-800 rounded transition"
+              title="Edit profile"
+            >
+              <PencilIcon className="w-5 h-5 text-gray-400" />
             </button>
           </div>
         )}
@@ -459,13 +469,35 @@ export default function ProfilePage({ params }: { params: { username: string } }
                     <div className={`${viewMode === 'grid' ? 'aspect-square' : 'aspect-video'} bg-gray-800 relative overflow-hidden`}>
                       {item.content_type === 'photo' && item.content_url && (
                         <img
-                          src={item.content_url}
+                          src={item.content_url.startsWith('http') ? item.content_url : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`}
                           alt={item.title || 'Portfolio item'}
                           className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                          onError={(e) => {
+                            console.error('Failed to load image:', item.content_url);
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
                         />
                       )}
                       {item.content_type === 'video' && item.content_url && (
-                        <video src={item.content_url} className="w-full h-full object-cover" />
+                        <video 
+                          src={item.content_url.startsWith('http') ? item.content_url : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`}
+                          className="w-full h-full object-cover" 
+                          controls
+                        />
+                      )}
+                      {item.content_type === 'audio' && item.content_url && (
+                        <div className="flex items-center justify-center w-full h-full bg-gray-800">
+                          <audio 
+                            src={item.content_url.startsWith('http') ? item.content_url : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`}
+                            controls 
+                            className="w-full"
+                          />
+                        </div>
+                      )}
+                      {item.content_type === 'link' && item.content_url && (
+                        <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20">
+                          <LinkIcon className="w-12 h-12 text-cyan-400" />
+                        </div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition" />
                     </div>

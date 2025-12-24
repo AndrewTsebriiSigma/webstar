@@ -19,6 +19,10 @@ class User(SQLModel, table=True):
     google_id: Optional[str] = Field(default=None, unique=True, index=True)
     oauth_provider: Optional[str] = None  # 'google', etc.
     
+    # 2FA
+    is_2fa_enabled: bool = Field(default=False)
+    totp_secret: Optional[str] = None
+    
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
