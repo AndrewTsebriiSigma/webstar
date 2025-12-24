@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { XMarkIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { useRouter } from 'next/navigation';
+import { XMarkIcon, ChevronRightIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 
 interface SettingsModalProps {
@@ -10,6 +12,8 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
+  const router = useRouter();
+  const { logout } = useAuth();
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [settings, setSettings] = useState({
     // Account
@@ -229,6 +233,33 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   >
                     <span className="text-white font-medium">Privacy</span>
                     <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                  </button>
+                </div>
+              </div>
+
+              {/* ACCOUNT ACTIONS Section */}
+              <div>
+                <div className="flex items-center gap-2 mb-4 text-gray-400 text-sm font-semibold uppercase tracking-wider">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  <span>ACTIONS</span>
+                </div>
+                
+                <div className="space-y-2">
+                  <button
+                    onClick={() => {
+                      logout();
+                      onClose();
+                      toast.success('Logged out successfully');
+                      router.push('/auth/login');
+                    }}
+                    className="w-full flex items-center justify-between p-4 bg-red-900/20 hover:bg-red-900/30 border border-red-800/50 rounded-xl transition text-left group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <ArrowRightOnRectangleIcon className="w-5 h-5 text-red-400" />
+                      <span className="text-red-400 font-medium">Log Out</span>
+                    </div>
                   </button>
                 </div>
               </div>

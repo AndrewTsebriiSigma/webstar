@@ -44,39 +44,49 @@ async def upload_profile_picture(
     session: Session = Depends(get_session)
 ):
     """Upload profile picture."""
-    # Validate file type
-    if not file.content_type or not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
-    
-    # Generate unique filename
-    file_ext = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
-    filename = f"{uuid.uuid4()}{file_ext}"
-    file_path = UPLOAD_DIR / "profile_pictures" / filename
-    file_path.parent.mkdir(exist_ok=True)
-    
-    # Save file
-    content = await file.read()
-    with open(file_path, "wb") as f:
-        f.write(content)
-    
-    # Generate URL (relative to uploads directory)
-    file_url = f"/uploads/profile_pictures/{filename}"
-    
-    # Update profile
-    profile = session.exec(select(Profile).where(Profile.user_id == current_user.id)).first()
-    if profile:
-        # Award points if first profile picture
-        if not profile.profile_picture:
-            await award_points_upload(current_user.id, "profile_picture", 10, session)
+    try:
+        # Validate file type
+        if not file.content_type or not file.content_type.startswith("image/"):
+            raise HTTPException(status_code=400, detail="File must be an image")
         
-        profile.profile_picture = file_url
-        session.add(profile)
-        session.commit()
-    
-    return {
-        "message": "Profile picture uploaded successfully",
-        "url": file_url
-    }
+        # Generate unique filename
+        file_ext = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
+        filename = f"{uuid.uuid4()}{file_ext}"
+        file_path = UPLOAD_DIR / "profile_pictures" / filename
+        file_path.parent.mkdir(exist_ok=True, parents=True)
+        
+        # Save file
+        content = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+        
+        # Generate URL (relative to uploads directory)
+        file_url = f"/uploads/profile_pictures/{filename}"
+        
+        # Update profile
+        profile = session.exec(select(Profile).where(Profile.user_id == current_user.id)).first()
+        if profile:
+            # Award points if first profile picture
+            if not profile.profile_picture:
+                await award_points_upload(current_user.id, "profile_picture", 10, session)
+            
+            profile.profile_picture = file_url
+            session.add(profile)
+            session.commit()
+        
+        return {
+            "message": "Profile picture uploaded successfully",
+            "url": file_url
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading profile picture for user {current_user.id}: {str(e)}")
+        session.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to upload profile picture: {str(e)}"
+        )
 
 
 @router.post("/media")

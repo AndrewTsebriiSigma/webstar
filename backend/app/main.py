@@ -58,8 +58,14 @@ if settings.ENVIRONMENT.lower() == "production":
         if normalized not in cors_origins_list:
             cors_origins_list.append(normalized)
     
+    # Ensure the production frontend URL is always included
+    production_frontend = "https://webstar-frontend.onrender.com"
+    if production_frontend not in cors_origins_list:
+        cors_origins_list.append(production_frontend)
+    
     # Log CORS origins for debugging
     logger.info(f"CORS origins configured: {cors_origins_list}")
+    logger.info(f"Environment: {settings.ENVIRONMENT}")
 else:
     # For development, ensure localhost is included
     if "http://localhost:3000" not in cors_origins_list:
@@ -77,7 +83,12 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
+    max_age=3600,  # Cache preflight requests for 1 hour
 )
+
+# Log startup info
+logger.info(f"Starting WebStar API in {settings.ENVIRONMENT} mode")
+logger.info(f"CORS enabled for origins: {cors_origins_list}")
 
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])

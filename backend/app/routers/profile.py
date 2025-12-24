@@ -89,38 +89,50 @@ async def update_my_profile(
     session: Session = Depends(get_session)
 ):
     """Update current user's profile."""
-    profile = session.exec(select(Profile).where(Profile.user_id == current_user.id)).first()
-    
-    if not profile:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    
-    # Update fields
-    if updates.display_name is not None:
-        profile.display_name = updates.display_name
-    if updates.about is not None:
-        profile.about = updates.about
-    if updates.skills is not None:
-        profile.skills = updates.skills
-    if updates.experience is not None:
-        profile.experience = updates.experience
-    if updates.social_links is not None:
-        profile.social_links = updates.social_links
-    if updates.website is not None:
-        profile.website = updates.website
-    if updates.linkedin_url is not None:
-        profile.linkedin_url = updates.linkedin_url
-    if updates.github_url is not None:
-        profile.github_url = updates.github_url
-    if updates.instagram_url is not None:
-        profile.instagram_url = updates.instagram_url
-    if updates.behance_url is not None:
-        profile.behance_url = updates.behance_url
-    if updates.soundcloud_url is not None:
-        profile.soundcloud_url = updates.soundcloud_url
-    
-    session.add(profile)
-    session.commit()
-    session.refresh(profile)
+    try:
+        profile = session.exec(select(Profile).where(Profile.user_id == current_user.id)).first()
+        
+        if not profile:
+            raise HTTPException(status_code=404, detail="Profile not found")
+        
+        # Update fields
+        if updates.display_name is not None:
+            profile.display_name = updates.display_name
+        if updates.about is not None:
+            profile.about = updates.about
+        if updates.skills is not None:
+            profile.skills = updates.skills
+        if updates.experience is not None:
+            profile.experience = updates.experience
+        if updates.social_links is not None:
+            profile.social_links = updates.social_links
+        if updates.website is not None:
+            profile.website = updates.website
+        if updates.linkedin_url is not None:
+            profile.linkedin_url = updates.linkedin_url
+        if updates.github_url is not None:
+            profile.github_url = updates.github_url
+        if updates.instagram_url is not None:
+            profile.instagram_url = updates.instagram_url
+        if updates.behance_url is not None:
+            profile.behance_url = updates.behance_url
+        if updates.soundcloud_url is not None:
+            profile.soundcloud_url = updates.soundcloud_url
+        
+        session.add(profile)
+        session.commit()
+        session.refresh(profile)
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        # Log and handle any other exceptions
+        logger.error(f"Error updating profile for user {current_user.id}: {str(e)}")
+        session.rollback()
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Failed to update profile: {str(e)}"
+        )
     
     # Get points
     user_points = session.exec(select(UserPoints).where(UserPoints.user_id == current_user.id)).first()

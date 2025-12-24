@@ -88,7 +88,14 @@ export default function EditProfilePage() {
       toast.success('Profile picture updated! (+10 points)');
       await loadProfile(); // Reload to get updated picture
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Failed to upload profile picture');
+      console.error('Profile picture upload error:', error);
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to upload profile picture';
+      toast.error(errorMessage);
+      
+      // If it's a CORS or network error, show specific message
+      if (error.code === 'ERR_NETWORK' || errorMessage.includes('CORS') || errorMessage.includes('Network')) {
+        toast.error('Network connection error. Please try again.');
+      }
     } finally {
       setUploadingPhoto(false);
     }
@@ -134,11 +141,24 @@ export default function EditProfilePage() {
         skills: skillsArray.join(','),
       };
 
-      await profileAPI.updateMe(cleanedFormData);
-      toast.success('Profile updated successfully!');
-      router.push(`/${user?.username}`);
+      const response = await profileAPI.updateMe(cleanedFormData);
+      
+      if (response && response.status === 200) {
+        toast.success('Profile updated successfully!');
+        // Wait a bit before redirecting to ensure toast is visible
+        setTimeout(() => {
+          router.push(`/${user?.username}`);
+        }, 500);
+      }
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Failed to update profile');
+      console.error('Profile update error:', error);
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to update profile';
+      toast.error(errorMessage);
+      
+      // If it's a CORS error, show specific message
+      if (error.code === 'ERR_NETWORK' || errorMessage.includes('CORS')) {
+        toast.error('Network error. Please check your connection and try again.');
+      }
     } finally {
       setSaving(false);
     }
