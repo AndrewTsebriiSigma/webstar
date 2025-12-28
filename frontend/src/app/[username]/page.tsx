@@ -14,6 +14,7 @@ import EditAboutModal from '@/components/EditAboutModal';
 import PortfolioDetailModal from '@/components/PortfolioDetailModal';
 import AboutSection from '@/components/AboutSection';
 import CreateContentModal from '@/components/CreateContentModal';
+import NotificationsPanel from '@/components/NotificationsPanel';
 import { 
   Cog6ToothIcon, 
   EyeIcon, 
@@ -50,6 +51,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<PortfolioItem | null>(null);
   const [showPortfolioDetail, setShowPortfolioDetail] = useState(false);
   const [showCreateContentModal, setShowCreateContentModal] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [hideHeaderText, setHideHeaderText] = useState(false);
   
   const isOwnProfile = user?.username === username;
 
@@ -130,7 +133,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
           </Link>
           
           <div className="flex items-center gap-1">
-            <button className="p-1.5 relative">
+            <button 
+              onClick={() => setShowNotifications(true)}
+              className="p-1.5 relative"
+            >
               <BellIcon className="w-5 h-5 text-white" />
               {isOwnProfile && (
                 <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-cyan-500 rounded-full flex items-center justify-center text-[10px] font-bold">
@@ -145,18 +151,33 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Cover Image Area */}
       <div className="relative">
         {/* Cover gradient */}
-        <div className="h-24 sm:h-36 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 relative overflow-hidden">
+        <div className={`${hideHeaderText ? 'h-36 sm:h-48' : 'h-24 sm:h-36'} bg-gradient-to-br from-cyan-500/20 to-blue-500/20 relative overflow-hidden transition-all duration-300`}>
           <div className="absolute inset-0 bg-[url('/api/placeholder/1200/400')] bg-cover bg-center opacity-20" />
+          
+          {/* WEBSTAR Logo Card - Hidden when eye is toggled */}
+          {!hideHeaderText && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 shadow-xl backdrop-blur-md border border-white/20 text-center transition-opacity duration-300">
+              <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent mb-1">
+                WEBSTAR
+              </div>
+              <div className="text-xs sm:text-sm text-gray-600 italic font-light">
+                stay original
+              </div>
+            </div>
+          )}
           
           {/* View and Settings Icons */}
           {isOwnProfile && (
             <div className="absolute top-2 left-2 right-2 flex justify-between">
-              <button className="p-2 bg-gray-800/60 backdrop-blur-md rounded-full">
+              <button 
+                onClick={() => setHideHeaderText(!hideHeaderText)}
+                className="p-2 bg-gray-800/60 backdrop-blur-md rounded-full hover:bg-gray-700/60 transition"
+              >
                 <EyeIcon className="w-4 h-4 text-white" />
               </button>
               <button 
                 onClick={() => setShowSettingsModal(true)}
-                className="p-2 bg-gray-800/60 backdrop-blur-md rounded-full"
+                className="p-2 bg-gray-800/60 backdrop-blur-md rounded-full hover:bg-gray-700/60 transition"
               >
                 <Cog6ToothIcon className="w-4 h-4 text-white" />
               </button>
@@ -165,7 +186,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
         </div>
 
         {/* Profile Picture - Overlapping */}
-        <div className="relative px-3 -mt-12 sm:-mt-16 pb-3">
+        <div className={`relative px-3 pb-3 transition-all duration-300 ${hideHeaderText ? '-mt-16 sm:-mt-20' : '-mt-12 sm:-mt-16'}`}>
           <div className="flex items-end justify-between">
             <div className="relative">
               {profile.profile_picture ? (
@@ -205,77 +226,79 @@ export default function ProfilePage({ params }: { params: { username: string } }
       </div>
 
       {/* Profile Info */}
-      <div className="px-3 pb-3">
-        <div className="flex items-center gap-2 mb-1">
-          <h1 className="text-xl sm:text-2xl font-bold">{profile.display_name || username}</h1>
-          {profile.expertise_badge && (
-            <CheckBadgeIcon className="w-5 h-5 text-cyan-400" />
-          )}
-        </div>
-        
-        <p className="text-sm text-gray-400 mb-2">
-          Make original the only standard.
-        </p>
+      {!hideHeaderText && (
+        <div className="px-3 pb-3">
+          <div className="flex items-center gap-2 mb-1">
+            <h1 className="text-xl sm:text-2xl font-bold">{profile.display_name || username}</h1>
+            {profile.expertise_badge && (
+              <CheckBadgeIcon className="w-5 h-5 text-cyan-400" />
+            )}
+          </div>
+          
+          <p className="text-sm text-gray-400 mb-2">
+            Make original the only standard.
+          </p>
 
-        <div className="flex items-center gap-3 text-xs text-gray-400 mb-3">
-          {profile.role && (
+          <div className="flex items-center gap-3 text-xs text-gray-400 mb-3">
+            {profile.role && (
+              <div className="flex items-center gap-1">
+                <MapPinIcon className="w-3.5 h-3.5" />
+                <span>Paris, France</span>
+              </div>
+            )}
             <div className="flex items-center gap-1">
-              <MapPinIcon className="w-3.5 h-3.5" />
-              <span>Paris, France</span>
+              <BriefcaseIcon className="w-3.5 h-3.5" />
+              <span>Creator</span>
             </div>
-          )}
-          <div className="flex items-center gap-1">
-            <BriefcaseIcon className="w-3.5 h-3.5" />
-            <span>Creator</span>
           </div>
-        </div>
 
-        {/* Points Badge - Mobile */}
-        {isOwnProfile && (
-          <div className="sm:hidden flex items-center gap-2 p-3 bg-gray-900 border border-gray-800 rounded-xl mb-3">
-            <svg className="w-6 h-6 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-            <div className="flex-1">
-              <div className="text-[10px] text-gray-400 uppercase tracking-wide">My Dashboard</div>
-              <div className="text-xl font-bold text-cyan-400">{profile.total_points?.toLocaleString() || '12.5K'}</div>
-            </div>
-            <button 
-              onClick={() => router.push('/profile/edit')}
-              className="p-1.5 hover:bg-gray-800 rounded transition"
-              title="Edit profile"
-            >
-              <PencilIcon className="w-4 h-4 text-gray-400" />
-            </button>
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="flex gap-2 mb-4">
-          {isOwnProfile ? (
-            <>
+          {/* Points Badge - Mobile */}
+          {isOwnProfile && (
+            <div className="sm:hidden flex items-center gap-2 p-3 bg-gray-900 border border-gray-800 rounded-xl mb-3">
+              <svg className="w-6 h-6 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              <div className="flex-1">
+                <div className="text-[10px] text-gray-400 uppercase tracking-wide">My Dashboard</div>
+                <div className="text-xl font-bold text-cyan-400">{profile.total_points?.toLocaleString() || '12.5K'}</div>
+              </div>
               <button 
-                onClick={() => setShowShareModal(true)}
-                className="flex-1 py-2 text-sm bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-lg font-semibold transition"
+                onClick={() => router.push('/profile/edit')}
+                className="p-1.5 hover:bg-gray-800 rounded transition"
+                title="Edit profile"
               >
-                Message Me
+                <PencilIcon className="w-4 h-4 text-gray-400" />
               </button>
-              <button className="flex-1 py-2 text-sm bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-lg font-semibold transition">
-                Email
-              </button>
-            </>
-          ) : (
-            <>
-              <button className="flex-1 py-2 text-sm bg-cyan-500 hover:bg-cyan-600 rounded-lg font-semibold transition">
-                Follow
-              </button>
-              <button className="flex-1 py-2 text-sm bg-gray-900 border border-gray-800 rounded-lg font-semibold transition">
-                Message
-              </button>
-            </>
+            </div>
           )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 mb-4">
+            {isOwnProfile ? (
+              <>
+                <button 
+                  onClick={() => setShowShareModal(true)}
+                  className="flex-1 py-2 text-sm bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-lg font-semibold transition"
+                >
+                  Message Me
+                </button>
+                <button className="flex-1 py-2 text-sm bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-lg font-semibold transition">
+                  Email
+                </button>
+              </>
+            ) : (
+              <>
+                <button className="flex-1 py-2 text-sm bg-cyan-500 hover:bg-cyan-600 rounded-lg font-semibold transition">
+                  Follow
+                </button>
+                <button className="flex-1 py-2 text-sm bg-gray-900 border border-gray-800 rounded-lg font-semibold transition">
+                  Message
+                </button>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Tabs */}
       <div className="sticky top-[49px] z-30 bg-black/90 backdrop-blur-md border-b border-gray-800">
@@ -538,6 +561,12 @@ export default function ProfilePage({ params }: { params: { username: string } }
         authorDisplayName={profile?.display_name || username}
         authorProfilePicture={profile?.profile_picture ?? undefined}
         isOwnItem={isOwnProfile}
+      />
+
+      {/* Notifications Panel */}
+      <NotificationsPanel
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
       />
     </div>
   );
