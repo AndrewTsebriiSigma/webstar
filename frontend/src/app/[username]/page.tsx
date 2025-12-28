@@ -161,24 +161,46 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <div className="absolute inset-0 bg-[url('/api/placeholder/1200/400')] bg-cover bg-center opacity-20" />
           )}
           
-          {/* Viewer Mode & Settings - 16px from edges, 32px buttons */}
+          {/* Viewer Mode & Settings - 16px from edges, 32px buttons, 16px icons */}
           {isOwnProfile && !viewerMode && (
             <div className="absolute top-4 left-4 right-4 flex justify-between">
               <button 
                 onClick={() => setViewerMode(true)}
-                className="w-8 h-8 bg-black/50 backdrop-blur-md rounded-full hover:bg-black/60 transition flex items-center justify-center"
-                style={{ border: '1px solid rgba(255, 255, 255, 0.15)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}
+                className="w-8 h-8 rounded-full flex items-center justify-center"
+                style={{ 
+                  background: 'rgba(0, 0, 0, 0.5)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                  color: '#FFFFFF',
+                  transition: 'all 150ms cubic-bezier(0.22, 0.61, 0.36, 1)'
+                }}
+                onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
+                onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 title="Enter viewer mode"
               >
-                <EyeIcon className="w-4 h-4 text-white" />
+                <EyeIcon className="w-4 h-4" />
               </button>
               <button 
                 onClick={() => setShowSettingsModal(true)}
-                className="w-8 h-8 bg-black/50 backdrop-blur-md rounded-full hover:bg-black/60 transition flex items-center justify-center"
-                style={{ border: '1px solid rgba(255, 255, 255, 0.15)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}
+                className="w-8 h-8 rounded-full flex items-center justify-center"
+                style={{ 
+                  background: 'rgba(0, 0, 0, 0.5)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                  color: '#FFFFFF',
+                  transition: 'all 150ms cubic-bezier(0.22, 0.61, 0.36, 1)'
+                }}
+                onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
+                onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 title="Settings"
               >
-                <Cog6ToothIcon className="w-4 h-4 text-white" />
+                <Cog6ToothIcon className="w-4 h-4" />
               </button>
             </div>
           )}
