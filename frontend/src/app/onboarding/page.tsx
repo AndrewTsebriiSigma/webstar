@@ -98,10 +98,7 @@ export default function OnboardingPage() {
         {/* Step 1: Archetype */}
         {step === 1 && (
           <div className="glass rounded-2xl shadow-xl p-8 animate-fade-in">
-            <h2 className="text-3xl font-bold text-center mb-4" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Choose Your Archetype</h2>
-            <p className="text-center mb-12" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
-              How do you create? This helps us personalize your experience.
-            </p>
+            <h2 className="text-3xl font-bold text-center mb-12" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Choose Your Archetype</h2>
 
             <div className="grid md:grid-cols-2 gap-6">
               {ARCHETYPES.map((archetype) => (
@@ -137,10 +134,7 @@ export default function OnboardingPage() {
               ← Back
             </button>
 
-            <h2 className="text-3xl font-bold text-center mb-4" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>What's Your Role?</h2>
-            <p className="text-center mb-8" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
-              Define your professional identity. This appears on your profile.
-            </p>
+            <h2 className="text-3xl font-bold text-center mb-8" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>What's Your Role?</h2>
 
             <div className="max-w-md mx-auto">
               <input
@@ -200,31 +194,19 @@ export default function OnboardingPage() {
               ← Back
             </button>
 
-            <h2 className="text-3xl font-bold text-center mb-4" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Your Expertise Level</h2>
-            <p className="text-center mb-8" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
-              Where are you in your professional journey?
-            </p>
-
             <div className="max-w-2xl mx-auto">
               {/* Current Level Display */}
-              <div className="mb-12 p-6 rounded-xl border-2" style={{ 
-                background: 'linear-gradient(135deg, rgba(0, 194, 255, 0.15) 0%, rgba(0, 122, 255, 0.15) 100%)',
-                borderColor: 'rgba(0, 194, 255, 0.3)'
-              }}>
-                <h3 className="text-2xl font-bold text-center mb-2" style={{ color: '#00C2FF' }}>
-                  {EXPERTISE_LEVELS[
-                    formData.expertiseLevel 
-                      ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel)
-                      : 0
-                  ]?.name || EXPERTISE_LEVELS[0].name}
-                </h3>
-                <p className="text-center" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
-                  {EXPERTISE_LEVELS[
-                    formData.expertiseLevel 
-                      ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel)
-                      : 0
-                  ]?.description || EXPERTISE_LEVELS[0].description}
+              <div className="mb-12 text-center">
+                <p className="text-lg mb-3" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
+                  Your expertise level is:
                 </p>
+                <h3 className="text-3xl font-bold" style={{ color: '#00C2FF' }}>
+                  {EXPERTISE_LEVELS[
+                    formData.expertiseLevel 
+                      ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel)
+                      : 1
+                  ]?.name || EXPERTISE_LEVELS[1].name}
+                </h3>
               </div>
 
               {/* Slider */}
@@ -236,7 +218,7 @@ export default function OnboardingPage() {
                   value={
                     formData.expertiseLevel 
                       ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel)
-                      : 0
+                      : 1
                   }
                   onChange={(e) => {
                     const index = parseInt(e.target.value);
@@ -244,6 +226,15 @@ export default function OnboardingPage() {
                       ...prev, 
                       expertiseLevel: EXPERTISE_LEVELS[index].id 
                     }));
+                  }}
+                  onMouseUp={() => {
+                    // Set default value on first interaction if not set
+                    if (!formData.expertiseLevel) {
+                      setFormData((prev) => ({ 
+                        ...prev, 
+                        expertiseLevel: EXPERTISE_LEVELS[1].id 
+                      }));
+                    }
                   }}
                   className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
                   style={{

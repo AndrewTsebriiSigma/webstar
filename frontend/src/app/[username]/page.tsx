@@ -536,7 +536,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
         }}
         authorUsername={username}
         authorDisplayName={profile?.display_name || username}
-        authorProfilePicture={profile?.profile_picture}
+        authorProfilePicture={profile?.profile_picture ?? undefined}
         isOwnItem={isOwnProfile}
       />
     </div>

@@ -93,7 +93,6 @@ export default function RegisterPage() {
             WebStar
           </Link>
           <h2 className="mt-6 text-3xl font-bold" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Create your account</h2>
-          <p className="mt-2" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Complete your profile to join WebStar</p>
         </div>
 
         {/* Progress Bar */}
@@ -118,9 +117,6 @@ export default function RegisterPage() {
             <h3 className="text-2xl font-bold text-center mb-6" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Basic Information</h3>
             <form onSubmit={handleBasicInfoSubmit} className="space-y-5">
               <div>
-                <label htmlFor="fullName" className="block text-sm font-medium" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
-                  Full Name
-                </label>
                 <input
                   id="fullName"
                   name="fullName"
@@ -128,21 +124,18 @@ export default function RegisterPage() {
                   required
                   value={formData.fullName}
                   onChange={handleChange}
-                  className="mt-1 block w-full px-4 py-3 rounded-lg"
+                  className="block w-full px-4 py-3 rounded-xl"
                   style={{ 
                     background: 'rgba(255, 255, 255, 0.05)', 
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                     color: 'rgba(255, 255, 255, 0.95)'
                   }}
-                  placeholder="John Doe"
+                  placeholder="Full Name"
                   autoFocus
                 />
               </div>
 
               <div>
-                <label htmlFor="username" className="block text-sm font-medium" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
-                  Username
-                </label>
                 <input
                   id="username"
                   name="username"
@@ -150,21 +143,18 @@ export default function RegisterPage() {
                   required
                   value={formData.username}
                   onChange={handleChange}
-                  className="mt-1 block w-full px-4 py-3 rounded-lg"
+                  className="block w-full px-4 py-3 rounded-xl"
                   style={{ 
                     background: 'rgba(255, 255, 255, 0.05)', 
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                     color: 'rgba(255, 255, 255, 0.95)'
                   }}
-                  placeholder="johndoe"
+                  placeholder="Username"
                 />
-                <p className="mt-1 text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Your unique URL: webstar.com/{formData.username || 'username'}</p>
+                <p className="mt-2 text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Your unique URL: webstar.com/{formData.username || 'username'}</p>
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
-                  Email
-                </label>
                 <input
                   id="email"
                   name="email"
@@ -172,20 +162,17 @@ export default function RegisterPage() {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="mt-1 block w-full px-4 py-3 rounded-lg"
+                  className="block w-full px-4 py-3 rounded-xl"
                   style={{ 
                     background: 'rgba(255, 255, 255, 0.05)', 
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                     color: 'rgba(255, 255, 255, 0.95)'
                   }}
-                  placeholder="you@example.com"
+                  placeholder="Email"
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
-                  Password
-                </label>
                 <input
                   id="password"
                   name="password"
@@ -193,16 +180,15 @@ export default function RegisterPage() {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="mt-1 block w-full px-4 py-3 rounded-lg"
+                  className="block w-full px-4 py-3 rounded-xl"
                   style={{ 
                     background: 'rgba(255, 255, 255, 0.05)', 
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                     color: 'rgba(255, 255, 255, 0.95)'
                   }}
-                  placeholder="••••••••"
+                  placeholder="Password"
                   minLength={8}
                 />
-                <p className="mt-1 text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Minimum 8 characters</p>
               </div>
 
               <button
@@ -233,10 +219,7 @@ export default function RegisterPage() {
               ← Back
             </button>
 
-            <h2 className="text-3xl font-bold text-center mb-4" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Choose Your Archetype</h2>
-            <p className="text-center mb-12" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
-              How do you create? This helps us personalize your experience.
-            </p>
+            <h2 className="text-3xl font-bold text-center mb-12" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Choose Your Archetype</h2>
 
             <div className="grid md:grid-cols-2 gap-6">
               {ARCHETYPES.map((archetype) => (
@@ -272,10 +255,7 @@ export default function RegisterPage() {
               ← Back
             </button>
 
-            <h2 className="text-3xl font-bold text-center mb-4" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>What's Your Role?</h2>
-            <p className="text-center mb-8" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
-              Define your professional identity. This appears on your profile.
-            </p>
+            <h2 className="text-3xl font-bold text-center mb-8" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>What's Your Role?</h2>
 
             <div className="max-w-md mx-auto">
               <input
@@ -335,31 +315,19 @@ export default function RegisterPage() {
               ← Back
             </button>
 
-            <h2 className="text-3xl font-bold text-center mb-4" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Your Expertise Level</h2>
-            <p className="text-center mb-8" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
-              Where are you in your professional journey?
-            </p>
-
             <div className="max-w-2xl mx-auto">
               {/* Current Level Display */}
-              <div className="mb-12 p-6 rounded-xl border-2" style={{ 
-                background: 'linear-gradient(135deg, rgba(0, 194, 255, 0.15) 0%, rgba(0, 122, 255, 0.15) 100%)',
-                borderColor: 'rgba(0, 194, 255, 0.3)'
-              }}>
-                <h3 className="text-2xl font-bold text-center mb-2" style={{ color: '#00C2FF' }}>
-                  {EXPERTISE_LEVELS[
-                    formData.expertiseLevel 
-                      ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel)
-                      : 0
-                  ]?.name || EXPERTISE_LEVELS[0].name}
-                </h3>
-                <p className="text-center" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
-                  {EXPERTISE_LEVELS[
-                    formData.expertiseLevel 
-                      ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel)
-                      : 0
-                  ]?.description || EXPERTISE_LEVELS[0].description}
+              <div className="mb-12 text-center">
+                <p className="text-lg mb-3" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
+                  Your expertise level is:
                 </p>
+                <h3 className="text-3xl font-bold" style={{ color: '#00C2FF' }}>
+                  {EXPERTISE_LEVELS[
+                    formData.expertiseLevel 
+                      ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel)
+                      : 1
+                  ]?.name || EXPERTISE_LEVELS[1].name}
+                </h3>
               </div>
 
               {/* Slider */}
@@ -371,7 +339,7 @@ export default function RegisterPage() {
                   value={
                     formData.expertiseLevel 
                       ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel)
-                      : 0
+                      : 1
                   }
                   onChange={(e) => {
                     const index = parseInt(e.target.value);
@@ -379,6 +347,15 @@ export default function RegisterPage() {
                       ...prev, 
                       expertiseLevel: EXPERTISE_LEVELS[index].id 
                     }));
+                  }}
+                  onMouseUp={() => {
+                    // Set default value on first interaction if not set
+                    if (!formData.expertiseLevel) {
+                      setFormData((prev) => ({ 
+                        ...prev, 
+                        expertiseLevel: EXPERTISE_LEVELS[1].id 
+                      }));
+                    }
                   }}
                   className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
                   style={{
