@@ -199,20 +199,26 @@ async def google_callback(request: Request, session: Session = Depends(get_sessi
         access_token = create_access_token({"sub": user.id})
         refresh_token_str = create_refresh_token({"sub": user.id})
         
-        # Determine redirect URL based on onboarding status
-        if onboarding_completed:
-            redirect_url = f"{settings.CORS_ORIGINS[0]}/{user.username}"
-        else:
-            redirect_url = f"{settings.CORS_ORIGINS[0]}/onboarding"
+        # Get the first CORS origin (frontend URL)
+        frontend_url = settings.CORS_ORIGINS[0] if isinstance(settings.CORS_ORIGINS, list) else settings.CORS_ORIGINS.split(',')[0].strip()
         
-        # Add tokens and user info as URL parameters (will be handled by frontend)
+        # Always redirect to the callback page first
+        redirect_url = f"{frontend_url}/auth/callback/google"
         redirect_url += f"?access_token={access_token}&refresh_token={refresh_token_str}&user_id={user.id}&username={user.username}&email={user.email}&onboarding_completed={onboarding_completed}"
         
         return RedirectResponse(url=redirect_url)
         
     except Exception as e:
-        # Redirect to frontend with error
-        error_url = f"{settings.CORS_ORIGINS[0]}/auth/login?error=oauth_failed&message={str(e)}"
+        # Log the error for debugging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"OAuth callback error: {str(e)}", exc_info=True)
+        
+        # Get the first CORS origin (frontend URL)
+        frontend_url = settings.CORS_ORIGINS[0] if isinstance(settings.CORS_ORIGINS, list) else settings.CORS_ORIGINS.split(',')[0].strip()
+        
+        # Redirect to frontend callback with error
+        error_url = f"{frontend_url}/auth/callback/google?error=oauth_failed&message={str(e)}"
         return RedirectResponse(url=error_url)
 
 
