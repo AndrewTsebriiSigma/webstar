@@ -13,6 +13,7 @@ import SettingsModal from '@/components/SettingsModal';
 import EditAboutModal from '@/components/EditAboutModal';
 import PortfolioDetailModal from '@/components/PortfolioDetailModal';
 import AboutSection from '@/components/AboutSection';
+import CreateContentModal from '@/components/CreateContentModal';
 import { 
   Cog6ToothIcon, 
   EyeIcon, 
@@ -48,6 +49,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<PortfolioItem | null>(null);
   const [showPortfolioDetail, setShowPortfolioDetail] = useState(false);
+  const [showCreateContentModal, setShowCreateContentModal] = useState(false);
   
   const isOwnProfile = user?.username === username;
 
@@ -112,9 +114,16 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Mobile Header */}
       <header className="sticky top-0 z-40 bg-black/90 backdrop-blur-md border-b border-gray-800">
         <div className="px-3 py-2 flex items-center justify-between">
-          <button className="p-1.5">
-            <PlusIcon className="w-5 h-5 text-white" />
-          </button>
+          {isOwnProfile ? (
+            <button 
+              onClick={() => setShowCreateContentModal(true)}
+              className="p-1.5"
+            >
+              <PlusIcon className="w-5 h-5 text-white" />
+            </button>
+          ) : (
+            <div className="w-8"></div>
+          )}
           
           <Link href="/" className="text-lg font-bold">
             webSTAR
@@ -305,14 +314,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold">Portfolio</h2>
               <div className="flex items-center gap-2">
-                {isOwnProfile && (
-                  <button
-                    onClick={() => setShowUploadModal(true)}
-                    className="p-1.5 bg-cyan-500 rounded-lg"
-                  >
-                    <PlusIcon className="w-4 h-4" />
-                  </button>
-                )}
                 <div className="flex bg-gray-900 rounded-lg p-0.5">
                   <button
                     onClick={() => setViewMode('grid')}
@@ -382,7 +383,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   <>
                     <p className="mb-3 text-sm">Start showcasing your work</p>
                     <button
-                      onClick={() => setShowUploadModal(true)}
+                      onClick={() => setShowCreateContentModal(true)}
                       className="px-5 py-2 text-sm bg-cyan-500 hover:bg-cyan-600 rounded-lg font-semibold transition"
                     >
                       Add First Item
@@ -400,14 +401,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold">Projects</h2>
-              {isOwnProfile && (
-                <button
-                  onClick={() => setShowProjectModal(true)}
-                  className="p-1.5 bg-cyan-500 rounded-lg"
-                >
-                  <PlusIcon className="w-4 h-4" />
-                </button>
-              )}
             </div>
 
             {projects.length > 0 ? (
@@ -498,6 +491,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
       )}
 
       {/* Modals */}
+      <CreateContentModal
+        isOpen={showCreateContentModal}
+        onClose={() => setShowCreateContentModal(false)}
+        onSelectPost={() => setShowUploadModal(true)}
+        onSelectProject={() => setShowProjectModal(true)}
+      />
+
       <UploadPortfolioModal
         isOpen={showUploadModal}
         onClose={() => setShowUploadModal(false)}

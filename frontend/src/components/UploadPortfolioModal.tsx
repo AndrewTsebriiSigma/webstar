@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { uploadsAPI, portfolioAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
-import { XMarkIcon, PhotoIcon, VideoCameraIcon, MusicalNoteIcon, LinkIcon as LinkIconHero, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 interface UploadPortfolioModalProps {
   isOpen: boolean;
@@ -11,45 +11,25 @@ interface UploadPortfolioModalProps {
   onSuccess: () => void;
 }
 
-const CONTENT_TYPES = [
-  { id: 'photo', name: 'Photo', icon: PhotoIcon, accept: 'image/jpeg,image/png,image/webp,image/gif' },
-  { id: 'video', name: 'Video', icon: VideoCameraIcon, accept: 'video/mp4,video/quicktime' },
-  { id: 'audio', name: 'Audio', icon: MusicalNoteIcon, accept: 'audio/mpeg,audio/wav' },
-  { id: 'link', name: 'Link', icon: LinkIconHero, accept: '' },
-];
-
-const ASPECT_RATIOS = [
-  { id: '1:1', name: '1:1 (Square)' },
-  { id: '4:5', name: '4:5 (Portrait)' },
-  { id: '9:16', name: '9:16 (Vertical)' },
-  { id: '16:9', name: '16:9 (Landscape)' },
-];
-
 export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: UploadPortfolioModalProps) {
-  const [step, setStep] = useState(1);
-  const [contentType, setContentType] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string>('');
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   
   const [formData, setFormData] = useState({
-    content_url: '',
     title: '',
     description: '',
-    aspect_ratio: '1:1',
   });
 
   if (!isOpen) return null;
 
   const handleReset = () => {
-    setStep(1);
-    setContentType('');
     setFile(null);
+    setPreview('');
     setFormData({
-      content_url: '',
       title: '',
       description: '',
-      aspect_ratio: '1:1',
     });
     setUploading(false);
     setUploadProgress(0);
@@ -62,73 +42,72 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
     }
   };
 
-  const handleTypeSelect = (type: string) => {
-    setContentType(type);
-    setStep(2);
-  };
-
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
-    const maxSize = contentType === 'video' ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
+    // Check file type
+    const isImage = selectedFile.type.startsWith('image/');
+    const isVideo = selectedFile.type.startsWith('video/');
+    
+    if (!isImage && !isVideo) {
+      toast.error('Please select an image or video file');
+      return;
+    }
+
+    // Check file size
+    const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
     if (selectedFile.size > maxSize) {
-      toast.error(`File must be less than ${contentType === 'video' ? '50MB' : '5MB'}`);
+      toast.error(`File must be less than ${isVideo ? '50MB' : '5MB'}`);
       return;
     }
 
     setFile(selectedFile);
-    setStep(3);
-  };
-
-  const handleLinkSubmit = () => {
-    if (!formData.content_url.trim()) {
-      toast.error('Please enter a valid URL');
-      return;
-    }
-
-    try {
-      new URL(formData.content_url);
-      setStep(3);
-    } catch {
-      toast.error('Please enter a valid URL');
+    
+    // Create preview for images
+    if (isImage) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreview(reader.result as string);
+      };
+      reader.readAsDataURL(selectedFile);
+    } else {
+      setPreview(''); // No preview for video
     }
   };
 
   const handleSubmit = async () => {
-    if (!formData.title.trim()) {
-      toast.error('Title is required');
+    if (!file) {
+      toast.error('Please select a file');
       return;
     }
 
     setUploading(true);
     
     try {
-      let contentUrl = formData.content_url;
+      setUploadProgress(30);
       
-      if (file && contentType !== 'link') {
-        setUploadProgress(50);
-        const uploadResponse = await uploadsAPI.uploadMedia(file, contentType);
-        contentUrl = uploadResponse.data.url;
-        setUploadProgress(75);
-      }
+      // Determine content type
+      const contentType = file.type.startsWith('image/') ? 'photo' : 'video';
+      
+      // Upload file
+      const uploadResponse = await uploadsAPI.uploadMedia(file, contentType);
+      const contentUrl = uploadResponse.data.url;
+      
+      setUploadProgress(70);
 
+      // Create portfolio item
       await portfolioAPI.createItem({
         content_type: contentType,
         content_url: contentUrl,
-        title: formData.title,
-        description: formData.description,
-        aspect_ratio: contentType === 'link' ? null : formData.aspect_ratio,
+        title: formData.title || file.name.replace(/\.[^/.]+$/, ''), // Use filename if no title
+        description: formData.description || '',
+        aspect_ratio: '1:1',
       });
 
       setUploadProgress(100);
-      toast.success('Portfolio item added! 🎉');
+      toast.success('Post published! 🎉');
       
-      toast('Check your points balance!', {
-        icon: '⭐',
-        duration: 4000,
-      });
-
       handleReset();
       onSuccess();
       onClose();
@@ -141,230 +120,163 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
     }
   };
 
-  const selectedType = CONTENT_TYPES.find(t => t.id === contentType);
-
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-800">
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-[#2a2d35] rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-700">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-800">
-          <h2 className="text-2xl font-bold text-white">Add to Portfolio</h2>
-          {!uploading && (
-            <button
-              onClick={handleClose}
-              className="p-2 hover:bg-gray-800 rounded-lg transition"
-            >
-              <XMarkIcon className="w-6 h-6 text-gray-400" />
-            </button>
-          )}
+        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+          <button
+            onClick={handleClose}
+            disabled={uploading}
+            className="p-1 hover:bg-gray-700 rounded transition"
+          >
+            <ArrowLeftIcon className="w-5 h-5 text-gray-400" />
+          </button>
+          <h2 className="text-lg font-bold text-white">Post</h2>
+          <button
+            onClick={handleSubmit}
+            disabled={uploading || !file}
+            className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {uploading ? 'Publishing...' : 'Publish'}
+          </button>
         </div>
 
         {/* Content */}
-        <div className="p-6">
-          {/* Step 1: Select Content Type */}
-          {step === 1 && (
-            <div>
-              <p className="text-gray-400 mb-6">What type of content would you like to add?</p>
-              <div className="grid grid-cols-2 gap-4">
-                {CONTENT_TYPES.map((type) => (
-                  <button
-                    key={type.id}
-                    onClick={() => handleTypeSelect(type.id)}
-                    className="p-6 border-2 border-gray-800 rounded-xl hover:border-cyan-500 hover:bg-gray-800/50 transition text-center group"
+        <div className="p-4 space-y-4">
+          {/* File Upload Area */}
+          <div>
+            {preview || file ? (
+              <div className="relative">
+                {preview ? (
+                  <img
+                    src={preview}
+                    alt="Preview"
+                    className="w-full rounded-xl object-cover max-h-80"
+                  />
+                ) : (
+                  <div className="w-full h-64 bg-gray-800 rounded-xl flex items-center justify-center">
+                    <div className="text-center text-gray-400">
+                      <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-sm">{file?.name}</p>
+                    </div>
+                  </div>
+                )}
+                {!uploading && (
+                  <label
+                    htmlFor="file-upload-edit"
+                    className="absolute top-2 right-2 px-3 py-1 bg-gray-900/80 hover:bg-gray-800 text-white text-xs rounded-lg cursor-pointer transition"
                   >
-                    <type.icon className="w-12 h-12 mx-auto mb-3 text-gray-400 group-hover:text-cyan-400 transition" />
-                    <div className="font-semibold text-lg text-white">{type.name}</div>
-                  </button>
-                ))}
+                    Change
+                  </label>
+                )}
+                <input
+                  type="file"
+                  id="file-upload-edit"
+                  accept="image/*,video/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  disabled={uploading}
+                />
               </div>
-            </div>
-          )}
-
-          {/* Step 2: Upload File or Enter Link */}
-          {step === 2 && contentType !== 'link' && (
-            <div>
-              <button
-                onClick={() => setStep(1)}
-                className="text-cyan-400 hover:text-cyan-300 mb-4 flex items-center gap-2"
+            ) : (
+              <label
+                htmlFor="file-upload"
+                className="block w-full h-64 border-2 border-dashed border-gray-700 rounded-xl hover:border-cyan-500 transition cursor-pointer"
               >
-                <ArrowLeftIcon className="w-5 h-5" />
-                <span>Back</span>
-              </button>
-              
-              <div className="text-center py-12">
-                {selectedType && <selectedType.icon className="w-16 h-16 mx-auto mb-4 text-cyan-400" />}
-                <h3 className="text-xl font-semibold mb-4 text-white">
-                  Upload {selectedType?.name}
-                </h3>
-                
+                <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                  <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p className="text-sm font-medium">Click to upload photo or video</p>
+                  <p className="text-xs mt-1">Max 5MB for images, 50MB for videos</p>
+                </div>
                 <input
                   type="file"
                   id="file-upload"
-                  accept={selectedType?.accept}
+                  accept="image/*,video/*"
                   onChange={handleFileSelect}
                   className="hidden"
                 />
-                <label
-                  htmlFor="file-upload"
-                  className="inline-block px-8 py-4 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition cursor-pointer"
-                >
-                  Choose File
-                </label>
-                
-                <p className="text-sm text-gray-500 mt-4">
-                  Max size: {contentType === 'video' ? '50MB' : '5MB'}
-                </p>
-              </div>
-            </div>
-          )}
+              </label>
+            )}
+          </div>
 
-          {step === 2 && contentType === 'link' && (
+          {/* Title Input */}
+          <div>
+            <input
+              type="text"
+              placeholder="Title*"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="w-full px-4 py-2.5 bg-[#1a1a1c] border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white placeholder-gray-500 text-sm"
+              disabled={uploading}
+            />
+          </div>
+
+          {/* Description Input */}
+          <div>
+            <textarea
+              placeholder="Description (boost discovery)"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              rows={3}
+              className="w-full px-4 py-2.5 bg-[#1a1a1c] border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none text-white placeholder-gray-500 text-sm"
+              disabled={uploading}
+            />
+          </div>
+
+          {/* Upload Progress */}
+          {uploading && (
             <div>
-              <button
-                onClick={() => setStep(1)}
-                className="text-cyan-400 hover:text-cyan-300 mb-4 flex items-center gap-2"
-              >
-                <ArrowLeftIcon className="w-5 h-5" />
-                <span>Back</span>
-              </button>
-              
-              <div className="py-6">
-                <h3 className="text-xl font-semibold mb-4 text-white">Enter Link URL</h3>
-                <input
-                  type="url"
-                  placeholder="https://example.com/your-work"
-                  value={formData.content_url}
-                  onChange={(e) => setFormData({ ...formData, content_url: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent mb-4 text-white placeholder-gray-500"
-                  autoFocus
-                />
-                <button
-                  onClick={handleLinkSubmit}
-                  disabled={!formData.content_url.trim()}
-                  className="w-full px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Continue
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Add Details */}
-          {step === 3 && (
-            <div>
-              <button
-                onClick={() => setStep(2)}
-                className="text-cyan-400 hover:text-cyan-300 mb-4 flex items-center gap-2"
-                disabled={uploading}
-              >
-                <ArrowLeftIcon className="w-5 h-5" />
-                <span>Back</span>
-              </button>
-
-              {/* Preview */}
-              {file && contentType === 'photo' && (
-                <div className="mb-6">
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt="Preview"
-                    className="w-full max-h-64 object-contain rounded-lg bg-gray-800"
-                  />
-                </div>
-              )}
-
-              {/* Title */}
-              <div className="mb-4">
-                <label htmlFor="title" className="block text-sm font-semibold mb-2 text-gray-300">
-                  Title *
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  placeholder="Give your work a title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white placeholder-gray-500"
-                  disabled={uploading}
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div
+                  className="bg-cyan-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
                 />
               </div>
-
-              {/* Description */}
-              <div className="mb-4">
-                <label htmlFor="description" className="block text-sm font-semibold mb-2 text-gray-300">
-                  Description (optional)
-                </label>
-                <textarea
-                  id="description"
-                  placeholder="Describe your work..."
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none text-white placeholder-gray-500"
-                  disabled={uploading}
-                />
-              </div>
-
-              {/* Aspect Ratio */}
-              {contentType !== 'link' && contentType !== 'audio' && (
-                <div className="mb-6">
-                  <label htmlFor="aspect_ratio" className="block text-sm font-semibold mb-2 text-gray-300">
-                    Aspect Ratio
-                  </label>
-                  <select
-                    id="aspect_ratio"
-                    value={formData.aspect_ratio}
-                    onChange={(e) => setFormData({ ...formData, aspect_ratio: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white"
-                    disabled={uploading}
-                  >
-                    {ASPECT_RATIOS.map((ratio) => (
-                      <option key={ratio.id} value={ratio.id}>
-                        {ratio.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Upload Progress */}
-              {uploading && (
-                <div className="mb-4">
-                  <div className="w-full bg-gray-800 rounded-full h-3">
-                    <div
-                      className="bg-cyan-500 h-3 rounded-full transition-all duration-300"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
-                  </div>
-                  <p className="text-sm text-gray-400 text-center mt-2">
-                    {uploadProgress < 50 ? 'Uploading...' : uploadProgress < 100 ? 'Creating...' : 'Complete!'}
-                  </p>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex gap-4">
-                <button
-                  onClick={handleSubmit}
-                  disabled={uploading || !formData.title.trim()}
-                  className="flex-1 px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {uploading ? 'Uploading...' : 'Add to Portfolio'}
-                </button>
-                <button
-                  onClick={handleClose}
-                  disabled={uploading}
-                  className="px-6 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-white"
-                >
-                  Cancel
-                </button>
-              </div>
-
-              {/* Tip */}
-              <p className="text-sm text-gray-500 mt-4 text-center">
-                💡 Tip: Upload your first item to earn +30 points!
+              <p className="text-xs text-gray-400 text-center mt-2">
+                {uploadProgress < 50 ? 'Uploading...' : 'Publishing...'}
               </p>
             </div>
           )}
+
+          {/* Bottom Actions */}
+          <div className="flex items-center gap-3 pt-2 border-t border-gray-700">
+            <button
+              disabled={uploading}
+              className="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 rounded-lg transition text-gray-400 disabled:opacity-50"
+              title="Save as draft"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+              </svg>
+              <span className="text-sm">Save as draft</span>
+            </button>
+            
+            <div className="flex gap-2 ml-auto">
+              <button
+                disabled={uploading}
+                className="p-2 hover:bg-gray-700 rounded-lg transition disabled:opacity-50"
+                title="Add audio"
+              >
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                </svg>
+              </button>
+              <button
+                disabled={uploading}
+                className="p-2 hover:bg-gray-700 rounded-lg transition disabled:opacity-50"
+                title="Add document"
+              >
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
