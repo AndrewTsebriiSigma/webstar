@@ -1,8 +1,12 @@
 """Authentication router."""
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import RedirectResponse
 from sqlmodel import Session, select
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
+from authlib.integrations.starlette_client import OAuth
+from starlette.requests import Request
+import secrets
 
 from app.db.base import get_session
 from app.db.models import User, Profile, OnboardingProgress, UserPoints
@@ -13,6 +17,21 @@ from app.services.totp_service import TOTPService
 from datetime import timedelta
 
 router = APIRouter()
+
+# Initialize OAuth
+oauth = OAuth()
+oauth.register(
+    name='google',
+    client_id=settings.GOOGLE_CLIENT_ID,
+    client_secret=settings.GOOGLE_CLIENT_SECRET,
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={
+        'scope': 'openid email profile'
+    }
+)
+
+# Store for OAuth state tokens (in production, use Redis or database)
+oauth_states = {}
 
 
 @router.post("/register", response_model=Token)
@@ -76,6 +95,125 @@ async def register(user_data: UserRegister, session: Session = Depends(get_sessi
             onboarding_completed=False
         )
     )
+
+
+@router.get("/google")
+async def google_login(request: Request):
+    """Initiate Google OAuth flow."""
+    # Generate state token for CSRF protection
+    state = secrets.token_urlsafe(32)
+    oauth_states[state] = True
+    
+    # Get the redirect URI from settings
+    redirect_uri = settings.GOOGLE_REDIRECT_URI
+    
+    # Redirect to Google OAuth
+    return await oauth.google.authorize_redirect(request, redirect_uri, state=state)
+
+
+@router.get("/google/callback")
+async def google_callback(request: Request, session: Session = Depends(get_session)):
+    """Handle Google OAuth callback."""
+    try:
+        # Verify state parameter (CSRF protection)
+        state = request.query_params.get('state')
+        if not state or state not in oauth_states:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid state parameter"
+            )
+        
+        # Remove used state
+        oauth_states.pop(state, None)
+        
+        # Get the authorization token
+        token = await oauth.google.authorize_access_token(request)
+        
+        # Get user info from Google
+        user_info = token.get('userinfo')
+        if not user_info:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to get user info from Google"
+            )
+        
+        google_id = user_info['sub']
+        email = user_info['email']
+        name = user_info.get('name', '')
+        email_verified = user_info.get('email_verified', False)
+        
+        # Check if user exists with this Google ID
+        user = session.exec(select(User).where(User.google_id == google_id)).first()
+        
+        if not user:
+            # Check if email exists (account linking)
+            user = session.exec(select(User).where(User.email == email)).first()
+            if user:
+                # Link Google account to existing user
+                user.google_id = google_id
+                user.oauth_provider = 'google'
+                session.add(user)
+                session.commit()
+            else:
+                # Create new user
+                # Generate username from email
+                username = email.split('@')[0].lower().replace('.', '').replace('-', '')
+                # Ensure username is unique
+                counter = 1
+                original_username = username
+                while session.exec(select(User).where(User.username == username)).first():
+                    username = f"{original_username}{counter}"
+                    counter += 1
+                
+                user = User(
+                    email=email,
+                    username=username,
+                    full_name=name,
+                    google_id=google_id,
+                    oauth_provider='google',
+                    is_active=True
+                )
+                session.add(user)
+                session.commit()
+                session.refresh(user)
+                
+                # Create profile
+                profile = Profile(user_id=user.id, display_name=name)
+                session.add(profile)
+                
+                # Create onboarding progress
+                onboarding = OnboardingProgress(user_id=user.id)
+                session.add(onboarding)
+                
+                # Create points account
+                points = UserPoints(user_id=user.id)
+                session.add(points)
+                
+                session.commit()
+        
+        # Check onboarding status
+        onboarding = session.exec(select(OnboardingProgress).where(OnboardingProgress.user_id == user.id)).first()
+        onboarding_completed = onboarding.completed if onboarding else False
+        
+        # Create tokens
+        access_token = create_access_token({"sub": user.id})
+        refresh_token_str = create_refresh_token({"sub": user.id})
+        
+        # Determine redirect URL based on onboarding status
+        if onboarding_completed:
+            redirect_url = f"{settings.CORS_ORIGINS[0]}/{user.username}"
+        else:
+            redirect_url = f"{settings.CORS_ORIGINS[0]}/onboarding"
+        
+        # Add tokens and user info as URL parameters (will be handled by frontend)
+        redirect_url += f"?access_token={access_token}&refresh_token={refresh_token_str}&user_id={user.id}&username={user.username}&email={user.email}&onboarding_completed={onboarding_completed}"
+        
+        return RedirectResponse(url=redirect_url)
+        
+    except Exception as e:
+        # Redirect to frontend with error
+        error_url = f"{settings.CORS_ORIGINS[0]}/auth/login?error=oauth_failed&message={str(e)}"
+        return RedirectResponse(url=error_url)
 
 
 @router.post("/login", response_model=LoginResponse)

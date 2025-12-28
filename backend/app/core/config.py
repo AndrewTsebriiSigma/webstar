@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     # Google OAuth
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
-    GOOGLE_REDIRECT_URI: str = "http://localhost:3000/auth/callback/google"
+    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/auth/google/callback"
     
     # S3 / Storage
     AWS_ACCESS_KEY_ID: str = ""
