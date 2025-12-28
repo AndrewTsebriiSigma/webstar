@@ -111,20 +111,20 @@ export default function ProfilePage({ params }: { params: { username: string } }
     <div className="min-h-screen bg-black text-white">
       {/* Mobile Header */}
       <header className="sticky top-0 z-40 bg-black/90 backdrop-blur-md border-b border-gray-800">
-        <div className="px-4 py-3 flex items-center justify-between">
-          <button className="p-2">
-            <PlusIcon className="w-6 h-6 text-white" />
+        <div className="px-3 py-2 flex items-center justify-between">
+          <button className="p-1.5">
+            <PlusIcon className="w-5 h-5 text-white" />
           </button>
           
-          <Link href="/" className="text-xl font-bold">
+          <Link href="/" className="text-lg font-bold">
             webSTAR
           </Link>
           
-          <div className="flex items-center gap-2">
-            <button className="p-2 relative">
-              <BellIcon className="w-6 h-6 text-white" />
+          <div className="flex items-center gap-1">
+            <button className="p-1.5 relative">
+              <BellIcon className="w-5 h-5 text-white" />
               {isOwnProfile && (
-                <span className="absolute top-1 right-1 w-5 h-5 bg-cyan-500 rounded-full flex items-center justify-center text-xs font-bold">
+                <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-cyan-500 rounded-full flex items-center justify-center text-[10px] font-bold">
                   3
                 </span>
               )}
@@ -136,37 +136,37 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Cover Image Area */}
       <div className="relative">
         {/* Cover gradient */}
-        <div className="h-32 sm:h-48 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 relative overflow-hidden">
+        <div className="h-24 sm:h-36 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('/api/placeholder/1200/400')] bg-cover bg-center opacity-20" />
           
           {/* View and Settings Icons */}
           {isOwnProfile && (
-            <div className="absolute top-4 left-4 right-4 flex justify-between">
-              <button className="p-3 bg-gray-800/60 backdrop-blur-md rounded-full">
-                <EyeIcon className="w-5 h-5 text-white" />
+            <div className="absolute top-2 left-2 right-2 flex justify-between">
+              <button className="p-2 bg-gray-800/60 backdrop-blur-md rounded-full">
+                <EyeIcon className="w-4 h-4 text-white" />
               </button>
               <button 
                 onClick={() => setShowSettingsModal(true)}
-                className="p-3 bg-gray-800/60 backdrop-blur-md rounded-full"
+                className="p-2 bg-gray-800/60 backdrop-blur-md rounded-full"
               >
-                <Cog6ToothIcon className="w-5 h-5 text-white" />
+                <Cog6ToothIcon className="w-4 h-4 text-white" />
               </button>
             </div>
           )}
         </div>
 
         {/* Profile Picture - Overlapping */}
-        <div className="relative px-4 -mt-16 sm:-mt-20 pb-4">
+        <div className="relative px-3 -mt-12 sm:-mt-16 pb-3">
           <div className="flex items-end justify-between">
             <div className="relative">
               {profile.profile_picture ? (
                 <img
                   src={profile.profile_picture}
                   alt={profile.display_name || username}
-                  className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-black object-cover"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-3 border-black object-cover"
                 />
               ) : (
-                <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-black bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-4xl font-bold">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-3 border-black bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-2xl font-bold">
                   {(profile.display_name || username).charAt(0).toUpperCase()}
                 </div>
               )}
@@ -174,20 +174,20 @@ export default function ProfilePage({ params }: { params: { username: string } }
             
             {/* Points Badge - Desktop */}
             {isOwnProfile && (
-              <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-800 rounded-full mb-2">
-                <svg className="w-6 h-6 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-full mb-1">
+                <svg className="w-4 h-4 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                 </svg>
                 <div className="text-left">
-                  <div className="text-xs text-gray-400">MY DASHBOARD</div>
-                  <div className="text-cyan-400 font-bold">{profile.total_points?.toLocaleString() || 0}</div>
+                  <div className="text-[10px] text-gray-400 uppercase tracking-wide">MY DASHBOARD</div>
+                  <div className="text-sm text-cyan-400 font-bold">{profile.total_points?.toLocaleString() || 0}</div>
                 </div>
                 <button 
                   onClick={() => router.push('/profile/edit')}
                   className="p-1 hover:bg-gray-800 rounded transition"
                   title="Edit profile"
                 >
-                  <PencilIcon className="w-5 h-5 text-gray-400" />
+                  <PencilIcon className="w-4 h-4 text-gray-400" />
                 </button>
               </div>
             )}
@@ -196,71 +196,71 @@ export default function ProfilePage({ params }: { params: { username: string } }
       </div>
 
       {/* Profile Info */}
-      <div className="px-4 pb-4">
-        <div className="flex items-center gap-2 mb-2">
-          <h1 className="text-2xl sm:text-3xl font-bold">{profile.display_name || username}</h1>
+      <div className="px-3 pb-3">
+        <div className="flex items-center gap-2 mb-1">
+          <h1 className="text-xl sm:text-2xl font-bold">{profile.display_name || username}</h1>
           {profile.expertise_badge && (
-            <CheckBadgeIcon className="w-6 h-6 text-cyan-400" />
+            <CheckBadgeIcon className="w-5 h-5 text-cyan-400" />
           )}
         </div>
         
-        <p className="text-gray-400 mb-2">
+        <p className="text-sm text-gray-400 mb-2">
           Make original the only standard.
         </p>
 
-        <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
+        <div className="flex items-center gap-3 text-xs text-gray-400 mb-3">
           {profile.role && (
             <div className="flex items-center gap-1">
-              <MapPinIcon className="w-4 h-4" />
+              <MapPinIcon className="w-3.5 h-3.5" />
               <span>Paris, France</span>
             </div>
           )}
           <div className="flex items-center gap-1">
-            <BriefcaseIcon className="w-4 h-4" />
+            <BriefcaseIcon className="w-3.5 h-3.5" />
             <span>Creator</span>
           </div>
         </div>
 
         {/* Points Badge - Mobile */}
         {isOwnProfile && (
-          <div className="sm:hidden flex items-center gap-3 p-4 bg-gray-900 border border-gray-800 rounded-2xl mb-4">
-            <svg className="w-8 h-8 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+          <div className="sm:hidden flex items-center gap-2 p-3 bg-gray-900 border border-gray-800 rounded-xl mb-3">
+            <svg className="w-6 h-6 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
             </svg>
             <div className="flex-1">
-              <div className="text-xs text-gray-400 uppercase tracking-wide">My Dashboard</div>
-              <div className="text-2xl font-bold text-cyan-400">{profile.total_points?.toLocaleString() || '12.5K'}</div>
+              <div className="text-[10px] text-gray-400 uppercase tracking-wide">My Dashboard</div>
+              <div className="text-xl font-bold text-cyan-400">{profile.total_points?.toLocaleString() || '12.5K'}</div>
             </div>
             <button 
               onClick={() => router.push('/profile/edit')}
-              className="p-2 hover:bg-gray-800 rounded transition"
+              className="p-1.5 hover:bg-gray-800 rounded transition"
               title="Edit profile"
             >
-              <PencilIcon className="w-5 h-5 text-gray-400" />
+              <PencilIcon className="w-4 h-4 text-gray-400" />
             </button>
           </div>
         )}
 
         {/* Action Buttons */}
-        <div className="flex gap-3 mb-6">
+        <div className="flex gap-2 mb-4">
           {isOwnProfile ? (
             <>
               <button 
                 onClick={() => setShowShareModal(true)}
-                className="flex-1 py-3 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl font-semibold transition"
+                className="flex-1 py-2 text-sm bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-lg font-semibold transition"
               >
                 Message Me
               </button>
-              <button className="flex-1 py-3 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl font-semibold transition">
+              <button className="flex-1 py-2 text-sm bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-lg font-semibold transition">
                 Email
               </button>
             </>
           ) : (
             <>
-              <button className="flex-1 py-3 bg-cyan-500 hover:bg-cyan-600 rounded-xl font-semibold transition">
+              <button className="flex-1 py-2 text-sm bg-cyan-500 hover:bg-cyan-600 rounded-lg font-semibold transition">
                 Follow
               </button>
-              <button className="flex-1 py-3 bg-gray-900 border border-gray-800 rounded-xl font-semibold transition">
+              <button className="flex-1 py-2 text-sm bg-gray-900 border border-gray-800 rounded-lg font-semibold transition">
                 Message
               </button>
             </>
@@ -269,13 +269,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
       </div>
 
       {/* Tabs */}
-      <div className="sticky top-[57px] z-30 bg-black/90 backdrop-blur-md border-b border-gray-800">
+      <div className="sticky top-[49px] z-30 bg-black/90 backdrop-blur-md border-b border-gray-800">
         <div className="flex">
           {['Portfolio', 'Projects', 'About'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab.toLowerCase())}
-              className={`flex-1 py-4 font-semibold transition relative ${
+              className={`flex-1 py-3 text-sm font-semibold transition relative ${
                 activeTab === tab.toLowerCase()
                   ? 'text-white'
                   : 'text-gray-500'
@@ -291,7 +291,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
       </div>
 
       {/* Tab Content */}
-      <div className="px-4 py-6">
+      <div className="px-3 py-4">
         {activeTab === 'about' && (
           <AboutSection
             isOwnProfile={isOwnProfile}
@@ -302,40 +302,40 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
         {activeTab === 'portfolio' && (
           <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold">Portfolio</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">Portfolio</h2>
               <div className="flex items-center gap-2">
                 {isOwnProfile && (
                   <button
                     onClick={() => setShowUploadModal(true)}
-                    className="p-2 bg-cyan-500 rounded-lg"
+                    className="p-1.5 bg-cyan-500 rounded-lg"
                   >
-                    <PlusIcon className="w-5 h-5" />
+                    <PlusIcon className="w-4 h-4" />
                   </button>
                 )}
-                <div className="flex bg-gray-900 rounded-lg p-1">
+                <div className="flex bg-gray-900 rounded-lg p-0.5">
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded ${viewMode === 'grid' ? 'bg-cyan-500' : ''}`}
+                    className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-cyan-500' : ''}`}
                   >
-                    <Squares2X2Icon className="w-5 h-5" />
+                    <Squares2X2Icon className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`p-2 rounded ${viewMode === 'list' ? 'bg-cyan-500' : ''}`}
+                    className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-cyan-500' : ''}`}
                   >
-                    <ListBulletIcon className="w-5 h-5" />
+                    <ListBulletIcon className="w-4 h-4" />
                   </button>
                 </div>
               </div>
             </div>
 
             {portfolioItems.length > 0 ? (
-              <div className={viewMode === 'grid' ? 'grid grid-cols-2 gap-4' : 'space-y-4'}>
+              <div className={viewMode === 'grid' ? 'grid grid-cols-2 gap-3' : 'space-y-3'}>
                 {portfolioItems.map((item) => (
                   <div 
                     key={item.id} 
-                    className="bg-gray-900 rounded-xl overflow-hidden group cursor-pointer"
+                    className="bg-gray-900 rounded-lg overflow-hidden group cursor-pointer"
                     onClick={() => {
                       setSelectedPortfolioItem(item);
                       setShowPortfolioDetail(true);
@@ -361,14 +361,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       )}
                       {item.content_type === 'audio' && item.content_url && (
                         <div className="flex items-center justify-center w-full h-full bg-gray-800">
-                          <svg className="w-16 h-16 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-12 h-12 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                           </svg>
                         </div>
                       )}
                       {item.content_type === 'link' && item.content_url && (
                         <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20">
-                          <LinkIcon className="w-12 h-12 text-cyan-400" />
+                          <LinkIcon className="w-10 h-10 text-cyan-400" />
                         </div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition" />
@@ -377,19 +377,19 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 ))}
               </div>
             ) : (
-              <div className="text-center py-16 text-gray-500">
+              <div className="text-center py-12 text-gray-500">
                 {isOwnProfile ? (
                   <>
-                    <p className="mb-4">Start showcasing your work</p>
+                    <p className="mb-3 text-sm">Start showcasing your work</p>
                     <button
                       onClick={() => setShowUploadModal(true)}
-                      className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 rounded-xl font-semibold transition"
+                      className="px-5 py-2 text-sm bg-cyan-500 hover:bg-cyan-600 rounded-lg font-semibold transition"
                     >
                       Add First Item
                     </button>
                   </>
                 ) : (
-                  <p>No portfolio items yet</p>
+                  <p className="text-sm">No portfolio items yet</p>
                 )}
               </div>
             )}
@@ -398,22 +398,22 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
         {activeTab === 'projects' && (
           <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold">Projects</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">Projects</h2>
               {isOwnProfile && (
                 <button
                   onClick={() => setShowProjectModal(true)}
-                  className="p-2 bg-cyan-500 rounded-lg"
+                  className="p-1.5 bg-cyan-500 rounded-lg"
                 >
-                  <PlusIcon className="w-5 h-5" />
+                  <PlusIcon className="w-4 h-4" />
                 </button>
               )}
             </div>
 
             {projects.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {projects.map((project) => (
-                  <div key={project.id} className="bg-gray-900 rounded-xl overflow-hidden">
+                  <div key={project.id} className="bg-gray-900 rounded-lg overflow-hidden">
                     {project.cover_image && (
                       <div className="aspect-video bg-gray-800">
                         <img
@@ -423,20 +423,20 @@ export default function ProfilePage({ params }: { params: { username: string } }
                         />
                       </div>
                     )}
-                    <div className="p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="text-lg font-semibold flex-1">{project.title}</h3>
-                        <span className="px-2 py-1 bg-gray-800 rounded text-xs">24</span>
+                    <div className="p-3">
+                      <div className="flex items-start justify-between mb-1.5">
+                        <h3 className="text-base font-semibold flex-1">{project.title}</h3>
+                        <span className="px-2 py-0.5 bg-gray-800 rounded text-xs">24</span>
                       </div>
                       {project.description && (
-                        <p className="text-gray-400 text-sm mb-3">{project.description}</p>
+                        <p className="text-gray-400 text-xs mb-2">{project.description}</p>
                       )}
                       {project.tags && (
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-1.5">
                           {project.tags.split(',').slice(0, 3).map((tag) => (
                             <span
                               key={tag}
-                              className="px-3 py-1 bg-gray-800 rounded-full text-xs"
+                              className="px-2 py-0.5 bg-gray-800 rounded-full text-xs"
                             >
                               {tag.trim()}
                             </span>
@@ -448,19 +448,19 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 ))}
               </div>
             ) : (
-              <div className="text-center py-16 text-gray-500">
+              <div className="text-center py-12 text-gray-500">
                 {isOwnProfile ? (
                   <>
-                    <p className="mb-4">Create your first project</p>
+                    <p className="mb-3 text-sm">Create your first project</p>
                     <button
                       onClick={() => setShowProjectModal(true)}
-                      className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 rounded-xl font-semibold transition"
+                      className="px-5 py-2 text-sm bg-cyan-500 hover:bg-cyan-600 rounded-lg font-semibold transition"
                     >
                       Create Project
                     </button>
                   </>
                 ) : (
-                  <p>No projects yet</p>
+                  <p className="text-sm">No projects yet</p>
                 )}
               </div>
             )}

@@ -152,18 +152,18 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* About Section */}
-      <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-white text-lg">About</h3>
+      <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-white text-base">About</h3>
           {isOwnProfile && !editingAbout && (
             <button
               onClick={startEditingAbout}
-              className="p-2 hover:bg-gray-800 rounded-lg transition"
+              className="p-1.5 hover:bg-gray-800 rounded-lg transition"
               title="Edit about"
             >
-              <PencilIcon className="w-5 h-5 text-gray-400" />
+              <PencilIcon className="w-4 h-4 text-gray-400" />
             </button>
           )}
         </div>
@@ -174,25 +174,25 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
               value={aboutText}
               onChange={(e) => setAboutText(e.target.value)}
               maxLength={500}
-              rows={6}
+              rows={5}
               placeholder="Tell us about yourself..."
-              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none text-white placeholder-gray-500"
+              className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none text-white placeholder-gray-500"
             />
-            <div className="flex items-center justify-between mt-3">
-              <span className="text-sm text-gray-500">{aboutText.length}/500</span>
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-xs text-gray-500">{aboutText.length}/500</span>
               <div className="flex gap-2">
                 <button
                   onClick={() => {
                     setEditingAbout(false);
                     setAboutText(profile?.about || '');
                   }}
-                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition text-white"
+                  className="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg transition text-white"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={saveAbout}
-                  className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition"
+                  className="px-3 py-1.5 text-sm bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition"
                 >
                   Save
                 </button>
@@ -202,15 +202,15 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
         ) : (
           <div>
             {profile?.about ? (
-              <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{profile.about}</p>
+              <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{profile.about}</p>
             ) : (
               isOwnProfile && (
                 <button
                   onClick={startEditingAbout}
-                  className="w-full py-8 border-2 border-dashed border-gray-700 rounded-xl hover:border-cyan-500 hover:bg-gray-800/50 transition text-gray-500 hover:text-cyan-400"
+                  className="w-full py-6 border-2 border-dashed border-gray-700 rounded-lg hover:border-cyan-500 hover:bg-gray-800/50 transition text-gray-500 hover:text-cyan-400"
                 >
-                  <PlusIcon className="w-8 h-8 mx-auto mb-2" />
-                  <p className="text-sm font-medium">Add About</p>
+                  <PlusIcon className="w-6 h-6 mx-auto mb-1" />
+                  <p className="text-xs font-medium">Add About</p>
                 </button>
               )
             )}
