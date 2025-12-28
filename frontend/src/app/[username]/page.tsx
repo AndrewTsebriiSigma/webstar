@@ -11,6 +11,8 @@ import UploadPortfolioModal from '@/components/UploadPortfolioModal';
 import CreateProjectModal from '@/components/CreateProjectModal';
 import SettingsModal from '@/components/SettingsModal';
 import EditAboutModal from '@/components/EditAboutModal';
+import PortfolioDetailModal from '@/components/PortfolioDetailModal';
+import AboutSection from '@/components/AboutSection';
 import { 
   Cog6ToothIcon, 
   EyeIcon, 
@@ -44,6 +46,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showEditAboutModal, setShowEditAboutModal] = useState(false);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<PortfolioItem | null>(null);
+  const [showPortfolioDetail, setShowPortfolioDetail] = useState(false);
   
   const isOwnProfile = user?.username === username;
 
@@ -289,147 +293,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Tab Content */}
       <div className="px-4 py-6">
         {activeTab === 'about' && (
-          <div className="space-y-8">
-            {/* Edit Button for Own Profile */}
-            {isOwnProfile && (
-              <button
-                onClick={() => setShowEditAboutModal(true)}
-                className="w-full py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition"
-              >
-                Edit Profile
-              </button>
-            )}
-
-            {/* About Section */}
-            {profile.about && (
-              <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-                <h3 className="font-semibold mb-3 text-white text-lg">About</h3>
-                <p className="text-gray-400 leading-relaxed">{profile.about}</p>
-              </div>
-            )}
-
-            {/* Experience Section */}
-            {profile.experience && (() => {
-              try {
-                const experiences = JSON.parse(profile.experience);
-                if (experiences && experiences.length > 0) {
-                  return (
-                    <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-                      <h3 className="font-semibold mb-4 text-white text-lg">Experience</h3>
-                      <div className="space-y-6">
-                        {experiences.map((exp: any, index: number) => (
-                          <div key={index} className="relative pl-6 before:absolute before:left-0 before:top-2 before:w-2 before:h-2 before:bg-cyan-500 before:rounded-full">
-                            <h4 className="font-semibold text-white">{exp.title}</h4>
-                            <p className="text-cyan-400 text-sm">{exp.company}</p>
-                            <p className="text-gray-500 text-sm mb-2">{exp.period}</p>
-                            {exp.description && (
-                              <p className="text-gray-400 text-sm leading-relaxed">{exp.description}</p>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                }
-              } catch {}
-              return null;
-            })()}
-
-            {/* Skills Section */}
-            {profile.skills && (
-              <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-                <h3 className="font-semibold mb-4 text-white text-lg">Skills</h3>
-                <div className="space-y-4">
-                  {profile.skills.split(',').map((skill, index) => {
-                    const level = 85 + (index * 3); // Sample levels
-                    return (
-                      <div key={skill}>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-white font-medium">{skill.trim()}</span>
-                          <span className="text-cyan-400 font-bold">{level}%</span>
-                        </div>
-                        <div className="w-full bg-gray-800 rounded-full h-2">
-                          <div
-                            className="bg-cyan-500 h-2 rounded-full transition-all"
-                            style={{ width: `${level}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Connect Section */}
-            <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-              <h3 className="font-semibold mb-4 text-white text-lg">Connect</h3>
-              <div className="grid grid-cols-3 gap-4">
-                {(() => {
-                  // Parse social_links JSON
-                  let socialLinks: any = {};
-                  try {
-                    if (profile.social_links) {
-                      socialLinks = JSON.parse(profile.social_links);
-                    }
-                  } catch (e) {
-                    // If parsing fails, use empty object
-                    socialLinks = {};
-                  }
-
-                  return [
-                    { icon: '📧', label: 'Email', url: socialLinks.email ? `mailto:${socialLinks.email}` : null },
-                    { icon: '💼', label: 'LinkedIn', url: profile.linkedin_url },
-                    { icon: '📸', label: 'Instagram', url: profile.instagram_url },
-                    { icon: '🎵', label: 'TikTok', url: socialLinks.tiktok || null },
-                    { icon: '📺', label: 'YouTube', url: socialLinks.youtube || null },
-                    { icon: '𝕏', label: 'X', url: socialLinks.twitter || null },
-                  ].map((link) => (
-                    link.url ? (
-                      <a
-                        key={link.label}
-                        href={link.url}
-                        target={link.url.startsWith('mailto:') ? '_self' : '_blank'}
-                        rel={link.url.startsWith('mailto:') ? '' : 'noopener noreferrer'}
-                        className="flex flex-col items-center gap-2 p-4 bg-gray-800 hover:bg-gray-750 rounded-xl transition"
-                      >
-                        <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center text-2xl">
-                          {link.icon}
-                        </div>
-                        <span className="text-xs text-gray-400">{link.label}</span>
-                      </a>
-                    ) : null
-                  ));
-                })()}
-                {profile.website && (
-                  <a
-                    href={profile.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex flex-col items-center gap-2 p-4 bg-gray-800 hover:bg-gray-750 rounded-xl transition"
-                  >
-                    <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center text-2xl">
-                      🌐
-                    </div>
-                    <span className="text-xs text-gray-400">Website</span>
-                  </a>
-                )}
-              </div>
-            </div>
-
-            {/* Empty State */}
-            {!profile.about && !profile.skills && !profile.experience && isOwnProfile && (
-              <div className="text-center py-12 text-gray-500">
-                <p className="mb-4">Complete your profile to stand out!</p>
-                <button
-                  onClick={() => setShowEditAboutModal(true)}
-                  className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-semibold transition"
-                >
-                  Add Information
-                </button>
-              </div>
-            )}
-          </div>
+          <AboutSection
+            isOwnProfile={isOwnProfile}
+            profile={profile}
+            onUpdate={loadProfile}
+          />
         )}
 
         {activeTab === 'portfolio' && (
@@ -465,12 +333,19 @@ export default function ProfilePage({ params }: { params: { username: string } }
             {portfolioItems.length > 0 ? (
               <div className={viewMode === 'grid' ? 'grid grid-cols-2 gap-4' : 'space-y-4'}>
                 {portfolioItems.map((item) => (
-                  <div key={item.id} className="bg-gray-900 rounded-xl overflow-hidden group cursor-pointer">
+                  <div 
+                    key={item.id} 
+                    className="bg-gray-900 rounded-xl overflow-hidden group cursor-pointer"
+                    onClick={() => {
+                      setSelectedPortfolioItem(item);
+                      setShowPortfolioDetail(true);
+                    }}
+                  >
                     <div className={`${viewMode === 'grid' ? 'aspect-square' : 'aspect-video'} bg-gray-800 relative overflow-hidden`}>
                       {item.content_type === 'photo' && item.content_url && (
                         <img
                           src={item.content_url.startsWith('http') ? item.content_url : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`}
-                          alt={item.title || 'Portfolio item'}
+                          alt={'Portfolio item'}
                           className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                           onError={(e) => {
                             console.error('Failed to load image:', item.content_url);
@@ -481,17 +356,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       {item.content_type === 'video' && item.content_url && (
                         <video 
                           src={item.content_url.startsWith('http') ? item.content_url : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`}
-                          className="w-full h-full object-cover" 
-                          controls
+                          className="w-full h-full object-cover pointer-events-none"
                         />
                       )}
                       {item.content_type === 'audio' && item.content_url && (
                         <div className="flex items-center justify-center w-full h-full bg-gray-800">
-                          <audio 
-                            src={item.content_url.startsWith('http') ? item.content_url : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`}
-                            controls 
-                            className="w-full"
-                          />
+                          <svg className="w-16 h-16 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                          </svg>
                         </div>
                       )}
                       {item.content_type === 'link' && item.content_url && (
@@ -501,14 +373,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition" />
                     </div>
-                    {item.title && viewMode === 'list' && (
-                      <div className="p-4">
-                        <h3 className="font-semibold">{item.title}</h3>
-                        {item.description && (
-                          <p className="text-sm text-gray-400 mt-1">{item.description}</p>
-                        )}
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
@@ -661,6 +525,19 @@ export default function ProfilePage({ params }: { params: { username: string } }
           experience: profile?.experience ? JSON.parse(profile.experience) : [],
           social_links: profile?.social_links ? JSON.parse(profile.social_links) : {},
         }}
+      />
+
+      <PortfolioDetailModal
+        item={selectedPortfolioItem}
+        isOpen={showPortfolioDetail}
+        onClose={() => {
+          setShowPortfolioDetail(false);
+          setSelectedPortfolioItem(null);
+        }}
+        authorUsername={username}
+        authorDisplayName={profile?.display_name || username}
+        authorProfilePicture={profile?.profile_picture}
+        isOwnItem={isOwnProfile}
       />
     </div>
   );

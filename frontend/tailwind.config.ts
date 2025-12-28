@@ -9,57 +9,61 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#e0f7ff',
-          100: '#b8edff',
-          200: '#8be3ff',
-          300: '#5dd9ff',
-          400: '#2fd0ff',
-          500: '#00C2FF', // webSTAR blue
-          600: '#00a8e0',
-          700: '#008ec2',
-          800: '#0074a3',
-          900: '#005a85',
+        // CREATOR OS - Electric Blue (Primary Accent)
+        blue: {
+          DEFAULT: '#00C2FF',
+          hover: '#33D1FF',
+          pressed: '#007EA7',
+          light: '#5dd9ff',
         },
-        accent: {
+        
+        // Background Colors
+        bg: {
+          app: '#111111',
+          surface1: '#1A1A1A',
+          surface2: '#222222',
+          surface3: '#2A2A2A',
+        },
+        
+        // Text Colors
+        text: {
+          primary: '#F5F5F5',
+          secondary: '#A0A0A0',
+          tertiary: '#707070',
+        },
+        
+        // Semantic Colors
+        success: '#00FF87',
+        error: '#FF3B5C',
+        warning: '#FFB800',
+        
+        // Legacy compatibility
+        primary: {
+          DEFAULT: '#00C2FF',
           50: '#e0f7ff',
           100: '#b8edff',
           200: '#8be3ff',
           300: '#5dd9ff',
           400: '#2fd0ff',
           500: '#00C2FF',
-          600: '#0EA5E9',
-          700: '#0284c7',
-          800: '#0369a1',
-          900: '#075985',
+          600: '#00a8e0',
+          700: '#008ec2',
+          800: '#0074a3',
+          900: '#005a85',
         },
         dark: {
           DEFAULT: '#111111',
-          50: '#f5f5f5',
+          50: '#F5F5F5',
           100: '#e5e5e5',
           200: '#d4d4d4',
-          300: '#a3a3a3',
+          300: '#A0A0A0',
           400: '#737373',
           500: '#525252',
           600: '#404040',
-          700: '#262626',
-          800: '#1a1a1a',
-          900: '#111111',
-        },
-        gray: {
-          50: '#f9fafb',
-          100: '#f3f4f6',
-          200: '#e5e7eb',
-          300: '#d1d5db',
-          400: '#9ca3af',
-          500: '#6b7280',
-          600: '#4b5563',
-          700: '#374151',
-          750: '#2d3748',
-          800: '#1f2937',
-          850: '#1a202c',
-          900: '#111827',
-          950: '#0a0a0a',
+          700: '#2A2A2A',
+          800: '#222222',
+          900: '#1A1A1A',
+          950: '#111111',
         },
       },
       animation: {
@@ -86,9 +90,27 @@ const config: Config = {
         xs: '2px',
       },
       boxShadow: {
-        'glow': '0 0 20px rgba(0, 194, 255, 0.5)',
-        'glow-sm': '0 0 10px rgba(0, 194, 255, 0.3)',
-        'glow-lg': '0 0 30px rgba(0, 194, 255, 0.6)',
+        'sm': '0 2px 8px rgba(0, 0, 0, 0.15)',
+        'md': '0 8px 32px rgba(0, 0, 0, 0.25)',
+        'glow': '0 0 24px rgba(0, 194, 255, 0.4)',
+        'glow-sm': '0 4px 16px rgba(0, 194, 255, 0.3)',
+        'glow-lg': '0 6px 24px rgba(0, 194, 255, 0.4)',
+      },
+      spacing: {
+        '1': '8px',
+        '2': '16px',
+        '3': '24px',
+        '4': '32px',
+        '6': '48px',
+        '8': '64px',
+      },
+      borderRadius: {
+        'sm': '8px',
+        'md': '12px',
+        'lg': '16px',
+        'xl': '20px',
+        '2xl': '24px',
+        'full': '9999px',
       },
     },
   },
