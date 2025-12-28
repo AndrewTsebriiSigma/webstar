@@ -52,7 +52,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [showPortfolioDetail, setShowPortfolioDetail] = useState(false);
   const [showCreateContentModal, setShowCreateContentModal] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [hideHeaderText, setHideHeaderText] = useState(false);
+  const [viewerMode, setViewerMode] = useState(false);
   
   const isOwnProfile = user?.username === username;
 
@@ -148,9 +148,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
         </div>
       </header>
 
-      {/* Cover Image Area */}
+      {/* Cover Image Area - webSTAR: 176px height */}
       <div className="relative">
-        {/* Cover gradient - matching webSTAR design: 176px height */}
         <div className="h-44 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 relative overflow-hidden">
           {profile.banner_image ? (
             <img
@@ -162,20 +161,22 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <div className="absolute inset-0 bg-[url('/api/placeholder/1200/400')] bg-cover bg-center opacity-20" />
           )}
           
-          {/* View and Settings Icons - webSTAR style: 16px from edges, 32px circular buttons */}
-          {isOwnProfile && (
+          {/* Viewer Mode & Settings - 16px from edges, 32px buttons */}
+          {isOwnProfile && !viewerMode && (
             <div className="absolute top-4 left-4 right-4 flex justify-between">
               <button 
-                onClick={() => setHideHeaderText(!hideHeaderText)}
+                onClick={() => setViewerMode(true)}
                 className="w-8 h-8 bg-black/50 backdrop-blur-md rounded-full hover:bg-black/60 transition flex items-center justify-center"
-                style={{ border: '1px solid rgba(255, 255, 255, 0.15)' }}
+                style={{ border: '1px solid rgba(255, 255, 255, 0.15)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}
+                title="Enter viewer mode"
               >
                 <EyeIcon className="w-4 h-4 text-white" />
               </button>
               <button 
                 onClick={() => setShowSettingsModal(true)}
                 className="w-8 h-8 bg-black/50 backdrop-blur-md rounded-full hover:bg-black/60 transition flex items-center justify-center"
-                style={{ border: '1px solid rgba(255, 255, 255, 0.15)' }}
+                style={{ border: '1px solid rgba(255, 255, 255, 0.15)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}
+                title="Settings"
               >
                 <Cog6ToothIcon className="w-4 h-4 text-white" />
               </button>
@@ -183,138 +184,144 @@ export default function ProfilePage({ params }: { params: { username: string } }
           )}
         </div>
 
-        {/* Profile Picture - webSTAR style: 144px diameter, -80px margin-top, 6px border */}
+        {/* Avatar - webSTAR: 144px, -80px overlap */}
         <div className="relative px-6 -mt-20">
-          <div className="flex items-end justify-center">
-            <div className="relative">
-              {profile.profile_picture ? (
-                <img
-                  src={profile.profile_picture}
-                  alt={profile.display_name || username}
-                  className="w-36 h-36 rounded-full object-cover"
-                  style={{
-                    border: '6px solid #111111',
-                    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
-                  }}
-                />
-              ) : (
-                <div className="w-36 h-36 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-4xl font-bold"
-                  style={{
-                    border: '6px solid #111111',
-                    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
-                  }}
-                >
-                  {(profile.display_name || username).charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
+          <div className="flex items-center justify-center">
+            {profile.profile_picture ? (
+              <img
+                src={profile.profile_picture}
+                alt={profile.display_name || username}
+                className="w-36 h-36 rounded-full object-cover"
+                style={{
+                  border: '6px solid #111111',
+                  boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
+                }}
+              />
+            ) : (
+              <div className="w-36 h-36 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-4xl font-bold"
+                style={{
+                  border: '6px solid #111111',
+                  boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
+                }}
+              >
+                {(profile.display_name || username).charAt(0).toUpperCase()}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Profile Info - webSTAR style: centered, specific spacing */}
-      <div className="px-6 pb-8 text-center">
-        {/* Name with verified badge - 12px padding-top */}
-        <div className="flex items-center justify-center gap-1.5 mb-1 pt-3">
-          <h1 className="text-2xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)' }}>
-            {profile.display_name || username}
-          </h1>
-          {profile.expertise_badge && (
-            <CheckBadgeIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" />
-          )}
-        </div>
-        
-        {/* Bio - 16px margin-bottom, 15px font-size */}
-        <p className="text-sm mb-4 px-2" style={{ 
-          color: 'rgba(255, 255, 255, 0.75)',
-          fontSize: '15px',
-          lineHeight: '1.4',
-          opacity: 0.9
-        }}>
-          {profile.about || 'Make original the only standard.'}
-        </p>
-
-        {/* Location & Role - webSTAR style: centered, 13px font-size */}
-        <div className="flex items-center justify-center gap-2 flex-wrap mb-8 px-2">
-          <div className="flex items-center gap-1.5" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
-            <MapPinIcon className="w-3.5 h-3.5" />
-            <span>{profile.location || 'Paris, France'}</span>
+      {/* Profile Info - Compact design */}
+      {!viewerMode && (
+        <div className="px-6 pb-3 text-center">
+          {/* Name + Badge */}
+          <div className="flex items-center justify-center gap-1.5 mb-1 pt-3">
+            <h1 className="text-xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)', letterSpacing: '-0.2px' }}>
+              {profile.display_name || username}
+            </h1>
+            {profile.expertise_badge && (
+              <CheckBadgeIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+            )}
           </div>
           
-          <div style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '12px', opacity: 0.5 }}>•</div>
-          
-          <div className="flex items-center gap-1.5" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
-            <BriefcaseIcon className="w-3.5 h-3.5" />
-            <span>{profile.role || 'Creator'}</span>
+          {/* Bio - Smaller font */}
+          <p className="text-sm mb-4 px-2" style={{ 
+            color: 'rgba(255, 255, 255, 0.75)',
+            fontSize: '15px',
+            lineHeight: '1.4',
+            opacity: 0.9
+          }}>
+            {profile.about || 'Make original the only standard.'}
+          </p>
+
+          {/* Location & Role - Compact */}
+          <div className="flex items-center justify-center gap-2 flex-wrap mb-4 px-2">
+            <div className="flex items-center gap-1" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
+              <MapPinIcon className="w-3.5 h-3.5" />
+              <span>{profile.location || 'Paris, France'}</span>
+            </div>
+            
+            <div style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '12px', opacity: 0.5 }}>•</div>
+            
+            <div className="flex items-center gap-1" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
+              <BriefcaseIcon className="w-3.5 h-3.5" />
+              <span>{profile.role || 'Creator'}</span>
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Dashboard Strip - webSTAR style: Only for owner */}
-        {isOwnProfile && (
-          <div className="px-4 mb-5">
-            {/* MY DASHBOARD Card */}
-            <div className="bg-gray-900/40 backdrop-blur-md rounded-xl p-4 border border-gray-800/50 mb-3">
+        {/* Dashboard Strip - Compact for owner only */}
+        {isOwnProfile && !viewerMode && (
+          <div className="px-4 mb-3">
+            <div className="bg-gray-900/40 backdrop-blur-md rounded-xl p-3 border border-gray-800/50">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <svg className="w-6 h-6 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center gap-2.5">
+                  <svg className="w-5 h-5 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                   </svg>
                   <div className="flex-1">
                     <div className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">MY DASHBOARD</div>
-                    <div className="text-xl font-bold text-cyan-400">{profile.total_points?.toLocaleString() || '12.5K'}</div>
+                    <div className="text-lg font-bold text-cyan-400">{profile.total_points?.toLocaleString() || '12.5K'}</div>
                   </div>
                 </div>
                 <button 
                   onClick={() => router.push('/profile/edit')}
-                  className="p-2 hover:bg-gray-800/50 rounded-lg transition"
+                  className="p-1.5 hover:bg-gray-800/50 rounded-lg transition"
                   title="Edit profile"
                 >
-                  <PencilIcon className="w-4 h-4 text-gray-400" />
+                  <PencilIcon className="w-3.5 h-3.5 text-gray-400" />
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Action Buttons - webSTAR style */}
-        <div className="px-4 mb-5">
-          <div className="flex gap-2">
-            {isOwnProfile ? (
-              <>
-                <button 
-                  onClick={() => setShowShareModal(true)}
-                  className="flex-1 py-2.5 text-sm font-semibold rounded-xl transition"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.06)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: 'rgba(255, 255, 255, 0.75)'
-                  }}
-                >
-                  Message Me
-                </button>
-                <button 
-                  className="flex-1 py-2.5 text-sm font-semibold rounded-xl transition"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.06)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: 'rgba(255, 255, 255, 0.75)'
-                  }}
-                >
-                  Email
-                </button>
-              </>
-            ) : (
-              <>
-                <button className="flex-1 py-2.5 text-sm bg-cyan-500 hover:bg-cyan-600 rounded-xl font-semibold transition">
-                  Follow
-                </button>
-                <button className="flex-1 py-2.5 text-sm bg-gray-900 border border-gray-800 rounded-xl font-semibold transition">
-                  Message
-                </button>
-              </>
-            )}
+        {/* Action Buttons - Compact */}
+        {!viewerMode && (
+          <div className="px-4 mb-4">
+            <div className="flex gap-2">
+              {isOwnProfile ? (
+                <>
+                  <button 
+                    onClick={() => setShowShareModal(true)}
+                    className="flex-1 py-2 text-sm font-semibold rounded-xl transition"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: 'rgba(255, 255, 255, 0.75)',
+                      fontSize: '14px',
+                      fontWeight: 600
+                    }}
+                  >
+                    Message Me
+                  </button>
+                  <button 
+                    className="flex-1 py-2 text-sm font-semibold rounded-xl transition"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: 'rgba(255, 255, 255, 0.75)',
+                      fontSize: '14px',
+                      fontWeight: 600
+                    }}
+                  >
+                    Email
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="flex-1 py-2 text-sm bg-cyan-500 hover:bg-cyan-600 rounded-xl font-semibold transition">
+                    Follow
+                  </button>
+                  <button className="flex-1 py-2 text-sm bg-gray-900 border border-gray-800 rounded-xl font-semibold transition">
+                    Message
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Tabs */}
