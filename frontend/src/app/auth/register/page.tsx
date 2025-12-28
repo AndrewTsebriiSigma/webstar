@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { onboardingAPI } from '@/lib/api';
+import { onboardingAPI, authAPI } from '@/lib/api';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 const ARCHETYPES = [
   { id: 'Engineer', name: 'Engineer', icon: '🔧', description: 'Build and create technical solutions' },
@@ -35,6 +36,7 @@ export default function RegisterPage() {
     expertiseLevel: '',
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleFinalSubmit = async () => {
     if (!formData.archetype || !formData.role || !formData.expertiseLevel) {
@@ -44,10 +46,7 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      // First, create the account
-      await register(formData.email, formData.username, formData.password, formData.fullName);
-      
-      // Then complete onboarding
+      // Complete onboarding (account already created in step 1)
       const response = await onboardingAPI.complete({
         archetype: formData.archetype,
         role: formData.role,
@@ -63,7 +62,7 @@ export default function RegisterPage() {
           error.code === 'ECONNREFUSED') {
         toast.error('Backend server is not running. Please start the backend server on port 8000.');
       } else {
-        toast.error(error.response?.data?.detail || error.message || 'Registration failed');
+        toast.error(error.response?.data?.detail || error.message || 'Onboarding failed');
       }
     } finally {
       setLoading(false);
@@ -77,10 +76,29 @@ export default function RegisterPage() {
     }));
   };
 
-  const handleBasicInfoSubmit = (e: React.FormEvent) => {
+  const handleBasicInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.email && formData.username && formData.fullName && formData.password) {
-      setStep(2);
+      // Check if email already exists before proceeding
+      setLoading(true);
+      try {
+        // Call the register endpoint to check if email/username exists
+        await register(formData.email, formData.username, formData.password, formData.fullName);
+        // If successful, proceed to next step
+        setStep(2);
+      } catch (error: any) {
+        // Check if error is about email/username already existing
+        const errorMessage = error.response?.data?.detail || error.message || '';
+        if (errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('already')) {
+          toast.error('Email already exists. Please use a different email or sign in.');
+        } else if (errorMessage.toLowerCase().includes('username') && errorMessage.toLowerCase().includes('taken')) {
+          toast.error('Username is already taken. Please choose a different username.');
+        } else {
+          toast.error(errorMessage || 'Registration failed. Please try again.');
+        }
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -172,15 +190,15 @@ export default function RegisterPage() {
                 />
               </div>
 
-              <div>
+              <div className="relative">
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="block w-full px-4 py-3 rounded-xl"
+                  className="block w-full px-4 py-3 pr-10 rounded-xl"
                   style={{ 
                     background: 'rgba(255, 255, 255, 0.05)', 
                     border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -189,13 +207,26 @@ export default function RegisterPage() {
                   placeholder="Password"
                   minLength={8}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="w-5 h-5" />
+                  ) : (
+                    <EyeIcon className="w-5 h-5" />
+                  )}
+                </button>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 px-4 bg-gradient-primary text-white font-semibold rounded-lg hover:shadow-lg transition"
+                disabled={loading}
+                className="w-full py-3 px-4 bg-gradient-primary text-white font-semibold rounded-lg hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Continue
+                {loading ? 'Checking...' : 'Continue'}
               </button>
             </form>
 
@@ -335,14 +366,25 @@ export default function RegisterPage() {
                 <input
                   type="range"
                   min="0"
-                  max="3"
+                  max="99"
                   value={
                     formData.expertiseLevel 
-                      ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel)
-                      : 1
+                      ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel) * 33
+                      : 33
                   }
                   onChange={(e) => {
-                    const index = parseInt(e.target.value);
+                    const sliderValue = parseInt(e.target.value);
+                    // Map 100 positions (0-99) to 4 categories
+                    let index;
+                    if (sliderValue < 25) {
+                      index = 0; // emerging
+                    } else if (sliderValue < 50) {
+                      index = 1; // developing
+                    } else if (sliderValue < 75) {
+                      index = 2; // established
+                    } else {
+                      index = 3; // leading
+                    }
                     setFormData((prev) => ({ 
                       ...prev, 
                       expertiseLevel: EXPERTISE_LEVELS[index].id 
@@ -362,11 +404,11 @@ export default function RegisterPage() {
                     background: `linear-gradient(to right, #0ea5e9 0%, #0ea5e9 ${
                       ((formData.expertiseLevel 
                         ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel)
-                        : 0) / 3) * 100
+                        : 1) / 3) * 100
                     }%, #e5e7eb ${
                       ((formData.expertiseLevel 
                         ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel)
-                        : 0) / 3) * 100
+                        : 1) / 3) * 100
                     }%, #e5e7eb 100%)`
                   }}
                 />

@@ -115,56 +115,46 @@ export default function ProfilePage({ params }: { params: { username: string } }
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Mobile Header */}
-      <header className="sticky top-0 z-40 bg-black/90 backdrop-blur-md border-b border-gray-800">
-        <div className="px-3 py-2 flex items-center justify-between">
-          {isOwnProfile ? (
-            <button 
-              onClick={() => setShowCreateContentModal(true)}
-              className="p-1.5"
-            >
-              <PlusIcon className="w-5 h-5 text-white" />
-            </button>
-          ) : (
-            <div className="w-8"></div>
-          )}
-          
-          <Link href="/" className="text-lg font-bold">
-            webSTAR
-          </Link>
-          
-          <div className="flex items-center gap-1">
-            <button 
-              onClick={() => setShowNotifications(true)}
-              className="p-1.5 relative"
-            >
-              <BellIcon className="w-5 h-5 text-white" />
-              {isOwnProfile && (
-                <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-cyan-500 rounded-full flex items-center justify-center text-[10px] font-bold">
-                  3
-                </span>
-              )}
-            </button>
+      {!hideHeaderText && (
+        <header className="sticky top-0 z-40 bg-black/90 backdrop-blur-md border-b border-gray-800">
+          <div className="px-3 py-2 flex items-center justify-between">
+            {isOwnProfile ? (
+              <button 
+                onClick={() => setShowCreateContentModal(true)}
+                className="p-1.5"
+              >
+                <PlusIcon className="w-5 h-5 text-white" />
+              </button>
+            ) : (
+              <div className="w-8"></div>
+            )}
+            
+            <Link href="/" className="text-lg font-bold">
+              webSTAR
+            </Link>
+            
+            <div className="flex items-center gap-1">
+              <button 
+                onClick={() => setShowNotifications(true)}
+                className="p-1.5 relative"
+              >
+                <BellIcon className="w-5 h-5 text-white" />
+                {isOwnProfile && (
+                  <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-cyan-500 rounded-full flex items-center justify-center text-[10px] font-bold">
+                    3
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Cover Image Area */}
       <div className="relative">
         {/* Cover gradient */}
-        <div className={`${hideHeaderText ? 'h-36 sm:h-48' : 'h-24 sm:h-36'} bg-gradient-to-br from-cyan-500/20 to-blue-500/20 relative overflow-hidden transition-all duration-300`}>
+        <div className={`${hideHeaderText ? 'h-48 sm:h-64' : 'h-24 sm:h-36'} bg-gradient-to-br from-cyan-500/20 to-blue-500/20 relative overflow-hidden transition-all duration-300`}>
           <div className="absolute inset-0 bg-[url('/api/placeholder/1200/400')] bg-cover bg-center opacity-20" />
-          
-          {/* WEBSTAR Logo Card - Hidden when eye is toggled */}
-          {!hideHeaderText && (
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 shadow-xl backdrop-blur-md border border-white/20 text-center transition-opacity duration-300">
-              <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent mb-1">
-                WEBSTAR
-              </div>
-              <div className="text-xs sm:text-sm text-gray-600 italic font-light">
-                stay original
-              </div>
-            </div>
-          )}
           
           {/* View and Settings Icons */}
           {isOwnProfile && (
@@ -186,7 +176,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
         </div>
 
         {/* Profile Picture - Overlapping */}
-        <div className={`relative px-3 pb-3 transition-all duration-300 ${hideHeaderText ? '-mt-16 sm:-mt-20' : '-mt-12 sm:-mt-16'}`}>
+        <div className={`relative px-3 pb-3 transition-all duration-300 ${hideHeaderText ? '-mt-20 sm:-mt-24' : '-mt-12 sm:-mt-16'}`}>
           <div className="flex items-end justify-between">
             <div className="relative">
               {profile.profile_picture ? (
