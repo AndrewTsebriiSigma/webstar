@@ -19,6 +19,8 @@ export default function EditProfilePage() {
   const [formData, setFormData] = useState({
     display_name: '',
     about: '',
+    location: '',
+    role: '',
     skills: '',
     website: '',
     linkedin_url: '',
@@ -46,6 +48,8 @@ export default function EditProfilePage() {
       setFormData({
         display_name: profileData.display_name || '',
         about: profileData.about || '',
+        location: profileData.location || '',
+        role: profileData.role || '',
         skills: profileData.skills || '',
         website: profileData.website || '',
         linkedin_url: profileData.linkedin_url || '',
@@ -244,7 +248,7 @@ export default function EditProfilePage() {
 
           {/* Display Name */}
           <div className="mb-6">
-            <label htmlFor="display_name" className="block text-sm font-semibold mb-2">
+            <label htmlFor="display_name" className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
               Display Name
             </label>
             <input
@@ -254,16 +258,63 @@ export default function EditProfilePage() {
               value={formData.display_name}
               onChange={handleChange}
               placeholder="Your display name"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              style={{
+                background: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: 'rgba(255, 255, 255, 0.95)'
+              }}
+            />
+          </div>
+
+          {/* Location */}
+          <div className="mb-6">
+            <label htmlFor="location" className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+              📍 Location
+            </label>
+            <input
+              type="text"
+              id="location"
+              name="location"
+              value={formData.location}
+              onChange={handleChange}
+              placeholder="e.g., Paris, France"
+              className="w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              style={{
+                background: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: 'rgba(255, 255, 255, 0.95)'
+              }}
+            />
+          </div>
+
+          {/* Role */}
+          <div className="mb-6">
+            <label htmlFor="role" className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+              💼 Role
+            </label>
+            <input
+              type="text"
+              id="role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              placeholder="e.g., Creator, Designer, Engineer"
+              className="w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              style={{
+                background: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: 'rgba(255, 255, 255, 0.95)'
+              }}
             />
           </div>
 
           {/* About */}
           <div className="mb-6">
-            <label htmlFor="about" className="block text-sm font-semibold mb-2">
+            <label htmlFor="about" className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
               About
               {!profile.has_about && (
-                <span className="ml-2 text-sm font-normal text-gray-500">💡 Add your about section to earn +20 points</span>
+                <span className="ml-2 text-sm font-normal" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>💡 Add your about section to earn +20 points</span>
               )}
             </label>
             <textarea
@@ -274,19 +325,24 @@ export default function EditProfilePage() {
               placeholder="Tell people about yourself..."
               rows={4}
               maxLength={500}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+              className="w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+              style={{
+                background: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: 'rgba(255, 255, 255, 0.95)'
+              }}
             />
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm mt-1" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
               {formData.about.length}/500 characters
             </p>
           </div>
 
           {/* Skills */}
           <div className="mb-6">
-            <label htmlFor="skills" className="block text-sm font-semibold mb-2">
+            <label htmlFor="skills" className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
               Skills (max 5)
               {!profile.has_skills && (
-                <span className="ml-2 text-sm font-normal text-gray-500">💡 Add skills to earn +10 points each</span>
+                <span className="ml-2 text-sm font-normal" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>💡 Add skills to earn +10 points each</span>
               )}
             </label>
             <input
@@ -296,9 +352,14 @@ export default function EditProfilePage() {
               value={formData.skills}
               onChange={handleChange}
               placeholder="e.g., React, Design, Photography (comma-separated)"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              style={{
+                background: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: 'rgba(255, 255, 255, 0.95)'
+              }}
             />
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm mt-1" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
               Separate skills with commas. Max 5 skills.
             </p>
             {formData.skills && (

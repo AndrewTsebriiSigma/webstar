@@ -36,6 +36,8 @@ export interface Profile {
   expertise_badge: string | null;
   about: string | null;
   profile_picture: string | null;
+  banner_image: string | null;
+  location: string | null;
   skills: string | null;
   experience: string | null; // JSON string
   social_links: string | null; // JSON string

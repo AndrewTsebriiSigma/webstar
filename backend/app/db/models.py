@@ -60,6 +60,8 @@ class Profile(SQLModel, table=True):
     expertise_badge: Optional[str] = None  # From onboarding
     about: Optional[str] = Field(default=None, max_length=500)
     profile_picture: Optional[str] = None
+    banner_image: Optional[str] = None  # Profile banner/cover image
+    location: Optional[str] = None  # User location (e.g., "Paris, France")
     
     # Skills (comma-separated, max 6)
     skills: Optional[str] = None

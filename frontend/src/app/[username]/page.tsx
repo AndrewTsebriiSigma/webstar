@@ -152,22 +152,32 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
       {/* Cover Image Area */}
       <div className="relative">
-        {/* Cover gradient */}
-        <div className={`${hideHeaderText ? 'h-48 sm:h-64' : 'h-24 sm:h-36'} bg-gradient-to-br from-cyan-500/20 to-blue-500/20 relative overflow-hidden transition-all duration-300`}>
-          <div className="absolute inset-0 bg-[url('/api/placeholder/1200/400')] bg-cover bg-center opacity-20" />
+        {/* Cover gradient - matching webSTAR design: 176px height */}
+        <div className="h-44 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 relative overflow-hidden">
+          {profile.banner_image ? (
+            <img
+              src={profile.banner_image}
+              alt="Profile banner"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="absolute inset-0 bg-[url('/api/placeholder/1200/400')] bg-cover bg-center opacity-20" />
+          )}
           
-          {/* View and Settings Icons */}
+          {/* View and Settings Icons - webSTAR style: 16px from edges, 32px circular buttons */}
           {isOwnProfile && (
-            <div className="absolute top-2 left-2 right-2 flex justify-between">
+            <div className="absolute top-4 left-4 right-4 flex justify-between">
               <button 
                 onClick={() => setHideHeaderText(!hideHeaderText)}
-                className="p-2 bg-gray-800/60 backdrop-blur-md rounded-full hover:bg-gray-700/60 transition"
+                className="w-8 h-8 bg-black/50 backdrop-blur-md rounded-full hover:bg-black/60 transition flex items-center justify-center"
+                style={{ border: '1px solid rgba(255, 255, 255, 0.15)' }}
               >
                 <EyeIcon className="w-4 h-4 text-white" />
               </button>
               <button 
                 onClick={() => setShowSettingsModal(true)}
-                className="p-2 bg-gray-800/60 backdrop-blur-md rounded-full hover:bg-gray-700/60 transition"
+                className="w-8 h-8 bg-black/50 backdrop-blur-md rounded-full hover:bg-black/60 transition flex items-center justify-center"
+                style={{ border: '1px solid rgba(255, 255, 255, 0.15)' }}
               >
                 <Cog6ToothIcon className="w-4 h-4 text-white" />
               </button>
@@ -175,120 +185,139 @@ export default function ProfilePage({ params }: { params: { username: string } }
           )}
         </div>
 
-        {/* Profile Picture - Overlapping */}
-        <div className={`relative px-3 pb-3 transition-all duration-300 ${hideHeaderText ? '-mt-20 sm:-mt-24' : '-mt-12 sm:-mt-16'}`}>
-          <div className="flex items-end justify-between">
+        {/* Profile Picture - webSTAR style: 144px diameter, -80px margin-top, 6px border */}
+        <div className="relative px-6 -mt-20">
+          <div className="flex items-end justify-center">
             <div className="relative">
               {profile.profile_picture ? (
                 <img
                   src={profile.profile_picture}
                   alt={profile.display_name || username}
-                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-3 border-black object-cover"
+                  className="w-36 h-36 rounded-full object-cover"
+                  style={{
+                    border: '6px solid #111111',
+                    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
+                  }}
                 />
               ) : (
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-3 border-black bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-2xl font-bold">
+                <div className="w-36 h-36 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-4xl font-bold"
+                  style={{
+                    border: '6px solid #111111',
+                    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
+                  }}
+                >
                   {(profile.display_name || username).charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
-            
-            {/* Points Badge - Desktop */}
-            {isOwnProfile && (
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-full mb-1">
-                <svg className="w-4 h-4 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </svg>
-                <div className="text-left">
-                  <div className="text-[10px] text-gray-400 uppercase tracking-wide">MY DASHBOARD</div>
-                  <div className="text-sm text-cyan-400 font-bold">{profile.total_points?.toLocaleString() || 0}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Profile Info - webSTAR style: centered, specific spacing */}
+      <div className="px-6 pb-8 text-center">
+        {/* Name with verified badge - 12px padding-top */}
+        <div className="flex items-center justify-center gap-1.5 mb-1 pt-3">
+          <h1 className="text-2xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)' }}>
+            {profile.display_name || username}
+          </h1>
+          {profile.expertise_badge && (
+            <CheckBadgeIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+          )}
+        </div>
+        
+        {/* Bio - 16px margin-bottom, 15px font-size */}
+        <p className="text-sm mb-4 px-2" style={{ 
+          color: 'rgba(255, 255, 255, 0.75)',
+          fontSize: '15px',
+          lineHeight: '1.4',
+          opacity: 0.9
+        }}>
+          {profile.about || 'Make original the only standard.'}
+        </p>
+
+        {/* Location & Role - webSTAR style: centered, 13px font-size */}
+        <div className="flex items-center justify-center gap-2 flex-wrap mb-8 px-2">
+          <div className="flex items-center gap-1.5" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
+            <MapPinIcon className="w-3.5 h-3.5" />
+            <span>{profile.location || 'Paris, France'}</span>
+          </div>
+          
+          <div style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '12px', opacity: 0.5 }}>•</div>
+          
+          <div className="flex items-center gap-1.5" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
+            <BriefcaseIcon className="w-3.5 h-3.5" />
+            <span>{profile.role || 'Creator'}</span>
+          </div>
+        </div>
+
+        {/* Dashboard Strip - webSTAR style: Only for owner */}
+        {isOwnProfile && (
+          <div className="px-4 mb-5">
+            {/* MY DASHBOARD Card */}
+            <div className="bg-gray-900/40 backdrop-blur-md rounded-xl p-4 border border-gray-800/50 mb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <svg className="w-6 h-6 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                  <div className="flex-1">
+                    <div className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">MY DASHBOARD</div>
+                    <div className="text-xl font-bold text-cyan-400">{profile.total_points?.toLocaleString() || '12.5K'}</div>
+                  </div>
                 </div>
                 <button 
                   onClick={() => router.push('/profile/edit')}
-                  className="p-1 hover:bg-gray-800 rounded transition"
+                  className="p-2 hover:bg-gray-800/50 rounded-lg transition"
                   title="Edit profile"
                 >
                   <PencilIcon className="w-4 h-4 text-gray-400" />
                 </button>
               </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Profile Info */}
-      {!hideHeaderText && (
-        <div className="px-3 pb-3">
-          <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-xl sm:text-2xl font-bold">{profile.display_name || username}</h1>
-            {profile.expertise_badge && (
-              <CheckBadgeIcon className="w-5 h-5 text-cyan-400" />
-            )}
-          </div>
-          
-          <p className="text-sm text-gray-400 mb-2">
-            Make original the only standard.
-          </p>
-
-          <div className="flex items-center gap-3 text-xs text-gray-400 mb-3">
-            {profile.role && (
-              <div className="flex items-center gap-1">
-                <MapPinIcon className="w-3.5 h-3.5" />
-                <span>Paris, France</span>
-              </div>
-            )}
-            <div className="flex items-center gap-1">
-              <BriefcaseIcon className="w-3.5 h-3.5" />
-              <span>Creator</span>
             </div>
           </div>
+        )}
 
-          {/* Points Badge - Mobile */}
-          {isOwnProfile && (
-            <div className="sm:hidden flex items-center gap-2 p-3 bg-gray-900 border border-gray-800 rounded-xl mb-3">
-              <svg className="w-6 h-6 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
-              <div className="flex-1">
-                <div className="text-[10px] text-gray-400 uppercase tracking-wide">My Dashboard</div>
-                <div className="text-xl font-bold text-cyan-400">{profile.total_points?.toLocaleString() || '12.5K'}</div>
-              </div>
-              <button 
-                onClick={() => router.push('/profile/edit')}
-                className="p-1.5 hover:bg-gray-800 rounded transition"
-                title="Edit profile"
-              >
-                <PencilIcon className="w-4 h-4 text-gray-400" />
-              </button>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex gap-2 mb-4">
+        {/* Action Buttons - webSTAR style */}
+        <div className="px-4 mb-5">
+          <div className="flex gap-2">
             {isOwnProfile ? (
               <>
                 <button 
                   onClick={() => setShowShareModal(true)}
-                  className="flex-1 py-2 text-sm bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-lg font-semibold transition"
+                  className="flex-1 py-2.5 text-sm font-semibold rounded-xl transition"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: 'rgba(255, 255, 255, 0.75)'
+                  }}
                 >
                   Message Me
                 </button>
-                <button className="flex-1 py-2 text-sm bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-lg font-semibold transition">
+                <button 
+                  className="flex-1 py-2.5 text-sm font-semibold rounded-xl transition"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: 'rgba(255, 255, 255, 0.75)'
+                  }}
+                >
                   Email
                 </button>
               </>
             ) : (
               <>
-                <button className="flex-1 py-2 text-sm bg-cyan-500 hover:bg-cyan-600 rounded-lg font-semibold transition">
+                <button className="flex-1 py-2.5 text-sm bg-cyan-500 hover:bg-cyan-600 rounded-xl font-semibold transition">
                   Follow
                 </button>
-                <button className="flex-1 py-2 text-sm bg-gray-900 border border-gray-800 rounded-lg font-semibold transition">
+                <button className="flex-1 py-2.5 text-sm bg-gray-900 border border-gray-800 rounded-xl font-semibold transition">
                   Message
                 </button>
               </>
             )}
           </div>
         </div>
-      )}
+      </div>
 
       {/* Tabs */}
       <div className="sticky top-[49px] z-30 bg-black/90 backdrop-blur-md border-b border-gray-800">
