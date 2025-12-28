@@ -3,11 +3,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 from pathlib import Path
+import secrets
 
 from app.core.config import settings
 from app.db.base import create_db_and_tables
-from app.routers import auth, onboarding, profile, portfolio, projects, economy, analytics, uploads, app_settings
+from app.routers import auth, onboarding, profile, portfolio, projects, economy, analytics, uploads, app_settings, diagnostics
 
 
 @asynccontextmanager
@@ -25,6 +27,18 @@ app = FastAPI(
     description="Backend API for WebStar V1 - One Professional Identity in One Link",
     version="1.0.0",
     lifespan=lifespan,
+)
+
+# Add SessionMiddleware for OAuth (required by authlib)
+# Generate a random secret key for session encryption
+SESSION_SECRET = getattr(settings, 'SESSION_SECRET', None) or secrets.token_urlsafe(32)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SESSION_SECRET,
+    session_cookie="webstar_session",
+    max_age=3600,  # 1 hour
+    same_site="lax",
+    https_only=settings.ENVIRONMENT.lower() == "production",
 )
 
 # CORS Configuration
@@ -100,6 +114,7 @@ app.include_router(economy.router, prefix="/api/economy", tags=["economy"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
 app.include_router(uploads.router, prefix="/api/uploads", tags=["uploads"])
 app.include_router(app_settings.router, prefix="/api/settings", tags=["settings"])
+app.include_router(diagnostics.router, prefix="/api/diagnostics", tags=["diagnostics"])
 
 
 @app.get("/health")
