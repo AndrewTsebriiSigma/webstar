@@ -115,40 +115,38 @@ export default function ProfilePage({ params }: { params: { username: string } }
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Mobile Header */}
-      {!hideHeaderText && (
-        <header className="sticky top-0 z-40 bg-black/90 backdrop-blur-md border-b border-gray-800">
-          <div className="px-3 py-2 flex items-center justify-between">
-            {isOwnProfile ? (
-              <button 
-                onClick={() => setShowCreateContentModal(true)}
-                className="p-1.5"
-              >
-                <PlusIcon className="w-5 h-5 text-white" />
-              </button>
-            ) : (
-              <div className="w-8"></div>
-            )}
-            
-            <Link href="/" className="text-lg font-bold">
-              webSTAR
-            </Link>
-            
-            <div className="flex items-center gap-1">
-              <button 
-                onClick={() => setShowNotifications(true)}
-                className="p-1.5 relative"
-              >
-                <BellIcon className="w-5 h-5 text-white" />
-                {isOwnProfile && (
-                  <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-cyan-500 rounded-full flex items-center justify-center text-[10px] font-bold">
-                    3
-                  </span>
-                )}
-              </button>
-            </div>
+      <header className="sticky top-0 z-40 bg-black/90 backdrop-blur-md border-b border-gray-800">
+        <div className="px-3 py-2 flex items-center justify-between">
+          {isOwnProfile ? (
+            <button 
+              onClick={() => setShowCreateContentModal(true)}
+              className="p-1.5"
+            >
+              <PlusIcon className="w-5 h-5 text-white" />
+            </button>
+          ) : (
+            <div className="w-8"></div>
+          )}
+          
+          <Link href="/" className="text-lg font-bold">
+            webSTAR
+          </Link>
+          
+          <div className="flex items-center gap-1">
+            <button 
+              onClick={() => setShowNotifications(true)}
+              className="p-1.5 relative"
+            >
+              <BellIcon className="w-5 h-5 text-white" />
+              {isOwnProfile && (
+                <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-cyan-500 rounded-full flex items-center justify-center text-[10px] font-bold">
+                  3
+                </span>
+              )}
+            </button>
           </div>
-        </header>
-      )}
+        </div>
+      </header>
 
       {/* Cover Image Area */}
       <div className="relative">

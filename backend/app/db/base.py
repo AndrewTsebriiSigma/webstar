@@ -1,5 +1,5 @@
 """Database connection and session management."""
-from sqlmodel import SQLModel, create_engine, Session
+from sqlmodel import SQLModel, create_engine, Session, text
 from app.core.config import settings
 
 # Create engine with improved SQLite concurrency handling
@@ -39,6 +39,51 @@ else:
 def create_db_and_tables():
     """Create database and tables."""
     SQLModel.metadata.create_all(engine)
+    
+    # Run migration for location and banner_image columns
+    try:
+        with Session(engine) as session:
+            # Check if we're using PostgreSQL
+            if "postgresql" in settings.DATABASE_URL or "postgres" in settings.DATABASE_URL:
+                # Check if columns exist (PostgreSQL)
+                result = session.exec(text("""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_name = 'profiles' AND column_name IN ('location', 'banner_image')
+                """))
+                existing_columns = [row[0] for row in result.fetchall()]
+                
+                # Add location column if missing
+                if 'location' not in existing_columns:
+                    session.exec(text("ALTER TABLE profiles ADD COLUMN location VARCHAR"))
+                    session.commit()
+                    print("✅ Added location column to profiles table")
+                
+                # Add banner_image column if missing
+                if 'banner_image' not in existing_columns:
+                    session.exec(text("ALTER TABLE profiles ADD COLUMN banner_image VARCHAR"))
+                    session.commit()
+                    print("✅ Added banner_image column to profiles table")
+            else:
+                # SQLite - check if columns exist
+                result = session.exec(text("PRAGMA table_info(profiles)"))
+                columns = [row[1] for row in result.fetchall()]
+                
+                # Add location column if missing
+                if 'location' not in columns:
+                    session.exec(text("ALTER TABLE profiles ADD COLUMN location TEXT"))
+                    session.commit()
+                    print("✅ Added location column to profiles table")
+                
+                # Add banner_image column if missing
+                if 'banner_image' not in columns:
+                    session.exec(text("ALTER TABLE profiles ADD COLUMN banner_image TEXT"))
+                    session.commit()
+                    print("✅ Added banner_image column to profiles table")
+    except Exception as e:
+        print(f"Migration note: {e}")
+        # If it fails, columns might already exist
+        pass
 
 
 def get_session():
