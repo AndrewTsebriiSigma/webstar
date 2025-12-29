@@ -59,12 +59,12 @@ class S3Service:
         
         try:
             # Upload to S3
+            # Note: Public access is handled by bucket policy, not ACLs
             self.s3_client.put_object(
                 Bucket=self.bucket_name,
                 Key=file_key,
                 Body=file_content,
-                ContentType=content_type,
-                ACL='public-read'  # Make file publicly accessible
+                ContentType=content_type
             )
             
             # Generate public URL
