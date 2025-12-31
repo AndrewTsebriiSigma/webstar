@@ -146,7 +146,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               >
                 <BellIcon className="w-5 h-5 text-white" />
                 {isOwnProfile && (
-                  <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-cyan-500 rounded-full flex items-center justify-center text-[10px] font-bold">
+                  <span className="absolute top-0 right-0 w-3 h-3 bg-cyan-500 rounded-full flex items-center justify-center text-[8px] font-bold">
                     3
                   </span>
                 )}
@@ -169,12 +169,12 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <div className="absolute inset-0 bg-[url('/api/placeholder/1200/400')] bg-cover bg-center opacity-20" />
           )}
           
-          {/* Viewer Mode & Settings - Smaller buttons (28px) */}
+          {/* Viewer Mode & Settings - Bigger buttons */}
           {isOwnProfile && (
-            <div className="absolute top-4 left-4 right-4 flex justify-between">
+            <div className="absolute bottom-4 left-4 right-4 flex justify-between">
               <button 
                 onClick={() => setViewerMode(!viewerMode)}
-                className={`w-7 h-7 rounded-full flex items-center justify-center ${viewerMode ? 'bg-cyan-500' : ''}`}
+                className={`w-9 h-9 rounded-full flex items-center justify-center ${viewerMode ? 'bg-cyan-500' : ''}`}
                 style={{ 
                   background: viewerMode ? '#00C2FF' : 'rgba(0, 0, 0, 0.5)',
                   backdropFilter: 'blur(20px)',
@@ -189,11 +189,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 title={viewerMode ? 'Exit viewer mode' : 'Enter viewer mode'}
               >
-                <EyeIcon className="w-3.5 h-3.5" />
+                <EyeIcon className="w-5 h-5" />
               </button>
               <button 
                 onClick={() => setShowSettingsModal(true)}
-                className="w-7 h-7 rounded-full flex items-center justify-center"
+                className="w-9 h-9 rounded-full flex items-center justify-center"
                 style={{ 
                   background: 'rgba(0, 0, 0, 0.5)',
                   backdropFilter: 'blur(20px)',
@@ -208,7 +208,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 title="Settings"
               >
-                <Cog6ToothIcon className="w-3.5 h-3.5" />
+                <Cog6ToothIcon className="w-5 h-5" />
               </button>
             </div>
           )}

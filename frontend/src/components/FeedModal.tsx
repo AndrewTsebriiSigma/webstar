@@ -84,7 +84,7 @@ export default function FeedModal({
         flexDirection: 'column'
       }}
     >
-      {/* Header */}
+      {/* Header with Profile */}
       <div 
         style={{
           position: 'sticky',
@@ -94,17 +94,124 @@ export default function FeedModal({
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          padding: '12px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
+          padding: '12px 16px'
         }}
       >
+        {/* Profile Header with Close Button */}
         <div 
           style={{
-            fontSize: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '8px'
+          }}
+        >
+          {/* Profile Info */}
+          <div 
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px'
+            }}
+          >
+            <div
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                border: '2px solid rgba(255, 255, 255, 0.1)',
+                flexShrink: 0
+              }}
+            >
+              {profile?.profile_picture ? (
+                <img
+                  src={profile.profile_picture}
+                  alt={profile.display_name || profile.username}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover'
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    background: 'linear-gradient(135deg, #00C2FF 0%, #764BA2 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#FFFFFF',
+                    fontSize: '16px',
+                    fontWeight: 600
+                  }}
+                >
+                  {profile?.username?.charAt(0).toUpperCase() || 'U'}
+                </div>
+              )}
+            </div>
+            
+            <div>
+              <div 
+                style={{
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  color: '#FFFFFF',
+                  lineHeight: 1.2
+                }}
+              >
+                {profile?.display_name || profile?.username || 'User'}
+              </div>
+              <div 
+                style={{
+                  fontSize: '13px',
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  lineHeight: 1.2
+                }}
+              >
+                @{profile?.username || 'user'}
+              </div>
+            </div>
+          </div>
+
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'all 150ms',
+              flexShrink: 0
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+          >
+            <XMarkIcon className="w-5 h-5 text-white" />
+          </button>
+        </div>
+
+        {/* Post Counter */}
+        <div 
+          style={{
+            fontSize: '13px',
             fontWeight: 600,
-            color: 'rgba(255, 255, 255, 0.7)'
+            color: 'rgba(255, 255, 255, 0.5)',
+            textAlign: 'center'
           }}
         >
           {currentIndex + 1} / {posts.length}
@@ -146,8 +253,6 @@ export default function FeedModal({
               <FeedPostContent 
                 post={post} 
                 isActive={index === currentIndex}
-                profile={profile}
-                onClose={onClose}
               />
             </div>
           </div>
@@ -160,14 +265,10 @@ export default function FeedModal({
 // Individual Feed Post Content
 function FeedPostContent({ 
   post, 
-  isActive,
-  profile,
-  onClose
+  isActive
 }: { 
   post: PortfolioItem;
   isActive: boolean;
-  profile?: Profile;
-  onClose: () => void;
 }) {
   const renderPrimaryContent = () => {
     switch (post.content_type) {
@@ -318,115 +419,6 @@ function FeedPostContent({
 
   return (
     <div>
-      {/* Profile Header with Close Button */}
-      <div 
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: '16px',
-          padding: '8px 0'
-        }}
-      >
-        {/* Profile Info */}
-        <div 
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px'
-          }}
-        >
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              overflow: 'hidden',
-              border: '2px solid rgba(255, 255, 255, 0.1)',
-              flexShrink: 0
-            }}
-          >
-            {profile?.profile_picture ? (
-              <img
-                src={profile.profile_picture}
-                alt={profile.display_name || profile.username}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover'
-                }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  background: 'linear-gradient(135deg, #00C2FF 0%, #764BA2 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#FFFFFF',
-                  fontSize: '16px',
-                  fontWeight: 600
-                }}
-              >
-                {profile?.username?.charAt(0).toUpperCase() || 'U'}
-              </div>
-            )}
-          </div>
-          
-          <div>
-            <div 
-              style={{
-                fontSize: '15px',
-                fontWeight: 600,
-                color: '#FFFFFF',
-                lineHeight: 1.2
-              }}
-            >
-              {profile?.display_name || profile?.username || 'User'}
-            </div>
-            <div 
-              style={{
-                fontSize: '13px',
-                color: 'rgba(255, 255, 255, 0.5)',
-                lineHeight: 1.2
-              }}
-            >
-              @{profile?.username || 'user'}
-            </div>
-          </div>
-        </div>
-
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '50%',
-            background: 'rgba(255, 255, 255, 0.08)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            transition: 'all 150ms',
-            flexShrink: 0
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
-            e.currentTarget.style.transform = 'scale(1.05)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
-        >
-          <XMarkIcon className="w-5 h-5 text-white" />
-        </button>
-      </div>
-
       {/* Primary Content */}
       {renderPrimaryContent()}
 
