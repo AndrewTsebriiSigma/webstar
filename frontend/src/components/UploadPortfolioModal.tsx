@@ -100,8 +100,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
       await portfolioAPI.createItem({
         content_type: contentType,
         content_url: contentUrl,
-        title: formData.title || file.name.replace(/\.[^/.]+$/, ''), // Use filename if no title
-        description: formData.description || '',
+        title: formData.title || null, // Title is optional
+        description: formData.description || null,
         aspect_ratio: '1:1',
       });
 
@@ -208,7 +208,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
           <div>
             <input
               type="text"
-              placeholder="Title*"
+              placeholder="Title (optional)"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="w-full px-4 py-2.5 bg-[#1a1a1c] border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white placeholder-gray-500 text-sm"

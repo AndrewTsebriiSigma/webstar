@@ -29,6 +29,13 @@ export default function FeedModal({
       const index = posts.findIndex(p => p.id === initialPostId);
       if (index !== -1) {
         setCurrentIndex(index);
+        // Scroll to the initial post
+        setTimeout(() => {
+          const postElement = document.querySelector(`[data-index="${index}"]`);
+          if (postElement) {
+            postElement.scrollIntoView({ behavior: 'instant', block: 'start' });
+          }
+        }, 100);
       }
     }
   }, [isOpen, initialPostId, posts]);
@@ -270,6 +277,37 @@ function FeedPostContent({
   post: PortfolioItem;
   isActive: boolean;
 }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Auto-play video when it becomes active
+  useEffect(() => {
+    if (post.content_type === 'video' && videoRef.current) {
+      if (isActive) {
+        videoRef.current.play().then(() => {
+          setIsPlaying(true);
+        }).catch(error => {
+          console.log('Autoplay prevented:', error);
+        });
+      } else {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      }
+    }
+  }, [isActive, post.content_type]);
+
+  const handleVideoClick = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        videoRef.current.play();
+        setIsPlaying(true);
+      }
+    }
+  };
+
   const renderPrimaryContent = () => {
     switch (post.content_type) {
       case 'photo':
@@ -281,7 +319,8 @@ function FeedPostContent({
               aspectRatio: '4 / 5',
               borderRadius: 'var(--radius-lg)',
               overflow: 'hidden',
-              marginBottom: '16px'
+              marginBottom: '16px',
+              position: 'relative'
             }}
           >
             {post.content_type === 'photo' ? (
@@ -297,20 +336,51 @@ function FeedPostContent({
                 }}
               />
             ) : (
-              <video
-                src={post.content_url.startsWith('http') 
-                  ? post.content_url 
-                  : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${post.content_url}`}
-                controls
-                autoPlay={isActive}
-                loop
-                playsInline
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover'
-                }}
-              />
+              <>
+                <video
+                  ref={videoRef}
+                  src={post.content_url.startsWith('http') 
+                    ? post.content_url 
+                    : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${post.content_url}`}
+                  loop
+                  playsInline
+                  muted={false}
+                  onClick={handleVideoClick}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    cursor: 'pointer'
+                  }}
+                />
+                {/* Play/Pause indicator - subtle overlay */}
+                {!isPlaying && (
+                  <div
+                    onClick={handleVideoClick}
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      width: '60px',
+                      height: '60px',
+                      borderRadius: '50%',
+                      background: 'rgba(0, 0, 0, 0.5)',
+                      backdropFilter: 'blur(10px)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 150ms',
+                      pointerEvents: 'all'
+                    }}
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
+                  </div>
+                )}
+              </>
             )}
           </div>
         );
