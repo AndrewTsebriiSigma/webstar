@@ -110,23 +110,6 @@ function PhotoDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => 
           e.currentTarget.src = '/api/placeholder/400/500';
         }}
       />
-      {item.title && (
-        <div 
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: '16px',
-            background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
-            color: '#FFFFFF',
-            fontSize: '14px',
-            fontWeight: 600
-          }}
-        >
-          {item.title}
-        </div>
-      )}
     </div>
   );
 }
@@ -403,17 +386,6 @@ function PDFDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => vo
       >
         {item.title || 'Document'}
       </div>
-      {item.description && (
-        <div 
-          style={{
-            fontSize: '13px',
-            color: 'rgba(255, 255, 255, 0.6)',
-            textAlign: 'center'
-          }}
-        >
-          {item.description}
-        </div>
-      )}
     </div>
   );
 }
@@ -456,23 +428,6 @@ function VideoDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => 
         playsInline
         autoPlay={isHovering}
       />
-      {item.title && (
-        <div 
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: '16px',
-            background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
-            color: '#FFFFFF',
-            fontSize: '14px',
-            fontWeight: 600
-          }}
-        >
-          {item.title}
-        </div>
-      )}
     </div>
   );
 }

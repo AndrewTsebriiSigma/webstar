@@ -599,19 +599,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
         }}
         posts={portfolioItems}
         initialPostId={feedInitialPostId}
-        isOwnProfile={isOwnProfile}
-        onEdit={(postId) => {
-          console.log('Edit post:', postId);
-          // TODO: Implement edit functionality
-        }}
-        onShare={(postId) => {
-          const post = portfolioItems.find(p => p.id === postId);
-          if (post) {
-            const url = `${window.location.origin}/${username}`;
-            navigator.clipboard.writeText(url);
-            toast.success('Link copied to clipboard!');
-          }
-        }}
+        profile={profile}
       />
 
       {/* Mini Audio Player */}

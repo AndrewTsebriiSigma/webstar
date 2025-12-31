@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { XMarkIcon, ChevronLeftIcon, ShareIcon, PencilIcon } from '@heroicons/react/24/outline';
-import { PortfolioItem } from '@/lib/types';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import { PortfolioItem, Profile } from '@/lib/types';
 import ContentDisplay from './ContentDisplay';
 
 interface FeedModalProps {
@@ -10,9 +10,7 @@ interface FeedModalProps {
   onClose: () => void;
   posts: PortfolioItem[];
   initialPostId?: number;
-  isOwnProfile?: boolean;
-  onEdit?: (postId: number) => void;
-  onShare?: (postId: number) => void;
+  profile?: Profile;
 }
 
 export default function FeedModal({
@@ -20,9 +18,7 @@ export default function FeedModal({
   onClose,
   posts,
   initialPostId,
-  isOwnProfile = false,
-  onEdit,
-  onShare
+  profile
 }: FeedModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -101,33 +97,9 @@ export default function FeedModal({
           padding: '12px 16px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between'
+          justifyContent: 'center'
         }}
       >
-        <button
-          onClick={onClose}
-          style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '50%',
-            background: 'rgba(255, 255, 255, 0.08)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            transition: 'all 150ms'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-          }}
-        >
-          <ChevronLeftIcon className="w-5 h-5 text-white" />
-        </button>
-
         <div 
           style={{
             fontSize: '14px',
@@ -137,8 +109,6 @@ export default function FeedModal({
         >
           {currentIndex + 1} / {posts.length}
         </div>
-
-        <div style={{ width: '36px' }} />
       </div>
 
       {/* Scrollable Content */}
@@ -176,9 +146,8 @@ export default function FeedModal({
               <FeedPostContent 
                 post={post} 
                 isActive={index === currentIndex}
-                isOwnProfile={isOwnProfile}
-                onEdit={onEdit}
-                onShare={onShare}
+                profile={profile}
+                onClose={onClose}
               />
             </div>
           </div>
@@ -192,15 +161,13 @@ export default function FeedModal({
 function FeedPostContent({ 
   post, 
   isActive,
-  isOwnProfile,
-  onEdit,
-  onShare 
+  profile,
+  onClose
 }: { 
   post: PortfolioItem;
   isActive: boolean;
-  isOwnProfile: boolean;
-  onEdit?: (postId: number) => void;
-  onShare?: (postId: number) => void;
+  profile?: Profile;
+  onClose: () => void;
 }) {
   const renderPrimaryContent = () => {
     switch (post.content_type) {
@@ -351,6 +318,115 @@ function FeedPostContent({
 
   return (
     <div>
+      {/* Profile Header with Close Button */}
+      <div 
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '16px',
+          padding: '8px 0'
+        }}
+      >
+        {/* Profile Info */}
+        <div 
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}
+        >
+          <div
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              overflow: 'hidden',
+              border: '2px solid rgba(255, 255, 255, 0.1)',
+              flexShrink: 0
+            }}
+          >
+            {profile?.profile_picture ? (
+              <img
+                src={profile.profile_picture}
+                alt={profile.display_name || profile.username}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  background: 'linear-gradient(135deg, #00C2FF 0%, #764BA2 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#FFFFFF',
+                  fontSize: '16px',
+                  fontWeight: 600
+                }}
+              >
+                {profile?.username?.charAt(0).toUpperCase() || 'U'}
+              </div>
+            )}
+          </div>
+          
+          <div>
+            <div 
+              style={{
+                fontSize: '15px',
+                fontWeight: 600,
+                color: '#FFFFFF',
+                lineHeight: 1.2
+              }}
+            >
+              {profile?.display_name || profile?.username || 'User'}
+            </div>
+            <div 
+              style={{
+                fontSize: '13px',
+                color: 'rgba(255, 255, 255, 0.5)',
+                lineHeight: 1.2
+              }}
+            >
+              @{profile?.username || 'user'}
+            </div>
+          </div>
+        </div>
+
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            background: 'rgba(255, 255, 255, 0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            transition: 'all 150ms',
+            flexShrink: 0
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
+            e.currentTarget.style.transform = 'scale(1.05)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
+        >
+          <XMarkIcon className="w-5 h-5 text-white" />
+        </button>
+      </div>
+
       {/* Primary Content */}
       {renderPrimaryContent()}
 
@@ -383,76 +459,6 @@ function FeedPostContent({
           )}
         </div>
       )}
-
-      {/* Actions */}
-      <div 
-        style={{
-          display: 'flex',
-          gap: '12px',
-          paddingTop: '16px',
-          borderTop: '1px solid rgba(255, 255, 255, 0.05)'
-        }}
-      >
-        <button
-          onClick={() => onShare?.(post.id)}
-          style={{
-            flex: 1,
-            padding: '12px',
-            borderRadius: 'var(--radius-md)',
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            color: '#FFFFFF',
-            fontSize: '14px',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            cursor: 'pointer',
-            transition: 'all 150ms'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-          }}
-        >
-          <ShareIcon className="w-5 h-5" />
-          Share
-        </button>
-
-        {isOwnProfile && onEdit && (
-          <button
-            onClick={() => onEdit(post.id)}
-            style={{
-              flex: 1,
-              padding: '12px',
-              borderRadius: 'var(--radius-md)',
-              background: 'rgba(0, 194, 255, 0.12)',
-              border: '1px solid rgba(0, 194, 255, 0.3)',
-              color: '#00C2FF',
-              fontSize: '14px',
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              cursor: 'pointer',
-              transition: 'all 150ms'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(0, 194, 255, 0.18)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(0, 194, 255, 0.12)';
-            }}
-          >
-            <PencilIcon className="w-5 h-5" />
-            Edit
-          </button>
-        )}
-      </div>
     </div>
   );
 }
