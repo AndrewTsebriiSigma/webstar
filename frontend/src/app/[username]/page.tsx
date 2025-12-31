@@ -15,6 +15,9 @@ import PortfolioDetailModal from '@/components/PortfolioDetailModal';
 import AboutSection from '@/components/AboutSection';
 import CreateContentModal from '@/components/CreateContentModal';
 import NotificationsPanel from '@/components/NotificationsPanel';
+import ContentDisplay from '@/components/ContentDisplay';
+import FeedModal from '@/components/FeedModal';
+import MiniPlayer from '@/components/MiniPlayer';
 import { 
   Cog6ToothIcon, 
   EyeIcon, 
@@ -53,6 +56,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [showCreateContentModal, setShowCreateContentModal] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [viewerMode, setViewerMode] = useState(false);
+  const [showFeedModal, setShowFeedModal] = useState(false);
+  const [feedInitialPostId, setFeedInitialPostId] = useState<number | undefined>(undefined);
+  const [currentAudioTrack, setCurrentAudioTrack] = useState<any>(null);
   
   const isOwnProfile = user?.username === username;
 
@@ -377,69 +383,41 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
         {activeTab === 'portfolio' && (
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">Portfolio</h2>
-              <div className="flex items-center gap-2">
-                <div className="flex bg-gray-900 rounded-lg p-0.5">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-cyan-500' : ''}`}
-                  >
-                    <Squares2X2Icon className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-cyan-500' : ''}`}
-                  >
-                    <ListBulletIcon className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
             {portfolioItems.length > 0 ? (
-              <div className={viewMode === 'grid' ? 'grid grid-cols-2 gap-3' : 'space-y-3'}>
+              <div 
+                className="portfolio-grid"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '12px',
+                  padding: '0'
+                }}
+              >
                 {portfolioItems.map((item) => (
                   <div 
                     key={item.id} 
-                    className="bg-gray-900 rounded-lg overflow-hidden group cursor-pointer"
                     onClick={() => {
-                      setSelectedPortfolioItem(item);
-                      setShowPortfolioDetail(true);
+                      // Handle audio differently - start playing
+                      if (item.content_type === 'audio') {
+                        setCurrentAudioTrack({
+                          id: item.id,
+                          title: item.title || 'Audio Track',
+                          url: item.content_url.startsWith('http') 
+                            ? item.content_url 
+                            : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`,
+                          thumbnail: item.thumbnail_url
+                        });
+                      }
+                      // Open feed for other types
+                      setFeedInitialPostId(item.id);
+                      setShowFeedModal(true);
                     }}
                   >
-                    <div className={`${viewMode === 'grid' ? 'aspect-square' : 'aspect-video'} bg-gray-800 relative overflow-hidden`}>
-                      {item.content_type === 'photo' && item.content_url && (
-                        <img
-                          src={item.content_url.startsWith('http') ? item.content_url : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`}
-                          alt={'Portfolio item'}
-                          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                          onError={(e) => {
-                            console.error('Failed to load image:', item.content_url);
-                            (e.target as HTMLImageElement).style.display = 'none';
-                          }}
-                        />
-                      )}
-                      {item.content_type === 'video' && item.content_url && (
-                        <video 
-                          src={item.content_url.startsWith('http') ? item.content_url : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`}
-                          className="w-full h-full object-cover pointer-events-none"
-                        />
-                      )}
-                      {item.content_type === 'audio' && item.content_url && (
-                        <div className="flex items-center justify-center w-full h-full bg-gray-800">
-                          <svg className="w-12 h-12 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                          </svg>
-                        </div>
-                      )}
-                      {item.content_type === 'link' && item.content_url && (
-                        <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20">
-                          <LinkIcon className="w-10 h-10 text-cyan-400" />
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition" />
-                    </div>
+                    <ContentDisplay 
+                      item={item} 
+                      isActive={false}
+                      showAttachments={false}
+                    />
                   </div>
                 ))}
               </div>
@@ -611,6 +589,68 @@ export default function ProfilePage({ params }: { params: { username: string } }
         isOpen={showNotifications}
         onClose={() => setShowNotifications(false)}
       />
+
+      {/* Feed Modal */}
+      <FeedModal
+        isOpen={showFeedModal}
+        onClose={() => {
+          setShowFeedModal(false);
+          setFeedInitialPostId(undefined);
+        }}
+        posts={portfolioItems}
+        initialPostId={feedInitialPostId}
+        isOwnProfile={isOwnProfile}
+        onEdit={(postId) => {
+          console.log('Edit post:', postId);
+          // TODO: Implement edit functionality
+        }}
+        onShare={(postId) => {
+          const post = portfolioItems.find(p => p.id === postId);
+          if (post) {
+            const url = `${window.location.origin}/${username}`;
+            navigator.clipboard.writeText(url);
+            toast.success('Link copied to clipboard!');
+          }
+        }}
+      />
+
+      {/* Mini Audio Player */}
+      {currentAudioTrack && (
+        <MiniPlayer
+          track={currentAudioTrack}
+          onClose={() => setCurrentAudioTrack(null)}
+          onNext={() => {
+            // Find next audio track
+            const currentIndex = portfolioItems.findIndex(p => p.id === currentAudioTrack.id);
+            const nextAudio = portfolioItems.slice(currentIndex + 1).find(p => p.content_type === 'audio');
+            if (nextAudio) {
+              setCurrentAudioTrack({
+                id: nextAudio.id,
+                title: nextAudio.title || 'Audio Track',
+                url: nextAudio.content_url.startsWith('http') 
+                  ? nextAudio.content_url 
+                  : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${nextAudio.content_url}`,
+                thumbnail: nextAudio.thumbnail_url
+              });
+            }
+          }}
+          onPrevious={() => {
+            // Find previous audio track
+            const currentIndex = portfolioItems.findIndex(p => p.id === currentAudioTrack.id);
+            const prevAudio = portfolioItems.slice(0, currentIndex).reverse().find(p => p.content_type === 'audio');
+            if (prevAudio) {
+              setCurrentAudioTrack({
+                id: prevAudio.id,
+                title: prevAudio.title || 'Audio Track',
+                url: prevAudio.content_url.startsWith('http') 
+                  ? prevAudio.content_url 
+                  : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${prevAudio.content_url}`,
+                thumbnail: prevAudio.thumbnail_url
+              });
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -580,3 +580,116 @@ select:disabled {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Portfolio Grid - 3 Columns Responsive */
+.portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+/* Mobile: 2 columns */
+@media (max-width: 640px) {
+  .portfolio-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+}
+
+/* Very small screens: 1 column for audio to span full width */
+@media (max-width: 400px) {
+  .portfolio-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Content Display Wrapper */
+.content-display-wrapper {
+  width: 100%;
+  min-height: 100px;
+}
+
+/* Audio posts span all 3 columns on desktop */
+.content-display-wrapper[style*="span 3"] {
+  grid-column: span 3;
+}
+
+/* Audio posts span all 2 columns on mobile */
+@media (max-width: 640px) {
+  .content-display-wrapper[style*="span 3"] {
+    grid-column: span 2;
+  }
+}
+
+/* Audio posts span 1 column on very small screens */
+@media (max-width: 400px) {
+  .content-display-wrapper[style*="span 3"] {
+    grid-column: span 1;
+  }
+}
+
+/* Photo and Video hover effects */
+.photo-display,
+.video-display {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Text display responsive font sizes */
+@media (max-width: 640px) {
+  .text-display {
+    padding: 16px !important;
+  }
+  
+  .text-display > div:first-child {
+    font-size: 16px !important;
+  }
+}
+
+/* Mini Player responsive adjustments */
+@media (max-width: 768px) {
+  .mini-player-mobile {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Feed Modal responsive */
+.feed-modal-overlay {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (max-width: 640px) {
+  .feed-post-item {
+    padding: 16px 12px !important;
+  }
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbar in feed modal for cleaner look */
+.feed-scroll-container {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.feed-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Touch target sizes for mobile */
+@media (max-width: 640px) {
+  button, a, input[type="button"], input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Safe area insets for iOS */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .mini-player-mobile {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+}
+
