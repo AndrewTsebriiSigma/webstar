@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Project } from '@/lib/types';
+import { projectsAPI } from '@/lib/api';
 
 interface ProjectDetailModalProps {
   isOpen: boolean;
@@ -31,16 +32,22 @@ export default function ProjectDetailModal({
 
   // Load project media when project changes
   useEffect(() => {
-    if (project && isOpen) {
-      // TODO: Load project media from API
-      // For now, using mock data
-      setProjectMedia([
-        { id: 1, media_type: 'photo', media_url: project.cover_image },
-        { id: 2, media_type: 'photo', media_url: project.cover_image },
-        { id: 3, media_type: 'video', media_url: '/sample-video.mp4' },
-        { id: 4, media_type: 'document', media_url: '/sample.pdf', thumbnail_url: null }
-      ]);
-    }
+    const loadProjectMedia = async () => {
+      if (project && isOpen) {
+        setLoading(true);
+        try {
+          const response = await projectsAPI.getProjectMedia(project.id);
+          setProjectMedia(response.data || []);
+        } catch (error) {
+          console.error('Failed to load project media:', error);
+          setProjectMedia([]);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadProjectMedia();
   }, [project, isOpen]);
 
   if (!isOpen || !project) return null;
