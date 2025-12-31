@@ -12,6 +12,7 @@ import CreateProjectModal from '@/components/CreateProjectModal';
 import SettingsModal from '@/components/SettingsModal';
 import EditAboutModal from '@/components/EditAboutModal';
 import PortfolioDetailModal from '@/components/PortfolioDetailModal';
+import ProjectDetailModal from '@/components/ProjectDetailModal';
 import AboutSection from '@/components/AboutSection';
 import CreateContentModal from '@/components/CreateContentModal';
 import NotificationsPanel from '@/components/NotificationsPanel';
@@ -59,6 +60,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [showFeedModal, setShowFeedModal] = useState(false);
   const [feedInitialPostId, setFeedInitialPostId] = useState<number | undefined>(undefined);
   const [currentAudioTrack, setCurrentAudioTrack] = useState<any>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [showProjectDetail, setShowProjectDetail] = useState(false);
   
   const isOwnProfile = user?.username === username;
 
@@ -393,7 +396,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   padding: '0'
                 }}
               >
-                {portfolioItems.map((item) => (
+                {[...portfolioItems].reverse().map((item) => (
                   <div 
                     key={item.id} 
                     onClick={() => {
@@ -448,38 +451,49 @@ export default function ProfilePage({ params }: { params: { username: string } }
             </div>
 
             {projects.length > 0 ? (
-              <div className="space-y-3">
-                {projects.map((project) => (
-                  <div key={project.id} className="bg-gray-900 rounded-lg overflow-hidden">
+              <div 
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '12px',
+                  padding: '0'
+                }}
+              >
+                {[...projects].reverse().map((project) => (
+                  <div 
+                    key={project.id} 
+                    onClick={() => {
+                      setSelectedProject(project);
+                      setShowProjectDetail(true);
+                    }}
+                    className="bg-gray-900 rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition"
+                    style={{
+                      aspectRatio: '4 / 5',
+                      position: 'relative'
+                    }}
+                  >
                     {project.cover_image && (
-                      <div className="aspect-video bg-gray-800">
-                        <img
-                          src={project.cover_image}
-                          alt={project.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
+                      <img
+                        src={project.cover_image}
+                        alt={project.title}
+                        className="w-full h-full object-cover"
+                      />
                     )}
-                    <div className="p-3">
-                      <div className="flex items-start justify-between mb-1.5">
-                        <h3 className="text-base font-semibold flex-1">{project.title}</h3>
-                        <span className="px-2 py-0.5 bg-gray-800 rounded text-xs">24</span>
+                    <div 
+                      style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        padding: '16px',
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
+                        color: '#FFFFFF'
+                      }}
+                    >
+                      <div className="flex items-start justify-between mb-1">
+                        <h3 className="text-sm font-semibold flex-1">{project.title}</h3>
+                        <span className="px-2 py-0.5 bg-black/50 rounded text-xs ml-2">24</span>
                       </div>
-                      {project.description && (
-                        <p className="text-gray-400 text-xs mb-2">{project.description}</p>
-                      )}
-                      {project.tags && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {project.tags.split(',').slice(0, 3).map((tag) => (
-                            <span
-                              key={tag}
-                              className="px-2 py-0.5 bg-gray-800 rounded-full text-xs"
-                            >
-                              {tag.trim()}
-                            </span>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -600,6 +614,16 @@ export default function ProfilePage({ params }: { params: { username: string } }
         posts={portfolioItems}
         initialPostId={feedInitialPostId}
         profile={profile}
+      />
+
+      {/* Project Detail Modal */}
+      <ProjectDetailModal
+        isOpen={showProjectDetail}
+        onClose={() => {
+          setShowProjectDetail(false);
+          setSelectedProject(null);
+        }}
+        project={selectedProject}
       />
 
       {/* Mini Audio Player */}
