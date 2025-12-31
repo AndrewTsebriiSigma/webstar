@@ -4,7 +4,7 @@ import uuid
 import logging
 from pathlib import Path
 from typing import Optional
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlmodel import Session, select
 
 from app.db.base import get_session
@@ -117,27 +117,52 @@ async def upload_profile_picture(
 @router.post("/media")
 async def upload_media(
     file: UploadFile = File(...),
-    media_type: Optional[str] = "photo",
+    media_type: str = Form("photo"),
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
     """Upload media file (photo, video, audio) to S3 or local storage."""
     try:
-        # Validate file type
+        logger.info(f"Upload request - media_type: {media_type}, file.content_type: {file.content_type}, filename: {file.filename}")
+        
+        # Validate media type
+        valid_media_types = ["photo", "video", "audio"]
+        if media_type not in valid_media_types:
+            raise HTTPException(status_code=400, detail=f"Invalid media type: {media_type}")
+        
+        # Validate file type - more permissive approach
         valid_types = {
-            "photo": ["image/jpeg", "image/png", "image/gif", "image/webp"],
-            "video": ["video/mp4", "video/quicktime", "video/x-msvideo", "video/webm", "video/mpeg"],
-            "audio": ["audio/mpeg", "audio/wav", "audio/ogg"]
+            "photo": ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"],
+            "video": [
+                "video/mp4", 
+                "video/quicktime", 
+                "video/x-msvideo", 
+                "video/webm", 
+                "video/mpeg",
+                "video/x-matroska",  # .mkv files
+                "video/ogg",
+                "application/octet-stream"  # Fallback for unknown types
+            ],
+            "audio": ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/mp4"]
         }
         
-        if media_type not in valid_types:
-            raise HTTPException(status_code=400, detail="Invalid media type")
-        
-        if file.content_type not in valid_types[media_type]:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid file type for {media_type}. Expected: {', '.join(valid_types[media_type])}"
-            )
+        # Check if content type is valid for the media type
+        if file.content_type and file.content_type not in valid_types[media_type]:
+            # If it's a video and has application/octet-stream, check file extension
+            if media_type == "video" and file.content_type == "application/octet-stream":
+                file_ext = os.path.splitext(file.filename)[1].lower() if file.filename else ""
+                valid_video_exts = [".mp4", ".mov", ".avi", ".webm", ".mpeg", ".mpg", ".mkv"]
+                if file_ext not in valid_video_exts:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Invalid video file extension: {file_ext}. Expected: {', '.join(valid_video_exts)}"
+                    )
+            else:
+                logger.warning(f"Invalid content type for {media_type}: {file.content_type}")
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid file type '{file.content_type}' for {media_type}. Expected: {', '.join(valid_types[media_type])}"
+                )
         
         # Generate unique filename
         file_ext = os.path.splitext(file.filename)[1] if file.filename else ""

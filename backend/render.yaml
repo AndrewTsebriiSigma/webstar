@@ -8,6 +8,10 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    startCommand: bash start.sh
     rootDir: backend
+    # Environment variables for file upload limits
+    envVars:
+      - key: MAX_REQUEST_SIZE
+        value: 209715200  # 200MB in bytes
 
