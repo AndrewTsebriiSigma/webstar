@@ -126,7 +126,7 @@ async def upload_media(
         # Validate file type
         valid_types = {
             "photo": ["image/jpeg", "image/png", "image/gif", "image/webp"],
-            "video": ["video/mp4", "video/quicktime", "video/x-msvideo"],
+            "video": ["video/mp4", "video/quicktime", "video/x-msvideo", "video/webm", "video/mpeg"],
             "audio": ["audio/mpeg", "audio/wav", "audio/ogg"]
         }
         
@@ -145,6 +145,20 @@ async def upload_media(
         
         # Read file content
         content = await file.read()
+        
+        # Validate file size (200MB max for videos, 5MB for photos, 10MB for audio)
+        max_sizes = {
+            "photo": 5 * 1024 * 1024,      # 5MB
+            "video": 200 * 1024 * 1024,    # 200MB
+            "audio": 10 * 1024 * 1024      # 10MB
+        }
+        
+        if len(content) > max_sizes[media_type]:
+            max_size_mb = max_sizes[media_type] / (1024 * 1024)
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large. Maximum size for {media_type} is {max_size_mb}MB"
+            )
         
         # Try S3 first (production), fallback to local (development)
         if s3_service.is_available():

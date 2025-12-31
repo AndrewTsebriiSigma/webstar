@@ -171,7 +171,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
           
           {/* Viewer Mode & Settings - Bigger buttons */}
           {isOwnProfile && (
-            <div className="absolute bottom-4 left-4 right-4 flex justify-between">
+            <div className="absolute top-4 left-4 right-4 flex justify-between">
               <button 
                 onClick={() => setViewerMode(!viewerMode)}
                 className={`w-9 h-9 rounded-full flex items-center justify-center ${viewerMode ? 'bg-cyan-500' : ''}`}

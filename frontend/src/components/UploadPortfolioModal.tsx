@@ -56,9 +56,9 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
     }
 
     // Check file size
-    const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
+    const maxSize = isVideo ? 200 * 1024 * 1024 : 5 * 1024 * 1024;
     if (selectedFile.size > maxSize) {
-      toast.error(`File must be less than ${isVideo ? '50MB' : '5MB'}`);
+      toast.error(`File must be less than ${isVideo ? '200MB' : '5MB'}`);
       return;
     }
 
