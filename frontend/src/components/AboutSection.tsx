@@ -368,18 +368,40 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
   const displayExperiences = getDisplayExperiences();
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* About Section */}
-      <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
+      <div 
+        className="rounded-xl p-4 border"
+        style={{
+          background: 'var(--bg-surface)',
+          borderColor: 'var(--border)',
+          borderRadius: 'var(--radius-xl)',
+        }}
+      >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-white text-lg">About</h3>
+          <h3 
+            className="font-semibold"
+            style={{ 
+              fontSize: '18px',
+              lineHeight: '24px',
+              fontWeight: '600',
+              color: 'var(--text-primary)'
+            }}
+          >
+            About
+          </h3>
           {isOwnProfile && !editingAbout && (
             <button
               onClick={startEditingAbout}
-              className="p-1.5 hover:bg-gray-800 rounded-lg transition"
+              className="flex items-center justify-center transition"
+              style={{
+                width: 'var(--height-icon-button)',
+                height: 'var(--height-icon-button)',
+                borderRadius: 'var(--radius-md)',
+              }}
               title="Edit about"
             >
-              <PencilIcon className="w-4 h-4 text-gray-400" />
+              <PencilIcon className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
             </button>
           )}
         </div>
@@ -392,23 +414,60 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
               maxLength={250}
               rows={4}
               placeholder={displayPlaceholder}
-              className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-white placeholder-gray-500"
+              className="w-full resize-none transition"
+              style={{
+                padding: 'var(--space-3) var(--space-4)',
+                background: 'var(--bg-surface-strong)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
+                color: 'var(--text-primary)',
+                fontSize: '15px',
+                lineHeight: '22px',
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'var(--blue)';
+                e.target.style.boxShadow = '0 0 0 4px var(--blue-10)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'var(--border)';
+                e.target.style.boxShadow = 'none';
+              }}
             />
-            <div className="flex items-center justify-between mt-2">
-              <span className="text-xs text-gray-500">{aboutText.length}/250</span>
-              <div className="flex gap-2">
+            <div className="flex items-center justify-between" style={{ marginTop: 'var(--space-2)' }}>
+              <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{aboutText.length}/250</span>
+              <div className="flex" style={{ gap: 'var(--space-2)' }}>
                 <button
                   onClick={() => {
                     setEditingAbout(false);
                     setAboutText(profile?.about || '');
                   }}
-                  className="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg transition text-white"
+                  className="transition"
+                  style={{
+                    padding: 'var(--space-2) var(--space-4)',
+                    height: 'var(--height-primary-btn)',
+                    background: 'var(--bg-surface-strong)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-lg)',
+                    color: 'var(--text-primary)',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={saveAbout}
-                  className="px-3 py-1.5 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition"
+                  className="transition"
+                  style={{
+                    padding: 'var(--space-2) var(--space-4)',
+                    height: 'var(--height-primary-btn)',
+                    background: 'var(--blue)',
+                    border: 'none',
+                    borderRadius: 'var(--radius-lg)',
+                    color: 'white',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                  }}
                 >
                   Save
                 </button>
@@ -419,11 +478,26 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
           <div>
             {profile?.about ? (
               <>
-                <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap mb-2">
+                <p 
+                  className="whitespace-pre-wrap"
+                  style={{
+                    color: 'var(--text-secondary)',
+                    fontSize: '15px',
+                    lineHeight: '22px',
+                    marginBottom: 'var(--space-2)',
+                  }}
+                >
                   {profile.about.length > 150 ? profile.about.substring(0, 150) + '...' : profile.about}
                 </p>
                 {profile.about.length > 150 && (
-                  <button className="text-blue-500 hover:text-blue-500/80 text-sm font-medium transition">
+                  <button 
+                    className="transition"
+                    style={{
+                      color: 'var(--blue)',
+                      fontSize: '15px',
+                      fontWeight: '600',
+                    }}
+                  >
                     Read more
                   </button>
                 )}
@@ -432,10 +506,17 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
               isOwnProfile && (
                 <button
                   onClick={startEditingAbout}
-                  className="w-full py-6 border-2 border-dashed border-gray-700 rounded-lg hover:border-blue-500 hover:bg-gray-800/50 transition text-gray-500 hover:text-blue-500"
+                  className="w-full transition"
+                  style={{
+                    padding: 'var(--space-6) 0',
+                    border: '2px dashed var(--border)',
+                    borderRadius: 'var(--radius-md)',
+                    background: 'transparent',
+                    color: 'var(--text-secondary)',
+                  }}
                 >
-                  <PlusIcon className="w-6 h-6 mx-auto mb-1" />
-                  <p className="text-xs font-medium">Add About</p>
+                  <PlusIcon className="w-5 h-5 mx-auto" style={{ marginBottom: 'var(--space-1)' }} />
+                  <p style={{ fontSize: '13px', fontWeight: '600' }}>Add About</p>
                 </button>
               )
             )}
@@ -444,43 +525,85 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
       </div>
 
       {/* Experience Section */}
-      <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-white text-lg">Experience</h3>
+      <div 
+        className="border"
+        style={{
+          background: 'var(--bg-surface)',
+          borderColor: 'var(--border)',
+          borderRadius: 'var(--radius-xl)',
+          padding: 'var(--space-4)',
+        }}
+      >
+        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
+          <h3 
+            className="font-semibold"
+            style={{
+              fontSize: '18px',
+              lineHeight: '24px',
+              fontWeight: '600',
+              color: 'var(--text-primary)',
+            }}
+          >
+            Experience
+          </h3>
           {isOwnProfile && !editingExperience && (
             <button
               onClick={startEditingExperience}
-              className="p-2 hover:bg-gray-800 rounded-lg transition"
+              className="flex items-center justify-center transition"
+              style={{
+                width: 'var(--height-icon-button)',
+                height: 'var(--height-icon-button)',
+                borderRadius: 'var(--radius-md)',
+              }}
               title="Edit experience"
             >
-              <PencilIcon className="w-5 h-5 text-gray-400" />
+              <PencilIcon className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
             </button>
           )}
         </div>
 
         {editingExperience ? (
-          <div className="w-[80%]">
+          <div style={{ maxWidth: '336px', margin: '0 auto' }}>
             {experiences.length > 0 ? (
-              <div className="space-y-4 mb-4">
+              <div style={{ marginBottom: 'var(--space-4)' }}>
                 {experiences.map((exp, index) => (
-                  <div key={exp.id} className="p-4 bg-gray-800 rounded-xl border border-gray-700">
-                    <div className="flex justify-between items-start mb-3">
-                      <h4 className="text-sm font-semibold text-blue-500">Experience {index + 1}</h4>
+                  <div 
+                    key={exp.id} 
+                    className="border"
+                    style={{
+                      padding: 'var(--space-4)',
+                      background: 'var(--bg-surface-strong)',
+                      borderRadius: 'var(--radius-xl)',
+                      borderColor: 'var(--border)',
+                      marginBottom: index < experiences.length - 1 ? 'var(--space-4)' : '0',
+                    }}
+                  >
+                    <div className="flex justify-between items-start" style={{ marginBottom: 'var(--space-3)' }}>
+                      <h4 style={{ fontSize: '15px', fontWeight: '600', color: 'var(--blue)' }}>Experience {index + 1}</h4>
                       <button
                         onClick={() => removeExperience(index)}
-                        className="text-red-400 hover:text-red-300"
+                        className="transition"
+                        style={{ color: 'var(--error)' }}
                       >
                         <TrashIcon className="w-5 h-5" />
                       </button>
                     </div>
-                    <div className="space-y-3">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                       <input
                         type="text"
                         placeholder="Creative Director"
                         value={exp.title}
                         onChange={(e) => updateExperience(index, 'title', e.target.value)}
                         maxLength={30}
-                        className="w-full px-3 py-2 text-sm bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500"
+                        className="w-full transition"
+                        style={{
+                          padding: 'var(--space-2) var(--space-3)',
+                          background: 'var(--bg-surface)',
+                          border: '1px solid var(--border)',
+                          borderRadius: 'var(--radius-md)',
+                          color: 'var(--text-primary)',
+                          fontSize: '15px',
+                        }}
                       />
                       <input
                         type="text"
@@ -488,11 +611,19 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                         value={exp.company}
                         onChange={(e) => updateExperience(index, 'company', e.target.value)}
                         maxLength={30}
-                        className="w-full px-3 py-2 text-sm bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500"
+                        className="w-full transition"
+                        style={{
+                          padding: 'var(--space-2) var(--space-3)',
+                          background: 'var(--bg-surface)',
+                          border: '1px solid var(--border)',
+                          borderRadius: 'var(--radius-md)',
+                          color: 'var(--text-primary)',
+                          fontSize: '15px',
+                        }}
                       />
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2" style={{ gap: 'var(--space-3)' }}>
                         <div>
-                          <label className="block text-xs text-gray-400 mb-1">Start Date</label>
+                          <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: 'var(--space-1)' }}>Start Date</label>
                           <SimpleCalendar
                             value={exp.startDate}
                             onChange={(date) => updateExperience(index, 'startDate', date)}
@@ -500,11 +631,11 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-400 mb-1">End Date (leave empty for Present)</label>
+                          <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: 'var(--space-1)' }}>End Date</label>
                           <SimpleCalendar
                             value={exp.endDate}
                             onChange={(date) => updateExperience(index, 'endDate', date)}
-                            placeholder="End date or Present"
+                            placeholder="End date"
                           />
                         </div>
                       </div>
@@ -513,7 +644,15 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                         value={exp.description}
                         onChange={(e) => updateExperience(index, 'description', e.target.value)}
                         rows={2}
-                        className="w-full px-3 py-2 text-sm bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 resize-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full resize-none transition"
+                        style={{
+                          padding: 'var(--space-2) var(--space-3)',
+                          background: 'var(--bg-surface)',
+                          border: '1px solid var(--border)',
+                          borderRadius: 'var(--radius-md)',
+                          color: 'var(--text-primary)',
+                          fontSize: '15px',
+                        }}
                       />
                     </div>
                   </div>
@@ -523,62 +662,141 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
 
             <button
               onClick={addExperience}
-              className="w-full py-3 bg-gray-800 hover:bg-gray-750 border border-gray-700 rounded-xl transition text-blue-500 font-medium flex items-center justify-center gap-2"
+              className="w-full transition flex items-center justify-center"
+              style={{
+                padding: 'var(--space-3)',
+                height: 'var(--height-primary-btn)',
+                background: 'var(--bg-surface-strong)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-xl)',
+                color: 'var(--blue)',
+                fontWeight: '600',
+                fontSize: '15px',
+                marginBottom: 'var(--space-4)',
+              }}
             >
-              <PlusIcon className="w-5 h-5" />
+              <PlusIcon className="w-5 h-5" style={{ marginRight: 'var(--space-2)' }} />
               Add Experience
             </button>
 
-            <div className="flex gap-2 mt-4">
+            <div className="flex" style={{ gap: 'var(--space-2)' }}>
               <button
                 onClick={() => {
                   setEditingExperience(false);
                 }}
-                className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition text-white"
+                className="flex-1 transition"
+                style={{
+                  height: 'var(--height-primary-btn)',
+                  background: 'var(--bg-surface-strong)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-md)',
+                  color: 'var(--text-primary)',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                }}
               >
                 Cancel
               </button>
               <button
                 onClick={saveExperience}
-                className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition"
+                className="flex-1 transition"
+                style={{
+                  height: 'var(--height-primary-btn)',
+                  background: 'var(--blue)',
+                  border: 'none',
+                  borderRadius: 'var(--radius-md)',
+                  color: 'white',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                }}
               >
                 Save
               </button>
             </div>
           </div>
         ) : (
-          <div className="w-[80%]">
+          <div style={{ maxWidth: '336px', margin: '0 auto' }}>
             {displayExperiences.length > 0 ? (
               <div className="relative" style={{ paddingLeft: '32px' }}>
                 {/* Vertical line - positioned to pass through circle center at 8px from container edge */}
-                <div className="absolute top-0 bottom-0 w-px bg-gray-700" style={{ left: '8px' }}></div>
-                <div className="space-y-6">
+                <div 
+                  className="absolute top-0 bottom-0 w-px" 
+                  style={{ left: '8px', background: 'var(--border)' }}
+                ></div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
                   {displayExperiences.map((item, index) => (
                     <div key={item.id || index} className="relative">
                       {/* Blue dot - 8px circle centered at 8px (left edge at 4px) */}
-                      <div className="absolute top-0 w-2 h-2 bg-blue-500 rounded-full" style={{ left: '-28px', marginTop: '2px' }}></div>
+                      <div 
+                        className="absolute top-0 rounded-full" 
+                        style={{ 
+                          left: '-28px', 
+                          marginTop: '2px',
+                          width: '8px',
+                          height: '8px',
+                          background: 'var(--blue)'
+                        }}
+                      ></div>
           <div>
-                        <h4 className="font-semibold text-white text-sm mb-1">{item.title}</h4>
-                        <p className="text-blue-500 text-sm mb-1">{item.company}</p>
-                        <p className="text-gray-500 text-sm mb-2">
+                        <h4 
+                          className="font-semibold"
+                          style={{
+                            fontSize: '15px',
+                            color: 'var(--text-primary)',
+                            marginBottom: 'var(--space-1)',
+                          }}
+                        >
+                          {item.title}
+                        </h4>
+                        <p 
+                          style={{
+                            color: 'var(--blue)',
+                            fontSize: '15px',
+                            marginBottom: 'var(--space-1)',
+                          }}
+                        >
+                          {item.company}
+                        </p>
+                        <p 
+                          style={{
+                            color: 'var(--text-secondary)',
+                            fontSize: '15px',
+                            marginBottom: 'var(--space-2)',
+                          }}
+                        >
                           {formatExperiencePeriod(item.startDate, item.endDate)}
                         </p>
                           {item.description && (
-                            <p className="text-gray-400 text-sm leading-relaxed">{item.description}</p>
-                          )}
+                          <p 
+                            style={{
+                              color: 'var(--text-secondary)',
+                              fontSize: '15px',
+                              lineHeight: '22px',
+                            }}
+                          >
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
                         </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
               </div>
             ) : (
               isOwnProfile && (
                 <button
                   onClick={startEditingExperience}
-                  className="w-full py-8 border-2 border-dashed border-gray-700 rounded-xl hover:border-blue-500 hover:bg-gray-800/50 transition text-gray-500 hover:text-blue-500"
+                  className="w-full transition"
+                  style={{
+                    padding: 'var(--space-8) 0',
+                    border: '2px dashed var(--border)',
+                    borderRadius: 'var(--radius-xl)',
+                    background: 'transparent',
+                    color: 'var(--text-secondary)',
+                  }}
                 >
-                  <PlusIcon className="w-8 h-8 mx-auto mb-2" />
-                  <p className="text-sm font-medium">Add Experience</p>
+                  <PlusIcon className="w-6 h-6 mx-auto" style={{ marginBottom: 'var(--space-2)' }} />
+                  <p style={{ fontSize: '15px', fontWeight: '600' }}>Add Experience</p>
                 </button>
               )
             )}
@@ -587,28 +805,51 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
       </div>
 
       {/* Skills Section */}
-      <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-white text-lg">Skills</h3>
+      <div 
+        className="border"
+        style={{
+          background: 'var(--bg-surface)',
+          borderColor: 'var(--border)',
+          borderRadius: 'var(--radius-xl)',
+          padding: 'var(--space-4)',
+        }}
+      >
+        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
+          <h3 
+            className="font-semibold"
+            style={{
+              fontSize: '18px',
+              lineHeight: '24px',
+              fontWeight: '600',
+              color: 'var(--text-primary)',
+            }}
+          >
+            Skills
+          </h3>
           {isOwnProfile && !editingSkills && (
             <button
               onClick={startEditingSkills}
-              className="p-2 hover:bg-gray-800 rounded-lg transition"
+              className="flex items-center justify-center transition"
+              style={{
+                width: 'var(--height-icon-button)',
+                height: 'var(--height-icon-button)',
+                borderRadius: 'var(--radius-md)',
+              }}
               title="Edit skills"
             >
-              <PencilIcon className="w-5 h-5 text-gray-400" />
+              <PencilIcon className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
             </button>
           )}
         </div>
 
         {editingSkills ? (
-          <div className="w-[80%]">
+          <div style={{ maxWidth: '336px', margin: '0 auto' }}>
             {skills.length > 0 && (
-              <div className="space-y-4 mb-4">
+              <div style={{ marginBottom: 'var(--space-4)' }}>
                 {skills.map((skill, index) => (
-                  <div key={index}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-white text-sm font-medium">{skill.name}</span>
+                  <div key={index} style={{ marginBottom: index < skills.length - 1 ? 'var(--space-4)' : '0' }}>
+                    <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-2)' }}>
+                      <span style={{ color: 'var(--text-primary)', fontSize: '15px', fontWeight: '600' }}>{skill.name}</span>
                     </div>
                     <input
                       type="range"
@@ -616,7 +857,12 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                       max="100"
                       value={skill.level}
                       onChange={(e) => updateSkillLevel(index, parseInt(e.target.value))}
-                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-thumb"
+                      className="w-full appearance-none cursor-pointer"
+                      style={{
+                        height: '8px',
+                        background: 'var(--bg-surface-strong)',
+                        borderRadius: 'var(--radius-pill)',
+                      }}
                     />
                   </div>
                 ))}
@@ -624,56 +870,104 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
             )}
 
             {skills.length < 6 && (
-              <div className="flex gap-2 mb-4">
+              <div className="flex" style={{ gap: 'var(--space-2)', marginBottom: 'var(--space-4)' }}>
                 <input
                   type="text"
                   value={newSkillName}
                   onChange={(e) => setNewSkillName(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && addSkill()}
                   placeholder="Add a skill (max 6)"
-                  className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 transition"
+                  style={{
+                    padding: 'var(--space-2) var(--space-4)',
+                    height: 'var(--height-primary-btn)',
+                    background: 'var(--bg-surface-strong)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-md)',
+                    color: 'var(--text-primary)',
+                    fontSize: '15px',
+                  }}
                 />
                 <button
                   onClick={addSkill}
                   disabled={skills.length >= 6}
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg disabled:opacity-50 transition"
+                  className="transition"
+                  style={{
+                    padding: 'var(--space-2) var(--space-4)',
+                    height: 'var(--height-primary-btn)',
+                    background: 'var(--blue)',
+                    border: 'none',
+                    borderRadius: 'var(--radius-md)',
+                    color: 'white',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    opacity: skills.length >= 6 ? 0.45 : 1,
+                  }}
                 >
                   Add
                 </button>
               </div>
             )}
 
-            <div className="flex gap-2">
+            <div className="flex" style={{ gap: 'var(--space-2)' }}>
               <button
                 onClick={() => {
                   setEditingSkills(false);
                   setNewSkillName('');
                 }}
-                className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition text-white"
+                className="flex-1 transition"
+                style={{
+                  height: 'var(--height-primary-btn)',
+                  background: 'var(--bg-surface-strong)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-md)',
+                  color: 'var(--text-primary)',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                }}
               >
                 Cancel
               </button>
               <button
                 onClick={saveSkills}
-                className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition"
+                className="flex-1 transition"
+                style={{
+                  height: 'var(--height-primary-btn)',
+                  background: 'var(--blue)',
+                  border: 'none',
+                  borderRadius: 'var(--radius-md)',
+                  color: 'white',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                }}
               >
                 Save
               </button>
             </div>
           </div>
         ) : (
-          <div className="w-[80%]">
+          <div style={{ maxWidth: '336px', margin: '0 auto' }}>
             {displaySkills.length > 0 ? (
-              <div className="space-y-4">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                 {displaySkills.map((skill, index) => (
                   <div key={index}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-white text-sm font-medium">{skill.name}</span>
+                    <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-2)' }}>
+                      <span style={{ color: 'var(--text-primary)', fontSize: '15px', fontWeight: '600' }}>{skill.name}</span>
                     </div>
-                    <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div 
+                      className="w-full rounded-full overflow-hidden"
+                      style={{
+                        height: '8px',
+                        background: 'var(--bg-surface-strong)',
+                      }}
+                    >
                       <div
-                        className="h-full bg-blue-500 rounded-full transition-all duration-500"
-                        style={{ width: `${skill.level}%` }}
+                        className="h-full rounded-full transition-all"
+                        style={{ 
+                          width: `${skill.level}%`,
+                          background: 'var(--blue)',
+                          transitionDuration: '500ms',
+                        }}
                       />
                     </div>
                   </div>
@@ -683,10 +977,17 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
               isOwnProfile && (
                 <button
                   onClick={startEditingSkills}
-                  className="w-full py-8 border-2 border-dashed border-gray-700 rounded-xl hover:border-blue-500 hover:bg-gray-800/50 transition text-gray-500 hover:text-blue-500"
+                  className="w-full transition"
+                  style={{
+                    padding: 'var(--space-8) 0',
+                    border: '2px dashed var(--border)',
+                    borderRadius: 'var(--radius-xl)',
+                    background: 'transparent',
+                    color: 'var(--text-secondary)',
+                  }}
                 >
-                  <PlusIcon className="w-8 h-8 mx-auto mb-2" />
-                  <p className="text-sm font-medium">Add Skills</p>
+                  <PlusIcon className="w-6 h-6 mx-auto" style={{ marginBottom: 'var(--space-2)' }} />
+                  <p style={{ fontSize: '15px', fontWeight: '600' }}>Add Skills</p>
                 </button>
               )
             )}
@@ -695,62 +996,110 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
       </div>
 
       {/* Connect Section */}
-      <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-white text-lg">Connect</h3>
+      <div 
+        className="border"
+        style={{
+          background: 'var(--bg-surface)',
+          borderColor: 'var(--border)',
+          borderRadius: 'var(--radius-xl)',
+          padding: 'var(--space-4)',
+        }}
+      >
+        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
+          <h3 
+            className="font-semibold"
+            style={{
+              fontSize: '18px',
+              lineHeight: '24px',
+              fontWeight: '600',
+              color: 'var(--text-primary)',
+            }}
+          >
+            Connect
+          </h3>
           {isOwnProfile && !showAddConnect && (
             <button
               onClick={() => setShowAddConnect(true)}
-              className="p-2 hover:bg-gray-800 rounded-lg transition"
+              className="flex items-center justify-center transition"
+              style={{
+                width: 'var(--height-icon-button)',
+                height: 'var(--height-icon-button)',
+                borderRadius: 'var(--radius-md)',
+              }}
               title="Add social link"
             >
-              <PlusIcon className="w-5 h-5 text-gray-400" />
+              <PlusIcon className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
             </button>
           )}
         </div>
 
         {showAddConnect && isOwnProfile ? (
-          <div className="w-full max-w-md mx-auto">
-            <div className="flex items-center gap-1 mb-2">
+          <div style={{ maxWidth: '336px', margin: '0 auto' }}>
+            <div className="flex items-center" style={{ gap: 'var(--space-1)', marginBottom: 'var(--space-2)' }}>
               {/* Platform Selector */}
               <div className="relative flex-1" ref={platformSelectorRef}>
-                <button
+              <button
                   onClick={() => setShowPlatformSelector(!showPlatformSelector)}
-                  className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white flex items-center justify-center gap-1 hover:bg-gray-750 transition text-xs"
+                  className="w-full flex items-center justify-center transition"
+                  style={{
+                    padding: 'var(--space-2)',
+                    height: 'var(--height-primary-btn)',
+                    background: 'var(--bg-surface-strong)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-md)',
+                    color: 'var(--text-primary)',
+                    fontSize: '13px',
+                    gap: 'var(--space-1)',
+                  }}
                 >
                   {selectedPlatform ? (
                     <>
                       {selectedPlatform === 'instagram' && (
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                         </svg>
                       )}
                       {selectedPlatform === 'linkedin' && (
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                         </svg>
                       )}
                       {selectedPlatform === 'facebook' && (
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                         </svg>
                       )}
-                      <span className="capitalize text-xs">{selectedPlatform}</span>
+                      <span className="capitalize" style={{ fontSize: '13px' }}>{selectedPlatform}</span>
                     </>
                   ) : (
-                    <span className="text-gray-400 text-xs">Select platform</span>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Select platform</span>
                   )}
-                </button>
+              </button>
                 {showPlatformSelector && (
-                  <div className="absolute top-full left-0 right-0 mt-0.5 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
-                    <button
+                  <div 
+                    className="absolute top-full left-0 right-0 z-50"
+                    style={{
+                      marginTop: '4px',
+                      background: 'var(--bg-surface-strong)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 'var(--radius-md)',
+                      boxShadow: 'var(--shadow-card)',
+                    }}
+                  >
+              <button
                       onClick={() => {
                         setSelectedPlatform('instagram');
                         setShowPlatformSelector(false);
                       }}
-                      className="w-full px-2 py-1.5 flex items-center gap-2 hover:bg-gray-700 transition text-white text-xs"
+                      className="w-full flex items-center transition"
+                      style={{
+                        padding: 'var(--space-2)',
+                        gap: 'var(--space-2)',
+                        color: 'var(--text-primary)',
+                        fontSize: '13px',
+                      }}
                     >
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                       </svg>
                       <span>Instagram</span>
@@ -760,9 +1109,16 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                         setSelectedPlatform('linkedin');
                         setShowPlatformSelector(false);
                       }}
-                      className="w-full px-2 py-1.5 flex items-center gap-2 hover:bg-gray-700 transition text-white border-t border-gray-700 text-xs"
+                      className="w-full flex items-center transition border-t"
+                      style={{
+                        padding: 'var(--space-2)',
+                        gap: 'var(--space-2)',
+                        color: 'var(--text-primary)',
+                        fontSize: '13px',
+                        borderTopColor: 'var(--border)',
+                      }}
                     >
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                       </svg>
                       <span>LinkedIn</span>
@@ -772,30 +1128,54 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                         setSelectedPlatform('facebook');
                         setShowPlatformSelector(false);
                       }}
-                      className="w-full px-2 py-1.5 flex items-center gap-2 hover:bg-gray-700 transition text-white border-t border-gray-700 text-xs"
+                      className="w-full flex items-center transition border-t"
+                      style={{
+                        padding: 'var(--space-2)',
+                        gap: 'var(--space-2)',
+                        color: 'var(--text-primary)',
+                        fontSize: '13px',
+                        borderTopColor: 'var(--border)',
+                      }}
                     >
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                       </svg>
                       <span>Facebook</span>
-                    </button>
-                  </div>
+              </button>
+            </div>
                 )}
-              </div>
-
               {/* Nickname Input */}
               <input
                 type="text"
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
                 placeholder="nickname"
-                className="flex-1 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs"
+                className="flex-1 transition"
+                style={{
+                  padding: 'var(--space-2)',
+                  height: 'var(--height-primary-btn)',
+                  background: 'var(--bg-surface-strong)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-md)',
+                  color: 'var(--text-primary)',
+                  fontSize: '13px',
+                }}
               />
 
               {/* Save Button */}
               <button
                 onClick={saveConnect}
-                className="px-2 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition font-medium text-xs whitespace-nowrap"
+                className="transition whitespace-nowrap"
+                style={{
+                  padding: 'var(--space-2) var(--space-3)',
+                  height: 'var(--height-primary-btn)',
+                  background: 'var(--blue)',
+                  border: 'none',
+                  borderRadius: 'var(--radius-md)',
+                  color: 'white',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                }}
               >
                 Save
               </button>
@@ -808,36 +1188,51 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                   setNickname('');
                   setShowPlatformSelector(false);
                 }}
-                className="px-2 py-1.5 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition text-xs whitespace-nowrap"
+                className="transition whitespace-nowrap"
+                style={{
+                  padding: 'var(--space-2) var(--space-3)',
+                  height: 'var(--height-primary-btn)',
+                  background: 'var(--bg-surface-strong)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-md)',
+                  color: 'var(--text-primary)',
+                  fontSize: '13px',
+                }}
               >
                 Cancel
               </button>
             </div>
           </div>
         ) : (
-          <div className="w-[80%]">
+          <div style={{ maxWidth: '336px', margin: '0 auto' }}>
             {Object.keys(savedLinks).length > 0 ? (
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap" style={{ gap: 'var(--space-4)' }}>
                 {Object.entries(savedLinks).map(([platform, link]) => (
                   <div key={platform} className="relative group">
                     <a
-                      href={`https://${link}`}
+                      href={link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center w-12 h-12 bg-gray-800 hover:bg-gray-700 rounded-lg transition"
+                      className="flex items-center justify-center transition"
+                      style={{
+                        width: 'var(--height-icon-button)',
+                        height: 'var(--height-icon-button)',
+                        background: 'var(--bg-surface-strong)',
+                        borderRadius: 'var(--radius-md)',
+                      }}
                     >
                       {platform === 'instagram' && (
-                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-primary)' }}>
                           <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                         </svg>
                       )}
                       {platform === 'linkedin' && (
-                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-primary)' }}>
                           <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                         </svg>
                       )}
                       {platform === 'facebook' && (
-                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-primary)' }}>
                           <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                         </svg>
                       )}
@@ -845,17 +1240,35 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                     {isOwnProfile && (
                       <button
                         onClick={() => removeConnect(platform)}
-                        className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                        className="absolute transition flex items-center justify-center"
+                        style={{
+                          top: '-8px',
+                          right: '-8px',
+                          width: '20px',
+                          height: '20px',
+                          background: 'var(--error)',
+                          borderRadius: '50%',
+                          opacity: 0,
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                        onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}
                       >
-                        <XMarkIcon className="w-3 h-3 text-white" />
-                    </button>
+                        <XMarkIcon className="w-3 h-3" style={{ color: 'white' }} />
+                      </button>
                     )}
                   </div>
                 ))}
-                    </div>
+              </div>
             ) : (
               isOwnProfile && (
-                <div className="text-center py-8 text-gray-500 text-sm">
+                <div 
+                  className="text-center"
+                  style={{
+                    padding: 'var(--space-8) 0',
+                    color: 'var(--text-secondary)',
+                    fontSize: '15px',
+                  }}
+                >
                   No social links added yet
                 </div>
               )
