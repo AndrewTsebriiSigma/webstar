@@ -222,7 +222,9 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
 
     if (showPlatformSelector) {
       document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
     }
   }, [showPlatformSelector]);
 
@@ -1144,6 +1146,8 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
               </button>
             </div>
                 )}
+              </div>
+
               {/* Nickname Input */}
               <input
                 type="text"
