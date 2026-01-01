@@ -23,9 +23,12 @@ export default function SimpleCalendar({ value, onChange, placeholder = 'Select 
   const calendarRef = useRef<HTMLDivElement>(null);
 
   const parseDate = (dateStr: string): Date | null => {
-    if (!dateStr) return null;
+    if (!dateStr || dateStr === 'undefined' || dateStr === 'null') return null;
     try {
-      return new Date(dateStr + 'T00:00:00');
+      const date = new Date(dateStr + 'T00:00:00');
+      // Check if date is valid
+      if (isNaN(date.getTime())) return null;
+      return date;
     } catch {
       return null;
     }
@@ -38,9 +41,13 @@ export default function SimpleCalendar({ value, onChange, placeholder = 'Select 
   useEffect(() => {
     if (value) {
       const parsed = parseDate(value);
-      if (parsed) {
+      if (parsed && !isNaN(parsed.getTime())) {
         setCurrentMonth(new Date(parsed.getFullYear(), parsed.getMonth(), 1));
       }
+    } else {
+      // Initialize with current month if no value
+      const today = new Date();
+      setCurrentMonth(new Date(today.getFullYear(), today.getMonth(), 1));
     }
   }, [value]);
 
@@ -117,7 +124,7 @@ export default function SimpleCalendar({ value, onChange, placeholder = 'Select 
     );
   };
 
-  const displayValue = selectedDate
+  const displayValue = selectedDate && !isNaN(selectedDate.getTime())
     ? `${MONTHS[selectedDate.getMonth()]} ${selectedDate.getDate()}, ${selectedDate.getFullYear()}`
     : '';
 

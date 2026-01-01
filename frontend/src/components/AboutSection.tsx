@@ -52,6 +52,14 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
   const [editingExperience, setEditingExperience] = useState(false);
   const [experiences, setExperiences] = useState<Experience[]>([]);
 
+  // Connect editing
+  const [showAddConnect, setShowAddConnect] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  const [nickname, setNickname] = useState('');
+  const [showPlatformSelector, setShowPlatformSelector] = useState(false);
+  const [savedLinks, setSavedLinks] = useState<Record<string, string>>({});
+  const platformSelectorRef = useRef<HTMLDivElement>(null);
+
   // Dynamic placeholder animation
   useEffect(() => {
     if (!editingAbout) {
@@ -189,6 +197,76 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
       onUpdate();
     } catch (error) {
       toast.error('Failed to update experience');
+    }
+  };
+
+  // Initialize saved links from profile
+  useEffect(() => {
+    if (profile?.social_links) {
+      try {
+        const links = JSON.parse(profile.social_links);
+        setSavedLinks(links || {});
+      } catch {
+        setSavedLinks({});
+      }
+    }
+  }, [profile]);
+
+  // Handle click outside platform selector
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (platformSelectorRef.current && !platformSelectorRef.current.contains(event.target as Node)) {
+        setShowPlatformSelector(false);
+      }
+    }
+
+    if (showPlatformSelector) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showPlatformSelector]);
+
+  const saveConnect = async () => {
+    if (!selectedPlatform || !nickname.trim()) {
+      toast.error('Please select a platform and enter a nickname');
+      return;
+    }
+
+    try {
+      const platformDomains: Record<string, string> = {
+        instagram: 'instagram.com',
+        linkedin: 'linkedin.com',
+        facebook: 'facebook.com',
+      };
+
+      const domain = platformDomains[selectedPlatform];
+      const link = `${domain}/${nickname.trim()}`;
+      
+      const updatedLinks = { ...savedLinks, [selectedPlatform]: link };
+      await profileAPI.updateMe({ social_links: JSON.stringify(updatedLinks) });
+      
+      setSavedLinks(updatedLinks);
+      setShowAddConnect(false);
+      setSelectedPlatform(null);
+      setNickname('');
+      setShowPlatformSelector(false);
+      toast.success('Social link added!');
+      onUpdate();
+    } catch (error) {
+      toast.error('Failed to save social link');
+    }
+  };
+
+  const removeConnect = async (platform: string) => {
+    try {
+      const updatedLinks = { ...savedLinks };
+      delete updatedLinks[platform];
+      await profileAPI.updateMe({ social_links: JSON.stringify(updatedLinks) });
+      setSavedLinks(updatedLinks);
+      toast.success('Social link removed!');
+      onUpdate();
+    } catch (error) {
+      toast.error('Failed to remove social link');
     }
   };
 
@@ -479,16 +557,16 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                     <div key={item.id || index} className="relative">
                       {/* Blue dot - 8px circle centered at 8px (left edge at 4px) */}
                       <div className="absolute top-0 w-2 h-2 bg-blue-500 rounded-full" style={{ left: '-28px', marginTop: '2px' }}></div>
-                      <div>
+          <div>
                         <h4 className="font-semibold text-white text-sm mb-1">{item.title}</h4>
                         <p className="text-blue-500 text-sm mb-1">{item.company}</p>
                         <p className="text-gray-500 text-sm mb-2">
                           {formatExperiencePeriod(item.startDate, item.endDate)}
                         </p>
-                        {item.description && (
-                          <p className="text-gray-400 text-sm leading-relaxed">{item.description}</p>
-                        )}
-                      </div>
+                          {item.description && (
+                            <p className="text-gray-400 text-sm leading-relaxed">{item.description}</p>
+                          )}
+                        </div>
                     </div>
                   ))}
                 </div>
@@ -610,6 +688,176 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                   <PlusIcon className="w-8 h-8 mx-auto mb-2" />
                   <p className="text-sm font-medium">Add Skills</p>
                 </button>
+              )
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Connect Section */}
+      <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-white text-lg">Connect</h3>
+          {isOwnProfile && !showAddConnect && (
+            <button
+              onClick={() => setShowAddConnect(true)}
+              className="p-2 hover:bg-gray-800 rounded-lg transition"
+              title="Add social link"
+            >
+              <PlusIcon className="w-5 h-5 text-gray-400" />
+            </button>
+          )}
+        </div>
+
+        {showAddConnect && isOwnProfile ? (
+          <div className="w-[80%] mx-auto">
+            <div className="flex items-center gap-2 mb-4">
+              {/* Platform Selector */}
+              <div className="relative flex-1" ref={platformSelectorRef}>
+                <button
+                  onClick={() => setShowPlatformSelector(!showPlatformSelector)}
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white flex items-center justify-center gap-2 hover:bg-gray-750 transition"
+                >
+                  {selectedPlatform ? (
+                    <>
+                      {selectedPlatform === 'instagram' && (
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                        </svg>
+                      )}
+                      {selectedPlatform === 'linkedin' && (
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                        </svg>
+                      )}
+                      {selectedPlatform === 'facebook' && (
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                      )}
+                      <span className="capitalize">{selectedPlatform}</span>
+                    </>
+                  ) : (
+                    <span className="text-gray-400">Select platform</span>
+                  )}
+                </button>
+                {showPlatformSelector && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
+                    <button
+                      onClick={() => {
+                        setSelectedPlatform('instagram');
+                        setShowPlatformSelector(false);
+                      }}
+                      className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-700 transition text-white"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                      </svg>
+                      <span>Instagram</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedPlatform('linkedin');
+                        setShowPlatformSelector(false);
+                      }}
+                      className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-700 transition text-white border-t border-gray-700"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                      </svg>
+                      <span>LinkedIn</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedPlatform('facebook');
+                        setShowPlatformSelector(false);
+                      }}
+                      className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-700 transition text-white border-t border-gray-700"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                      </svg>
+                      <span>Facebook</span>
+                    </button>
+                </div>
+                )}
+            </div>
+
+              {/* Nickname Input */}
+              <input
+                type="text"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="nickname"
+                className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+
+              {/* Save Button */}
+              <button
+                onClick={saveConnect}
+                className="px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition font-medium"
+              >
+                Save
+              </button>
+
+              {/* Cancel Button */}
+              <button
+                onClick={() => {
+                  setShowAddConnect(false);
+                  setSelectedPlatform(null);
+                  setNickname('');
+                  setShowPlatformSelector(false);
+                }}
+                className="px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="w-[80%]">
+            {Object.keys(savedLinks).length > 0 ? (
+              <div className="flex flex-wrap gap-4">
+                {Object.entries(savedLinks).map(([platform, link]) => (
+                  <div key={platform} className="relative group">
+                    <a
+                      href={`https://${link}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center w-12 h-12 bg-gray-800 hover:bg-gray-700 rounded-lg transition"
+                    >
+                      {platform === 'instagram' && (
+                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                        </svg>
+                      )}
+                      {platform === 'linkedin' && (
+                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                        </svg>
+                      )}
+                      {platform === 'facebook' && (
+                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                      )}
+                    </a>
+                    {isOwnProfile && (
+                      <button
+                        onClick={() => removeConnect(platform)}
+                        className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                      >
+                        <XMarkIcon className="w-3 h-3 text-white" />
+                    </button>
+                    )}
+                  </div>
+                ))}
+                    </div>
+            ) : (
+              isOwnProfile && (
+                <div className="text-center py-8 text-gray-500 text-sm">
+                  No social links added yet
+                </div>
               )
             )}
           </div>
