@@ -506,6 +506,9 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                     fontSize: '15px',
                     lineHeight: '22px',
                     marginBottom: 'var(--space-2)',
+                    wordBreak: 'break-word',
+                    overflowWrap: 'break-word',
+                    width: '100%',
                   }}
                 >
                   {profile.about.length > 150 && !showFullAbout
