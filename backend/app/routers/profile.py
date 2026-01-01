@@ -148,6 +148,8 @@ async def update_my_profile(
         about=profile.about,
         profile_picture=profile.profile_picture,
         skills=profile.skills,
+        experience=profile.experience,
+        social_links=profile.social_links,
         website=profile.website,
         linkedin_url=profile.linkedin_url,
         github_url=profile.github_url,

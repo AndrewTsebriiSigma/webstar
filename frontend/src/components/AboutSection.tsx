@@ -345,7 +345,7 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                   {profile.about.length > 150 ? profile.about.substring(0, 150) + '...' : profile.about}
                 </p>
                 {profile.about.length > 150 && (
-                  <button className="text-blue-500 hover:text-blue-400 text-sm font-medium transition">
+                  <button className="text-blue-500 hover:text-blue-500/80 text-sm font-medium transition">
                     Read more
                   </button>
                 )}
@@ -354,7 +354,7 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
               isOwnProfile && (
                 <button
                   onClick={startEditingAbout}
-                  className="w-full py-6 border-2 border-dashed border-gray-700 rounded-lg hover:border-blue-500 hover:bg-gray-800/50 transition text-gray-500 hover:text-blue-400"
+                  className="w-full py-6 border-2 border-dashed border-gray-700 rounded-lg hover:border-blue-500 hover:bg-gray-800/50 transition text-gray-500 hover:text-blue-500"
                 >
                   <PlusIcon className="w-6 h-6 mx-auto mb-1" />
                   <p className="text-xs font-medium">Add About</p>
@@ -381,13 +381,13 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
         </div>
 
         {editingExperience ? (
-          <div>
+          <div className="w-[80%]">
             {experiences.length > 0 ? (
               <div className="space-y-4 mb-4">
                 {experiences.map((exp, index) => (
                   <div key={exp.id} className="p-4 bg-gray-800 rounded-xl border border-gray-700">
                     <div className="flex justify-between items-start mb-3">
-                      <h4 className="text-sm font-semibold text-blue-400">Experience {index + 1}</h4>
+                      <h4 className="text-sm font-semibold text-blue-500">Experience {index + 1}</h4>
                       <button
                         onClick={() => removeExperience(index)}
                         className="text-red-400 hover:text-red-300"
@@ -445,7 +445,7 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
 
             <button
               onClick={addExperience}
-              className="w-full py-3 bg-gray-800 hover:bg-gray-750 border border-gray-700 rounded-xl transition text-blue-400 font-medium flex items-center justify-center gap-2"
+              className="w-full py-3 bg-gray-800 hover:bg-gray-750 border border-gray-700 rounded-xl transition text-blue-500 font-medium flex items-center justify-center gap-2"
             >
               <PlusIcon className="w-5 h-5" />
               Add Experience
@@ -469,16 +469,16 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
             </div>
           </div>
         ) : (
-          <div>
+          <div className="w-[80%]">
             {displayExperiences.length > 0 ? (
-              <div className="relative pl-6">
-                {/* Vertical line */}
-                <div className="absolute left-0 top-2 bottom-0 w-0.5 bg-gray-700"></div>
+              <div className="relative" style={{ paddingLeft: '32px' }}>
+                {/* Vertical line - positioned to pass through circle center at 8px from container edge */}
+                <div className="absolute top-0 bottom-0 w-px bg-gray-700" style={{ left: '8px' }}></div>
                 <div className="space-y-6">
                   {displayExperiences.map((item, index) => (
                     <div key={item.id || index} className="relative">
-                      {/* Blue dot */}
-                      <div className="absolute -left-[26px] top-1 w-2 h-2 bg-blue-500 rounded-full"></div>
+                      {/* Blue dot - 8px circle centered at 8px (left edge at 4px) */}
+                      <div className="absolute top-0 w-2 h-2 bg-blue-500 rounded-full" style={{ left: '-28px', marginTop: '2px' }}></div>
                       <div>
                         <h4 className="font-semibold text-white text-sm mb-1">{item.title}</h4>
                         <p className="text-blue-500 text-sm mb-1">{item.company}</p>
@@ -497,7 +497,7 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
               isOwnProfile && (
                 <button
                   onClick={startEditingExperience}
-                  className="w-full py-8 border-2 border-dashed border-gray-700 rounded-xl hover:border-blue-500 hover:bg-gray-800/50 transition text-gray-500 hover:text-blue-400"
+                  className="w-full py-8 border-2 border-dashed border-gray-700 rounded-xl hover:border-blue-500 hover:bg-gray-800/50 transition text-gray-500 hover:text-blue-500"
                 >
                   <PlusIcon className="w-8 h-8 mx-auto mb-2" />
                   <p className="text-sm font-medium">Add Experience</p>
@@ -524,7 +524,7 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
         </div>
 
         {editingSkills ? (
-          <div>
+          <div className="w-[80%]">
             {skills.length > 0 && (
               <div className="space-y-4 mb-4">
                 {skills.map((skill, index) => (
@@ -584,7 +584,7 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
             </div>
           </div>
         ) : (
-          <div>
+          <div className="w-[80%]">
             {displaySkills.length > 0 ? (
               <div className="space-y-4">
                 {displaySkills.map((skill, index) => (
@@ -605,7 +605,7 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
               isOwnProfile && (
                 <button
                   onClick={startEditingSkills}
-                  className="w-full py-8 border-2 border-dashed border-gray-700 rounded-xl hover:border-blue-500 hover:bg-gray-800/50 transition text-gray-500 hover:text-blue-400"
+                  className="w-full py-8 border-2 border-dashed border-gray-700 rounded-xl hover:border-blue-500 hover:bg-gray-800/50 transition text-gray-500 hover:text-blue-500"
                 >
                   <PlusIcon className="w-8 h-8 mx-auto mb-2" />
                   <p className="text-sm font-medium">Add Skills</p>
