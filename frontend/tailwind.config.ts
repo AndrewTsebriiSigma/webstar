@@ -89,13 +89,6 @@ const config: Config = {
       backdropBlur: {
         xs: '2px',
       },
-      boxShadow: {
-        'sm': '0 2px 8px rgba(0, 0, 0, 0.15)',
-        'md': '0 8px 32px rgba(0, 0, 0, 0.25)',
-        'glow': '0 0 24px rgba(0, 194, 255, 0.4)',
-        'glow-sm': '0 4px 16px rgba(0, 194, 255, 0.3)',
-        'glow-lg': '0 6px 24px rgba(0, 194, 255, 0.4)',
-      },
       spacing: {
         '0': '0px',
         '1': '4px',
