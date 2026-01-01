@@ -49,7 +49,7 @@ def create_db_and_tables():
                 result = session.exec(text("""
                     SELECT column_name 
                     FROM information_schema.columns 
-                    WHERE table_name = 'profiles' AND column_name IN ('location', 'banner_image')
+                    WHERE table_name = 'profiles' AND column_name IN ('location', 'banner_image', 'bio')
                 """))
                 existing_columns = [row[0] for row in result.fetchall()]
                 
@@ -64,6 +64,12 @@ def create_db_and_tables():
                     session.exec(text("ALTER TABLE profiles ADD COLUMN banner_image VARCHAR"))
                     session.commit()
                     print("✅ Added banner_image column to profiles table")
+                
+                # Add bio column if missing
+                if 'bio' not in existing_columns:
+                    session.exec(text("ALTER TABLE profiles ADD COLUMN bio VARCHAR(200)"))
+                    session.commit()
+                    print("✅ Added bio column to profiles table")
             else:
                 # SQLite - check if columns exist
                 result = session.exec(text("PRAGMA table_info(profiles)"))
@@ -80,6 +86,12 @@ def create_db_and_tables():
                     session.exec(text("ALTER TABLE profiles ADD COLUMN banner_image TEXT"))
                     session.commit()
                     print("✅ Added banner_image column to profiles table")
+                
+                # Add bio column if missing
+                if 'bio' not in columns:
+                    session.exec(text("ALTER TABLE profiles ADD COLUMN bio TEXT"))
+                    session.commit()
+                    print("✅ Added bio column to profiles table")
     except Exception as e:
         print(f"Migration note: {e}")
         # If it fails, columns might already exist

@@ -34,7 +34,8 @@ export interface Profile {
   display_name: string | null;
   role: string | null;
   expertise_badge: string | null;
-  about: string | null;
+  bio: string | null;  // Short bio below profile picture
+  about: string | null;  // Detailed about section
   profile_picture: string | null;
   banner_image: string | null;
   location: string | null;

@@ -6,7 +6,8 @@ from typing import Optional
 class ProfileUpdate(BaseModel):
     """Profile update schema."""
     display_name: Optional[str] = None
-    about: Optional[str] = Field(None, max_length=500)
+    bio: Optional[str] = Field(None, max_length=200)  # Short bio below profile picture
+    about: Optional[str] = Field(None, max_length=500)  # Detailed about section
     skills: Optional[str] = None  # Comma-separated, max 6
     experience: Optional[str] = None  # JSON string
     social_links: Optional[str] = None  # JSON string
@@ -26,7 +27,8 @@ class ProfileResponse(BaseModel):
     display_name: Optional[str]
     role: Optional[str]
     expertise_badge: Optional[str]
-    about: Optional[str]
+    bio: Optional[str]  # Short bio below profile picture
+    about: Optional[str]  # Detailed about section
     profile_picture: Optional[str]
     skills: Optional[str]
     experience: Optional[str]

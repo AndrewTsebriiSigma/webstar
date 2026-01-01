@@ -59,6 +59,7 @@ async def get_my_profile(
         display_name=profile.display_name,
         role=profile.role,
         expertise_badge=profile.expertise_badge,
+        bio=profile.bio,
         about=profile.about,
         profile_picture=profile.profile_picture,
         skills=profile.skills,
@@ -98,6 +99,8 @@ async def update_my_profile(
         # Update fields
         if updates.display_name is not None:
             profile.display_name = updates.display_name
+        if updates.bio is not None:
+            profile.bio = updates.bio
         if updates.about is not None:
             profile.about = updates.about
         if updates.skills is not None:
@@ -145,6 +148,7 @@ async def update_my_profile(
         display_name=profile.display_name,
         role=profile.role,
         expertise_badge=profile.expertise_badge,
+        bio=profile.bio,
         about=profile.about,
         profile_picture=profile.profile_picture,
         skills=profile.skills,
@@ -232,6 +236,7 @@ async def get_profile_by_username(
         display_name=profile.display_name,
         role=profile.role,
         expertise_badge=profile.expertise_badge,
+        bio=profile.bio,
         about=profile.about,
         profile_picture=profile.profile_picture,
         skills=profile.skills,

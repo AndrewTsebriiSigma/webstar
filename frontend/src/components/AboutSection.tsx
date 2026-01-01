@@ -179,10 +179,18 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
 
   const saveSkills = async () => {
     try {
+      // Auto-add new skill if user typed one but didn't click "Add"
+      let skillsToSave = [...skills];
+      if (newSkillName.trim() && skillsToSave.length < 6) {
+        skillsToSave.push({ name: newSkillName.trim(), level: 85 });
+        setNewSkillName('');
+      }
+      
       // Store as JSON string with levels
-      await profileAPI.updateMe({ skills: JSON.stringify(skills) });
+      await profileAPI.updateMe({ skills: JSON.stringify(skillsToSave) });
       toast.success('Skills updated!');
       setEditingSkills(false);
+      setSkills(skillsToSave);
       onUpdate();
     } catch (error) {
       toast.error('Failed to update skills');

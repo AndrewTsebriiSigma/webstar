@@ -263,7 +263,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
           lineHeight: '1.4',
           opacity: 0.9
         }}>
-          {profile.about || 'Make original the only standard.'}
+          {profile.bio || 'Make original the only standard.'}
         </p>
 
         {/* Location & Role - Compact */}

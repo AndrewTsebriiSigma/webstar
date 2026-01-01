@@ -58,7 +58,8 @@ class Profile(SQLModel, table=True):
     display_name: Optional[str] = None
     role: Optional[str] = None  # From onboarding
     expertise_badge: Optional[str] = None  # From onboarding
-    about: Optional[str] = Field(default=None, max_length=500)
+    bio: Optional[str] = Field(default=None, max_length=200)  # Short bio below profile picture
+    about: Optional[str] = Field(default=None, max_length=500)  # Detailed about section
     profile_picture: Optional[str] = None
     banner_image: Optional[str] = None  # Profile banner/cover image
     location: Optional[str] = None  # User location (e.g., "Paris, France")
