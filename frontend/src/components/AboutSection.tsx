@@ -42,6 +42,7 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
   const [displayPlaceholder, setDisplayPlaceholder] = useState(PLACEHOLDER_TEXTS[0]);
   const placeholderIndexRef = useRef(0);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [showFullAbout, setShowFullAbout] = useState(false);
 
   // Skills editing
   const [editingSkills, setEditingSkills] = useState(false);
@@ -144,11 +145,12 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
   };
 
   const startEditingExperience = () => {
+    let existingExperiences: Experience[] = [];
     try {
       if (profile?.experience) {
         const exp = JSON.parse(profile.experience);
         // Migrate old format to new format if needed
-        const migratedExp = exp.map((item: any) => ({
+        existingExperiences = exp.map((item: any) => ({
           id: item.id || Date.now().toString() + Math.random(),
           title: item.title || '',
           company: item.company || '',
@@ -156,13 +158,22 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
           endDate: item.endDate || (item.period && item.period.includes('Present') ? '' : (item.period ? item.period.split(' - ')[1] : '')),
           description: item.description || '',
         }));
-        setExperiences(migratedExp);
-      } else {
-        setExperiences([]);
       }
     } catch {
-      setExperiences([]);
+      existingExperiences = [];
     }
+    // Automatically add a new empty experience item when editing starts
+    setExperiences([
+      ...existingExperiences,
+      {
+        id: Date.now().toString() + Math.random(),
+        title: '',
+        company: '',
+        startDate: '',
+        endDate: '',
+        description: '',
+      },
+    ]);
     setEditingExperience(true);
   };
 
@@ -497,10 +508,13 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                     marginBottom: 'var(--space-2)',
                   }}
                 >
-                  {profile.about.length > 150 ? profile.about.substring(0, 150) + '...' : profile.about}
+                  {profile.about.length > 150 && !showFullAbout
+                    ? profile.about.substring(0, 150) + '...'
+                    : profile.about}
                 </p>
                 {profile.about.length > 150 && (
                   <button 
+                    onClick={() => setShowFullAbout(!showFullAbout)}
                     className="transition"
                     style={{
                       color: 'var(--blue)',
@@ -508,7 +522,7 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                       fontWeight: '600',
                     }}
                   >
-                    Read more
+                    {showFullAbout ? 'Read less' : 'Read more'}
                   </button>
                 )}
               </>
@@ -574,20 +588,19 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
 
         {editingExperience ? (
           <div style={{ maxWidth: '336px', margin: '0 auto' }}>
-            {experiences.length > 0 ? (
-              <div style={{ marginBottom: 'var(--space-4)' }}>
-                {experiences.map((exp, index) => (
-                  <div 
-                    key={exp.id} 
-                    className="border"
-                    style={{
-                      padding: 'var(--space-4)',
-                      background: 'var(--bg-surface-strong)',
-                      borderRadius: 'var(--radius-xl)',
-                      borderColor: 'var(--border)',
-                      marginBottom: index < experiences.length - 1 ? 'var(--space-4)' : '0',
-                    }}
-                  >
+            <div style={{ marginBottom: 'var(--space-4)' }}>
+              {experiences.map((exp, index) => (
+                <div 
+                  key={exp.id} 
+                  className="border"
+                  style={{
+                    padding: 'var(--space-4)',
+                    background: 'var(--bg-surface-strong)',
+                    borderRadius: 'var(--radius-xl)',
+                    borderColor: 'var(--border)',
+                    marginBottom: index < experiences.length - 1 ? 'var(--space-4)' : '0',
+                  }}
+                >
                     <div className="flex justify-between items-start" style={{ marginBottom: 'var(--space-3)' }}>
                       <h4 style={{ fontSize: '15px', fontWeight: '600', color: 'var(--blue)' }}>Experience {index + 1}</h4>
                       <button
@@ -667,27 +680,7 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                     </div>
                   </div>
                 ))}
-              </div>
-            ) : null}
-
-            <button
-              onClick={addExperience}
-              className="w-full transition flex items-center justify-center"
-              style={{
-                padding: 'var(--space-3)',
-                height: 'var(--height-primary-btn)',
-                background: 'var(--bg-surface-strong)',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-xl)',
-                color: 'var(--blue)',
-                fontWeight: '600',
-                fontSize: '15px',
-                marginBottom: 'var(--space-4)',
-              }}
-            >
-              <PlusIcon className="w-5 h-5" style={{ marginRight: 'var(--space-2)' }} />
-              Add Experience
-            </button>
+            </div>
 
             <div className="flex" style={{ gap: 'var(--space-2)' }}>
               <button
@@ -747,41 +740,51 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                           background: 'var(--blue)'
                         }}
                       ></div>
-          <div>
+                      <div>
                         <h4 
                           className="font-semibold"
                           style={{
-                            fontSize: '15px',
+                            fontSize: '20px',
+                            lineHeight: '26px',
                             color: 'var(--text-primary)',
-                            marginBottom: 'var(--space-1)',
+                            marginBottom: 'var(--space-2)',
                           }}
                         >
                           {item.title}
                         </h4>
-                        <p 
-                          style={{
-                            color: 'var(--blue)',
-                            fontSize: '15px',
-                            marginBottom: 'var(--space-1)',
-                          }}
-                        >
-                          {item.company}
-                        </p>
-                        <p 
-                          style={{
-                            color: 'var(--text-secondary)',
-                            fontSize: '15px',
-                            marginBottom: 'var(--space-2)',
-                          }}
-                        >
-                          {formatExperiencePeriod(item.startDate, item.endDate)}
-                        </p>
-                          {item.description && (
+                        <div className="flex items-center gap-2" style={{ marginBottom: 'var(--space-2)' }}>
                           <p 
                             style={{
                               color: 'var(--text-secondary)',
-                              fontSize: '15px',
-                              lineHeight: '22px',
+                              fontSize: '14px',
+                            }}
+                          >
+                            {item.company}
+                          </p>
+                          <span 
+                            style={{
+                              color: 'var(--text-secondary)',
+                              fontSize: '12px',
+                              opacity: 0.6,
+                            }}
+                          >
+                            •
+                          </span>
+                          <p 
+                            style={{
+                              color: 'var(--text-secondary)',
+                              fontSize: '12px',
+                            }}
+                          >
+                            {formatExperiencePeriod(item.startDate, item.endDate)}
+                          </p>
+                        </div>
+                        {item.description && (
+                          <p 
+                            style={{
+                              color: 'var(--text-secondary)',
+                              fontSize: '14px',
+                              lineHeight: '20px',
                             }}
                           >
                             {item.description}
