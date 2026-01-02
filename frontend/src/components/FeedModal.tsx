@@ -381,7 +381,7 @@ function FeedPostContent({
                   </div>
                 )}
               </>
-            )}
+            ) : null}
           </div>
         );
       
@@ -413,7 +413,7 @@ function FeedPostContent({
                 fontStyle: 'italic'
               }}
             >
-              "{post.description || post.title || 'Text content'}"
+              "{post.text_content || post.description || post.title || 'Text content'}"
             </div>
           </div>
         );
@@ -455,7 +455,7 @@ function FeedPostContent({
               </svg>
             </div>
             <a
-              href={post.content_url}
+              href={post.content_url || '#'}
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -466,7 +466,9 @@ function FeedPostContent({
                 fontWeight: 600,
                 fontSize: '14px',
                 textDecoration: 'none',
-                transition: 'all 150ms'
+                transition: 'all 150ms',
+                pointerEvents: post.content_url ? 'auto' : 'none',
+                opacity: post.content_url ? 1 : 0.5
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = '#33D1FF';
