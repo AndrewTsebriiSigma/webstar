@@ -250,7 +250,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
       </div>
 
       {/* Profile Info - Compact design */}
-      <div className="px-4 pb-2 text-center">
+      <div className="profile-info" style={{ padding: '12px 24px 32px', textAlign: 'center' }}>
         {/* Name + Badge */}
         <div className="flex items-center justify-center gap-1.5 mb-1 pt-3">
           <h1 className="text-xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)', letterSpacing: '-0.2px' }}>
@@ -305,7 +305,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
             transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
             padding: '10px 16px 10px 24px',
             margin: '0 16px 20px',
-            width: 'calc(100% - 32px)'
+            width: 'calc(100% - 32px)',
+            height: '60px'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
@@ -335,7 +336,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 style={{ 
                   fontSize: '9px',
                   fontWeight: '700',
-                  color: 'rgba(255, 255, 255, 0.6)',
+                  color: '#707070',
                   textTransform: 'uppercase',
                   letterSpacing: '0.8px',
                   lineHeight: '1'
@@ -346,7 +347,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               <div 
                 className="dashboard-value"
                 style={{ 
-                  fontSize: '24px',
+                  fontSize: '18px',
                   fontWeight: '800',
                   background: 'linear-gradient(135deg, #00C2FF 0%, #0EA5E9 100%)',
                   WebkitBackgroundClip: 'text',
@@ -368,10 +369,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 minWidth: '56px',
                 height: '40px',
                 borderRadius: '20px',
-                background: 'rgba(255, 255, 255, 0.05)',
+                background: '#2A2A2A',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                border: '1px solid #414141',
                 color: '#707070',
                 display: 'flex',
                 alignItems: 'center',
@@ -387,8 +388,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 e.currentTarget.style.color = '#f5f5f5';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.background = '#2A2A2A';
+                e.currentTarget.style.borderColor = '#414141';
                 e.currentTarget.style.color = '#707070';
               }}
               onMouseDown={(e) => {
@@ -399,7 +400,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
               title="Portfolio"
             >
-              <RectangleStackIcon className="w-5 h-5" />
+              <img src="/open-folder.svg" alt="Portfolio" style={{ width: '20px', height: '20px', filter: 'invert(1) opacity(0.44)' }} />
             </button>
             <button 
               className="action-button"
@@ -407,10 +408,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 minWidth: '56px',
                 height: '40px',
                 borderRadius: '20px',
-                background: 'rgba(255, 255, 255, 0.05)',
+                background: '#2A2A2A',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                border: '1px solid #414141',
                 color: '#707070',
                 display: 'flex',
                 alignItems: 'center',
@@ -424,11 +425,15 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                 e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
                 e.currentTarget.style.color = '#f5f5f5';
+                const img = e.currentTarget.querySelector('img');
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.background = '#2A2A2A';
+                e.currentTarget.style.borderColor = '#414141';
                 e.currentTarget.style.color = '#707070';
+                const img = e.currentTarget.querySelector('img');
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
               }}
               onMouseDown={(e) => {
                 e.currentTarget.style.transform = 'scale(0.94)';
@@ -438,7 +443,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
               title="Customize"
             >
-              <PaintBrushIcon className="w-5 h-5" />
+              <img src="/magic-wand.svg" alt="Customize" style={{ width: '20px', height: '20px', filter: 'invert(1) opacity(0.44)' }} />
             </button>
           </div>
         </div>
@@ -454,8 +459,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 className="action-btn custom-btn"
                 style={{
                   flex: '0 0 calc(65% - 4px)',
-                  background: 'rgba(255, 255, 255, 0.06)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  height: '40px',
+                  background: '#2A2A2A',
+                  border: '1px solid #414141',
                   color: 'rgba(255, 255, 255, 0.75)',
                   cursor: 'pointer',
                   padding: '5px 20px',
@@ -475,8 +481,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.background = '#2A2A2A';
+                  e.currentTarget.style.borderColor = '#414141';
                   e.currentTarget.style.color = 'rgba(255, 255, 255, 0.75)';
                 }}
                 onMouseDown={(e) => {
@@ -492,8 +498,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 className="action-btn"
                 style={{
                   flex: '0 0 calc(35% - 4px)',
-                  background: 'rgba(255, 255, 255, 0.06)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  height: '40px',
+                  background: '#2A2A2A',
+                  border: '1px solid #414141',
                   color: 'rgba(255, 255, 255, 0.75)',
                   cursor: 'pointer',
                   padding: '5px 20px',
@@ -513,8 +520,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.background = '#2A2A2A';
+                  e.currentTarget.style.borderColor = '#414141';
                   e.currentTarget.style.color = 'rgba(255, 255, 255, 0.75)';
                 }}
                 onMouseDown={(e) => {
