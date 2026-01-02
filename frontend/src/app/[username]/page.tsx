@@ -314,8 +314,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
               alt="webSTAR"
               className="dashboard-logo"
               style={{ 
-                width: '30px',
-                height: '30px',
+                width: '36px',
+                height: '36px',
                 objectFit: 'contain',
                 filter: 'drop-shadow(0 0 12px rgba(0, 194, 255, 0.2))',
                 flexShrink: 0
@@ -327,7 +327,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: 'flex-start', 
-                gap: '1px'
+                gap: '8px'
               }}
             >
               <div 
@@ -363,86 +363,90 @@ export default function ProfilePage({ params }: { params: { username: string } }
           <div className="dashboard-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             <button 
               onClick={() => router.push('/profile/edit')}
-              className="action-button dashboard-icon-btn"
+              className="action-button"
               style={{
-                width: '32px',
-                height: '32px',
-                minHeight: '32px',
-                borderRadius: '10px',
-                background: 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                width: '55px',
+                height: '40px',
+                borderRadius: '20px',
+                background: '#2A2A2A',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid #353535',
+                color: '#707070',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
                 cursor: 'pointer',
-                transition: 'border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                 padding: 0
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.color = '#f5f5f5';
                 const img = e.currentTarget.querySelector('img');
-                if (img) {
-                  (img as HTMLImageElement).style.filter = 'brightness(0) saturate(100%) invert(66%) sepia(100%) saturate(7500%) hue-rotate(168deg) brightness(101%) contrast(101%)';
-                }
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.background = '#2A2A2A';
+                e.currentTarget.style.borderColor = '#353535';
+                e.currentTarget.style.color = '#707070';
                 const img = e.currentTarget.querySelector('img');
-                if (img) {
-                  (img as HTMLImageElement).style.filter = 'brightness(0) saturate(100%) invert(78%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(98%) contrast(81%)';
-                }
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
               }}
               onMouseDown={(e) => {
-                e.currentTarget.style.transform = 'scale(0.95)';
+                e.currentTarget.style.transform = 'scale(0.94)';
               }}
               onMouseUp={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
               }}
               title="Portfolio"
             >
-              <img src="/layers.svg" alt="Portfolio" style={{ width: '20px', height: '20px', filter: 'brightness(0) saturate(100%) invert(78%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(98%) contrast(81%)' }} />
+              <img src="/layers.svg" alt="Portfolio" style={{ width: '20px', height: '20px', filter: 'invert(1) opacity(0.44)' }} />
             </button>
             <button 
-              className="action-button dashboard-icon-btn"
+              className="action-button"
               style={{
-                width: '32px',
-                height: '32px',
-                minHeight: '32px',
-                borderRadius: '10px',
-                background: 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                width: '55px',
+                height: '40px',
+                borderRadius: '20px',
+                background: '#2A2A2A',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid #353535',
+                color: '#707070',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
                 cursor: 'pointer',
-                transition: 'border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                 padding: 0
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.color = '#f5f5f5';
                 const img = e.currentTarget.querySelector('img');
-                if (img) {
-                  (img as HTMLImageElement).style.filter = 'brightness(0) saturate(100%) invert(66%) sepia(100%) saturate(7500%) hue-rotate(168deg) brightness(101%) contrast(101%)';
-                }
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.background = '#2A2A2A';
+                e.currentTarget.style.borderColor = '#353535';
+                e.currentTarget.style.color = '#707070';
                 const img = e.currentTarget.querySelector('img');
-                if (img) {
-                  (img as HTMLImageElement).style.filter = 'brightness(0) saturate(100%) invert(78%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(98%) contrast(81%)';
-                }
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
               }}
               onMouseDown={(e) => {
-                e.currentTarget.style.transform = 'scale(0.95)';
+                e.currentTarget.style.transform = 'scale(0.94)';
               }}
               onMouseUp={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
               }}
               title="Customize"
             >
-              <img src="/palette.svg" alt="Customize" style={{ width: '20px', height: '20px', filter: 'brightness(0) saturate(100%) invert(78%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(98%) contrast(81%)' }} />
+              <img src="/palette.svg" alt="Customize" style={{ width: '20px', height: '20px', filter: 'invert(1) opacity(0.44)' }} />
             </button>
           </div>
         </div>

@@ -761,11 +761,14 @@ html {
     min-width: 44px;
   }
   
-  /* Override for dashboard buttons - keep at 32px */
-  .dashboard-action-btn,
-  .dashboard-icon-btn {
-    min-height: 32px !important;
+  /* Mobile adjustments for dashboard */
+  .dashboard-logo {
+    width: 32px !important;
     height: 32px !important;
+  }
+  
+  .dashboard-info {
+    gap: 2px !important;
   }
 }
 
