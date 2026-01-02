@@ -173,7 +173,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 transition: 'font-size 0.2s ease'
               }}
             >
-              {isOwnProfile ? (profile?.display_name || profile?.name || 'Profile') : 'webSTAR'}
+              {isOwnProfile ? (profile?.display_name || profile?.username || 'Profile') : 'webSTAR'}
             </span>
           </div>
           
