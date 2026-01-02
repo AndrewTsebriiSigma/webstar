@@ -4,6 +4,14 @@ import { useState, useEffect, useRef } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { PortfolioItem, Profile } from '@/lib/types';
 import ContentDisplay from './ContentDisplay';
+import MiniPlayer from './MiniPlayer';
+
+interface AudioTrack {
+  id: number;
+  title: string;
+  url: string;
+  thumbnail?: string;
+}
 
 interface FeedModalProps {
   isOpen: boolean;
@@ -11,6 +19,8 @@ interface FeedModalProps {
   posts: PortfolioItem[];
   initialPostId?: number;
   profile?: Profile;
+  currentAudioTrack?: AudioTrack | null;
+  onAudioTrackChange?: (track: AudioTrack | null) => void;
 }
 
 export default function FeedModal({
@@ -18,7 +28,9 @@ export default function FeedModal({
   onClose,
   posts,
   initialPostId,
-  profile
+  profile,
+  currentAudioTrack,
+  onAudioTrackChange
 }: FeedModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -233,7 +245,8 @@ export default function FeedModal({
           overflowY: 'auto',
           overflowX: 'hidden',
           scrollBehavior: 'smooth',
-          WebkitOverflowScrolling: 'touch'
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: currentAudioTrack ? '100px' : '0' // Space for mini player
         }}
       >
         {posts.map((post, index) => (
@@ -260,11 +273,62 @@ export default function FeedModal({
               <FeedPostContent 
                 post={post} 
                 isActive={index === currentIndex}
+                onAudioClick={(audioPost) => {
+                  // Handle audio click - set the track for mini player
+                  if (onAudioTrackChange && audioPost.content_url) {
+                    onAudioTrackChange({
+                      id: audioPost.id,
+                      title: audioPost.title || 'Audio Track',
+                      url: audioPost.content_url.startsWith('http') 
+                        ? audioPost.content_url 
+                        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${audioPost.content_url}`,
+                      thumbnail: audioPost.thumbnail_url || undefined
+                    });
+                  }
+                }}
               />
             </div>
           </div>
         ))}
       </div>
+
+      {/* Mini Audio Player - Inside Feed Modal */}
+      {currentAudioTrack && onAudioTrackChange && (
+        <MiniPlayer
+          track={currentAudioTrack}
+          onClose={() => onAudioTrackChange(null)}
+          onNext={() => {
+            // Find next audio track
+            const currentIdx = posts.findIndex(p => p.id === currentAudioTrack.id);
+            const nextAudio = posts.slice(currentIdx + 1).find(p => p.content_type === 'audio');
+            if (nextAudio && nextAudio.content_url) {
+              onAudioTrackChange({
+                id: nextAudio.id,
+                title: nextAudio.title || 'Audio Track',
+                url: nextAudio.content_url.startsWith('http') 
+                  ? nextAudio.content_url 
+                  : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${nextAudio.content_url}`,
+                thumbnail: nextAudio.thumbnail_url || undefined
+              });
+            }
+          }}
+          onPrevious={() => {
+            // Find previous audio track
+            const currentIdx = posts.findIndex(p => p.id === currentAudioTrack.id);
+            const prevAudio = posts.slice(0, currentIdx).reverse().find(p => p.content_type === 'audio');
+            if (prevAudio && prevAudio.content_url) {
+              onAudioTrackChange({
+                id: prevAudio.id,
+                title: prevAudio.title || 'Audio Track',
+                url: prevAudio.content_url.startsWith('http') 
+                  ? prevAudio.content_url 
+                  : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${prevAudio.content_url}`,
+                thumbnail: prevAudio.thumbnail_url || undefined
+              });
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -272,10 +336,12 @@ export default function FeedModal({
 // Individual Feed Post Content
 function FeedPostContent({ 
   post, 
-  isActive
+  isActive,
+  onAudioClick
 }: { 
   post: PortfolioItem;
   isActive: boolean;
+  onAudioClick?: (post: PortfolioItem) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -387,8 +453,125 @@ function FeedPostContent({
       
       case 'audio':
         return (
-          <div style={{ marginBottom: '16px' }}>
-            <ContentDisplay item={post} isActive={isActive} variant="full" />
+          <div 
+            style={{ 
+              marginBottom: '16px',
+              cursor: 'pointer',
+              borderRadius: '20px',
+              overflow: 'hidden',
+              position: 'relative'
+            }}
+            onClick={() => onAudioClick?.(post)}
+          >
+            {/* Audio Visual Display - No actual audio element */}
+            <div 
+              style={{
+                width: '100%',
+                aspectRatio: '4 / 5',
+                borderRadius: '20px',
+                background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.12), rgba(0, 194, 255, 0.08))',
+                border: '1px solid rgba(10, 132, 255, 0.25)',
+                padding: '32px 24px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '24px',
+                position: 'relative',
+                overflow: 'hidden',
+                transition: 'all 180ms cubic-bezier(0.25, 0.8, 0.25, 1)'
+              }}
+            >
+              {/* Background Equalizer Pattern */}
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                opacity: 0.15,
+                pointerEvents: 'none'
+              }}>
+                {[...Array(16)].map((_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      width: '4px',
+                      height: `${30 + (i % 4) * 15}%`,
+                      background: 'linear-gradient(to top, #0A84FF, #00C2FF)',
+                      borderRadius: '2px',
+                      animation: `audioWave ${0.8 + (i % 3) * 0.2}s ease-in-out infinite ${i * 0.1}s`
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Audio Icon */}
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                background: 'rgba(10, 132, 255, 0.2)',
+                border: '2px solid rgba(10, 132, 255, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                zIndex: 1
+              }}>
+                <svg
+                  width="36"
+                  height="36"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#00C2FF"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M9 18V5l12-2v13" />
+                  <circle cx="6" cy="18" r="3" />
+                  <circle cx="18" cy="16" r="3" />
+                </svg>
+              </div>
+
+              {/* Title */}
+              {post.title && (
+                <div 
+                  style={{
+                    fontSize: '18px',
+                    fontWeight: 600,
+                    color: '#FFFFFF',
+                    textAlign: 'center',
+                    position: 'relative',
+                    zIndex: 1,
+                    maxWidth: '100%',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
+                  }}
+                >
+                  {post.title}
+                </div>
+              )}
+
+              {/* Tap to Play hint */}
+              <div 
+                style={{
+                  fontSize: '13px',
+                  color: 'rgba(10, 132, 255, 0.8)',
+                  textAlign: 'center',
+                  fontWeight: 600,
+                  position: 'relative',
+                  zIndex: 1,
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
+                }}
+              >
+                Tap to play in mini player
+              </div>
+            </div>
           </div>
         );
       
