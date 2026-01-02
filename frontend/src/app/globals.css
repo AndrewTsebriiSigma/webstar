@@ -769,32 +769,3 @@ html {
   }
 }
 
-/* Dashboard Strip Mobile Responsive */
-@media (max-width: 640px) {
-  .dashboard-strip {
-    height: 72px !important;
-    padding: 12px 16px !important;
-  }
-  .dashboard-actions button {
-    height: 36px !important;
-  }
-  .dashboard-actions button.action-btn {
-    font-size: 12px !important;
-    padding: 0 12px !important;
-  }
-  .dashboard-actions button.action-btn span {
-    display: inline !important;
-  }
-}
-
-@media (max-width: 390px) {
-  .dashboard-actions button.action-btn span {
-    display: none !important;
-  }
-  .dashboard-actions button.action-btn {
-    width: 36px !important;
-    padding: 0 !important;
-    min-width: 36px !important;
-  }
-}
-

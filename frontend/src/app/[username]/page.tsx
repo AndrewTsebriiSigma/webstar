@@ -31,9 +31,7 @@ import {
   BellIcon,
   CheckBadgeIcon,
   RectangleStackIcon,
-  PaintBrushIcon,
-  EnvelopeIcon,
-  PaperAirplaneIcon
+  PaintBrushIcon
 } from '@heroicons/react/24/outline';
 import { BellIcon as BellSolidIcon } from '@heroicons/react/24/solid';
 
@@ -296,28 +294,28 @@ export default function ProfilePage({ params }: { params: { username: string } }
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: 'rgba(31, 31, 31, 0.6)',
+            background: 'rgba(255, 255, 255, 0.06)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
             borderRadius: '16px',
+            cursor: 'pointer',
             transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-            padding: '12px 16px',
+            padding: '10px 16px 10px 24px',
             margin: '0 16px 20px',
             width: 'calc(100% - 32px)',
-            height: '72px',
-            boxSizing: 'border-box'
+            height: '60px'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
             <img 
               src="/webstar-logo.png"
               alt="webSTAR"
               className="dashboard-logo"
               style={{ 
-                width: '32px',
-                height: '32px',
+                width: '36px',
+                height: '36px',
                 objectFit: 'contain',
                 filter: 'drop-shadow(0 0 12px rgba(0, 194, 255, 0.2))',
                 flexShrink: 0
@@ -329,8 +327,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: 'flex-start', 
-                gap: '2px',
-                minWidth: 0
+                gap: '8px'
               }}
             >
               <div 
@@ -338,9 +335,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 style={{ 
                   fontSize: '9px',
                   fontWeight: '700',
-                  color: '#6B6B6B',
+                  color: '#707070',
                   textTransform: 'uppercase',
-                  letterSpacing: '0.6px',
+                  letterSpacing: '0.8px',
                   lineHeight: '1'
                 }}
               >
@@ -349,11 +346,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
               <div 
                 className="dashboard-value"
                 style={{ 
-                  fontSize: '17px',
+                  fontSize: '18px',
                   fontWeight: '800',
-                  color: '#FFFFFF',
-                  letterSpacing: '-0.5px',
-                  lineHeight: '1'
+                  background: 'linear-gradient(135deg, #00C2FF 0%, #0EA5E9 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  lineHeight: '1',
+                  filter: 'drop-shadow(0 0 8px rgba(0, 194, 255, 0.15))'
                 }}
               >
                 {profile.total_points?.toLocaleString() || '12.5K'}
@@ -365,11 +365,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
               onClick={() => router.push('/profile/edit')}
               className="action-button"
               style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '10px',
-                background: 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                width: '55px',
+                height: '40px',
+                borderRadius: '20px',
+                background: '#2A2A2A',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid #414141',
+                color: '#707070',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -379,35 +382,40 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 padding: 0
               }}
               onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.color = '#f5f5f5';
                 const img = e.currentTarget.querySelector('img');
-                if (img) {
-                  (img as HTMLImageElement).style.filter = 'brightness(0) saturate(100%) invert(66%) sepia(100%) saturate(7500%) hue-rotate(168deg) brightness(101%) contrast(101%)';
-                }
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
               }}
               onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#2A2A2A';
+                e.currentTarget.style.borderColor = '#414141';
+                e.currentTarget.style.color = '#707070';
                 const img = e.currentTarget.querySelector('img');
-                if (img) {
-                  (img as HTMLImageElement).style.filter = 'brightness(0) saturate(100%) invert(78%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(98%) contrast(81%)';
-                }
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
               }}
               onMouseDown={(e) => {
-                e.currentTarget.style.transform = 'scale(0.95)';
+                e.currentTarget.style.transform = 'scale(0.94)';
               }}
               onMouseUp={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
               }}
               title="Portfolio"
             >
-              <img src="/layers.svg" alt="Portfolio" style={{ width: '18px', height: '18px', filter: 'brightness(0) saturate(100%) invert(78%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(98%) contrast(81%)' }} />
+              <img src="/layers.svg" alt="Portfolio" style={{ width: '16px', height: '16px', filter: 'invert(1) opacity(0.44)' }} />
             </button>
             <button 
               className="action-button"
               style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '10px',
-                background: 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                width: '55px',
+                height: '40px',
+                borderRadius: '20px',
+                background: '#2A2A2A',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid #414141',
+                color: '#707070',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -417,108 +425,130 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 padding: 0
               }}
               onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.color = '#f5f5f5';
                 const img = e.currentTarget.querySelector('img');
-                if (img) {
-                  (img as HTMLImageElement).style.filter = 'brightness(0) saturate(100%) invert(66%) sepia(100%) saturate(7500%) hue-rotate(168deg) brightness(101%) contrast(101%)';
-                }
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
               }}
               onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#2A2A2A';
+                e.currentTarget.style.borderColor = '#414141';
+                e.currentTarget.style.color = '#707070';
                 const img = e.currentTarget.querySelector('img');
-                if (img) {
-                  (img as HTMLImageElement).style.filter = 'brightness(0) saturate(100%) invert(78%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(98%) contrast(81%)';
-                }
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
               }}
               onMouseDown={(e) => {
-                e.currentTarget.style.transform = 'scale(0.95)';
+                e.currentTarget.style.transform = 'scale(0.94)';
               }}
               onMouseUp={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
               }}
               title="Customize"
             >
-              <img src="/palette.svg" alt="Customize" style={{ width: '18px', height: '18px', filter: 'brightness(0) saturate(100%) invert(78%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(98%) contrast(81%)' }} />
-            </button>
-            <button 
-              onClick={() => setShowShareModal(true)}
-              className="action-btn"
-              style={{
-                height: '36px',
-                background: '#00C2FF',
-                border: 'none',
-                color: '#000000',
-                cursor: 'pointer',
-                padding: '0 16px',
-                borderRadius: '10px',
-                fontSize: '13px',
-                fontWeight: '600',
-                letterSpacing: '-0.2px',
-                transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                boxShadow: '0 0 20px rgba(0, 194, 255, 0.3)',
-                whiteSpace: 'nowrap'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#00D4FF';
-                e.currentTarget.style.transform = 'translateY(-1px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#00C2FF';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-              onMouseDown={(e) => {
-                e.currentTarget.style.transform = 'scale(0.97)';
-              }}
-              onMouseUp={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-            >
-              <EnvelopeIcon style={{ width: '16px', height: '16px' }} />
-              <span style={{ display: 'inline' }}>Message Me</span>
-            </button>
-            <button 
-              className="action-btn"
-              style={{
-                height: '36px',
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                color: '#FFFFFF',
-                cursor: 'pointer',
-                padding: '0 16px',
-                borderRadius: '10px',
-                fontSize: '13px',
-                fontWeight: '600',
-                letterSpacing: '-0.2px',
-                transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                whiteSpace: 'nowrap'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-              }}
-              onMouseDown={(e) => {
-                e.currentTarget.style.transform = 'scale(0.97)';
-              }}
-              onMouseUp={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-            >
-              <PaperAirplaneIcon style={{ width: '16px', height: '16px', color: '#C7C7C7' }} />
-              <span style={{ display: 'inline' }}>Email</span>
+              <img src="/palette.svg" alt="Customize" style={{ width: '16px', height: '16px', filter: 'invert(1) opacity(0.44)' }} />
             </button>
           </div>
         </div>
       )}
+
+      {/* Action Buttons - Compact */}
+      <div style={{ padding: '0 16px', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+          {isOwnProfile ? (
+            <>
+              <button 
+                onClick={() => setShowShareModal(true)}
+                className="action-btn custom-btn"
+                style={{
+                  flex: '0 0 calc(65% - 4px)',
+                  height: '30px',
+                  background: '#1F1F1F',
+                  border: '1px solid #353535',
+                  color: '#C7C7C7',
+                  cursor: 'pointer',
+                  padding: '5px 20px',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  textTransform: 'none',
+                  letterSpacing: '-0.2px',
+                  transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                  textAlign: 'center',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#1F1F1F';
+                  e.currentTarget.style.borderColor = '#353535';
+                  e.currentTarget.style.color = '#C7C7C7';
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = 'scale(0.96)';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                Message Me
+              </button>
+              <button 
+                className="action-btn"
+                style={{
+                  flex: '0 0 calc(35% - 4px)',
+                  height: '30px',
+                  background: '#1F1F1F',
+                  border: '1px solid #353535',
+                  color: '#C7C7C7',
+                  cursor: 'pointer',
+                  padding: '5px 20px',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  textTransform: 'none',
+                  letterSpacing: '-0.2px',
+                  transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                  textAlign: 'center',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#1F1F1F';
+                  e.currentTarget.style.borderColor = '#353535';
+                  e.currentTarget.style.color = '#C7C7C7';
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = 'scale(0.96)';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                Email
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="flex-1 py-2 text-sm bg-cyan-500 hover:bg-cyan-600 rounded-xl font-semibold transition">
+                Follow
+              </button>
+              <button className="flex-1 py-2 text-sm bg-gray-900 border border-gray-800 rounded-xl font-semibold transition">
+                Message
+              </button>
+            </>
+          )}
+        </div>
+      </div>
 
       {/* Tabs */}
       <div 
