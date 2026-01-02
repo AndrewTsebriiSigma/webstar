@@ -560,7 +560,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <button
               key={tab}
               onClick={() => setActiveTab(tab.toLowerCase())}
-              className={`flex-1 py-3 text-sm font-semibold transition relative ${
+              className={`flex-1 py-3 text-base font-semibold transition relative ${
                 activeTab === tab.toLowerCase()
                   ? 'text-white'
                   : 'text-gray-500'
@@ -568,7 +568,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             >
               {tab}
               {activeTab === tab.toLowerCase() && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-[3px] bg-cyan-500 rounded-full" />
               )}
             </button>
           ))}
