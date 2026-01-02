@@ -303,7 +303,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             cursor: 'pointer',
             transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
             padding: '10px 16px 10px 24px',
-            margin: '0 16px 3px',
+            margin: '0 16px 14px',
             width: 'calc(100% - 32px)',
             height: '60px'
           }}
@@ -327,7 +327,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: 'flex-start', 
-                gap: '8px'
+                gap: '3px'
               }}
             >
               <div 
@@ -382,18 +382,16 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 padding: 0
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.background = '#313131';
                 e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.color = '#f5f5f5';
                 const img = e.currentTarget.querySelector('img');
                 if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = '#2A2A2A';
                 e.currentTarget.style.borderColor = '#414141';
-                e.currentTarget.style.color = '#707070';
                 const img = e.currentTarget.querySelector('img');
-                if (img) (img as HTMLImageElement).style.filter = 'invert(1) brightness(0.26)';
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) brightness(0.44)';
               }}
               onMouseDown={(e) => {
                 e.currentTarget.style.transform = 'scale(0.94)';
@@ -403,7 +401,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
               title="Portfolio"
             >
-              <img src="/layers.svg" alt="Portfolio" style={{ width: '20px', height: '20px', filter: 'invert(1) brightness(0.26)', transition: 'filter 0.1s ease-out' }} />
+              <img src="/layers.svg" alt="Portfolio" style={{ width: '20px', height: '20px', filter: 'invert(1) brightness(0.44)', transition: 'filter 0.15s cubic-bezier(0.4, 0, 0.2, 1)' }} />
             </button>
             <button 
               className="action-button"
@@ -425,18 +423,16 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 padding: 0
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.background = '#313131';
                 e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.color = '#f5f5f5';
                 const img = e.currentTarget.querySelector('img');
                 if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = '#2A2A2A';
                 e.currentTarget.style.borderColor = '#414141';
-                e.currentTarget.style.color = '#707070';
                 const img = e.currentTarget.querySelector('img');
-                if (img) (img as HTMLImageElement).style.filter = 'invert(1) brightness(0.26)';
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) brightness(0.44)';
               }}
               onMouseDown={(e) => {
                 e.currentTarget.style.transform = 'scale(0.94)';
@@ -446,7 +442,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
               title="Customize"
             >
-              <img src="/palette.svg" alt="Customize" style={{ width: '20px', height: '20px', filter: 'invert(1) brightness(0.26)', transition: 'filter 0.1s ease-out' }} />
+              <img src="/palette.svg" alt="Customize" style={{ width: '20px', height: '20px', filter: 'invert(1) brightness(0.44)', transition: 'filter 0.15s cubic-bezier(0.4, 0, 0.2, 1)' }} />
             </button>
           </div>
         </div>
@@ -462,19 +458,21 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 className="action-btn custom-btn"
                 style={{
                   flex: '0 0 calc(65% - 4px)',
-                  height: '30px',
+                  height: '32px',
                   background: '#1F1F1F',
                   border: '1px solid #353535',
                   color: '#C7C7C7',
                   cursor: 'pointer',
-                  padding: '5px 20px',
+                  padding: '0 20px',
                   borderRadius: '12px',
                   fontSize: '14px',
                   fontWeight: '600',
                   textTransform: 'none',
                   letterSpacing: '-0.2px',
                   transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-                  textAlign: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   backdropFilter: 'blur(10px)',
                   WebkitBackdropFilter: 'blur(10px)'
                 }}
@@ -501,19 +499,21 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 className="action-btn"
                 style={{
                   flex: '0 0 calc(35% - 4px)',
-                  height: '30px',
+                  height: '32px',
                   background: '#1F1F1F',
                   border: '1px solid #353535',
                   color: '#C7C7C7',
                   cursor: 'pointer',
-                  padding: '5px 20px',
+                  padding: '0 20px',
                   borderRadius: '12px',
                   fontSize: '14px',
                   fontWeight: '600',
                   textTransform: 'none',
                   letterSpacing: '-0.2px',
                   transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-                  textAlign: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   backdropFilter: 'blur(10px)',
                   WebkitBackdropFilter: 'blur(10px)'
                 }}
