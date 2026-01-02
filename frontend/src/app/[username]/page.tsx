@@ -366,8 +366,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
               onClick={() => router.push('/profile/edit')}
               className="action-button"
               style={{
-                minWidth: '56px',
-                height: '40px',
+                minWidth: '48px',
+                height: '34px',
                 borderRadius: '20px',
                 background: '#2A2A2A',
                 backdropFilter: 'blur(10px)',
@@ -386,11 +386,15 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                 e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
                 e.currentTarget.style.color = '#f5f5f5';
+                const img = e.currentTarget.querySelector('img');
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = '#2A2A2A';
                 e.currentTarget.style.borderColor = '#414141';
                 e.currentTarget.style.color = '#707070';
+                const img = e.currentTarget.querySelector('img');
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
               }}
               onMouseDown={(e) => {
                 e.currentTarget.style.transform = 'scale(0.94)';
@@ -400,13 +404,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
               title="Portfolio"
             >
-              <img src="/open-folder.svg" alt="Portfolio" style={{ width: '20px', height: '20px', filter: 'invert(1) opacity(0.44)' }} />
+              <img src="/layers.svg" alt="Portfolio" style={{ width: '16px', height: '16px', filter: 'invert(1) opacity(0.44)' }} />
             </button>
             <button 
               className="action-button"
               style={{
-                minWidth: '56px',
-                height: '40px',
+                minWidth: '48px',
+                height: '34px',
                 borderRadius: '20px',
                 background: '#2A2A2A',
                 backdropFilter: 'blur(10px)',
@@ -443,7 +447,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
               title="Customize"
             >
-              <img src="/magic-wand.svg" alt="Customize" style={{ width: '20px', height: '20px', filter: 'invert(1) opacity(0.44)' }} />
+              <img src="/palette.svg" alt="Customize" style={{ width: '16px', height: '16px', filter: 'invert(1) opacity(0.44)' }} />
             </button>
           </div>
         </div>
