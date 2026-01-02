@@ -121,7 +121,10 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
   };
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div 
+      className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      style={{ background: 'rgba(17, 17, 17, 0.9)' }}
+    >
       <div className="bg-[#2a2d35] rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-700">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">

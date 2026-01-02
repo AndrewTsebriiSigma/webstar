@@ -56,7 +56,8 @@ export default function PortfolioDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm p-4"
+      style={{ background: 'rgba(17, 17, 17, 0.9)' }}
       onClick={onClose}
     >
       <div
@@ -64,7 +65,7 @@ export default function PortfolioDetailModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Left: Media Content */}
-        <div className="md:w-2/3 bg-black flex items-center justify-center p-4 md:p-8">
+        <div className="md:w-2/3 flex items-center justify-center p-4 md:p-8" style={{ background: '#111111' }}>
           {item.content_type === 'photo' && item.content_url && (
             <img
               src={getContentUrl(item.content_url)}

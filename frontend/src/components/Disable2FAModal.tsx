@@ -46,7 +46,8 @@ export default function Disable2FAModal({ isOpen, onClose, onSuccess }: Disable2
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 backdrop-blur-sm"
+        style={{ background: 'rgba(17, 17, 17, 0.7)' }}
         onClick={handleClose}
       />
 

@@ -102,7 +102,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#111111' }}>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
       </div>
     );
@@ -110,7 +110,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#111111' }}>
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4 text-white">Profile not found</h2>
           <Link href="/" className="text-cyan-400 hover:underline">
@@ -122,10 +122,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen text-white" style={{ background: '#111111' }}>
       {/* Mobile Header - Hidden in viewer mode */}
       {!viewerMode && (
-        <header className="sticky top-0 z-40 bg-black/90 backdrop-blur-md border-b border-gray-800">
+        <header 
+          className="sticky top-0 z-40 backdrop-blur-md border-b border-gray-800"
+          style={{ background: 'rgba(17, 17, 17, 0.9)' }}
+        >
           <div className="px-3 py-2 flex items-center justify-between">
             {isOwnProfile ? (
               <button 
@@ -525,7 +528,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
       </div>
 
       {/* Tabs */}
-      <div className="sticky top-[49px] z-30 bg-black/90 backdrop-blur-md border-b border-gray-800">
+      <div 
+        className="sticky top-[49px] z-30 backdrop-blur-md border-b border-gray-800"
+        style={{ background: 'rgba(17, 17, 17, 0.9)' }}
+      >
         <div className="flex">
           {['Portfolio', 'Projects', 'About'].map((tab) => (
             <button
@@ -664,7 +670,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                     >
                       <div className="flex items-start justify-between mb-1">
                         <h3 className="text-sm font-semibold flex-1">{project.title}</h3>
-                        <span className="px-2 py-0.5 bg-black/50 rounded text-xs ml-2">24</span>
+                        <span className="px-2 py-0.5 rounded text-xs ml-2" style={{ background: 'rgba(17, 17, 17, 0.5)' }}>24</span>
                       </div>
                     </div>
                   </div>
@@ -693,7 +699,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
       {/* Share Modal */}
       {showShareModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50 p-4"
+          style={{ background: 'rgba(17, 17, 17, 0.8)' }}
+        >
           <div className="bg-gray-900 rounded-2xl shadow-2xl p-6 max-w-md w-full">
             <h3 className="text-2xl font-bold mb-4">Share Your Profile</h3>
             <p className="text-gray-400 mb-6">

@@ -156,7 +156,10 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
   };
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div 
+      className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      style={{ background: 'rgba(17, 17, 17, 0.9)' }}
+    >
       <div className="bg-[#2a2d35] rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-700">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
@@ -291,7 +294,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
                       </div>
                     )}
                     {index === 5 && projectMedia.length > 6 && (
-                      <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                      <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(17, 17, 17, 0.7)' }}>
                         <span className="text-white text-sm font-bold">
                           +{projectMedia.length - 6}
                         </span>
@@ -355,7 +358,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
       {/* Add Content Modal */}
       {showAddContentModal && (
         <div 
-          className="fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+          style={{ background: 'rgba(17, 17, 17, 0.95)' }}
           onClick={() => setShowAddContentModal(false)}
         >
           <div 
@@ -427,7 +431,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
       {/* Attach Existing Posts Modal */}
       <div 
         id="attach-existing-modal"
-        className="fixed inset-0 bg-black/95 z-[70] hidden items-center justify-center p-4"
+        className="fixed inset-0 z-[70] hidden items-center justify-center p-4"
+        style={{ background: 'rgba(17, 17, 17, 0.95)' }}
         onClick={(e) => {
           if (e.target === e.currentTarget) {
             (e.target as HTMLElement).style.display = 'none';

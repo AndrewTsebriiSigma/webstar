@@ -75,7 +75,8 @@ export default function Setup2FAModal({ isOpen, onClose, onSuccess }: Setup2FAMo
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 backdrop-blur-sm"
+        style={{ background: 'rgba(17, 17, 17, 0.7)' }}
         onClick={onClose}
       />
 

@@ -58,7 +58,8 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+        className="fixed inset-0 backdrop-blur-sm z-50"
+        style={{ background: 'rgba(17, 17, 17, 0.5)' }}
         onClick={onClose}
       />
       
