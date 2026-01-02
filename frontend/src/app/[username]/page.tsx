@@ -589,15 +589,20 @@ export default function ProfilePage({ params }: { params: { username: string } }
         )}
 
         {activeTab === 'portfolio' && (
-          <div>
+          <div style={{ 
+            maxWidth: '430px', 
+            margin: '0 auto',
+            width: '100%',
+            padding: '0 12px'
+          }}>
             {portfolioItems.length > 0 ? (
               <div 
                 className="portfolio-grid"
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '12px',
-                  padding: '0'
+                  gap: '8px',
+                  width: '100%'
                 }}
               >
                 {[...portfolioItems].reverse().map((item) => (

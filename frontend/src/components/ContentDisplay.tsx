@@ -59,7 +59,9 @@ export default function ContentDisplay({
       style={{ 
         aspectRatio: aspectRatio,
         width: '100%',
-        height: variant === 'full' ? 'auto' : '100%'
+        height: variant === 'full' ? 'auto' : '100%',
+        minWidth: 0, // Prevent overflow
+        overflow: 'hidden'
       }}
     >
       {renderContent()}

@@ -653,47 +653,27 @@ select:disabled {
 .portfolio-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 8px;
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
-/* Mobile: 2 columns */
+/* Mobile: 3 columns maintained (smaller) */
 @media (max-width: 640px) {
   .portfolio-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    gap: 6px;
+    max-width: 100%;
   }
 }
 
-/* Very small screens: 1 column for audio to span full width */
-@media (max-width: 400px) {
-  .portfolio-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Content Display Wrapper */
+/* Content Display Wrapper - All items uniform */
 .content-display-wrapper {
   width: 100%;
-  min-height: 100px;
-}
-
-/* Audio posts span all 3 columns on desktop */
-.content-display-wrapper[style*="span 3"] {
-  grid-column: span 3;
-}
-
-/* Audio posts span all 2 columns on mobile */
-@media (max-width: 640px) {
-  .content-display-wrapper[style*="span 3"] {
-    grid-column: span 2;
-  }
-}
-
-/* Audio posts span 1 column on very small screens */
-@media (max-width: 400px) {
-  .content-display-wrapper[style*="span 3"] {
-    grid-column: span 1;
-  }
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* Photo and Video hover effects */
