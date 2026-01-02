@@ -328,7 +328,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: 'flex-start', 
-                gap: '4px'
+                gap: '8px'
               }}
             >
               <div 
@@ -366,8 +366,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
               onClick={() => router.push('/profile/edit')}
               className="action-button"
               style={{
-                minWidth: '48px',
-                height: '34px',
+                width: '55px',
+                height: '40px',
                 borderRadius: '20px',
                 background: '#2A2A2A',
                 backdropFilter: 'blur(10px)',
@@ -409,8 +409,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <button 
               className="action-button"
               style={{
-                minWidth: '48px',
-                height: '34px',
+                width: '55px',
+                height: '40px',
                 borderRadius: '20px',
                 background: '#2A2A2A',
                 backdropFilter: 'blur(10px)',
@@ -463,10 +463,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 className="action-btn custom-btn"
                 style={{
                   flex: '0 0 calc(65% - 4px)',
-                  height: '40px',
-                  background: '#2A2A2A',
-                  border: '1px solid #414141',
-                  color: 'rgba(255, 255, 255, 0.75)',
+                  height: '30px',
+                  background: '#1F1F1F',
+                  border: '1px solid #353535',
+                  color: '#C7C7C7',
                   cursor: 'pointer',
                   padding: '5px 20px',
                   borderRadius: '12px',
@@ -485,9 +485,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#2A2A2A';
-                  e.currentTarget.style.borderColor = '#414141';
-                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.75)';
+                  e.currentTarget.style.background = '#1F1F1F';
+                  e.currentTarget.style.borderColor = '#353535';
+                  e.currentTarget.style.color = '#C7C7C7';
                 }}
                 onMouseDown={(e) => {
                   e.currentTarget.style.transform = 'scale(0.96)';
@@ -502,10 +502,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 className="action-btn"
                 style={{
                   flex: '0 0 calc(35% - 4px)',
-                  height: '40px',
-                  background: '#2A2A2A',
-                  border: '1px solid #414141',
-                  color: 'rgba(255, 255, 255, 0.75)',
+                  height: '30px',
+                  background: '#1F1F1F',
+                  border: '1px solid #353535',
+                  color: '#C7C7C7',
                   cursor: 'pointer',
                   padding: '5px 20px',
                   borderRadius: '12px',
@@ -524,9 +524,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#2A2A2A';
-                  e.currentTarget.style.borderColor = '#414141';
-                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.75)';
+                  e.currentTarget.style.background = '#1F1F1F';
+                  e.currentTarget.style.borderColor = '#353535';
+                  e.currentTarget.style.color = '#C7C7C7';
                 }}
                 onMouseDown={(e) => {
                   e.currentTarget.style.transform = 'scale(0.96)';
