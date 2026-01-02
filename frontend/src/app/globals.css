@@ -6,11 +6,14 @@
 
 :root {
   /* Design System - Background Colors */
-  --bg-app: #0B0C0F;
+  --bg-app: rgb(17, 17, 17);
   --bg-surface: rgba(255, 255, 255, 0.06);
   --bg-surface-strong: rgba(255, 255, 255, 0.09);
   --bg-surface-1: rgba(255, 255, 255, 0.06);
   --bg-surface-2: rgba(255, 255, 255, 0.09);
+  --bg-dashboard: rgb(31, 31, 31);
+  --bg-settings: rgb(27, 29, 30);
+  --bg-settings-item: rgb(28, 30, 31);
   
   /* Text Colors */
   --text-primary: rgba(255, 255, 255, 0.92);
@@ -18,16 +21,13 @@
   --text-muted: rgba(255, 255, 255, 0.65);
   --text-tertiary: rgba(255, 255, 255, 0.40);
   
-  /* Accent Color */
-  --accent: #67B8FF;
-  --blue: #67B8FF;
-  --blue-hover: #7FC4FF;
-  --blue-pressed: #4FA8E6;
-  --blue-10: rgba(103, 184, 255, 0.1);
-  --blue-20: rgba(103, 184, 255, 0.2);
-  
-  /* Legacy Electric Blue (for compatibility) */
-  --blue-legacy: #00C2FF;
+  /* Accent Color - Electric Blue #00C2FF */
+  --accent: #00C2FF;
+  --blue: #00C2FF;
+  --blue-hover: #33D1FF;
+  --blue-pressed: #0099CC;
+  --blue-10: rgba(0, 194, 255, 0.1);
+  --blue-20: rgba(0, 194, 255, 0.2);
   
   /* Semantic Colors */
   --success: #00FF87;
@@ -50,11 +50,11 @@
   --container-max-w: 420px;
   --container-max-w-lg: 480px;
   
-  /* Border Radius */
-  --radius-sm: 12px;
-  --radius-md: 16px;
-  --radius-lg: 20px;
-  --radius-xl: 24px;
+  /* Border Radius - Consistent across all elements */
+  --radius-sm: 18px;
+  --radius-md: 18px;
+  --radius-lg: 18px;
+  --radius-xl: 18px;
   --radius-pill: 999px;
   --radius-full: 9999px;
   
@@ -67,7 +67,7 @@
   --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.25);
   --shadow-card: 0 12px 30px rgba(0, 0, 0, 0.45);
   --shadow-fab: 0 16px 40px rgba(0, 0, 0, 0.55);
-  --shadow-glow: 0 0 24px rgba(103, 184, 255, 0.4);
+  --shadow-glow: 0 0 24px rgba(0, 194, 255, 0.4);
   
   /* Component Heights */
   --height-topbar: 56px;
@@ -88,7 +88,8 @@
   --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
   
   /* Gradients */
-  --gradient-blue: linear-gradient(135deg, rgba(103, 184, 255, 0.9) 0%, rgba(79, 168, 230, 0.9) 100%);
+  --gradient-blue: linear-gradient(135deg, #00C2FF 0%, #0099CC 100%);
+  --gradient-skill: linear-gradient(90deg, #00C2FF 0%, #0099CC 100%);
 }
 
 @layer base {

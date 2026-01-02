@@ -13,16 +13,19 @@ const config: Config = {
         blue: {
           DEFAULT: '#00C2FF',
           hover: '#33D1FF',
-          pressed: '#007EA7',
+          pressed: '#0099CC',
           light: '#5dd9ff',
         },
         
         // Background Colors
         bg: {
-          app: '#111111',
+          app: 'rgb(17, 17, 17)',
           surface1: '#1A1A1A',
           surface2: '#222222',
           surface3: '#2A2A2A',
+          dashboard: 'rgb(31, 31, 31)',
+          settings: 'rgb(27, 29, 30)',
+          settingsItem: 'rgb(28, 30, 31)',
         },
         
         // Text Colors
@@ -52,7 +55,7 @@ const config: Config = {
           900: '#005a85',
         },
         dark: {
-          DEFAULT: '#111111',
+          DEFAULT: 'rgb(17, 17, 17)',
           50: '#F5F5F5',
           100: '#e5e5e5',
           200: '#d4d4d4',
@@ -63,7 +66,7 @@ const config: Config = {
           700: '#2A2A2A',
           800: '#222222',
           900: '#1A1A1A',
-          950: '#111111',
+          950: 'rgb(17, 17, 17)',
         },
       },
       animation: {
@@ -101,10 +104,10 @@ const config: Config = {
         '10': '40px',
       },
       borderRadius: {
-        'sm': '12px',
-        'md': '16px',
-        'lg': '20px',
-        'xl': '24px',
+        'sm': '18px',
+        'md': '18px',
+        'lg': '18px',
+        'xl': '18px',
         'pill': '999px',
         'full': '9999px',
       },

@@ -102,66 +102,86 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       />
 
       {/* Modal */}
-      <div className="relative bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+      <div 
+        className="relative rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden"
+        style={{ background: 'rgb(27, 29, 30)' }}
+      >
         {/* Header */}
-        <div className="sticky top-0 bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between z-10">
-          <h2 className="text-2xl font-bold text-white">Settings</h2>
+        <div 
+          className="sticky top-0 border-b px-5 py-3 flex items-center justify-between z-10"
+          style={{ 
+            background: 'rgb(27, 29, 30)',
+            borderColor: 'rgba(255, 255, 255, 0.1)'
+          }}
+        >
+          <h2 className="text-xl font-bold text-white">Settings</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-800 rounded-lg transition"
+            className="p-1.5 hover:bg-white/5 rounded-lg transition"
           >
-            <XMarkIcon className="w-6 h-6 text-gray-400" />
+            <XMarkIcon className="w-5 h-5 text-gray-400" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
+        <div className="overflow-y-auto max-h-[calc(90vh-60px)]">
           {activeSection === null ? (
             // Main Menu
-            <div className="p-6 space-y-6">
+            <div className="p-4 space-y-4">
               {/* ACCOUNT Section */}
               <div>
-                <div className="flex items-center gap-2 mb-4 text-gray-400 text-sm font-semibold uppercase tracking-wider">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-center gap-2 mb-2 text-gray-500 text-xs font-semibold uppercase tracking-wider">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                   <span>ACCOUNT</span>
                 </div>
                 
-                <div className="space-y-2">
+                <div className="space-y-0">
                   <button
                     onClick={() => setActiveSection('email')}
-                    className="w-full flex items-center justify-between p-4 bg-gray-800 hover:bg-gray-750 rounded-xl transition text-left"
+                    className="w-full flex items-center justify-between px-3.5 py-3 hover:bg-white/5 transition text-left rounded-none first:rounded-t-2xl"
+                    style={{ background: 'rgb(28, 30, 31)' }}
                   >
-                    <span className="text-white font-medium">Email</span>
-                    <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                    <span className="text-white text-sm">Email</span>
+                    <ChevronRightIcon className="w-4 h-4 text-gray-400" />
                   </button>
                   
                   <button
                     onClick={() => setActiveSection('password')}
-                    className="w-full flex items-center justify-between p-4 bg-gray-800 hover:bg-gray-750 rounded-xl transition text-left"
+                    className="w-full flex items-center justify-between px-3.5 py-3 hover:bg-white/5 transition text-left border-t rounded-none"
+                    style={{ 
+                      background: 'rgb(28, 30, 31)',
+                      borderColor: 'rgba(255, 255, 255, 0.05)'
+                    }}
                   >
-                    <span className="text-white font-medium">Password</span>
-                    <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                    <span className="text-white text-sm">Password</span>
+                    <ChevronRightIcon className="w-4 h-4 text-gray-400" />
                   </button>
                   
-                  <div className="flex items-center justify-between p-4 bg-gray-800 rounded-xl">
+                  <div 
+                    className="flex items-center justify-between px-3.5 py-3 border-t rounded-none last:rounded-b-2xl"
+                    style={{ 
+                      background: 'rgb(28, 30, 31)',
+                      borderColor: 'rgba(255, 255, 255, 0.05)'
+                    }}
+                  >
                     <div className="flex items-center gap-2">
-                      <span className="text-white font-medium">2FA</span>
+                      <span className="text-white text-sm">2FA</span>
                       {loading2FAStatus && (
-                        <div className="w-4 h-4 border-2 border-gray-600 border-t-cyan-500 rounded-full animate-spin"></div>
+                        <div className="w-3 h-3 border-2 border-gray-600 border-t-cyan-500 rounded-full animate-spin"></div>
                       )}
                     </div>
                     <button
                       onClick={handle2FAToggle}
                       disabled={loading2FAStatus}
-                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed ${
+                      className={`relative inline-flex h-6 w-10 items-center rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed ${
                         settings.twoFactorEnabled ? 'bg-cyan-500' : 'bg-gray-600'
                       }`}
                     >
                       <span
-                        className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
-                          settings.twoFactorEnabled ? 'translate-x-6' : 'translate-x-1'
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                          settings.twoFactorEnabled ? 'translate-x-5' : 'translate-x-1'
                         }`}
                       />
                     </button>
@@ -171,28 +191,31 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
               {/* PRIVACY Section */}
               <div>
-                <div className="flex items-center gap-2 mb-4 text-gray-400 text-sm font-semibold uppercase tracking-wider">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-center gap-2 mb-2 text-gray-500 text-xs font-semibold uppercase tracking-wider">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                   <span>PRIVACY</span>
                 </div>
                 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between p-4 bg-gray-800 rounded-xl">
-                    <span className="text-white font-medium">Public Profile</span>
+                <div className="space-y-0">
+                  <div 
+                    className="flex items-center justify-between px-3.5 py-3 rounded-t-2xl"
+                    style={{ background: 'rgb(28, 30, 31)' }}
+                  >
+                    <span className="text-white text-sm">Public Profile</span>
                     <button
                       onClick={() => {
                         toggleSetting('publicProfile');
                         saveSettings();
                       }}
-                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition ${
+                      className={`relative inline-flex h-6 w-10 items-center rounded-full transition ${
                         settings.publicProfile ? 'bg-cyan-500' : 'bg-gray-600'
                       }`}
                     >
                       <span
-                        className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
-                          settings.publicProfile ? 'translate-x-6' : 'translate-x-1'
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                          settings.publicProfile ? 'translate-x-5' : 'translate-x-1'
                         }`}
                       />
                     </button>
@@ -200,57 +223,70 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   
                   <button
                     onClick={() => setActiveSection('blocked')}
-                    className="w-full flex items-center justify-between p-4 bg-gray-800 hover:bg-gray-750 rounded-xl transition text-left"
+                    className="w-full flex items-center justify-between px-3.5 py-3 hover:bg-white/5 transition text-left border-t rounded-b-2xl"
+                    style={{ 
+                      background: 'rgb(28, 30, 31)',
+                      borderColor: 'rgba(255, 255, 255, 0.05)'
+                    }}
                   >
-                    <span className="text-white font-medium">Blocked Users</span>
-                    <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                    <span className="text-white text-sm">Blocked Users</span>
+                    <ChevronRightIcon className="w-4 h-4 text-gray-400" />
                   </button>
                 </div>
               </div>
 
               {/* NOTIFICATIONS Section */}
               <div>
-                <div className="flex items-center gap-2 mb-4 text-gray-400 text-sm font-semibold uppercase tracking-wider">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-center gap-2 mb-2 text-gray-500 text-xs font-semibold uppercase tracking-wider">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
                   <span>NOTIFICATIONS</span>
                 </div>
                 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between p-4 bg-gray-800 rounded-xl">
-                    <span className="text-white font-medium">Push</span>
+                <div className="space-y-0">
+                  <div 
+                    className="flex items-center justify-between px-3.5 py-3 rounded-t-2xl"
+                    style={{ background: 'rgb(28, 30, 31)' }}
+                  >
+                    <span className="text-white text-sm">Push</span>
                     <button
                       onClick={() => {
                         toggleSetting('pushNotifications');
                         saveSettings();
                       }}
-                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition ${
+                      className={`relative inline-flex h-6 w-10 items-center rounded-full transition ${
                         settings.pushNotifications ? 'bg-cyan-500' : 'bg-gray-600'
                       }`}
                     >
                       <span
-                        className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
-                          settings.pushNotifications ? 'translate-x-6' : 'translate-x-1'
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                          settings.pushNotifications ? 'translate-x-5' : 'translate-x-1'
                         }`}
                       />
                     </button>
                   </div>
                   
-                  <div className="flex items-center justify-between p-4 bg-gray-800 rounded-xl">
-                    <span className="text-white font-medium">Email</span>
+                  <div 
+                    className="flex items-center justify-between px-3.5 py-3 border-t rounded-b-2xl"
+                    style={{ 
+                      background: 'rgb(28, 30, 31)',
+                      borderColor: 'rgba(255, 255, 255, 0.05)'
+                    }}
+                  >
+                    <span className="text-white text-sm">Email</span>
                     <button
                       onClick={() => {
                         toggleSetting('emailNotifications');
                         saveSettings();
                       }}
-                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition ${
+                      className={`relative inline-flex h-6 w-10 items-center rounded-full transition ${
                         settings.emailNotifications ? 'bg-cyan-500' : 'bg-gray-600'
                       }`}
                     >
                       <span
-                        className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
-                          settings.emailNotifications ? 'translate-x-6' : 'translate-x-1'
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                          settings.emailNotifications ? 'translate-x-5' : 'translate-x-1'
                         }`}
                       />
                     </button>
@@ -260,42 +296,47 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
               {/* LEGAL Section */}
               <div>
-                <div className="flex items-center gap-2 mb-4 text-gray-400 text-sm font-semibold uppercase tracking-wider">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-center gap-2 mb-2 text-gray-500 text-xs font-semibold uppercase tracking-wider">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   <span>LEGAL</span>
                 </div>
                 
-                <div className="space-y-2">
+                <div className="space-y-0">
                   <button
                     onClick={() => setActiveSection('terms')}
-                    className="w-full flex items-center justify-between p-4 bg-gray-800 hover:bg-gray-750 rounded-xl transition text-left"
+                    className="w-full flex items-center justify-between px-3.5 py-3 hover:bg-white/5 transition text-left rounded-t-2xl"
+                    style={{ background: 'rgb(28, 30, 31)' }}
                   >
-                    <span className="text-white font-medium">Terms</span>
-                    <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                    <span className="text-white text-sm">Terms</span>
+                    <ChevronRightIcon className="w-4 h-4 text-gray-400" />
                   </button>
                   
                   <button
                     onClick={() => setActiveSection('privacy-policy')}
-                    className="w-full flex items-center justify-between p-4 bg-gray-800 hover:bg-gray-750 rounded-xl transition text-left"
+                    className="w-full flex items-center justify-between px-3.5 py-3 hover:bg-white/5 transition text-left border-t rounded-b-2xl"
+                    style={{ 
+                      background: 'rgb(28, 30, 31)',
+                      borderColor: 'rgba(255, 255, 255, 0.05)'
+                    }}
                   >
-                    <span className="text-white font-medium">Privacy</span>
-                    <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                    <span className="text-white text-sm">Privacy</span>
+                    <ChevronRightIcon className="w-4 h-4 text-gray-400" />
                   </button>
                 </div>
               </div>
 
               {/* ACCOUNT ACTIONS Section */}
               <div>
-                <div className="flex items-center gap-2 mb-4 text-gray-400 text-sm font-semibold uppercase tracking-wider">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-center gap-2 mb-2 text-gray-500 text-xs font-semibold uppercase tracking-wider">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                   <span>ACTIONS</span>
                 </div>
                 
-                <div className="space-y-2">
+                <div>
                   <button
                     onClick={() => {
                       logout();
@@ -303,11 +344,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       toast.success('Logged out successfully');
                       router.push('/auth/login');
                     }}
-                    className="w-full flex items-center justify-between p-4 bg-red-900/20 hover:bg-red-900/30 border border-red-800/50 rounded-xl transition text-left group"
+                    className="w-full flex items-center justify-between px-3.5 py-3 bg-red-900/20 hover:bg-red-900/30 border border-red-800/50 rounded-2xl transition text-left group"
                   >
-                    <div className="flex items-center gap-3">
-                      <ArrowRightOnRectangleIcon className="w-5 h-5 text-red-400" />
-                      <span className="text-red-400 font-medium">Log Out</span>
+                    <div className="flex items-center gap-2.5">
+                      <ArrowRightOnRectangleIcon className="w-4 h-4 text-red-400" />
+                      <span className="text-red-400 text-sm font-medium">Log Out</span>
                     </div>
                   </button>
                 </div>

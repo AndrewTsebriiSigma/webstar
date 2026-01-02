@@ -285,7 +285,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Dashboard Strip - Compact for owner only */}
       {isOwnProfile && (
         <div className="px-4 mb-2">
-          <div className="bg-gray-900/40 backdrop-blur-md rounded-xl p-3 border border-gray-800/50">
+          <div 
+            className="backdrop-blur-md rounded-xl p-3"
+            style={{ 
+              background: 'rgb(31, 31, 31)',
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <svg className="w-5 h-5 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
@@ -317,7 +323,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 onClick={() => setShowShareModal(true)}
                 className="flex-1 py-2 text-sm font-semibold rounded-xl transition"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.06)',
+                  background: 'rgb(31, 31, 31)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
                   color: 'rgba(255, 255, 255, 0.75)',
                   fontSize: '14px',
@@ -329,7 +335,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               <button 
                 className="flex-1 py-2 text-sm font-semibold rounded-xl transition"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.06)',
+                  background: 'rgb(31, 31, 31)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
                   color: 'rgba(255, 255, 255, 0.75)',
                   fontSize: '14px',

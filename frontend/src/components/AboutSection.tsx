@@ -981,7 +981,8 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                         className="h-full rounded-full transition-all"
                         style={{ 
                           width: `${skill.level}%`,
-                          background: 'var(--blue)',
+                          background: 'linear-gradient(90deg, #00C2FF 0%, #0099CC 100%)',
+                          boxShadow: '0 0 8px rgba(0, 194, 255, 0.4)',
                           transitionDuration: '500ms',
                         }}
                       />
