@@ -388,7 +388,7 @@ function FeedPostContent({
       case 'audio':
         return (
           <div style={{ marginBottom: '16px' }}>
-            <ContentDisplay item={post} isActive={isActive} />
+            <ContentDisplay item={post} isActive={isActive} variant="full" />
           </div>
         );
       

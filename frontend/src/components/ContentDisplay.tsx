@@ -14,33 +14,36 @@ interface ContentDisplayProps {
   isActive?: boolean;
   showAttachments?: boolean;
   onClick?: () => void;
+  variant?: 'compact' | 'full'; // Add variant prop
 }
 
 export default function ContentDisplay({ 
   item, 
   isActive = false, 
   showAttachments = true,
-  onClick 
+  onClick,
+  variant = 'compact' // Default to compact for grid
 }: ContentDisplayProps) {
-  const getAspectRatio = (type: string) => {
-    switch (type) {
-      case 'audio': return '8 / 1';
-      case 'photo': return '4 / 5';
-      case 'video': return '4 / 5';
-      case 'text': return '4 / 3';
-      case 'pdf': return '3 / 4';
-      default: return '4 / 5';
-    }
-  };
+  // All items use same aspect ratio in grid (4:5) for compact
+  // Full variant can have dynamic sizing
+  const aspectRatio = variant === 'compact' ? '4 / 5' : undefined;
 
   const renderContent = () => {
     switch (item.content_type) {
       case 'photo':
         return <PhotoDisplay item={item} onClick={onClick} />;
       case 'audio':
-        return <AudioDisplay item={item} isActive={isActive} />;
+        return variant === 'full' ? (
+          <AudioDisplay item={item} isActive={isActive} />
+        ) : (
+          <AudioDisplayCompact item={item} onClick={onClick} />
+        );
       case 'text':
-        return <TextDisplay item={item} onClick={onClick} />;
+        return variant === 'full' ? (
+          <TextDisplay item={item} onClick={onClick} />
+        ) : (
+          <TextDisplayCompact item={item} onClick={onClick} />
+        );
       case 'pdf':
         return <PDFDisplay item={item} onClick={onClick} />;
       case 'video':
@@ -54,8 +57,9 @@ export default function ContentDisplay({
     <div 
       className="content-display-wrapper"
       style={{ 
-        aspectRatio: getAspectRatio(item.content_type),
-        gridColumn: item.content_type === 'audio' ? 'span 3' : 'span 1'
+        aspectRatio: aspectRatio,
+        width: '100%',
+        height: variant === 'full' ? 'auto' : '100%'
       }}
     >
       {renderContent()}
@@ -114,7 +118,121 @@ function PhotoDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => 
   );
 }
 
-// Audio Display Component
+// Audio Display Component - Compact for Grid
+function AudioDisplayCompact({ item, onClick }: { item: PortfolioItem; onClick?: () => void }) {
+  const audioUrl = item.content_url && item.content_url.startsWith('http') 
+    ? item.content_url 
+    : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`;
+
+  return (
+    <div 
+      className="audio-display-compact"
+      onClick={onClick}
+      style={{
+        width: '100%',
+        height: '100%',
+        borderRadius: '20px',
+        background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.12), rgba(0, 194, 255, 0.08))',
+        border: '1px solid rgba(10, 132, 255, 0.25)',
+        padding: '24px 20px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '16px',
+        position: 'relative',
+        overflow: 'hidden',
+        cursor: 'pointer',
+        transition: 'all 180ms cubic-bezier(0.25, 0.8, 0.25, 1)'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-4px)';
+        e.currentTarget.style.boxShadow = '0 12px 32px rgba(10, 132, 255, 0.2)';
+        e.currentTarget.style.borderColor = 'rgba(10, 132, 255, 0.4)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = 'none';
+        e.currentTarget.style.borderColor = 'rgba(10, 132, 255, 0.25)';
+      }}
+    >
+      {/* Background Equalizer Pattern */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '4px',
+        opacity: 0.08,
+        pointerEvents: 'none'
+      }}>
+        {[...Array(12)].map((_, i) => (
+          <div
+            key={i}
+            style={{
+              width: '3px',
+              height: `${30 + (i % 3) * 20}%`,
+              background: 'linear-gradient(to top, #0A84FF, #00C2FF)',
+              borderRadius: '2px'
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Play Icon */}
+      <div style={{
+        width: '64px',
+        height: '64px',
+        borderRadius: '50%',
+        background: '#0A84FF',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 8px 24px rgba(10, 132, 255, 0.3)',
+        zIndex: 1
+      }}>
+        <PlayIcon className="w-8 h-8" style={{ color: '#FFFFFF', marginLeft: '3px' }} />
+      </div>
+
+      {/* Track Title */}
+      <div style={{
+        fontSize: '15px',
+        fontWeight: 600,
+        color: '#FFFFFF',
+        textAlign: 'center',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        display: '-webkit-box',
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: 'vertical',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
+        zIndex: 1,
+        lineHeight: '1.4'
+      }}>
+        {item.title || 'Audio Track'}
+      </div>
+
+      {/* Audio Icon Badge */}
+      <div style={{
+        position: 'absolute',
+        bottom: '12px',
+        right: '12px',
+        width: '32px',
+        height: '32px',
+        borderRadius: '50%',
+        background: 'rgba(10, 132, 255, 0.2)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <MusicalNoteIcon className="w-4 h-4" style={{ color: '#0A84FF' }} />
+      </div>
+    </div>
+  );
+}
+
+// Audio Display Component - Full Size for Modal/Feed
 function AudioDisplay({ item, isActive }: { item: PortfolioItem; isActive?: boolean }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -349,7 +467,118 @@ function AudioDisplay({ item, isActive }: { item: PortfolioItem; isActive?: bool
   );
 }
 
-// Text Display Component
+// Text Display Component - Compact for Grid (Preview)
+function TextDisplayCompact({ item, onClick }: { item: PortfolioItem; onClick?: () => void }) {
+  // Use text_content if available, otherwise fallback to description
+  const displayText = item.text_content || item.description || item.title || 'Text content';
+  
+  // Create preview - first ~80 characters or first 2 lines
+  const previewText = displayText.length > 80 ? displayText.substring(0, 80) + '...' : displayText;
+  
+  return (
+    <div 
+      className="text-display-compact"
+      onClick={onClick}
+      style={{
+        width: '100%',
+        height: '100%',
+        borderRadius: '20px',
+        background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.05), rgba(118, 75, 162, 0.05))',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        padding: '24px 20px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        transition: 'all 180ms cubic-bezier(0.25, 0.8, 0.25, 1)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-4px)';
+        e.currentTarget.style.boxShadow = '0 18px 40px rgba(10, 132, 255, 0.15)';
+        e.currentTarget.style.borderColor = 'rgba(10, 132, 255, 0.3)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = 'none';
+        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+      }}
+    >
+      {/* Decorative gradient orb */}
+      <div style={{
+        position: 'absolute',
+        top: '-30%',
+        right: '-20%',
+        width: '150px',
+        height: '150px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(10, 132, 255, 0.08), transparent)',
+        filter: 'blur(30px)',
+        pointerEvents: 'none'
+      }} />
+      
+      {/* Preview Text */}
+      <div 
+        style={{
+          fontSize: '15px',
+          lineHeight: '1.5',
+          color: '#FFFFFF',
+          fontWeight: 500,
+          textAlign: 'center',
+          position: 'relative',
+          zIndex: 1,
+          overflow: 'hidden',
+          display: '-webkit-box',
+          WebkitLineClamp: 4,
+          WebkitBoxOrient: 'vertical',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
+        }}
+      >
+        "{previewText}"
+      </div>
+      
+      {/* Title if exists */}
+      {item.title && item.text_content && (
+        <div 
+          style={{
+            fontSize: '12px',
+            color: 'rgba(255, 255, 255, 0.5)',
+            textAlign: 'center',
+            marginTop: '12px',
+            fontWeight: 500,
+            position: 'relative',
+            zIndex: 1,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
+          }}
+        >
+          — {item.title}
+        </div>
+      )}
+      
+      {/* "Read more" indicator */}
+      {displayText.length > 80 && (
+        <div style={{
+          fontSize: '11px',
+          color: 'rgba(10, 132, 255, 0.8)',
+          textAlign: 'center',
+          marginTop: '8px',
+          fontWeight: 600,
+          position: 'relative',
+          zIndex: 1,
+          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
+        }}>
+          Read more →
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Text Display Component - Full Size for Modal/Feed
 function TextDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => void }) {
   // Use text_content if available, otherwise fallback to description
   const displayText = item.text_content || item.description || item.title || 'Text content';
