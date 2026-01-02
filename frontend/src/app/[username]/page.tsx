@@ -327,7 +327,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: 'flex-start', 
-                gap: '8px'
+                gap: '8.4px'
               }}
             >
               <div 

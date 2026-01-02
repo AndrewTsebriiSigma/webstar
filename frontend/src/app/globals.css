@@ -770,6 +770,12 @@ html {
   .dashboard-info {
     gap: 2px !important;
   }
+  
+  /* Icon buttons height on mobile */
+  .dashboard-actions .action-button {
+    height: 34px !important;
+    width: 55px !important;
+  }
 }
 
 /* Safe area insets for iOS */
