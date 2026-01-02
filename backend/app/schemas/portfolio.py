@@ -5,11 +5,12 @@ from typing import Optional
 
 class PortfolioItemCreate(BaseModel):
     """Create portfolio item."""
-    content_type: str = Field(..., description="photo, video, audio, or link")
-    content_url: str
+    content_type: str = Field(..., description="photo, video, audio, text, or link")
+    content_url: Optional[str] = None  # Optional for text posts
     thumbnail_url: Optional[str] = None
     title: Optional[str] = None
     description: Optional[str] = None
+    text_content: Optional[str] = Field(None, max_length=500)  # For text posts
     aspect_ratio: Optional[str] = None
 
 
@@ -25,10 +26,11 @@ class PortfolioItemResponse(BaseModel):
     id: int
     user_id: int
     content_type: str
-    content_url: str
+    content_url: Optional[str]
     thumbnail_url: Optional[str]
     title: Optional[str]
     description: Optional[str]
+    text_content: Optional[str]
     aspect_ratio: Optional[str]
     views: int
     clicks: int

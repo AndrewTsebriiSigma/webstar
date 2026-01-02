@@ -53,6 +53,7 @@ async def get_portfolio_items(
             thumbnail_url=item.thumbnail_url,
             title=item.title,
             description=item.description,
+            text_content=item.text_content,
             aspect_ratio=item.aspect_ratio,
             views=item.views,
             clicks=item.clicks,
@@ -88,6 +89,7 @@ async def get_user_portfolio_items(
             thumbnail_url=item.thumbnail_url,
             title=item.title,
             description=item.description,
+            text_content=item.text_content,
             aspect_ratio=item.aspect_ratio,
             views=item.views,
             clicks=item.clicks,
@@ -106,11 +108,25 @@ async def create_portfolio_item(
 ):
     """Create a new portfolio item."""
     # Validate content type
-    valid_types = ["photo", "video", "audio", "link"]
+    valid_types = ["photo", "video", "audio", "text", "link"]
     if item_data.content_type not in valid_types:
         raise HTTPException(
             status_code=400,
             detail=f"Invalid content_type. Must be one of: {', '.join(valid_types)}"
+        )
+    
+    # Validate text posts have text_content
+    if item_data.content_type == "text" and not item_data.text_content:
+        raise HTTPException(
+            status_code=400,
+            detail="text_content is required for text posts"
+        )
+    
+    # Validate non-text posts have content_url
+    if item_data.content_type != "text" and not item_data.content_url:
+        raise HTTPException(
+            status_code=400,
+            detail="content_url is required for non-text posts"
         )
     
     # Get current max order
@@ -127,6 +143,7 @@ async def create_portfolio_item(
         thumbnail_url=item_data.thumbnail_url,
         title=item_data.title,
         description=item_data.description,
+        text_content=item_data.text_content,
         aspect_ratio=item_data.aspect_ratio,
         order=order
     )
@@ -154,6 +171,7 @@ async def create_portfolio_item(
         thumbnail_url=item.thumbnail_url,
         title=item.title,
         description=item.description,
+        text_content=item.text_content,
         aspect_ratio=item.aspect_ratio,
         views=item.views,
         clicks=item.clicks,
@@ -193,6 +211,7 @@ async def update_portfolio_item(
         thumbnail_url=item.thumbnail_url,
         title=item.title,
         description=item.description,
+        text_content=item.text_content,
         aspect_ratio=item.aspect_ratio,
         views=item.views,
         clicks=item.clicks,

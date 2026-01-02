@@ -63,10 +63,11 @@ export interface PortfolioItem {
   id: number;
   user_id: number;
   content_type: string;
-  content_url: string;
+  content_url: string | null;
   thumbnail_url: string | null;
   title: string | null;
   description: string | null;
+  text_content: string | null;
   aspect_ratio: string | null;
   views: number;
   clicks: number;

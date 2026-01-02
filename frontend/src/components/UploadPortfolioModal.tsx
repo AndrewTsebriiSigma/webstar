@@ -49,22 +49,24 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
     // Check file type
     const isImage = selectedFile.type.startsWith('image/');
     const isVideo = selectedFile.type.startsWith('video/');
+    const isAudio = selectedFile.type.startsWith('audio/');
     
-    if (!isImage && !isVideo) {
-      toast.error('Please select an image or video file');
+    if (!isImage && !isVideo && !isAudio) {
+      toast.error('Please select an image, video, or audio file');
       return;
     }
 
     // Check file size
-    const maxSize = isVideo ? 200 * 1024 * 1024 : 5 * 1024 * 1024;
+    const maxSize = isVideo ? 200 * 1024 * 1024 : isAudio ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
     if (selectedFile.size > maxSize) {
-      toast.error(`File must be less than ${isVideo ? '200MB' : '5MB'}`);
+      const sizeMB = isVideo ? '200MB' : isAudio ? '10MB' : '5MB';
+      toast.error(`File must be less than ${sizeMB}`);
       return;
     }
 
     setFile(selectedFile);
     
-    // Create preview for images
+    // Create preview for images only
     if (isImage) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -72,7 +74,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
       };
       reader.readAsDataURL(selectedFile);
     } else {
-      setPreview(''); // No preview for video
+      setPreview(''); // No preview for video/audio
     }
   };
 
@@ -88,7 +90,11 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
       setUploadProgress(30);
       
       // Determine content type
-      const contentType = file.type.startsWith('image/') ? 'photo' : 'video';
+      const contentType = file.type.startsWith('image/') 
+        ? 'photo' 
+        : file.type.startsWith('video/')
+        ? 'video'
+        : 'audio';
       
       // Upload file
       const uploadResponse = await uploadsAPI.uploadMedia(file, contentType);
@@ -100,7 +106,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
       await portfolioAPI.createItem({
         content_type: contentType,
         content_url: contentUrl,
-        title: formData.title || null, // Title is optional
+        title: formData.title || null,
         description: formData.description || null,
         aspect_ratio: '1:1',
       });
@@ -160,10 +166,22 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
                 ) : (
                   <div className="w-full h-64 bg-gray-800 rounded-xl flex items-center justify-center">
                     <div className="text-center text-gray-400">
-                      <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                      <p className="text-sm">{file?.name}</p>
+                      {file?.type.startsWith('audio/') ? (
+                        <>
+                          <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                          </svg>
+                          <p className="text-sm">🎵 Audio File</p>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          <p className="text-sm">🎬 Video File</p>
+                        </>
+                      )}
+                      <p className="text-xs mt-1">{file?.name}</p>
                     </div>
                   </div>
                 )}
@@ -178,7 +196,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
                 <input
                   type="file"
                   id="file-upload-edit"
-                  accept="image/*,video/*"
+                  accept="image/*,video/*,audio/*"
                   onChange={handleFileSelect}
                   className="hidden"
                   disabled={uploading}
@@ -193,13 +211,13 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
                   <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <p className="text-sm font-medium">Click to upload photo or video</p>
-                  <p className="text-xs mt-1">Max 5MB for images, 50MB for videos</p>
+                  <p className="text-sm font-medium">Click to upload photo, video, or audio</p>
+                  <p className="text-xs mt-1">Max 5MB for images, 200MB for videos, 10MB for audio</p>
                 </div>
                 <input
                   type="file"
                   id="file-upload"
-                  accept="image/*,video/*"
+                  accept="image/*,video/*,audio/*"
                   onChange={handleFileSelect}
                   className="hidden"
                 />

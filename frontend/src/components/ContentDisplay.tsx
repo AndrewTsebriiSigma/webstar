@@ -65,7 +65,7 @@ export default function ContentDisplay({
 
 // Photo Display Component
 function PhotoDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => void }) {
-  const imageUrl = item.content_url.startsWith('http') 
+  const imageUrl = item.content_url && item.content_url.startsWith('http') 
     ? item.content_url 
     : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`;
 
@@ -118,6 +118,8 @@ function PhotoDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => 
 function AudioDisplay({ item, isActive }: { item: PortfolioItem; isActive?: boolean }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const togglePlay = () => {
@@ -138,13 +140,30 @@ function AudioDisplay({ item, isActive }: { item: PortfolioItem; isActive?: bool
     const updateProgress = () => {
       const prog = (audio.currentTime / audio.duration) * 100;
       setProgress(prog);
+      setCurrentTime(audio.currentTime);
+    };
+
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
     };
 
     audio.addEventListener('timeupdate', updateProgress);
-    return () => audio.removeEventListener('timeupdate', updateProgress);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    
+    return () => {
+      audio.removeEventListener('timeupdate', updateProgress);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+    };
   }, []);
 
-  const audioUrl = item.content_url.startsWith('http') 
+  const formatTime = (seconds: number) => {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const audioUrl = item.content_url && item.content_url.startsWith('http') 
     ? item.content_url 
     : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`;
 
@@ -154,41 +173,45 @@ function AudioDisplay({ item, isActive }: { item: PortfolioItem; isActive?: bool
       style={{
         width: '100%',
         height: '100%',
-        borderRadius: 'var(--radius-lg)',
-        background: 'rgba(0, 194, 255, 0.08)',
-        border: '1px solid rgba(0, 194, 255, 0.2)',
-        padding: '16px',
+        borderRadius: '20px',
+        background: 'rgba(10, 132, 255, 0.08)',
+        border: '1px solid rgba(10, 132, 255, 0.2)',
+        padding: '20px',
         display: 'flex',
         alignItems: 'center',
-        gap: '16px',
+        gap: '20px',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        transition: 'all 180ms cubic-bezier(0.25, 0.8, 0.25, 1)'
       }}
     >
-      {/* Animated Equalizer Bars */}
+      {/* Animated Equalizer Background */}
       <div 
         style={{
           position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: '100px',
+          left: '16px',
+          top: '50%',
+          transform: 'translateY(-50%)',
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-end',
           justifyContent: 'center',
-          gap: '4px',
-          opacity: isPlaying ? 0.3 : 0.1
+          gap: '3px',
+          height: '40px',
+          opacity: isPlaying ? 0.3 : 0.12,
+          transition: 'opacity 300ms'
         }}
       >
         {[...Array(5)].map((_, i) => (
           <div
             key={i}
+            className="equalizer-bar"
             style={{
               width: '4px',
-              height: isPlaying ? `${20 + Math.random() * 40}%` : '20%',
-              background: '#00C2FF',
+              height: '20%',
+              background: 'linear-gradient(to top, #0A84FF, #00C2FF)',
               borderRadius: '2px',
-              animation: isPlaying ? `equalizer ${0.5 + i * 0.1}s ease-in-out infinite alternate` : 'none'
+              animation: isPlaying ? `equalizerAnimation ${0.6 + i * 0.15}s ease-in-out infinite alternate` : 'none',
+              transformOrigin: 'bottom'
             }}
           />
         ))}
@@ -198,10 +221,10 @@ function AudioDisplay({ item, isActive }: { item: PortfolioItem; isActive?: bool
       <button
         onClick={togglePlay}
         style={{
-          width: '48px',
-          height: '48px',
+          width: '56px',
+          height: '56px',
           borderRadius: '50%',
-          background: '#00C2FF',
+          background: '#0A84FF',
           border: 'none',
           display: 'flex',
           alignItems: 'center',
@@ -209,35 +232,39 @@ function AudioDisplay({ item, isActive }: { item: PortfolioItem; isActive?: bool
           cursor: 'pointer',
           flexShrink: 0,
           zIndex: 1,
-          transition: 'all 150ms'
+          transition: 'all 180ms cubic-bezier(0.25, 0.8, 0.25, 1)',
+          boxShadow: '0 4px 12px rgba(10, 132, 255, 0.3)'
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'scale(1.1)';
-          e.currentTarget.style.background = '#33D1FF';
+          e.currentTarget.style.transform = 'scale(1.08)';
+          e.currentTarget.style.background = '#0066CC';
+          e.currentTarget.style.boxShadow = '0 6px 16px rgba(10, 132, 255, 0.4)';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.background = '#00C2FF';
+          e.currentTarget.style.background = '#0A84FF';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(10, 132, 255, 0.3)';
         }}
       >
         {isPlaying ? (
-          <PauseIcon className="w-6 h-6 text-black" />
+          <PauseIcon className="w-7 h-7" style={{ color: '#FFFFFF' }} />
         ) : (
-          <PlayIcon className="w-6 h-6 text-black ml-1" />
+          <PlayIcon className="w-7 h-7" style={{ color: '#FFFFFF', marginLeft: '2px' }} />
         )}
       </button>
 
-      {/* Track Info */}
+      {/* Track Info & Controls */}
       <div style={{ flex: 1, minWidth: 0, zIndex: 1 }}>
         <div 
           style={{
             color: '#FFFFFF',
-            fontSize: '16px',
+            fontSize: '17px',
             fontWeight: 600,
-            marginBottom: '8px',
+            marginBottom: '10px',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
           }}
         >
           {item.title || 'Audio Track'}
@@ -247,30 +274,75 @@ function AudioDisplay({ item, isActive }: { item: PortfolioItem; isActive?: bool
         <div 
           style={{
             width: '100%',
-            height: '4px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '2px',
-            overflow: 'hidden'
+            height: '6px',
+            background: 'rgba(255, 255, 255, 0.15)',
+            borderRadius: '3px',
+            overflow: 'hidden',
+            marginBottom: '8px',
+            cursor: 'pointer'
+          }}
+          onClick={(e) => {
+            if (audioRef.current && duration) {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              const percentage = x / rect.width;
+              audioRef.current.currentTime = percentage * duration;
+            }
           }}
         >
           <div 
             style={{
               width: `${progress}%`,
               height: '100%',
-              background: '#00C2FF',
-              transition: 'width 100ms linear'
+              background: 'linear-gradient(90deg, #0A84FF, #00C2FF)',
+              transition: 'width 100ms linear',
+              borderRadius: '3px'
             }}
           />
         </div>
+
+        {/* Time Display */}
+        <div 
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            fontSize: '12px',
+            color: 'rgba(255, 255, 255, 0.6)',
+            fontWeight: 500,
+            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
+          }}
+        >
+          <span>{formatTime(currentTime)}</span>
+          <span>{formatTime(duration)}</span>
+        </div>
+      </div>
+
+      {/* Audio Waveform Icon */}
+      <div style={{ 
+        flexShrink: 0, 
+        zIndex: 1,
+        opacity: 0.4
+      }}>
+        <MusicalNoteIcon className="w-6 h-6" style={{ color: '#0A84FF' }} />
       </div>
 
       {/* Hidden Audio Element */}
       <audio ref={audioRef} src={audioUrl} />
 
       <style jsx>{`
-        @keyframes equalizer {
-          from { height: 20%; }
-          to { height: 80%; }
+        @keyframes equalizerAnimation {
+          0% { 
+            height: 20%;
+            opacity: 0.6;
+          }
+          50% {
+            height: 60%;
+            opacity: 1;
+          }
+          100% { 
+            height: 85%;
+            opacity: 0.8;
+          }
         }
       `}</style>
     </div>
@@ -279,6 +351,9 @@ function AudioDisplay({ item, isActive }: { item: PortfolioItem; isActive?: bool
 
 // Text Display Component
 function TextDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => void }) {
+  // Use text_content if available, otherwise fallback to description
+  const displayText = item.text_content || item.description || item.title || 'Text content';
+  
   return (
     <div 
       className="text-display"
@@ -286,49 +361,73 @@ function TextDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => v
       style={{
         width: '100%',
         height: '100%',
-        borderRadius: 'var(--radius-lg)',
-        background: 'linear-gradient(135deg, rgba(0, 194, 255, 0.05), rgba(118, 75, 162, 0.05))',
+        borderRadius: '20px',
+        background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.05), rgba(118, 75, 162, 0.05))',
         border: '1px solid rgba(255, 255, 255, 0.08)',
-        padding: '24px',
+        padding: '32px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         cursor: onClick ? 'pointer' : 'default',
-        transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)'
+        transition: 'all 180ms cubic-bezier(0.25, 0.8, 0.25, 1)',
+        position: 'relative',
+        overflow: 'hidden'
       }}
       onMouseEnter={(e) => {
         if (onClick) {
           e.currentTarget.style.transform = 'translateY(-4px)';
-          e.currentTarget.style.boxShadow = '0 12px 48px rgba(0, 194, 255, 0.2)';
+          e.currentTarget.style.boxShadow = '0 18px 40px rgba(10, 132, 255, 0.15)';
+          e.currentTarget.style.borderColor = 'rgba(10, 132, 255, 0.3)';
         }
       }}
       onMouseLeave={(e) => {
         if (onClick) {
           e.currentTarget.style.transform = 'translateY(0)';
           e.currentTarget.style.boxShadow = 'none';
+          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
         }
       }}
     >
+      {/* Decorative gradient orb */}
+      <div style={{
+        position: 'absolute',
+        top: '-50%',
+        right: '-20%',
+        width: '200px',
+        height: '200px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(10, 132, 255, 0.1), transparent)',
+        filter: 'blur(40px)',
+        pointerEvents: 'none'
+      }} />
+      
       <div 
         style={{
-          fontSize: '20px',
-          lineHeight: '1.5',
+          fontSize: '19px',
+          lineHeight: '1.6',
           color: '#FFFFFF',
           fontWeight: 500,
           textAlign: 'center',
           fontStyle: 'italic',
-          marginBottom: '12px'
+          marginBottom: item.title ? '16px' : '0',
+          position: 'relative',
+          zIndex: 1,
+          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
         }}
       >
-        "{item.description || item.title || 'Text content'}"
+        "{displayText}"
       </div>
-      {item.title && item.description !== item.title && (
+      {item.title && item.text_content && (
         <div 
           style={{
             fontSize: '14px',
             color: 'rgba(255, 255, 255, 0.6)',
             textAlign: 'center',
-            marginTop: '8px'
+            marginTop: '12px',
+            fontWeight: 500,
+            position: 'relative',
+            zIndex: 1,
+            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
           }}
         >
           — {item.title}
@@ -394,7 +493,7 @@ function PDFDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => vo
 function VideoDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => void }) {
   const [isHovering, setIsHovering] = useState(false);
 
-  const videoUrl = item.content_url.startsWith('http') 
+  const videoUrl = item.content_url && item.content_url.startsWith('http') 
     ? item.content_url 
     : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`;
 

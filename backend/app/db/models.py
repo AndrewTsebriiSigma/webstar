@@ -92,18 +92,19 @@ class Profile(SQLModel, table=True):
 
 
 class PortfolioItem(SQLModel, table=True):
-    """Portfolio item (photo, video, audio, or link)."""
+    """Portfolio item (photo, video, audio, text, or link)."""
     __tablename__ = "portfolio_items"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id", nullable=False)
     
     # Content
-    content_type: str = Field(nullable=False)  # 'photo', 'video', 'audio', 'link'
-    content_url: str = Field(nullable=False)
+    content_type: str = Field(nullable=False)  # 'photo', 'video', 'audio', 'text', 'link'
+    content_url: Optional[str] = None  # Optional for text posts
     thumbnail_url: Optional[str] = None
     title: Optional[str] = None
     description: Optional[str] = None
+    text_content: Optional[str] = Field(default=None, max_length=500)  # For text posts
     
     # Format info
     aspect_ratio: Optional[str] = None  # '1:1', '4:5', '9:16', '16:9'
