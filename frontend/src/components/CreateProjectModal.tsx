@@ -506,14 +506,14 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
                         isSelected ? 'ring-2 ring-cyan-500' : ''
                       }`}
                     >
-                      {item.content_type === 'photo' && (
+                      {item.content_type === 'photo' && item.content_url && (
                         <img
                           src={item.content_url}
                           alt=""
                           className="w-full h-full object-cover"
                         />
                       )}
-                      {item.content_type === 'video' && (
+                      {item.content_type === 'video' && item.content_url && (
                         <video
                           src={item.content_url}
                           className="w-full h-full object-cover"
