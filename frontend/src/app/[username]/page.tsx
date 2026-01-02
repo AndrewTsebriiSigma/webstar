@@ -70,8 +70,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const isOwnProfile = user?.username === username;
   
   // Scroll animation calculations
-  const heightReduction = Math.min(scrollY / 100, 1);
-  const isScrolled = scrollY > 10; // Glassy activates almost immediately
+  const heightReduction = Math.min(scrollY / 120, 1); // Slower reduction over 120px
+  const isScrolled = scrollY > 5; // Glassy activates almost immediately
   const isScrolledPastBanner = scrollY > 176;
 
   useEffect(() => {
@@ -84,8 +84,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
       const currentScrollY = window.scrollY;
       
       // Determine scroll direction - hide on scroll down, show on scroll up
-      if (currentScrollY > lastScrollY && currentScrollY > 250) {
-        // Scrolling DOWN past threshold - hide nav
+      if (currentScrollY > lastScrollY && currentScrollY > 300) {
+        // Scrolling DOWN past threshold - hide nav (later at 300px)
         setNavVisible(false);
       } else {
         // Scrolling UP or near top - show nav
@@ -159,10 +159,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
         <header 
           className={`top-nav ${isScrolled ? 'glassy' : ''} ${!navVisible ? 'nav-hidden' : ''}`}
           style={{
-            paddingTop: `${8 - (4 * heightReduction)}px`,
-            paddingBottom: `${8 - (4 * heightReduction)}px`,
-            transform: navVisible ? 'translateY(0)' : 'translateY(-100%)',
-            opacity: navVisible ? 1 : 0,
+            paddingTop: `${10 - (6 * heightReduction)}px`,
+            paddingBottom: `${10 - (6 * heightReduction)}px`,
+            transition: 'all 0.2s ease'
           }}
         >
           {/* Post - Left */}
@@ -170,15 +169,12 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <button 
               onClick={() => setShowCreateContentModal(true)}
               className={`nav-btn ${isScrolled ? 'glassy-btn' : ''}`}
+              style={{
+                transform: `scale(${1 - (0.15 * heightReduction)})`,
+                transition: 'all 0.2s ease'
+              }}
             >
-              <PlusIcon 
-                className="text-white" 
-                style={{ 
-                  width: `${20 - (4 * heightReduction)}px`, 
-                  height: `${20 - (4 * heightReduction)}px`,
-                  transition: 'all 0.2s ease'
-                }} 
-              />
+              <PlusIcon className="text-white w-[22px] h-[22px]" />
             </button>
           ) : (
             <div className="w-8"></div>
@@ -189,10 +185,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <span 
               className="username-display"
               style={{
-                fontSize: `${16 - (2 * heightReduction)}px`,
+                fontSize: `${17 - (3 * heightReduction)}px`,
                 fontWeight: 700,
                 letterSpacing: '-0.3px',
-                transition: 'font-size 0.2s ease'
+                transition: 'all 0.2s ease'
               }}
             >
               WebSTAR
@@ -203,15 +199,12 @@ export default function ProfilePage({ params }: { params: { username: string } }
           <button 
             onClick={() => setShowNotifications(true)}
             className={`nav-btn ${isScrolled ? 'glassy-btn' : ''}`}
+            style={{
+              transform: `scale(${1 - (0.15 * heightReduction)})`,
+              transition: 'all 0.2s ease'
+            }}
           >
-            <BellIcon 
-              className="text-white" 
-              style={{ 
-                width: `${20 - (4 * heightReduction)}px`, 
-                height: `${20 - (4 * heightReduction)}px`,
-                transition: 'all 0.2s ease'
-              }} 
-            />
+            <BellIcon className="text-white w-[22px] h-[22px]" />
             {isOwnProfile && (
               <span className="nav-badge">3</span>
             )}
