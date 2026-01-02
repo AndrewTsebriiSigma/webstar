@@ -323,7 +323,7 @@ function FeedPostContent({
               position: 'relative'
             }}
           >
-            {post.content_type === 'photo' ? (
+            {post.content_type === 'photo' && post.content_url ? (
               <img
                 src={post.content_url.startsWith('http') 
                   ? post.content_url 
@@ -335,7 +335,7 @@ function FeedPostContent({
                   objectFit: 'cover'
                 }}
               />
-            ) : (
+            ) : post.content_type === 'video' && post.content_url ? (
               <>
                 <video
                   ref={videoRef}

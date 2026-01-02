@@ -605,7 +605,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                     key={item.id} 
                     onClick={() => {
                       // Handle audio differently - start playing
-                      if (item.content_type === 'audio') {
+                      if (item.content_type === 'audio' && item.content_url) {
                         setCurrentAudioTrack({
                           id: item.id,
                           title: item.title || 'Audio Track',
@@ -849,7 +849,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             // Find next audio track
             const currentIndex = portfolioItems.findIndex(p => p.id === currentAudioTrack.id);
             const nextAudio = portfolioItems.slice(currentIndex + 1).find(p => p.content_type === 'audio');
-            if (nextAudio) {
+            if (nextAudio && nextAudio.content_url) {
               setCurrentAudioTrack({
                 id: nextAudio.id,
                 title: nextAudio.title || 'Audio Track',
@@ -864,7 +864,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             // Find previous audio track
             const currentIndex = portfolioItems.findIndex(p => p.id === currentAudioTrack.id);
             const prevAudio = portfolioItems.slice(0, currentIndex).reverse().find(p => p.content_type === 'audio');
-            if (prevAudio) {
+            if (prevAudio && prevAudio.content_url) {
               setCurrentAudioTrack({
                 id: prevAudio.id,
                 title: prevAudio.title || 'Audio Track',
