@@ -553,25 +553,30 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Tabs */}
       <div 
         className="sticky top-[49px] z-30 backdrop-blur-md border-b border-gray-800"
-        style={{ background: 'rgba(17, 17, 17, 0.9)' }}
+        style={{ background: 'rgba(17, 17, 17, 0.9)', marginTop: '80px' }}
       >
-        <div className="flex">
-          {['Portfolio', 'Projects', 'About'].map((tab) => (
+        <div className="flex relative">
+          {['Portfolio', 'Projects', 'About'].map((tab, index) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab.toLowerCase())}
-              className={`flex-1 py-3 text-base font-semibold transition relative ${
+              className={`flex-1 py-3 text-base font-semibold transition-colors duration-300 ease-out relative ${
                 activeTab === tab.toLowerCase()
                   ? 'text-white'
                   : 'text-gray-500'
               }`}
             >
               {tab}
-              {activeTab === tab.toLowerCase() && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-[3px] bg-cyan-500 rounded-full" />
-              )}
             </button>
           ))}
+          {/* Animated indicator */}
+          <div 
+            className="absolute bottom-0 h-[3px] bg-cyan-500 transition-all duration-300 ease-out"
+            style={{
+              width: '80px',
+              left: `calc(${['portfolio', 'projects', 'about'].indexOf(activeTab)} * 33.333% + 16.666% - 40px)`
+            }}
+          />
         </div>
       </div>
 
