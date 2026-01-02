@@ -287,149 +287,159 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
       {/* Dashboard Strip - Compact for owner only */}
       {isOwnProfile && (
-        <div style={{ padding: '0 16px', marginBottom: '12px' }}>
-          <div 
-            style={{ 
-              width: '100%',
-              minHeight: '68px',
-              background: 'rgba(255, 255, 255, 0.03)',
-              backdropFilter: 'blur(20px) saturate(150%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(150%)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-              borderRadius: '16px',
-              padding: '14px 16px',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <img 
-                src="/webstar-logo.png"
-                alt="webSTAR"
+        <div 
+          className="dashboard-strip"
+          style={{ 
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: 'rgba(255, 255, 255, 0.06)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+            borderRadius: '16px',
+            cursor: 'pointer',
+            transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+            padding: '10px 16px 10px 24px',
+            margin: '0 16px 20px',
+            width: 'calc(100% - 32px)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+            <img 
+              src="/webstar-logo.png"
+              alt="webSTAR"
+              className="dashboard-logo"
+              style={{ 
+                width: '32px',
+                height: '32px',
+                objectFit: 'contain',
+                filter: 'drop-shadow(0 0 12px rgba(0, 194, 255, 0.2))',
+                flexShrink: 0
+              }}
+            />
+            <div 
+              className="dashboard-info"
+              style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'flex-start', 
+                gap: '4px'
+              }}
+            >
+              <div 
+                className="dashboard-label"
                 style={{ 
-                  width: '36px',
-                  height: '36px',
-                  objectFit: 'contain',
-                  filter: 'drop-shadow(0 0 16px rgba(0, 194, 255, 0.4))',
-                  flexShrink: 0
+                  fontSize: '9px',
+                  fontWeight: '700',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.8px',
+                  lineHeight: '1'
                 }}
-              />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-start' }}>
-                <div 
-                  style={{ 
-                    fontSize: '10px',
-                    fontWeight: '700',
-                    color: 'rgba(255, 255, 255, 0.65)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.8px',
-                    lineHeight: '1'
-                  }}
-                >
-                  MY DASHBOARD
-                </div>
-                <div 
-                  style={{ 
-                    fontSize: '32px',
-                    fontWeight: '800',
-                    background: 'linear-gradient(135deg, #00C2FF 0%, #0EA5E9 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    lineHeight: '1',
-                    filter: 'drop-shadow(0 0 12px rgba(0, 194, 255, 0.2))'
-                  }}
-                >
-                  {profile.total_points?.toLocaleString() || '230'}
-                </div>
+              >
+                MY DASHBOARD
+              </div>
+              <div 
+                className="dashboard-value"
+                style={{ 
+                  fontSize: '24px',
+                  fontWeight: '800',
+                  background: 'linear-gradient(135deg, #00C2FF 0%, #0EA5E9 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  lineHeight: '1',
+                  filter: 'drop-shadow(0 0 8px rgba(0, 194, 255, 0.15))'
+                }}
+              >
+                {profile.total_points?.toLocaleString() || '12.5K'}
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-              <button 
-                onClick={() => router.push('/profile/edit')}
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: '12px',
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  color: 'rgba(255, 255, 255, 0.65)',
-                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.02)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  padding: 0
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
-                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.03)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.65)';
-                  e.currentTarget.style.boxShadow = 'inset 0 1px 0 rgba(255, 255, 255, 0.02)';
-                }}
-                onMouseDown={(e) => {
-                  e.currentTarget.style.transform = 'scale(0.94)';
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                }}
-                onMouseUp={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                }}
-                title="Edit profile"
-              >
-                <PencilIcon className="w-5 h-5" />
-              </button>
-              <button 
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: '12px',
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  color: 'rgba(255, 255, 255, 0.65)',
-                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.02)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  padding: 0
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
-                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.03)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.65)';
-                  e.currentTarget.style.boxShadow = 'inset 0 1px 0 rgba(255, 255, 255, 0.02)';
-                }}
-                onMouseDown={(e) => {
-                  e.currentTarget.style.transform = 'scale(0.94)';
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                }}
-                onMouseUp={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                }}
-                title="Settings"
-              >
-                <Squares2X2Icon className="w-5 h-5" />
-              </button>
-            </div>
+          </div>
+          <div className="dashboard-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            <button 
+              onClick={() => router.push('/profile/edit')}
+              className="action-button"
+              style={{
+                width: '40px',
+                height: '40px',
+                minWidth: '40px',
+                borderRadius: '12px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: 'rgba(255, 255, 255, 0.65)',
+                boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.02)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                padding: 0
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.65)';
+              }}
+              onMouseDown={(e) => {
+                e.currentTarget.style.transform = 'scale(0.94)';
+              }}
+              onMouseUp={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+              title="Edit profile"
+            >
+              <PencilIcon className="w-4 h-4" />
+            </button>
+            <button 
+              className="action-button"
+              style={{
+                width: '40px',
+                height: '40px',
+                minWidth: '40px',
+                borderRadius: '12px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: 'rgba(255, 255, 255, 0.65)',
+                boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.02)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                padding: 0
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.65)';
+              }}
+              onMouseDown={(e) => {
+                e.currentTarget.style.transform = 'scale(0.94)';
+              }}
+              onMouseUp={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+              title="Settings"
+            >
+              <Squares2X2Icon className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}
