@@ -303,7 +303,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             cursor: 'pointer',
             transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
             padding: '10px 16px 10px 24px',
-            margin: '0 16px 14px',
+            margin: '0 16px 20px',
             width: 'calc(100% - 32px)',
             height: '60px'
           }}
@@ -327,7 +327,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: 'flex-start', 
-                gap: '10px'
+                gap: '8px'
               }}
             >
               <div 
@@ -371,7 +371,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 background: '#2A2A2A',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid #353535',
+                border: '1px solid #414141',
                 color: '#707070',
                 display: 'flex',
                 alignItems: 'center',
@@ -382,12 +382,16 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 padding: 0
               }}
               onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                 e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.color = '#f5f5f5';
                 const img = e.currentTarget.querySelector('img');
                 if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#353535';
+                e.currentTarget.style.background = '#2A2A2A';
+                e.currentTarget.style.borderColor = '#414141';
+                e.currentTarget.style.color = '#707070';
                 const img = e.currentTarget.querySelector('img');
                 if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
               }}
@@ -399,7 +403,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
               title="Portfolio"
             >
-              <img src="/layers.svg" alt="Portfolio" style={{ width: '20px', height: '20px', filter: 'invert(1) opacity(0.44)' }} />
+              <img src="/layers.svg" alt="Portfolio" style={{ width: '16px', height: '16px', filter: 'invert(1) opacity(0.44)' }} />
             </button>
             <button 
               className="action-button"
@@ -410,7 +414,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 background: '#2A2A2A',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid #353535',
+                border: '1px solid #414141',
                 color: '#707070',
                 display: 'flex',
                 alignItems: 'center',
@@ -421,12 +425,16 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 padding: 0
               }}
               onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                 e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.color = '#f5f5f5';
                 const img = e.currentTarget.querySelector('img');
                 if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#353535';
+                e.currentTarget.style.background = '#2A2A2A';
+                e.currentTarget.style.borderColor = '#414141';
+                e.currentTarget.style.color = '#707070';
                 const img = e.currentTarget.querySelector('img');
                 if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
               }}
@@ -438,7 +446,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
               title="Customize"
             >
-              <img src="/palette.svg" alt="Customize" style={{ width: '20px', height: '20px', filter: 'invert(1) opacity(0.44)' }} />
+              <img src="/palette.svg" alt="Customize" style={{ width: '16px', height: '16px', filter: 'invert(1) opacity(0.44)' }} />
             </button>
           </div>
         </div>
@@ -451,39 +459,37 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <>
               <button 
                 onClick={() => setShowShareModal(true)}
-                className="action-btn custom-btn dashboard-action-btn"
+                className="action-btn custom-btn"
                 style={{
                   flex: '0 0 calc(65% - 4px)',
-                  height: '32px',
-                  minHeight: '32px',
+                  height: '30px',
                   background: '#1F1F1F',
                   border: '1px solid #353535',
                   color: '#C7C7C7',
                   cursor: 'pointer',
-                  padding: '0 16px',
-                  borderRadius: '10px',
-                  fontSize: '13px',
+                  padding: '5px 20px',
+                  borderRadius: '12px',
+                  fontSize: '14px',
                   fontWeight: '600',
                   textTransform: 'none',
                   letterSpacing: '-0.2px',
-                  transition: 'border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                   textAlign: 'center',
                   backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
+                  WebkitBackdropFilter: 'blur(10px)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
                   e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
                 }}
                 onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#1F1F1F';
                   e.currentTarget.style.borderColor = '#353535';
                   e.currentTarget.style.color = '#C7C7C7';
                 }}
                 onMouseDown={(e) => {
-                  e.currentTarget.style.transform = 'scale(0.97)';
+                  e.currentTarget.style.transform = 'scale(0.96)';
                 }}
                 onMouseUp={(e) => {
                   e.currentTarget.style.transform = 'scale(1)';
@@ -492,39 +498,37 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 Message Me
               </button>
               <button 
-                className="action-btn dashboard-action-btn"
+                className="action-btn"
                 style={{
                   flex: '0 0 calc(35% - 4px)',
-                  height: '32px',
-                  minHeight: '32px',
+                  height: '30px',
                   background: '#1F1F1F',
                   border: '1px solid #353535',
                   color: '#C7C7C7',
                   cursor: 'pointer',
-                  padding: '0 16px',
-                  borderRadius: '10px',
-                  fontSize: '13px',
+                  padding: '5px 20px',
+                  borderRadius: '12px',
+                  fontSize: '14px',
                   fontWeight: '600',
                   textTransform: 'none',
                   letterSpacing: '-0.2px',
-                  transition: 'border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                   textAlign: 'center',
                   backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
+                  WebkitBackdropFilter: 'blur(10px)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
                   e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
                 }}
                 onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#1F1F1F';
                   e.currentTarget.style.borderColor = '#353535';
                   e.currentTarget.style.color = '#C7C7C7';
                 }}
                 onMouseDown={(e) => {
-                  e.currentTarget.style.transform = 'scale(0.97)';
+                  e.currentTarget.style.transform = 'scale(0.96)';
                 }}
                 onMouseUp={(e) => {
                   e.currentTarget.style.transform = 'scale(1)';

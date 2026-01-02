@@ -760,24 +760,6 @@ html {
     min-height: 44px;
     min-width: 44px;
   }
-  
-  /* Mobile adjustments for dashboard */
-  .dashboard-logo {
-    width: 32px !important;
-    height: 32px !important;
-  }
-  
-  .dashboard-info {
-    gap: 2px !important;
-  }
-  
-  /* Icon buttons height on mobile */
-  .dashboard-actions .action-button {
-    height: 34px !important;
-    min-height: 34px !important;
-    max-height: 34px !important;
-    width: 55px !important;
-  }
 }
 
 /* Safe area insets for iOS */
