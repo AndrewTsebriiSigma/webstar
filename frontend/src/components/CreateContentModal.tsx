@@ -19,11 +19,23 @@ export default function CreateContentModal({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{
+        background: 'rgba(0, 0, 0, 0.7)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)'
+      }}
       onClick={onClose}
     >
       <div 
-        className="bg-[#1a1a1c] rounded-2xl shadow-2xl w-full max-w-md border border-gray-800"
+        className="rounded-2xl shadow-2xl w-full max-w-md"
+        style={{
+          background: 'rgba(17, 17, 17, 0.98)',
+          backdropFilter: 'blur(60px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(60px) saturate(200%)',
+          border: '1px solid rgba(255, 255, 255, 0.06)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

@@ -284,30 +284,142 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
       {/* Dashboard Strip - Compact for owner only */}
       {isOwnProfile && (
-        <div className="px-4 mb-2">
+        <div style={{ padding: '0 16px', marginBottom: '12px' }}>
           <div 
-            className="backdrop-blur-md rounded-xl p-3"
             style={{ 
-              background: 'rgb(31, 31, 31)',
-              border: '1px solid rgba(255, 255, 255, 0.1)'
+              width: '100%',
+              height: '64px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              backdropFilter: 'blur(20px) saturate(150%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              borderRadius: '16px',
+              padding: '12px 16px',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
             }}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <svg className="w-5 h-5 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </svg>
-                <div className="flex-1">
-                  <div className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">MY DASHBOARD</div>
-                  <div className="text-lg font-bold text-cyan-400">{profile.total_points?.toLocaleString() || '12.5K'}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <svg 
+                className="w-8 h-8" 
+                style={{ 
+                  filter: 'drop-shadow(0 0 12px rgba(0, 194, 255, 0.2))',
+                  color: '#00C2FF'
+                }} 
+                fill="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              <div>
+                <div 
+                  style={{ 
+                    fontSize: '10px',
+                    fontWeight: '700',
+                    color: 'rgba(255, 255, 255, 0.65)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.6px',
+                    lineHeight: '1',
+                    marginBottom: '4px'
+                  }}
+                >
+                  MY DASHBOARD
+                </div>
+                <div 
+                  style={{ 
+                    fontSize: '28px',
+                    fontWeight: '800',
+                    background: 'linear-gradient(135deg, #00C2FF 0%, #0EA5E9 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    lineHeight: '1',
+                    filter: 'drop-shadow(0 0 8px rgba(0, 194, 255, 0.15))'
+                  }}
+                >
+                  {profile.total_points?.toLocaleString() || '230'}
                 </div>
               </div>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
               <button 
                 onClick={() => router.push('/profile/edit')}
-                className="p-1.5 hover:bg-gray-800/50 rounded-lg transition"
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  color: 'rgba(255, 255, 255, 0.65)',
+                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.02)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.65)';
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = 'scale(0.94)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
                 title="Edit profile"
               >
-                <PencilIcon className="w-3.5 h-3.5 text-gray-400" />
+                <PencilIcon className="w-4 h-4" />
+              </button>
+              <button 
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  color: 'rgba(255, 255, 255, 0.65)',
+                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.02)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.65)';
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = 'scale(0.94)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+                title="Settings"
+              >
+                <Squares2X2Icon className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -315,31 +427,85 @@ export default function ProfilePage({ params }: { params: { username: string } }
       )}
 
       {/* Action Buttons - Compact */}
-      <div className="px-4 mb-3">
-        <div className="flex gap-2">
+      <div style={{ padding: '0 16px', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
           {isOwnProfile ? (
             <>
               <button 
                 onClick={() => setShowShareModal(true)}
-                className="flex-1 py-2 text-sm font-semibold rounded-xl transition"
                 style={{
-                  background: 'rgb(31, 31, 31)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: 'rgba(255, 255, 255, 0.75)',
-                  fontSize: '14px',
-                  fontWeight: 600
+                  height: '48px',
+                  padding: '12px 20px',
+                  borderRadius: '12px',
+                  flex: 1,
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  letterSpacing: '-0.3px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  backdropFilter: 'blur(10px) saturate(120%)',
+                  WebkitBackdropFilter: 'blur(10px) saturate(120%)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  color: 'rgba(255, 255, 255, 0.95)',
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.04)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.03)';
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = 'scale(0.96)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.02)';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
                 }}
               >
                 Message Me
               </button>
               <button 
-                className="flex-1 py-2 text-sm font-semibold rounded-xl transition"
                 style={{
-                  background: 'rgb(31, 31, 31)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: 'rgba(255, 255, 255, 0.75)',
-                  fontSize: '14px',
-                  fontWeight: 600
+                  height: '48px',
+                  padding: '12px 20px',
+                  borderRadius: '12px',
+                  flex: 1,
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  letterSpacing: '-0.3px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  backdropFilter: 'blur(10px) saturate(120%)',
+                  WebkitBackdropFilter: 'blur(10px) saturate(120%)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  color: 'rgba(255, 255, 255, 0.95)',
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.04)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.03)';
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = 'scale(0.96)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.02)';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
                 }}
               >
                 Email

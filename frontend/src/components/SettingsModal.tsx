@@ -97,21 +97,34 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0"
+        style={{
+          background: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)'
+        }}
         onClick={onClose}
       />
 
       {/* Modal */}
       <div 
         className="relative rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden"
-        style={{ background: 'rgb(27, 29, 30)' }}
+        style={{ 
+          background: 'rgba(17, 17, 17, 0.98)',
+          backdropFilter: 'blur(60px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(60px) saturate(200%)',
+          border: '1px solid rgba(255, 255, 255, 0.06)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
+        }}
       >
         {/* Header */}
         <div 
           className="sticky top-0 border-b px-5 py-3 flex items-center justify-between z-10"
           style={{ 
-            background: 'rgb(27, 29, 30)',
-            borderColor: 'rgba(255, 255, 255, 0.1)'
+            background: 'rgba(17, 17, 17, 0.95)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderColor: 'rgba(255, 255, 255, 0.06)'
           }}
         >
           <h2 className="text-xl font-bold text-white">Settings</h2>
