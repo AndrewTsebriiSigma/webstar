@@ -451,39 +451,36 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <>
               <button 
                 onClick={() => setShowShareModal(true)}
+                className="action-btn custom-btn"
                 style={{
-                  height: '52px',
-                  padding: '14px 20px',
-                  borderRadius: '14px',
-                  flex: '0 0 70%',
-                  maxWidth: '70%',
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  letterSpacing: '-0.3px',
-                  textAlign: 'center',
+                  flex: '0 0 calc(65% - 4px)',
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: 'rgba(255, 255, 255, 0.75)',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  backdropFilter: 'blur(10px) saturate(120%)',
-                  WebkitBackdropFilter: 'blur(10px) saturate(120%)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  color: 'rgba(255, 255, 255, 0.95)',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
+                  padding: '5px 20px',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  textTransform: 'none',
+                  letterSpacing: '-0.2px',
+                  transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                  textAlign: 'center',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-                  e.currentTarget.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.04)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.03)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.75)';
                 }}
                 onMouseDown={(e) => {
                   e.currentTarget.style.transform = 'scale(0.96)';
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                  e.currentTarget.style.boxShadow = '0 1px 4px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.02)';
                 }}
                 onMouseUp={(e) => {
                   e.currentTarget.style.transform = 'scale(1)';
@@ -492,39 +489,36 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 Message Me
               </button>
               <button 
+                className="action-btn"
                 style={{
-                  height: '52px',
-                  padding: '14px 20px',
-                  borderRadius: '14px',
-                  flex: '0 0 30%',
-                  maxWidth: '30%',
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  letterSpacing: '-0.3px',
-                  textAlign: 'center',
+                  flex: '0 0 calc(35% - 4px)',
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: 'rgba(255, 255, 255, 0.75)',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  backdropFilter: 'blur(10px) saturate(120%)',
-                  WebkitBackdropFilter: 'blur(10px) saturate(120%)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  color: 'rgba(255, 255, 255, 0.95)',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
+                  padding: '5px 20px',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  textTransform: 'none',
+                  letterSpacing: '-0.2px',
+                  transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                  textAlign: 'center',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-                  e.currentTarget.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.04)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.03)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.75)';
                 }}
                 onMouseDown={(e) => {
                   e.currentTarget.style.transform = 'scale(0.96)';
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                  e.currentTarget.style.boxShadow = '0 1px 4px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.02)';
                 }}
                 onMouseUp={(e) => {
                   e.currentTarget.style.transform = 'scale(1)';
