@@ -314,8 +314,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
               alt="webSTAR"
               className="dashboard-logo"
               style={{ 
-                width: '36px',
-                height: '36px',
+                width: '30px',
+                height: '30px',
                 objectFit: 'contain',
                 filter: 'drop-shadow(0 0 12px rgba(0, 194, 255, 0.2))',
                 flexShrink: 0
@@ -327,7 +327,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: 'flex-start', 
-                gap: '8px'
+                gap: '1px'
               }}
             >
               <div 
@@ -363,90 +363,86 @@ export default function ProfilePage({ params }: { params: { username: string } }
           <div className="dashboard-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             <button 
               onClick={() => router.push('/profile/edit')}
-              className="action-button"
+              className="action-button dashboard-icon-btn"
               style={{
-                width: '55px',
-                height: '40px',
-                borderRadius: '20px',
-                background: '#2A2A2A',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid #414141',
-                color: '#707070',
+                width: '32px',
+                height: '32px',
+                minHeight: '32px',
+                borderRadius: '10px',
+                background: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
                 cursor: 'pointer',
-                transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                transition: 'border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                 padding: 0
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.color = '#f5f5f5';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
                 const img = e.currentTarget.querySelector('img');
-                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
+                if (img) {
+                  (img as HTMLImageElement).style.filter = 'brightness(0) saturate(100%) invert(66%) sepia(100%) saturate(7500%) hue-rotate(168deg) brightness(101%) contrast(101%)';
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#2A2A2A';
-                e.currentTarget.style.borderColor = '#414141';
-                e.currentTarget.style.color = '#707070';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
                 const img = e.currentTarget.querySelector('img');
-                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
+                if (img) {
+                  (img as HTMLImageElement).style.filter = 'brightness(0) saturate(100%) invert(78%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(98%) contrast(81%)';
+                }
               }}
               onMouseDown={(e) => {
-                e.currentTarget.style.transform = 'scale(0.94)';
+                e.currentTarget.style.transform = 'scale(0.95)';
               }}
               onMouseUp={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
               }}
               title="Portfolio"
             >
-              <img src="/layers.svg" alt="Portfolio" style={{ width: '16px', height: '16px', filter: 'invert(1) opacity(0.44)' }} />
+              <img src="/layers.svg" alt="Portfolio" style={{ width: '20px', height: '20px', filter: 'brightness(0) saturate(100%) invert(78%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(98%) contrast(81%)' }} />
             </button>
             <button 
-              className="action-button"
+              className="action-button dashboard-icon-btn"
               style={{
-                width: '55px',
-                height: '40px',
-                borderRadius: '20px',
-                background: '#2A2A2A',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid #414141',
-                color: '#707070',
+                width: '32px',
+                height: '32px',
+                minHeight: '32px',
+                borderRadius: '10px',
+                background: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
                 cursor: 'pointer',
-                transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                transition: 'border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                 padding: 0
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.color = '#f5f5f5';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
                 const img = e.currentTarget.querySelector('img');
-                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
+                if (img) {
+                  (img as HTMLImageElement).style.filter = 'brightness(0) saturate(100%) invert(66%) sepia(100%) saturate(7500%) hue-rotate(168deg) brightness(101%) contrast(101%)';
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#2A2A2A';
-                e.currentTarget.style.borderColor = '#414141';
-                e.currentTarget.style.color = '#707070';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
                 const img = e.currentTarget.querySelector('img');
-                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
+                if (img) {
+                  (img as HTMLImageElement).style.filter = 'brightness(0) saturate(100%) invert(78%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(98%) contrast(81%)';
+                }
               }}
               onMouseDown={(e) => {
-                e.currentTarget.style.transform = 'scale(0.94)';
+                e.currentTarget.style.transform = 'scale(0.95)';
               }}
               onMouseUp={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
               }}
               title="Customize"
             >
-              <img src="/palette.svg" alt="Customize" style={{ width: '16px', height: '16px', filter: 'invert(1) opacity(0.44)' }} />
+              <img src="/palette.svg" alt="Customize" style={{ width: '20px', height: '20px', filter: 'brightness(0) saturate(100%) invert(78%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(98%) contrast(81%)' }} />
             </button>
           </div>
         </div>
@@ -459,37 +455,39 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <>
               <button 
                 onClick={() => setShowShareModal(true)}
-                className="action-btn custom-btn"
+                className="action-btn custom-btn dashboard-action-btn"
                 style={{
                   flex: '0 0 calc(65% - 4px)',
-                  height: '30px',
+                  height: '32px',
+                  minHeight: '32px',
                   background: '#1F1F1F',
                   border: '1px solid #353535',
                   color: '#C7C7C7',
                   cursor: 'pointer',
-                  padding: '5px 20px',
-                  borderRadius: '12px',
-                  fontSize: '14px',
+                  padding: '0 16px',
+                  borderRadius: '10px',
+                  fontSize: '13px',
                   fontWeight: '600',
                   textTransform: 'none',
                   letterSpacing: '-0.2px',
-                  transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transition: 'border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                   textAlign: 'center',
                   backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)'
+                  WebkitBackdropFilter: 'blur(10px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
                   e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#1F1F1F';
                   e.currentTarget.style.borderColor = '#353535';
                   e.currentTarget.style.color = '#C7C7C7';
                 }}
                 onMouseDown={(e) => {
-                  e.currentTarget.style.transform = 'scale(0.96)';
+                  e.currentTarget.style.transform = 'scale(0.97)';
                 }}
                 onMouseUp={(e) => {
                   e.currentTarget.style.transform = 'scale(1)';
@@ -498,37 +496,39 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 Message Me
               </button>
               <button 
-                className="action-btn"
+                className="action-btn dashboard-action-btn"
                 style={{
                   flex: '0 0 calc(35% - 4px)',
-                  height: '30px',
+                  height: '32px',
+                  minHeight: '32px',
                   background: '#1F1F1F',
                   border: '1px solid #353535',
                   color: '#C7C7C7',
                   cursor: 'pointer',
-                  padding: '5px 20px',
-                  borderRadius: '12px',
-                  fontSize: '14px',
+                  padding: '0 16px',
+                  borderRadius: '10px',
+                  fontSize: '13px',
                   fontWeight: '600',
                   textTransform: 'none',
                   letterSpacing: '-0.2px',
-                  transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transition: 'border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                   textAlign: 'center',
                   backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)'
+                  WebkitBackdropFilter: 'blur(10px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
                   e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#1F1F1F';
                   e.currentTarget.style.borderColor = '#353535';
                   e.currentTarget.style.color = '#C7C7C7';
                 }}
                 onMouseDown={(e) => {
-                  e.currentTarget.style.transform = 'scale(0.96)';
+                  e.currentTarget.style.transform = 'scale(0.97)';
                 }}
                 onMouseUp={(e) => {
                   e.currentTarget.style.transform = 'scale(1)';
