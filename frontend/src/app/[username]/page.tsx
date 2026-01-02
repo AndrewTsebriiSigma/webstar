@@ -63,12 +63,24 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [currentAudioTrack, setCurrentAudioTrack] = useState<any>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showProjectDetail, setShowProjectDetail] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
   
   const isOwnProfile = user?.username === username;
+  
+  // Scroll animation calculations
+  const heightReduction = Math.min(scrollY / 100, 1);
+  const isScrolledPastBanner = scrollY > 176;
 
   useEffect(() => {
     loadProfile();
   }, [username]);
+
+  // Scroll listener for animated nav
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const loadProfile = async () => {
     try {
@@ -124,42 +136,64 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
   return (
     <div className="min-h-screen text-white" style={{ background: '#111111' }}>
-      {/* Mobile Header - Hidden in viewer mode */}
+      {/* Mobile Header - Animated on scroll, hidden in viewer mode */}
       {!viewerMode && (
         <header 
-          className="sticky top-0 z-40 backdrop-blur-md border-b border-gray-800"
-          style={{ background: 'rgba(17, 17, 17, 0.9)' }}
+          className={`top-nav ${isScrolledPastBanner ? 'glassy' : ''}`}
+          style={{
+            paddingTop: `${12 - (12 * heightReduction)}px`,
+            paddingBottom: `${12 - (12 * heightReduction)}px`,
+          }}
         >
-          <div className="px-3 py-2 flex items-center justify-between">
-            {isOwnProfile ? (
-              <button 
-                onClick={() => setShowCreateContentModal(true)}
-                className="p-1.5"
-              >
-                <PlusIcon className="w-5 h-5 text-white" />
-              </button>
-            ) : (
-              <div className="w-8"></div>
-            )}
-            
-            <Link href="/" className="text-lg font-bold">
-              webSTAR
-            </Link>
-            
-            <div className="flex items-center gap-1">
-              <button 
-                onClick={() => setShowNotifications(true)}
-                className="p-1.5 relative"
-              >
-                <BellIcon className="w-5 h-5 text-white" />
-                {isOwnProfile && (
-                  <span className="absolute top-0 right-0 w-3 h-3 bg-cyan-500 rounded-full flex items-center justify-center text-[8px] font-bold">
-                    3
-                  </span>
-                )}
-              </button>
-            </div>
+          {/* Post - Left */}
+          {isOwnProfile ? (
+            <button 
+              onClick={() => setShowCreateContentModal(true)}
+              className={`nav-btn ${isScrolledPastBanner ? 'glassy-btn' : ''}`}
+            >
+              <PlusIcon 
+                className="text-white" 
+                style={{ 
+                  width: `${22 - (6 * heightReduction)}px`, 
+                  height: `${22 - (6 * heightReduction)}px`,
+                  transition: 'all 0.2s ease'
+                }} 
+              />
+            </button>
+          ) : (
+            <div className="w-9"></div>
+          )}
+          
+          {/* Profile Name - Center */}
+          <div className="nav-center">
+            <span 
+              className="username-display"
+              style={{
+                fontSize: `${18 - (4 * heightReduction)}px`,
+                transition: 'font-size 0.2s ease'
+              }}
+            >
+              {isOwnProfile ? (profile?.display_name || profile?.name || 'Profile') : 'webSTAR'}
+            </span>
           </div>
+          
+          {/* Notifications - Right */}
+          <button 
+            onClick={() => setShowNotifications(true)}
+            className={`nav-btn ${isScrolledPastBanner ? 'glassy-btn' : ''}`}
+          >
+            <BellIcon 
+              className="text-white" 
+              style={{ 
+                width: `${22 - (6 * heightReduction)}px`, 
+                height: `${22 - (6 * heightReduction)}px`,
+                transition: 'all 0.2s ease'
+              }} 
+            />
+            {isOwnProfile && (
+              <span className="nav-badge">3</span>
+            )}
+          </button>
         </header>
       )}
 

@@ -394,6 +394,79 @@ input[type="range"].slider-thumb::-moz-range-thumb:hover {
   animation: shimmer 2s infinite;
 }
 
+/* Animated Top Nav */
+.top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  transition: all 0.2s ease;
+}
+
+.top-nav.glassy {
+  background: rgba(17, 17, 17, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nav-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-btn.glassy-btn {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.nav-btn.glassy-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.nav-center {
+  flex: 1;
+  text-align: center;
+}
+
+.nav-center .username-display {
+  font-weight: 700;
+  color: white;
+  transition: font-size 0.2s ease;
+}
+
+.nav-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: #00C2FF;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* webSTAR Component Styles */
 
 /* Input Fields - CREATOR OS Style */
