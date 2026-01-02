@@ -774,6 +774,8 @@ html {
   /* Icon buttons height on mobile */
   .dashboard-actions .action-button {
     height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
     width: 55px !important;
   }
 }

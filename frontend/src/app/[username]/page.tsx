@@ -303,7 +303,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             cursor: 'pointer',
             transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
             padding: '10px 16px 10px 24px',
-            margin: '0 16px 20px',
+            margin: '0 16px 14px',
             width: 'calc(100% - 32px)',
             height: '60px'
           }}
@@ -327,7 +327,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: 'flex-start', 
-                gap: '8.4px'
+                gap: '10px'
               }}
             >
               <div 
@@ -382,16 +382,12 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 padding: 0
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                 e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.color = '#f5f5f5';
                 const img = e.currentTarget.querySelector('img');
                 if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#2A2A2A';
                 e.currentTarget.style.borderColor = '#353535';
-                e.currentTarget.style.color = '#707070';
                 const img = e.currentTarget.querySelector('img');
                 if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
               }}
@@ -425,16 +421,12 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 padding: 0
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                 e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.color = '#f5f5f5';
                 const img = e.currentTarget.querySelector('img');
                 if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#2A2A2A';
                 e.currentTarget.style.borderColor = '#353535';
-                e.currentTarget.style.color = '#707070';
                 const img = e.currentTarget.querySelector('img');
                 if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
               }}
