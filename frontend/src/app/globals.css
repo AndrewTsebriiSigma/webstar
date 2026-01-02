@@ -676,15 +676,42 @@ select:disabled {
   box-sizing: border-box;
 }
 
+/* Text Display Compact - Force containment */
+.text-display-compact {
+  box-sizing: border-box;
+  contain: layout size style;
+  will-change: transform;
+}
+
+.text-display-compact * {
+  box-sizing: border-box;
+}
+
+/* Audio Display Compact - Force containment */
+.audio-display-compact {
+  box-sizing: border-box;
+  contain: layout size style;
+  will-change: transform;
+}
+
 /* Photo and Video hover effects */
 .photo-display,
 .video-display {
   cursor: pointer;
   user-select: none;
+  box-sizing: border-box;
 }
 
 /* Text display responsive font sizes */
 @media (max-width: 640px) {
+  .text-display-compact {
+    padding: 16px 12px !important;
+  }
+  
+  .text-display-compact > div {
+    font-size: 12px !important;
+  }
+  
   .text-display {
     padding: 16px !important;
   }

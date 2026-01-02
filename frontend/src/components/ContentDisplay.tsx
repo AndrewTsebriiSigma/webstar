@@ -61,7 +61,9 @@ export default function ContentDisplay({
         width: '100%',
         height: variant === 'full' ? 'auto' : '100%',
         minWidth: 0, // Prevent overflow
-        overflow: 'hidden'
+        overflow: 'hidden',
+        boxSizing: 'border-box',
+        position: 'relative'
       }}
     >
       {renderContent()}
@@ -474,8 +476,8 @@ function TextDisplayCompact({ item, onClick }: { item: PortfolioItem; onClick?: 
   // Use text_content if available, otherwise fallback to description
   const displayText = item.text_content || item.description || item.title || 'Text content';
   
-  // Create preview - first ~80 characters or first 2 lines
-  const previewText = displayText.length > 80 ? displayText.substring(0, 80) + '...' : displayText;
+  // Create preview - first ~60 characters for compact view
+  const previewText = displayText.length > 60 ? displayText.substring(0, 60) + '...' : displayText;
   
   return (
     <div 
@@ -487,14 +489,17 @@ function TextDisplayCompact({ item, onClick }: { item: PortfolioItem; onClick?: 
         borderRadius: '20px',
         background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.05), rgba(118, 75, 162, 0.05))',
         border: '1px solid rgba(255, 255, 255, 0.08)',
-        padding: '24px 20px',
+        padding: '20px 16px',
         display: 'flex',
         flexDirection: 'column',
+        alignItems: 'center',
         justifyContent: 'center',
+        gap: '8px',
         cursor: 'pointer',
         transition: 'all 180ms cubic-bezier(0.25, 0.8, 0.25, 1)',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        boxSizing: 'border-box'
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-4px)';
@@ -507,24 +512,25 @@ function TextDisplayCompact({ item, onClick }: { item: PortfolioItem; onClick?: 
         e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
       }}
     >
-      {/* Decorative gradient orb */}
+      {/* Decorative gradient orb - FIXED sizing */}
       <div style={{
         position: 'absolute',
-        top: '-30%',
-        right: '-20%',
-        width: '150px',
-        height: '150px',
+        top: '-40%',
+        right: '-30%',
+        width: '100px',
+        height: '100px',
         borderRadius: '50%',
         background: 'radial-gradient(circle, rgba(10, 132, 255, 0.08), transparent)',
-        filter: 'blur(30px)',
-        pointerEvents: 'none'
+        filter: 'blur(25px)',
+        pointerEvents: 'none',
+        zIndex: 0
       }} />
       
-      {/* Preview Text */}
+      {/* Preview Text - FIXED height and clamping */}
       <div 
         style={{
-          fontSize: '15px',
-          lineHeight: '1.5',
+          fontSize: '13px',
+          lineHeight: '1.45',
           color: '#FFFFFF',
           fontWeight: 500,
           textAlign: 'center',
@@ -532,28 +538,32 @@ function TextDisplayCompact({ item, onClick }: { item: PortfolioItem; onClick?: 
           zIndex: 1,
           overflow: 'hidden',
           display: '-webkit-box',
-          WebkitLineClamp: 4,
+          WebkitLineClamp: 3,
           WebkitBoxOrient: 'vertical',
+          wordBreak: 'break-word',
+          maxHeight: '60px',
+          width: '100%',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
         }}
       >
         "{previewText}"
       </div>
       
-      {/* Title if exists */}
+      {/* Title if exists - FIXED single line */}
       {item.title && item.text_content && (
         <div 
           style={{
-            fontSize: '12px',
+            fontSize: '11px',
             color: 'rgba(255, 255, 255, 0.5)',
             textAlign: 'center',
-            marginTop: '12px',
             fontWeight: 500,
             position: 'relative',
             zIndex: 1,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
+            width: '100%',
+            maxWidth: '100%',
             fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
           }}
         >
@@ -561,16 +571,16 @@ function TextDisplayCompact({ item, onClick }: { item: PortfolioItem; onClick?: 
         </div>
       )}
       
-      {/* "Read more" indicator */}
-      {displayText.length > 80 && (
+      {/* "Read more" indicator - FIXED positioning */}
+      {displayText.length > 60 && (
         <div style={{
-          fontSize: '11px',
+          fontSize: '10px',
           color: 'rgba(10, 132, 255, 0.8)',
           textAlign: 'center',
-          marginTop: '8px',
           fontWeight: 600,
           position: 'relative',
           zIndex: 1,
+          marginTop: 'auto',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
         }}>
           Read more →
