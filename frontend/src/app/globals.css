@@ -760,6 +760,20 @@ html {
     min-height: 44px;
     min-width: 44px;
   }
+  
+  /* Dashboard icon buttons - override to 36px on mobile */
+  .dashboard-actions .action-button {
+    height: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+    width: 55px !important;
+  }
+  
+  /* Message Me & Email buttons - keep 30px height */
+  .action-btn {
+    height: 30px !important;
+    min-height: 30px !important;
+  }
 }
 
 /* Safe area insets for iOS */

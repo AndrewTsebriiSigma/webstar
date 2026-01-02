@@ -303,7 +303,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             cursor: 'pointer',
             transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
             padding: '10px 16px 10px 24px',
-            margin: '0 16px 20px',
+            margin: '0 16px 3px',
             width: 'calc(100% - 32px)',
             height: '60px'
           }}
@@ -393,7 +393,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 e.currentTarget.style.borderColor = '#414141';
                 e.currentTarget.style.color = '#707070';
                 const img = e.currentTarget.querySelector('img');
-                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) brightness(0.26)';
               }}
               onMouseDown={(e) => {
                 e.currentTarget.style.transform = 'scale(0.94)';
@@ -403,7 +403,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
               title="Portfolio"
             >
-              <img src="/layers.svg" alt="Portfolio" style={{ width: '16px', height: '16px', filter: 'invert(1) opacity(0.44)' }} />
+              <img src="/layers.svg" alt="Portfolio" style={{ width: '20px', height: '20px', filter: 'invert(1) brightness(0.26)', transition: 'filter 0.1s ease-out' }} />
             </button>
             <button 
               className="action-button"
@@ -436,7 +436,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 e.currentTarget.style.borderColor = '#414141';
                 e.currentTarget.style.color = '#707070';
                 const img = e.currentTarget.querySelector('img');
-                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) brightness(0.26)';
               }}
               onMouseDown={(e) => {
                 e.currentTarget.style.transform = 'scale(0.94)';
@@ -446,7 +446,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
               title="Customize"
             >
-              <img src="/palette.svg" alt="Customize" style={{ width: '16px', height: '16px', filter: 'invert(1) opacity(0.44)' }} />
+              <img src="/palette.svg" alt="Customize" style={{ width: '20px', height: '20px', filter: 'invert(1) brightness(0.26)', transition: 'filter 0.1s ease-out' }} />
             </button>
           </div>
         </div>
