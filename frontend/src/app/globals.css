@@ -402,7 +402,8 @@ input[type="range"].slider-thumb::-moz-range-thumb:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 8px 16px;
+  background: #111111;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -410,7 +411,6 @@ input[type="range"].slider-thumb::-moz-range-thumb:hover {
   background: rgba(17, 17, 17, 0.85);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .top-nav.nav-hidden {
@@ -418,29 +418,29 @@ input[type="range"].slider-thumb::-moz-range-thumb:hover {
 }
 
 .nav-btn {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
   background: transparent;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
+  padding: 0;
 }
 
 .nav-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  opacity: 0.7;
 }
 
 .nav-btn.glassy-btn {
-  background: rgba(255, 255, 255, 0.06);
+  opacity: 1;
 }
 
 .nav-btn.glassy-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  opacity: 0.7;
 }
 
 .nav-center {

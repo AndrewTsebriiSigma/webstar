@@ -71,6 +71,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
   
   // Scroll animation calculations
   const heightReduction = Math.min(scrollY / 100, 1);
+  const isScrolled = scrollY > 10; // Glassy activates almost immediately
   const isScrolledPastBanner = scrollY > 176;
 
   useEffect(() => {
@@ -156,10 +157,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Mobile Header - Animated on scroll, hidden in viewer mode */}
       {!viewerMode && (
         <header 
-          className={`top-nav ${isScrolledPastBanner ? 'glassy' : ''} ${!navVisible ? 'nav-hidden' : ''}`}
+          className={`top-nav ${isScrolled ? 'glassy' : ''} ${!navVisible ? 'nav-hidden' : ''}`}
           style={{
-            paddingTop: `${12 - (12 * heightReduction)}px`,
-            paddingBottom: `${12 - (12 * heightReduction)}px`,
+            paddingTop: `${8 - (4 * heightReduction)}px`,
+            paddingBottom: `${8 - (4 * heightReduction)}px`,
             transform: navVisible ? 'translateY(0)' : 'translateY(-100%)',
             opacity: navVisible ? 1 : 0,
           }}
@@ -168,44 +169,46 @@ export default function ProfilePage({ params }: { params: { username: string } }
           {isOwnProfile ? (
             <button 
               onClick={() => setShowCreateContentModal(true)}
-              className={`nav-btn ${isScrolledPastBanner ? 'glassy-btn' : ''}`}
+              className={`nav-btn ${isScrolled ? 'glassy-btn' : ''}`}
             >
               <PlusIcon 
                 className="text-white" 
                 style={{ 
-                  width: `${22 - (6 * heightReduction)}px`, 
-                  height: `${22 - (6 * heightReduction)}px`,
+                  width: `${20 - (4 * heightReduction)}px`, 
+                  height: `${20 - (4 * heightReduction)}px`,
                   transition: 'all 0.2s ease'
                 }} 
               />
             </button>
           ) : (
-            <div className="w-9"></div>
+            <div className="w-8"></div>
           )}
           
-          {/* Profile Name - Center */}
+          {/* Brand Name - Center */}
           <div className="nav-center">
             <span 
               className="username-display"
               style={{
-                fontSize: `${18 - (4 * heightReduction)}px`,
+                fontSize: `${16 - (2 * heightReduction)}px`,
+                fontWeight: 700,
+                letterSpacing: '-0.3px',
                 transition: 'font-size 0.2s ease'
               }}
             >
-              webSTAR
+              WebSTAR
             </span>
           </div>
           
           {/* Notifications - Right */}
           <button 
             onClick={() => setShowNotifications(true)}
-            className={`nav-btn ${isScrolledPastBanner ? 'glassy-btn' : ''}`}
+            className={`nav-btn ${isScrolled ? 'glassy-btn' : ''}`}
           >
             <BellIcon 
               className="text-white" 
               style={{ 
-                width: `${22 - (6 * heightReduction)}px`, 
-                height: `${22 - (6 * heightReduction)}px`,
+                width: `${20 - (4 * heightReduction)}px`, 
+                height: `${20 - (4 * heightReduction)}px`,
                 transition: 'all 0.2s ease'
               }} 
             />
