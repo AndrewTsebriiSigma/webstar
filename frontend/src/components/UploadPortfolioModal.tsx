@@ -12,10 +12,12 @@ interface UploadPortfolioModalProps {
 }
 
 export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: UploadPortfolioModalProps) {
+  const [postType, setPostType] = useState<'media' | 'text'>('media'); // Tab state
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>('');
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [textContent, setTextContent] = useState(''); // For text posts
   
   const [formData, setFormData] = useState({
     title: '',
@@ -25,8 +27,10 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
   if (!isOpen) return null;
 
   const handleReset = () => {
+    setPostType('media');
     setFile(null);
     setPreview('');
+    setTextContent('');
     setFormData({
       title: '',
       description: '',
@@ -79,8 +83,14 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
   };
 
   const handleSubmit = async () => {
-    if (!file) {
+    // Validation based on post type
+    if (postType === 'media' && !file) {
       toast.error('Please select a file');
+      return;
+    }
+    
+    if (postType === 'text' && !textContent.trim()) {
+      toast.error('Please enter some text');
       return;
     }
 
@@ -89,37 +99,53 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
     try {
       setUploadProgress(30);
       
-      // Determine content type
-      const contentType = file.type.startsWith('image/') 
-        ? 'photo' 
-        : file.type.startsWith('video/')
-        ? 'video'
-        : 'audio';
-      
-      // Upload file
-      const uploadResponse = await uploadsAPI.uploadMedia(file, contentType);
-      const contentUrl = uploadResponse.data.url;
-      
-      setUploadProgress(70);
+      if (postType === 'text') {
+        // Create text post directly (no file upload)
+        await portfolioAPI.createItem({
+          content_type: 'text',
+          content_url: null,
+          text_content: textContent.trim(),
+          title: formData.title || null,
+          description: formData.description || null,
+          aspect_ratio: '4:5',
+        });
+        
+        setUploadProgress(100);
+        toast.success('Text post published! 🎉');
+      } else {
+        // Media post flow (existing logic)
+        // Determine content type
+        const contentType = file!.type.startsWith('image/') 
+          ? 'photo' 
+          : file!.type.startsWith('video/')
+          ? 'video'
+          : 'audio';
+        
+        // Upload file
+        const uploadResponse = await uploadsAPI.uploadMedia(file!, contentType);
+        const contentUrl = uploadResponse.data.url;
+        
+        setUploadProgress(70);
 
-      // Create portfolio item
-      await portfolioAPI.createItem({
-        content_type: contentType,
-        content_url: contentUrl,
-        title: formData.title || null,
-        description: formData.description || null,
-        aspect_ratio: '1:1',
-      });
+        // Create portfolio item
+        await portfolioAPI.createItem({
+          content_type: contentType,
+          content_url: contentUrl,
+          title: formData.title || null,
+          description: formData.description || null,
+          aspect_ratio: '1:1',
+        });
 
-      setUploadProgress(100);
-      toast.success('Post published! 🎉');
+        setUploadProgress(100);
+        toast.success('Post published! 🎉');
+      }
       
       handleReset();
       onSuccess();
       onClose();
     } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error(error.response?.data?.detail || 'Failed to upload');
+      toast.error(error.response?.data?.detail || 'Failed to publish');
     } finally {
       setUploading(false);
       setUploadProgress(0);
@@ -133,27 +159,63 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
     >
       <div className="bg-[#2a2d35] rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-700">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <button
-            onClick={handleClose}
-            disabled={uploading}
-            className="p-1 hover:bg-gray-700 rounded transition"
-          >
-            <ArrowLeftIcon className="w-5 h-5 text-gray-400" />
-          </button>
-          <h2 className="text-lg font-bold text-white">Post</h2>
-          <button
-            onClick={handleSubmit}
-            disabled={uploading || !file}
-            className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {uploading ? 'Publishing...' : 'Publish'}
-          </button>
+        <div className="border-b border-gray-700">
+          <div className="flex items-center justify-between p-4">
+            <button
+              onClick={handleClose}
+              disabled={uploading}
+              className="p-1 hover:bg-gray-700 rounded transition"
+            >
+              <ArrowLeftIcon className="w-5 h-5 text-gray-400" />
+            </button>
+            <h2 className="text-lg font-bold text-white">Create Post</h2>
+            <button
+              onClick={handleSubmit}
+              disabled={uploading || (postType === 'media' && !file) || (postType === 'text' && !textContent.trim())}
+              className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {uploading ? 'Publishing...' : 'Publish'}
+            </button>
+          </div>
+
+          {/* Tab Switcher */}
+          <div className="flex px-4">
+            <button
+              onClick={() => setPostType('media')}
+              disabled={uploading}
+              className={`flex-1 py-2.5 text-sm font-semibold transition relative ${
+                postType === 'media' 
+                  ? 'text-cyan-400' 
+                  : 'text-gray-400 hover:text-gray-300'
+              }`}
+            >
+              Media
+              {postType === 'media' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
+              )}
+            </button>
+            <button
+              onClick={() => setPostType('text')}
+              disabled={uploading}
+              className={`flex-1 py-2.5 text-sm font-semibold transition relative ${
+                postType === 'text' 
+                  ? 'text-cyan-400' 
+                  : 'text-gray-400 hover:text-gray-300'
+              }`}
+            >
+              Text
+              {postType === 'text' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Content */}
         <div className="p-4 space-y-4">
-          {/* File Upload Area */}
+          {postType === 'media' ? (
+            <>
+              {/* File Upload Area */}
           <div>
             {preview || file ? (
               <div className="relative">
@@ -248,6 +310,114 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
               disabled={uploading}
             />
           </div>
+            </>
+          ) : (
+            <>
+              {/* Text Post Interface */}
+              <div>
+                <textarea
+                  placeholder="What's on your mind?"
+                  value={textContent}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 500) {
+                      setTextContent(e.target.value);
+                    }
+                  }}
+                  rows={8}
+                  className="w-full px-4 py-3 bg-[#1a1a1c] border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none text-white placeholder-gray-500 text-base"
+                  disabled={uploading}
+                />
+                <div className="flex justify-between items-center mt-1">
+                  <span className="text-xs text-gray-500">Share your thoughts with the community</span>
+                  <span className={`text-xs ${textContent.length > 450 ? 'text-yellow-500' : 'text-gray-500'}`}>
+                    {textContent.length}/500
+                  </span>
+                </div>
+              </div>
+
+              {/* Title Input for Text Post */}
+              <div>
+                <input
+                  type="text"
+                  placeholder="Title (optional)"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-[#1a1a1c] border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white placeholder-gray-500 text-sm"
+                  disabled={uploading}
+                />
+              </div>
+
+              {/* Preview */}
+              {textContent.trim() && (
+                <div>
+                  <p className="text-xs text-gray-500 mb-2">Preview</p>
+                  <div 
+                    style={{
+                      aspectRatio: '4 / 5',
+                      borderRadius: '20px',
+                      background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.05), rgba(118, 75, 162, 0.05))',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      padding: '24px 20px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    {/* Decorative gradient orb */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '-30%',
+                      right: '-20%',
+                      width: '150px',
+                      height: '150px',
+                      borderRadius: '50%',
+                      background: 'radial-gradient(circle, rgba(10, 132, 255, 0.08), transparent)',
+                      filter: 'blur(30px)',
+                      pointerEvents: 'none'
+                    }} />
+                    
+                    {/* Preview Text */}
+                    <div 
+                      style={{
+                        fontSize: '15px',
+                        lineHeight: '1.5',
+                        color: '#FFFFFF',
+                        fontWeight: 500,
+                        textAlign: 'center',
+                        position: 'relative',
+                        zIndex: 1,
+                        overflow: 'hidden',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 4,
+                        WebkitBoxOrient: 'vertical'
+                      }}
+                    >
+                      "{textContent.length > 80 ? textContent.substring(0, 80) + '...' : textContent}"
+                    </div>
+                    
+                    {/* Title if exists */}
+                    {formData.title && (
+                      <div 
+                        style={{
+                          fontSize: '12px',
+                          color: 'rgba(255, 255, 255, 0.5)',
+                          textAlign: 'center',
+                          marginTop: '12px',
+                          fontWeight: 500,
+                          position: 'relative',
+                          zIndex: 1
+                        }}
+                      >
+                        — {formData.title}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
 
           {/* Upload Progress */}
           {uploading && (

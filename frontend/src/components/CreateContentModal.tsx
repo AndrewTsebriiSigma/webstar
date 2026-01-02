@@ -6,7 +6,6 @@ interface CreateContentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectPost: () => void;
-  onSelectTextPost: () => void;
   onSelectProject: () => void;
 }
 
@@ -14,7 +13,6 @@ export default function CreateContentModal({
   isOpen,
   onClose,
   onSelectPost,
-  onSelectTextPost,
   onSelectProject,
 }: CreateContentModalProps) {
   if (!isOpen) return null;
@@ -53,7 +51,7 @@ export default function CreateContentModal({
 
         {/* Content */}
         <div className="p-4 space-y-3">
-          {/* Media Post Option */}
+          {/* Post Option (Media + Text) */}
           <button
             onClick={() => {
               onSelectPost();
@@ -67,27 +65,8 @@ export default function CreateContentModal({
               </svg>
             </div>
             <div className="flex-1">
-              <h3 className="text-base font-semibold text-white mb-0.5">Media Post</h3>
-              <p className="text-sm text-gray-400">Photo, video, or audio</p>
-            </div>
-          </button>
-
-          {/* Text Post Option */}
-          <button
-            onClick={() => {
-              onSelectTextPost();
-              onClose();
-            }}
-            className="w-full flex items-center gap-4 p-4 bg-gray-900 hover:bg-gray-800 rounded-xl transition text-left border border-gray-800 hover:border-purple-500"
-          >
-            <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <h3 className="text-base font-semibold text-white mb-0.5">Text Post</h3>
-              <p className="text-sm text-gray-400">Share your thoughts</p>
+              <h3 className="text-base font-semibold text-white mb-0.5">Post</h3>
+              <p className="text-sm text-gray-400">Share media or thoughts</p>
             </div>
           </button>
 

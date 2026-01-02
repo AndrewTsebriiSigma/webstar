@@ -15,7 +15,6 @@ import PortfolioDetailModal from '@/components/PortfolioDetailModal';
 import ProjectDetailModal from '@/components/ProjectDetailModal';
 import AboutSection from '@/components/AboutSection';
 import CreateContentModal from '@/components/CreateContentModal';
-import TextPostModal from '@/components/TextPostModal';
 import NotificationsPanel from '@/components/NotificationsPanel';
 import ContentDisplay from '@/components/ContentDisplay';
 import FeedModal from '@/components/FeedModal';
@@ -51,7 +50,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [loading, setLoading] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showTextPostModal, setShowTextPostModal] = useState(false);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showEditAboutModal, setShowEditAboutModal] = useState(false);
@@ -765,19 +763,12 @@ export default function ProfilePage({ params }: { params: { username: string } }
         isOpen={showCreateContentModal}
         onClose={() => setShowCreateContentModal(false)}
         onSelectPost={() => setShowUploadModal(true)}
-        onSelectTextPost={() => setShowTextPostModal(true)}
         onSelectProject={() => setShowProjectModal(true)}
       />
 
       <UploadPortfolioModal
         isOpen={showUploadModal}
         onClose={() => setShowUploadModal(false)}
-        onSuccess={loadProfile}
-      />
-
-      <TextPostModal
-        isOpen={showTextPostModal}
-        onClose={() => setShowTextPostModal(false)}
         onSuccess={loadProfile}
       />
 
