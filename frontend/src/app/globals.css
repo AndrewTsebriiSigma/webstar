@@ -403,7 +403,7 @@ input[type="range"].slider-thumb::-moz-range-thumb:hover {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .top-nav.glassy {
@@ -411,6 +411,10 @@ input[type="range"].slider-thumb::-moz-range-thumb:hover {
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.top-nav.nav-hidden {
+  pointer-events: none;
 }
 
 .nav-btn {

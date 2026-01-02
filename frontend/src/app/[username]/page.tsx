@@ -64,6 +64,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showProjectDetail, setShowProjectDetail] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [navVisible, setNavVisible] = useState(true);
   
   const isOwnProfile = user?.username === username;
   
@@ -75,12 +77,27 @@ export default function ProfilePage({ params }: { params: { username: string } }
     loadProfile();
   }, [username]);
 
-  // Scroll listener for animated nav
+  // Scroll listener for animated nav with hide/show on direction
   useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Determine scroll direction - hide on scroll down, show on scroll up
+      if (currentScrollY > lastScrollY && currentScrollY > 250) {
+        // Scrolling DOWN past threshold - hide nav
+        setNavVisible(false);
+      } else {
+        // Scrolling UP or near top - show nav
+        setNavVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+      setScrollY(currentScrollY);
+    };
+    
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
   const loadProfile = async () => {
     try {
@@ -139,10 +156,12 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Mobile Header - Animated on scroll, hidden in viewer mode */}
       {!viewerMode && (
         <header 
-          className={`top-nav ${isScrolledPastBanner ? 'glassy' : ''}`}
+          className={`top-nav ${isScrolledPastBanner ? 'glassy' : ''} ${!navVisible ? 'nav-hidden' : ''}`}
           style={{
             paddingTop: `${12 - (12 * heightReduction)}px`,
             paddingBottom: `${12 - (12 * heightReduction)}px`,
+            transform: navVisible ? 'translateY(0)' : 'translateY(-100%)',
+            opacity: navVisible ? 1 : 0,
           }}
         >
           {/* Post - Left */}
