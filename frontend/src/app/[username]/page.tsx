@@ -30,7 +30,9 @@ import {
   Squares2X2Icon,
   ListBulletIcon,
   BellIcon,
-  CheckBadgeIcon
+  CheckBadgeIcon,
+  RectangleStackIcon,
+  PaintBrushIcon
 } from '@heroicons/react/24/outline';
 import { BellIcon as BellSolidIcon } from '@heroicons/react/24/solid';
 
@@ -312,8 +314,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
               alt="webSTAR"
               className="dashboard-logo"
               style={{ 
-                width: '32px',
-                height: '32px',
+                width: '36px',
+                height: '36px',
                 objectFit: 'contain',
                 filter: 'drop-shadow(0 0 12px rgba(0, 194, 255, 0.2))',
                 flexShrink: 0
@@ -363,19 +365,18 @@ export default function ProfilePage({ params }: { params: { username: string } }
               onClick={() => router.push('/profile/edit')}
               className="action-button"
               style={{
-                width: '40px',
+                minWidth: '56px',
                 height: '40px',
-                minWidth: '40px',
-                borderRadius: '12px',
+                borderRadius: '20px',
                 background: 'rgba(255, 255, 255, 0.05)',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: 'rgba(255, 255, 255, 0.65)',
-                boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.02)',
+                color: '#707070',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                flexShrink: 0,
                 cursor: 'pointer',
                 transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                 padding: 0
@@ -383,12 +384,12 @@ export default function ProfilePage({ params }: { params: { username: string } }
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                 e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
+                e.currentTarget.style.color = '#f5f5f5';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
                 e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.65)';
+                e.currentTarget.style.color = '#707070';
               }}
               onMouseDown={(e) => {
                 e.currentTarget.style.transform = 'scale(0.94)';
@@ -396,26 +397,25 @@ export default function ProfilePage({ params }: { params: { username: string } }
               onMouseUp={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
               }}
-              title="Edit profile"
+              title="Portfolio"
             >
-              <PencilIcon className="w-4 h-4" />
+              <RectangleStackIcon className="w-5 h-5" />
             </button>
             <button 
               className="action-button"
               style={{
-                width: '40px',
+                minWidth: '56px',
                 height: '40px',
-                minWidth: '40px',
-                borderRadius: '12px',
+                borderRadius: '20px',
                 background: 'rgba(255, 255, 255, 0.05)',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: 'rgba(255, 255, 255, 0.65)',
-                boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.02)',
+                color: '#707070',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                flexShrink: 0,
                 cursor: 'pointer',
                 transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                 padding: 0
@@ -423,12 +423,12 @@ export default function ProfilePage({ params }: { params: { username: string } }
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                 e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
+                e.currentTarget.style.color = '#f5f5f5';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
                 e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.65)';
+                e.currentTarget.style.color = '#707070';
               }}
               onMouseDown={(e) => {
                 e.currentTarget.style.transform = 'scale(0.94)';
@@ -436,9 +436,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
               onMouseUp={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
               }}
-              title="Settings"
+              title="Customize"
             >
-              <Squares2X2Icon className="w-4 h-4" />
+              <PaintBrushIcon className="w-5 h-5" />
             </button>
           </div>
         </div>
