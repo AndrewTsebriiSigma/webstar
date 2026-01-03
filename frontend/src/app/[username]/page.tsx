@@ -606,24 +606,32 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
       {/* Tabs */}
       <div 
-        className="sticky top-[49px] z-30 backdrop-blur-md border-b border-gray-800"
-        style={{ background: 'rgba(17, 17, 17, 0.9)' }}
+        className="z-30 backdrop-blur-md border-b border-gray-800"
+        style={{ background: 'rgba(17, 17, 17, 0.9)', marginTop: '80px' }}
       >
-        <div className="flex">
+        <div className="flex relative">
+          {/* Sliding indicator */}
+          <div 
+            className="absolute bottom-0 h-[3px] transition-transform duration-300 ease-out"
+            style={{
+              width: 'calc(100% / 3)',
+              transform: `translateX(${['portfolio', 'projects', 'about'].indexOf(activeTab) * 100}%)`
+            }}
+          >
+            <div className="w-20 h-full bg-cyan-500 mx-auto" />
+          </div>
+          
           {['Portfolio', 'Projects', 'About'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab.toLowerCase())}
-              className={`flex-1 py-3 text-sm font-semibold transition relative ${
+              className={`flex-1 py-3 text-base font-semibold ${
                 activeTab === tab.toLowerCase()
                   ? 'text-white'
                   : 'text-gray-500'
               }`}
             >
               {tab}
-              {activeTab === tab.toLowerCase() && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
-              )}
             </button>
           ))}
         </div>
