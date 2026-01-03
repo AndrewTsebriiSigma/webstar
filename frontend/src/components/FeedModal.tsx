@@ -38,8 +38,11 @@ export default function FeedModal({
   // Reverse posts order (newest first in feed)
   const reversedPosts = [...posts].reverse();
 
+  // Track if initial scroll has been done
+  const hasScrolledToInitial = useRef(false);
+
   useEffect(() => {
-    if (isOpen && initialPostId) {
+    if (isOpen && initialPostId && !hasScrolledToInitial.current) {
       const index = reversedPosts.findIndex(p => p.id === initialPostId);
       if (index !== -1) {
         setCurrentIndex(index);
@@ -48,11 +51,17 @@ export default function FeedModal({
           const postElement = document.querySelector(`[data-index="${index}"]`);
           if (postElement) {
             postElement.scrollIntoView({ behavior: 'instant', block: 'start' });
+            hasScrolledToInitial.current = true;
           }
         }, 100);
       }
     }
-  }, [isOpen, initialPostId, reversedPosts]);
+    
+    // Reset flag when modal closes
+    if (!isOpen) {
+      hasScrolledToInitial.current = false;
+    }
+  }, [isOpen, initialPostId]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -67,7 +76,7 @@ export default function FeedModal({
 
   // Intersection Observer for tracking visible post
   useEffect(() => {
-    if (!scrollContainerRef.current) return;
+    if (!scrollContainerRef.current || !isOpen) return;
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
@@ -87,7 +96,7 @@ export default function FeedModal({
     return () => {
       observerRef.current?.disconnect();
     };
-  }, [reversedPosts, isOpen]);
+  }, [isOpen]); // Only re-run when modal opens/closes
 
   if (!isOpen) return null;
 
