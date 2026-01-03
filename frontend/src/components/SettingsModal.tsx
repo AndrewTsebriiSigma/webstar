@@ -74,16 +74,16 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   if (!isOpen) return null;
 
-  // Toggle component - exact Figma spec
+  // Toggle component - tighter like reference
   const Toggle = ({ enabled, onToggle, disabled }: { enabled: boolean; onToggle: () => void; disabled?: boolean }) => (
     <button
       onClick={onToggle}
       disabled={disabled}
       className="relative disabled:opacity-50"
       style={{
-        width: '51px',
-        height: '31px',
-        borderRadius: '16px',
+        width: '46px',
+        height: '28px',
+        borderRadius: '14px',
         background: enabled ? '#00C2FF' : '#39393D',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
       }}
@@ -91,12 +91,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       <span
         className="absolute top-[2px]"
         style={{
-          width: '27px',
-          height: '27px',
+          width: '24px',
+          height: '24px',
           borderRadius: '50%',
           background: '#FFFFFF',
           boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
-          left: enabled ? '22px' : '2px',
+          left: enabled ? '20px' : '2px',
           transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
         }}
       />
@@ -186,25 +186,26 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   return (
     <>
-      {/* Dark Glass Overlay - blur(40px) */}
+      {/* Glass Overlay - shows page behind with blur */}
       <div 
         className="fixed inset-0 z-50"
         style={{ 
-          background: 'rgba(0, 0, 0, 0.6)',
+          background: 'rgba(17, 17, 17, 0.85)',
           backdropFilter: 'blur(40px)',
           WebkitBackdropFilter: 'blur(40px)'
         }}
       >
-        {/* Full Screen Modal */}
+        {/* Full Screen Modal - semi-transparent to see blur */}
         <div 
           className="w-full h-full flex flex-col"
-          style={{ background: '#111111' }}
+          style={{ background: 'transparent' }}
         >
-          {/* Header - Darker #0D0D0D */}
+          {/* Header - 55px height, centered vertically */}
           <div 
             className="flex items-center justify-between flex-shrink-0"
             style={{ 
-              padding: '16px 16px 14px',
+              height: '55px',
+              padding: '0 16px',
               background: '#0D0D0D',
               borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
             }}
