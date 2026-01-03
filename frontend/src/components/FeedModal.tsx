@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { PortfolioItem, Profile } from '@/lib/types';
 import ContentDisplay from './ContentDisplay';
-import MiniPlayer from './MiniPlayer';
 
 interface AudioTrack {
   id: number;
@@ -36,9 +35,12 @@ export default function FeedModal({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
+  // Reverse posts order (newest first in feed)
+  const reversedPosts = [...posts].reverse();
+
   useEffect(() => {
     if (isOpen && initialPostId) {
-      const index = posts.findIndex(p => p.id === initialPostId);
+      const index = reversedPosts.findIndex(p => p.id === initialPostId);
       if (index !== -1) {
         setCurrentIndex(index);
         // Scroll to the initial post
@@ -50,7 +52,7 @@ export default function FeedModal({
         }, 100);
       }
     }
-  }, [isOpen, initialPostId, posts]);
+  }, [isOpen, initialPostId, reversedPosts]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -79,17 +81,17 @@ export default function FeedModal({
       { threshold: 0.5 }
     );
 
-    const posts = scrollContainerRef.current.querySelectorAll('.feed-post-item');
-    posts.forEach((post) => observerRef.current?.observe(post));
+    const postElements = scrollContainerRef.current.querySelectorAll('.feed-post-item');
+    postElements.forEach((post) => observerRef.current?.observe(post));
 
     return () => {
       observerRef.current?.disconnect();
     };
-  }, [posts, isOpen]);
+  }, [reversedPosts, isOpen]);
 
   if (!isOpen) return null;
 
-  const currentPost = posts[currentIndex];
+  const currentPost = reversedPosts[currentIndex];
 
   return (
     <div 
@@ -183,15 +185,6 @@ export default function FeedModal({
               >
                 {profile?.display_name || profile?.username || 'User'}
               </div>
-              <div 
-                style={{
-                  fontSize: '13px',
-                  color: 'rgba(255, 255, 255, 0.5)',
-                  lineHeight: 1.2
-                }}
-              >
-                @{profile?.username || 'user'}
-              </div>
             </div>
           </div>
 
@@ -233,7 +226,7 @@ export default function FeedModal({
             textAlign: 'center'
           }}
         >
-          {currentIndex + 1} / {posts.length}
+          {currentIndex + 1} / {reversedPosts.length}
         </div>
       </div>
 
@@ -245,11 +238,10 @@ export default function FeedModal({
           overflowY: 'auto',
           overflowX: 'hidden',
           scrollBehavior: 'smooth',
-          WebkitOverflowScrolling: 'touch',
-          paddingBottom: currentAudioTrack ? '100px' : '0' // Space for mini player
+          WebkitOverflowScrolling: 'touch'
         }}
       >
-        {posts.map((post, index) => (
+        {reversedPosts.map((post, index) => (
           <div
             key={post.id}
             data-index={index}
@@ -259,7 +251,7 @@ export default function FeedModal({
               display: 'flex',
               flexDirection: 'column',
               padding: '24px 16px',
-              borderBottom: index < posts.length - 1 ? '1px solid rgba(255, 255, 255, 0.05)' : 'none'
+              borderBottom: index < reversedPosts.length - 1 ? '1px solid rgba(255, 255, 255, 0.05)' : 'none'
             }}
           >
             {/* Content Display */}
@@ -291,44 +283,6 @@ export default function FeedModal({
           </div>
         ))}
       </div>
-
-      {/* Mini Audio Player - Inside Feed Modal */}
-      {currentAudioTrack && onAudioTrackChange && (
-        <MiniPlayer
-          track={currentAudioTrack}
-          onClose={() => onAudioTrackChange(null)}
-          onNext={() => {
-            // Find next audio track
-            const currentIdx = posts.findIndex(p => p.id === currentAudioTrack.id);
-            const nextAudio = posts.slice(currentIdx + 1).find(p => p.content_type === 'audio');
-            if (nextAudio && nextAudio.content_url) {
-              onAudioTrackChange({
-                id: nextAudio.id,
-                title: nextAudio.title || 'Audio Track',
-                url: nextAudio.content_url.startsWith('http') 
-                  ? nextAudio.content_url 
-                  : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${nextAudio.content_url}`,
-                thumbnail: nextAudio.thumbnail_url || undefined
-              });
-            }
-          }}
-          onPrevious={() => {
-            // Find previous audio track
-            const currentIdx = posts.findIndex(p => p.id === currentAudioTrack.id);
-            const prevAudio = posts.slice(0, currentIdx).reverse().find(p => p.content_type === 'audio');
-            if (prevAudio && prevAudio.content_url) {
-              onAudioTrackChange({
-                id: prevAudio.id,
-                title: prevAudio.title || 'Audio Track',
-                url: prevAudio.content_url.startsWith('http') 
-                  ? prevAudio.content_url 
-                  : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${prevAudio.content_url}`,
-                thumbnail: prevAudio.thumbnail_url || undefined
-              });
-            }
-          }}
-        />
-      )}
     </div>
   );
 }

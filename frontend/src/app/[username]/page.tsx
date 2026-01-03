@@ -18,6 +18,7 @@ import CreateContentModal from '@/components/CreateContentModal';
 import NotificationsPanel from '@/components/NotificationsPanel';
 import ContentDisplay from '@/components/ContentDisplay';
 import FeedModal from '@/components/FeedModal';
+import MiniPlayer from '@/components/MiniPlayer';
 import { 
   Cog6ToothIcon, 
   EyeIcon, 
@@ -870,7 +871,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
         onClose={() => {
           setShowFeedModal(false);
           setFeedInitialPostId(undefined);
-          setCurrentAudioTrack(null); // Clear audio when closing feed
+          // DON'T clear audio - let it persist
         }}
         posts={portfolioItems}
         initialPostId={feedInitialPostId}
@@ -888,6 +889,49 @@ export default function ProfilePage({ params }: { params: { username: string } }
         }}
         project={selectedProject}
       />
+
+      {/* Mini Audio Player - Persistent at page level */}
+      {currentAudioTrack && (
+        <MiniPlayer
+          track={currentAudioTrack}
+          onClose={() => setCurrentAudioTrack(null)}
+          onThumbnailClick={() => {
+            // Open feed modal at the current audio track
+            setFeedInitialPostId(currentAudioTrack.id);
+            setShowFeedModal(true);
+          }}
+          onNext={() => {
+            // Find next audio track
+            const currentIndex = portfolioItems.findIndex(p => p.id === currentAudioTrack.id);
+            const nextAudio = portfolioItems.slice(currentIndex + 1).find(p => p.content_type === 'audio');
+            if (nextAudio && nextAudio.content_url) {
+              setCurrentAudioTrack({
+                id: nextAudio.id,
+                title: nextAudio.title || 'Audio Track',
+                url: nextAudio.content_url.startsWith('http') 
+                  ? nextAudio.content_url 
+                  : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${nextAudio.content_url}`,
+                thumbnail: nextAudio.thumbnail_url || undefined
+              });
+            }
+          }}
+          onPrevious={() => {
+            // Find previous audio track
+            const currentIndex = portfolioItems.findIndex(p => p.id === currentAudioTrack.id);
+            const prevAudio = portfolioItems.slice(0, currentIndex).reverse().find(p => p.content_type === 'audio');
+            if (prevAudio && prevAudio.content_url) {
+              setCurrentAudioTrack({
+                id: prevAudio.id,
+                title: prevAudio.title || 'Audio Track',
+                url: prevAudio.content_url.startsWith('http') 
+                  ? prevAudio.content_url 
+                  : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${prevAudio.content_url}`,
+                thumbnail: prevAudio.thumbnail_url || undefined
+              });
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

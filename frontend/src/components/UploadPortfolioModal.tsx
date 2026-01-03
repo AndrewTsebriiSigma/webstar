@@ -19,10 +19,29 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
   const [uploadProgress, setUploadProgress] = useState(0);
   const [textContent, setTextContent] = useState(''); // For text posts
   
+  // Attachment states
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [attachmentType, setAttachmentType] = useState<'audio' | 'pdf' | null>(null);
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
   });
+
+  // Helper to determine main content type
+  const getMainContentType = () => {
+    if (!file) return null;
+    if (file.type.startsWith('image/')) return 'photo';
+    if (file.type.startsWith('video/')) return 'video';
+    if (file.type.startsWith('audio/')) return 'audio';
+    return null;
+  };
+
+  const mainContentType = getMainContentType();
+  
+  // Determine if attachments are allowed
+  const canAddAudioAttachment = mainContentType === 'photo' || mainContentType === 'video';
+  const canAddPdfAttachment = mainContentType === 'photo' || mainContentType === 'video';
 
   if (!isOpen) return null;
 
@@ -31,6 +50,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
     setFile(null);
     setPreview('');
     setTextContent('');
+    setAttachmentFile(null);
+    setAttachmentType(null);
     setFormData({
       title: '',
       description: '',
@@ -80,6 +101,49 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
     } else {
       setPreview(''); // No preview for video/audio
     }
+  };
+
+  const handleAudioAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    if (!selectedFile.type.startsWith('audio/')) {
+      toast.error('Please select an audio file');
+      return;
+    }
+
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      toast.error('Audio file must be less than 10MB');
+      return;
+    }
+
+    setAttachmentFile(selectedFile);
+    setAttachmentType('audio');
+    toast.success('Audio attachment added');
+  };
+
+  const handlePdfAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    if (selectedFile.type !== 'application/pdf') {
+      toast.error('Please select a PDF file');
+      return;
+    }
+
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      toast.error('PDF file must be less than 10MB');
+      return;
+    }
+
+    setAttachmentFile(selectedFile);
+    setAttachmentType('pdf');
+    toast.success('PDF attachment added');
+  };
+
+  const removeAttachment = () => {
+    setAttachmentFile(null);
+    setAttachmentType(null);
   };
 
   const handleSubmit = async () => {
@@ -310,6 +374,34 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
               disabled={uploading}
             />
           </div>
+
+          {/* Attachment Display */}
+          {attachmentFile && attachmentType && (
+            <div className="p-3 bg-gray-800/50 border border-gray-700 rounded-lg flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {attachmentType === 'audio' ? (
+                  <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                )}
+                <div>
+                  <p className="text-sm text-white font-medium">{attachmentFile.name}</p>
+                  <p className="text-xs text-gray-400">{(attachmentFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                </div>
+              </div>
+              <button
+                onClick={removeAttachment}
+                className="p-1 hover:bg-gray-700 rounded-lg transition"
+                disabled={uploading}
+              >
+                <XMarkIcon className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
+          )}
             </>
           ) : (
             <>
@@ -448,24 +540,85 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
             </button>
             
             <div className="flex gap-2 ml-auto">
-              <button
-                disabled={uploading}
-                className="p-2 hover:bg-gray-700 rounded-lg transition disabled:opacity-50"
-                title="Add audio"
-              >
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                </svg>
-              </button>
-              <button
-                disabled={uploading}
-                className="p-2 hover:bg-gray-700 rounded-lg transition disabled:opacity-50"
-                title="Add document"
-              >
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </button>
+              {/* Audio Attachment Button */}
+              <div className="relative">
+                <input
+                  type="file"
+                  id="audio-attachment"
+                  accept="audio/*"
+                  onChange={handleAudioAttachment}
+                  className="hidden"
+                  disabled={uploading || !canAddAudioAttachment || attachmentType === 'pdf'}
+                />
+                <label
+                  htmlFor="audio-attachment"
+                  className={`p-2 rounded-lg transition cursor-pointer inline-flex ${
+                    !canAddAudioAttachment || attachmentType === 'pdf'
+                      ? 'opacity-30 cursor-not-allowed'
+                      : attachmentType === 'audio'
+                      ? 'bg-cyan-500/20 hover:bg-cyan-500/30'
+                      : 'hover:bg-gray-700'
+                  }`}
+                  title={
+                    !canAddAudioAttachment
+                      ? 'Audio attachments only available for photo/video posts'
+                      : attachmentType === 'pdf'
+                      ? 'Remove PDF attachment first'
+                      : attachmentType === 'audio'
+                      ? 'Audio attached'
+                      : 'Add audio attachment'
+                  }
+                  onClick={(e) => {
+                    if (!canAddAudioAttachment || attachmentType === 'pdf') {
+                      e.preventDefault();
+                    }
+                  }}
+                >
+                  <svg className={`w-5 h-5 ${attachmentType === 'audio' ? 'text-cyan-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                  </svg>
+                </label>
+              </div>
+
+              {/* PDF Attachment Button */}
+              <div className="relative">
+                <input
+                  type="file"
+                  id="pdf-attachment"
+                  accept="application/pdf"
+                  onChange={handlePdfAttachment}
+                  className="hidden"
+                  disabled={uploading || !canAddPdfAttachment || attachmentType === 'audio'}
+                />
+                <label
+                  htmlFor="pdf-attachment"
+                  className={`p-2 rounded-lg transition cursor-pointer inline-flex ${
+                    !canAddPdfAttachment || attachmentType === 'audio'
+                      ? 'opacity-30 cursor-not-allowed'
+                      : attachmentType === 'pdf'
+                      ? 'bg-cyan-500/20 hover:bg-cyan-500/30'
+                      : 'hover:bg-gray-700'
+                  }`}
+                  title={
+                    !canAddPdfAttachment
+                      ? 'PDF attachments only available for photo/video posts'
+                      : attachmentType === 'audio'
+                      ? 'Remove audio attachment first'
+                      : attachmentType === 'pdf'
+                      ? 'PDF attached'
+                      : 'Add PDF attachment'
+                  }
+                  onClick={(e) => {
+                    if (!canAddPdfAttachment || attachmentType === 'audio') {
+                      e.preventDefault();
+                    }
+                  }}
+                >
+                  <svg className={`w-5 h-5 ${attachmentType === 'pdf' ? 'text-cyan-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </label>
+              </div>
             </div>
           </div>
         </div>

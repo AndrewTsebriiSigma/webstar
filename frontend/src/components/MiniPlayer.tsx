@@ -21,13 +21,15 @@ interface MiniPlayerProps {
   onClose: () => void;
   onNext?: () => void;
   onPrevious?: () => void;
+  onThumbnailClick?: () => void;
 }
 
 export default function MiniPlayer({ 
   track, 
   onClose,
   onNext,
-  onPrevious 
+  onPrevious,
+  onThumbnailClick
 }: MiniPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -132,6 +134,7 @@ export default function MiniPlayer({
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {/* Album Art / Thumbnail */}
           <div 
+            onClick={onThumbnailClick}
             style={{
               width: '56px',
               height: '56px',
@@ -141,8 +144,12 @@ export default function MiniPlayer({
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              overflow: 'hidden'
+              overflow: 'hidden',
+              cursor: onThumbnailClick ? 'pointer' : 'default',
+              transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1)'
             }}
+            onMouseEnter={(e) => onThumbnailClick && (e.currentTarget.style.transform = 'scale(1.05)')}
+            onMouseLeave={(e) => onThumbnailClick && (e.currentTarget.style.transform = 'scale(1)')}
           >
             {track.thumbnail ? (
               <img 
@@ -356,6 +363,7 @@ export default function MiniPlayer({
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {/* Thumbnail */}
           <div 
+            onClick={onThumbnailClick}
             style={{
               width: '40px',
               height: '40px',
@@ -365,8 +373,12 @@ export default function MiniPlayer({
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              overflow: 'hidden'
+              overflow: 'hidden',
+              cursor: onThumbnailClick ? 'pointer' : 'default',
+              transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1)'
             }}
+            onMouseEnter={(e) => onThumbnailClick && (e.currentTarget.style.transform = 'scale(1.05)')}
+            onMouseLeave={(e) => onThumbnailClick && (e.currentTarget.style.transform = 'scale(1)')}
           >
             {track.thumbnail ? (
               <img 
