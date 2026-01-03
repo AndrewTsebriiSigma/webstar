@@ -193,7 +193,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       <div 
         className="fixed inset-0 z-50"
         style={{ 
-          background: 'rgba(17, 17, 17, 0.85)',
+          background: 'rgba(17, 17, 17, 0.92)',
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)'
         }}
