@@ -224,13 +224,17 @@ async def google_callback(request: Request, session: Session = Depends(get_sessi
 
 @router.post("/login", response_model=LoginResponse)
 async def login(user_data: UserLogin, session: Session = Depends(get_session)):
-    """Login with email and password. May require 2FA verification."""
-    # Find user
-    user = session.exec(select(User).where(User.email == user_data.email)).first()
+    """Login with email or username and password. May require 2FA verification."""
+    # Find user by email OR username
+    user = session.exec(
+        select(User).where(
+            (User.email == user_data.email) | (User.username == user_data.email)
+        )
+    ).first()
     if not user or not user.hashed_password:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
+            detail="Incorrect email/username or password"
         )
     
     # Verify password

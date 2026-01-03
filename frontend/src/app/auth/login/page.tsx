@@ -155,17 +155,17 @@ export default function LoginPage() {
         >
           {step === 'credentials' ? (
             <form onSubmit={handleCredentialsSubmit} className="space-y-5">
-              {/* Email Input */}
+              {/* Email or Username Input */}
               <div>
                 <input
                   id="email"
-                  type="email"
+                  type="text"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full"
-                  placeholder="Email address"
-                  autoComplete="email"
+                  placeholder="Email or username"
+                  autoComplete="username"
                   disabled={loading}
                 />
               </div>
