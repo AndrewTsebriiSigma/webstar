@@ -170,11 +170,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
               onClick={() => setShowCreateContentModal(true)}
               className={`nav-btn ${isScrolled ? 'glassy-btn' : ''}`}
               style={{
-                transform: `scale(${1 - (0.15 * heightReduction)})`,
+                transform: `scale(${1 - (0.17 * heightReduction)})`,
                 transition: 'all 0.35s ease'
               }}
             >
-              <PlusIcon className="text-white w-[19px] h-[19px]" />
+              <PlusIcon className="text-white w-[23px] h-[23px]" />
             </button>
           ) : (
             <div className="w-8"></div>
@@ -185,7 +185,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <span 
               className="username-display"
               style={{
-                fontSize: `${14 - (2 * heightReduction)}px`,
+                fontSize: `${17 - (3 * heightReduction)}px`,
                 fontWeight: 700,
                 letterSpacing: '-0.3px',
                 transition: 'all 0.35s ease'
@@ -204,7 +204,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               transition: 'all 0.35s ease'
             }}
           >
-            <BellIcon className="text-white w-[19px] h-[19px]" />
+              <BellIcon className="text-white w-[23px] h-[23px]" />
             {isOwnProfile && (
               <span className="nav-badge">3</span>
             )}
