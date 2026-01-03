@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { profileAPI, portfolioAPI, projectsAPI, economyAPI, analyticsAPI } from '@/lib/api';
@@ -63,12 +63,38 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [currentAudioTrack, setCurrentAudioTrack] = useState<any>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showProjectDetail, setShowProjectDetail] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+  const [navPushUp, setNavPushUp] = useState(0);
+  
+  const dashboardRef = useRef<HTMLDivElement>(null);
   
   const isOwnProfile = user?.username === username;
+  
+  // Scroll animation calculations
+  const heightReduction = Math.min(scrollY / 100, 1);
+  const isScrolled = scrollY > 5;
 
   useEffect(() => {
     loadProfile();
   }, [username]);
+
+  // Scroll listener - dashboard acts as ceiling for nav
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+      if (dashboardRef.current) {
+        const dashboardTop = dashboardRef.current.getBoundingClientRect().top;
+        const navHeight = 54;
+        if (dashboardTop < navHeight) {
+          setNavPushUp(Math.min(navHeight - dashboardTop, 60));
+        } else {
+          setNavPushUp(0);
+        }
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const loadProfile = async () => {
     try {
@@ -124,42 +150,67 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
   return (
     <div className="min-h-screen text-white" style={{ background: '#111111' }}>
-      {/* Mobile Header - Hidden in viewer mode */}
+      {/* Mobile Header - Animated on scroll, hidden in viewer mode */}
       {!viewerMode && (
         <header 
-          className="sticky top-0 z-40 backdrop-blur-md border-b border-gray-800"
-          style={{ background: 'rgba(17, 17, 17, 0.9)' }}
+          className={`top-nav ${isScrolled ? 'glassy' : ''}`}
+          style={{
+            paddingTop: `${11 - (5 * heightReduction)}px`,
+            paddingBottom: `${11 - (5 * heightReduction)}px`,
+            transform: `translateY(-${navPushUp}px)`
+          }}
         >
-          <div className="px-3 py-2 flex items-center justify-between">
-            {isOwnProfile ? (
-              <button 
-                onClick={() => setShowCreateContentModal(true)}
-                className="p-1.5"
-              >
-                <PlusIcon className="w-5 h-5 text-white" />
-              </button>
-            ) : (
-              <div className="w-8"></div>
-            )}
-            
-            <Link href="/" className="text-lg font-bold">
-              webSTAR
-            </Link>
-            
-            <div className="flex items-center gap-1">
-              <button 
-                onClick={() => setShowNotifications(true)}
-                className="p-1.5 relative"
-              >
-                <BellIcon className="w-5 h-5 text-white" />
-                {isOwnProfile && (
-                  <span className="absolute top-0 right-0 w-3 h-3 bg-cyan-500 rounded-full flex items-center justify-center text-[8px] font-bold">
-                    3
-                  </span>
-                )}
-              </button>
-            </div>
+          {/* Post - Left */}
+          {isOwnProfile ? (
+            <button 
+              onClick={() => setShowCreateContentModal(true)}
+              className="nav-btn"
+            >
+              <PlusIcon 
+                className="text-white" 
+                style={{ 
+                  width: `${22 - (3 * heightReduction)}px`, 
+                  height: `${22 - (3 * heightReduction)}px` 
+                }} 
+              />
+            </button>
+          ) : (
+            <div className="w-8"></div>
+          )}
+          
+          {/* Brand Name - Center */}
+          <div className="nav-center">
+            <span 
+              style={{
+                fontSize: `${17 - (2 * heightReduction)}px`,
+                fontWeight: 700,
+                letterSpacing: '-0.3px',
+                color: 'white'
+              }}
+            >
+              WebSTAR
+            </span>
           </div>
+          
+          {/* Notifications - Right */}
+          <button 
+            onClick={() => setShowNotifications(true)}
+            className="nav-btn"
+          >
+            <BellIcon 
+              className="text-white" 
+              style={{ 
+                width: `${22 - (3 * heightReduction)}px`, 
+                height: `${22 - (3 * heightReduction)}px` 
+              }} 
+            />
+            {isOwnProfile && (
+              <span 
+                className="nav-badge"
+                style={{ transform: `scale(${1 - (0.15 * heightReduction)})` }}
+              >3</span>
+            )}
+          </button>
         </header>
       )}
 
@@ -291,6 +342,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Dashboard Strip - Compact for owner only */}
       {isOwnProfile && (
         <div 
+          ref={dashboardRef}
           className="dashboard-strip"
           style={{ 
             display: 'flex',
@@ -305,7 +357,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             cursor: 'pointer',
             transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
             padding: '10px 16px 10px 24px',
-            margin: '0 16px 20px',
+            margin: '0 16px 14px',
             width: 'calc(100% - 32px)',
             height: '60px'
           }}
@@ -329,7 +381,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: 'flex-start', 
-                gap: '8px'
+                gap: '3px'
               }}
             >
               <div 
@@ -405,7 +457,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
               title="Portfolio"
             >
-              <img src="/layers.svg" alt="Portfolio" style={{ width: '16px', height: '16px', filter: 'invert(1) opacity(0.44)' }} />
+              <img src="/layers.svg" alt="Portfolio" style={{ width: '20px', height: '20px', filter: 'invert(1) opacity(0.44)' }} />
             </button>
             <button 
               className="action-button"
@@ -448,7 +500,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
               title="Customize"
             >
-              <img src="/palette.svg" alt="Customize" style={{ width: '16px', height: '16px', filter: 'invert(1) opacity(0.44)' }} />
+              <img src="/palette.svg" alt="Customize" style={{ width: '20px', height: '20px', filter: 'invert(1) opacity(0.44)' }} />
             </button>
           </div>
         </div>
@@ -464,7 +516,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 className="action-btn custom-btn"
                 style={{
                   flex: '0 0 calc(65% - 4px)',
-                  height: '30px',
+                  height: '32px',
                   background: '#1F1F1F',
                   border: '1px solid #353535',
                   color: '#C7C7C7',
@@ -503,7 +555,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 className="action-btn"
                 style={{
                   flex: '0 0 calc(35% - 4px)',
-                  height: '30px',
+                  height: '32px',
                   background: '#1F1F1F',
                   border: '1px solid #353535',
                   color: '#C7C7C7',
