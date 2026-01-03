@@ -402,7 +402,7 @@ input[type="range"].slider-thumb::-moz-range-thumb:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 9px 16px;
+  padding: 11px 16px;
   background: rgba(18, 18, 18, 0.95);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
