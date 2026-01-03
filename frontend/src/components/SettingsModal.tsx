@@ -74,30 +74,34 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   if (!isOpen) return null;
 
-  // Toggle component - tighter like reference
+  // Toggle component - fixed positioning
   const Toggle = ({ enabled, onToggle, disabled }: { enabled: boolean; onToggle: () => void; disabled?: boolean }) => (
     <button
       onClick={onToggle}
       disabled={disabled}
-      className="relative disabled:opacity-50"
       style={{
+        position: 'relative',
         width: '46px',
         height: '28px',
         borderRadius: '14px',
         background: enabled ? '#00C2FF' : '#39393D',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+        border: 'none',
+        cursor: 'pointer',
+        transition: 'background 0.3s ease',
+        opacity: disabled ? 0.5 : 1
       }}
     >
       <span
-        className="absolute top-[2px]"
         style={{
+          position: 'absolute',
+          top: '2px',
+          left: enabled ? '20px' : '2px',
           width: '24px',
           height: '24px',
           borderRadius: '50%',
           background: '#FFFFFF',
           boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
-          left: enabled ? '20px' : '2px',
-          transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+          transition: 'left 0.3s ease'
         }}
       />
     </button>
@@ -186,13 +190,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   return (
     <>
-      {/* Glass Overlay - shows page behind with blur */}
+      {/* Glass Overlay - stronger blur, more transparent */}
       <div 
         className="fixed inset-0 z-50"
         style={{ 
-          background: 'rgba(17, 17, 17, 0.85)',
-          backdropFilter: 'blur(40px)',
-          WebkitBackdropFilter: 'blur(40px)'
+          background: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(30px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(30px) saturate(180%)'
         }}
       >
         {/* Full Screen Modal - semi-transparent to see blur */}
