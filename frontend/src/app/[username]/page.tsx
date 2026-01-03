@@ -73,7 +73,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const heightReduction = Math.min(scrollY / 100, 1); // Fast reduction over 100px
   const isScrolled = scrollY > 5; // Glassy activates almost immediately
   const isScrolledPastBanner = scrollY > 176;
-  const shouldHideNav = scrollY > 340; // Disappear exactly at dashboard line
+  
+  // Dashboard acts as ceiling - nav gets pushed off (no delay, follows scroll)
+  const dashboardLine = 310;
+  const navPushUp = scrollY > dashboardLine ? Math.min(scrollY - dashboardLine, 60) : 0;
 
   useEffect(() => {
     loadProfile();
@@ -158,11 +161,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Mobile Header - Animated on scroll, hidden in viewer mode */}
       {!viewerMode && (
         <header 
-          className={`top-nav ${isScrolled ? 'glassy' : ''} ${shouldHideNav ? 'nav-hidden' : ''}`}
+          className={`top-nav ${isScrolled ? 'glassy' : ''}`}
           style={{
             paddingTop: `${11 - (5 * heightReduction)}px`,
             paddingBottom: `${11 - (5 * heightReduction)}px`,
-            transition: 'all 0.25s ease'
+            transform: `translateY(-${navPushUp}px)`
           }}
         >
           {/* Post - Left */}
@@ -609,21 +612,29 @@ export default function ProfilePage({ params }: { params: { username: string } }
         className="z-30 backdrop-blur-md border-b border-gray-800"
         style={{ background: 'rgba(17, 17, 17, 0.9)', marginTop: '80px' }}
       >
-        <div className="flex">
+        <div className="flex relative">
+          {/* Sliding indicator */}
+          <div 
+            className="absolute bottom-0 h-[3px] transition-transform duration-300 ease-out"
+            style={{
+              width: 'calc(100% / 3)',
+              transform: `translateX(${['portfolio', 'projects', 'about'].indexOf(activeTab) * 100}%)`
+            }}
+          >
+            <div className="w-20 h-full bg-cyan-500 mx-auto" />
+          </div>
+          
           {['Portfolio', 'Projects', 'About'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab.toLowerCase())}
-              className={`flex-1 py-3 text-base font-semibold relative ${
+              className={`flex-1 py-3 text-base font-semibold ${
                 activeTab === tab.toLowerCase()
                   ? 'text-white'
                   : 'text-gray-500'
               }`}
             >
               {tab}
-              {activeTab === tab.toLowerCase() && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-[3px] bg-cyan-500" />
-              )}
             </button>
           ))}
         </div>

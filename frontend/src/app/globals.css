@@ -417,12 +417,7 @@ input[type="range"].slider-thumb::-moz-range-thumb:hover {
   border-bottom: 1px solid #2D2D2D;
 }
 
-.top-nav.nav-hidden {
-  opacity: 0;
-  transform: translateY(-100%);
-  pointer-events: none;
-  transition: all 0.25s ease;
-}
+/* nav-hidden not needed - using direct scroll-based transform */
 
 .nav-btn {
   width: 32px;
