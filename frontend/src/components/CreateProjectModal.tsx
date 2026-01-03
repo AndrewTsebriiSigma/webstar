@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, KeyboardEvent } from 'react';
 import { uploadsAPI, projectsAPI, portfolioAPI } from '@/lib/api';
 import { PortfolioItem } from '@/lib/types';
 import toast from 'react-hot-toast';
@@ -21,12 +21,10 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
   const [selectedPortfolioIds, setSelectedPortfolioIds] = useState<Set<number>>(new Set());
   const [projectMedia, setProjectMedia] = useState<any[]>([]);
-  
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    cover_image: '',
-  });
+  const [description, setDescription] = useState('');
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [attachmentType, setAttachmentType] = useState<'audio' | 'pdf' | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Load user's portfolio items
   useEffect(() => {
@@ -46,11 +44,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
   if (!isOpen) return null;
 
   const handleReset = () => {
-    setFormData({
-      title: '',
-      description: '',
-      cover_image: '',
-    });
+    setDescription('');
     setCoverFile(null);
     setCoverPreview('');
     setSaving(false);
@@ -58,6 +52,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
     setShowAddContentModal(false);
     setProjectMedia([]);
     setSelectedPortfolioIds(new Set());
+    setAttachmentFile(null);
+    setAttachmentType(null);
   };
 
   const handleClose = () => {
@@ -65,6 +61,104 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
       handleReset();
       onClose();
     }
+  };
+
+  // Rich text editing features (from post modal)
+  const handleTextareaKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const textarea = e.currentTarget;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const value = textarea.value;
+      
+      const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+      const linePrefix = value.substring(lineStart, start);
+      
+      if (linePrefix.trim() === '-' || linePrefix.endsWith('- ')) {
+        const newValue = value.substring(0, lineStart) + '• ' + value.substring(start);
+        setDescription(newValue);
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = lineStart + 2;
+        }, 0);
+      } else {
+        const newValue = value.substring(0, start) + '  ' + value.substring(end);
+        setDescription(newValue);
+        textarea.selectionStart = textarea.selectionEnd = start + 2;
+      }
+    } else if (e.key === 'Enter') {
+      const textarea = e.currentTarget;
+      const start = textarea.selectionStart;
+      const value = textarea.value;
+      
+      const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+      const currentLine = value.substring(lineStart, start);
+      
+      const bulletMatch = currentLine.match(/^(\s*)(•|-)\s+(.*)$/);
+      
+      if (bulletMatch) {
+        e.preventDefault();
+        const [, indent, bullet, content] = bulletMatch;
+        
+        if (content.trim() === '') {
+          const newValue = value.substring(0, lineStart) + value.substring(start);
+          setDescription(newValue);
+          setTimeout(() => {
+            textarea.selectionStart = textarea.selectionEnd = lineStart;
+          }, 0);
+        } else {
+          const newValue = value.substring(0, start) + '\n' + indent + bullet + ' ' + value.substring(start);
+          setDescription(newValue);
+          setTimeout(() => {
+            textarea.selectionStart = textarea.selectionEnd = start + indent.length + bullet.length + 3;
+          }, 0);
+        }
+      }
+    }
+  };
+
+  // Attachment handlers
+  const handleAudioAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    if (!selectedFile.type.startsWith('audio/')) {
+      toast.error('Please select an audio file');
+      return;
+    }
+
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      toast.error('Audio file must be less than 10MB');
+      return;
+    }
+
+    setAttachmentFile(selectedFile);
+    setAttachmentType('audio');
+    toast.success('Audio attachment added');
+  };
+
+  const handlePdfAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    if (selectedFile.type !== 'application/pdf') {
+      toast.error('Please select a PDF file');
+      return;
+    }
+
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      toast.error('PDF file must be less than 10MB');
+      return;
+    }
+
+    setAttachmentFile(selectedFile);
+    setAttachmentType('pdf');
+    toast.success('PDF attachment added');
+  };
+
+  const removeAttachment = () => {
+    setAttachmentFile(null);
+    setAttachmentType(null);
   };
 
   const handleCoverSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -89,14 +183,9 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
     reader.readAsDataURL(file);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
   const handleSubmit = async () => {
-    if (!formData.title.trim()) {
-      toast.error('Project title is required');
+    if (!description.trim()) {
+      toast.error('Project description is required');
       return;
     }
 
@@ -112,10 +201,17 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
         setUploadingCover(false);
       }
 
-      // Create project
+      // Handle attachment upload if present
+      let attachmentUrl = null;
+      if (attachmentFile && attachmentType) {
+        const attachmentResponse = await uploadsAPI.uploadMedia(attachmentFile, attachmentType);
+        attachmentUrl = attachmentResponse.data.url;
+      }
+
+      // Create project - Note: title removed, description is required now
       const projectResponse = await projectsAPI.createProject({
-        title: formData.title,
-        description: formData.description || null,
+        title: description.substring(0, 100), // Use first 100 chars of description as title for backend
+        description: description || null,
         cover_image: coverUrl || null,
         tags: null,
         tools: null,
@@ -170,10 +266,10 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
           >
             <ArrowLeftIcon className="w-5 h-5 text-gray-400" />
           </button>
-          <h2 className="text-lg font-bold text-white">Project</h2>
+          <h2 className="text-lg font-bold text-white">Create Project</h2>
           <button
             onClick={handleSubmit}
-            disabled={saving || uploadingCover || !formData.title.trim()}
+            disabled={saving || uploadingCover || !description.trim()}
             className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving || uploadingCover ? 'Creating...' : 'Publish'}
@@ -231,30 +327,21 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
             )}
           </div>
 
-          {/* Title Input */}
-          <div>
-            <input
-              type="text"
-              name="title"
-              placeholder="Title*"
-              value={formData.title}
-              onChange={handleChange}
-              className="w-full px-4 py-2.5 bg-[#1a1a1c] border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white placeholder-gray-500 text-sm"
-              disabled={saving || uploadingCover}
-            />
-          </div>
-
-          {/* Description Input */}
+          {/* Description Input with Rich Text Editing */}
           <div>
             <textarea
-              name="description"
-              placeholder="Description (boost discovery)"
-              value={formData.description}
-              onChange={handleChange}
-              rows={3}
-              className="w-full px-4 py-2.5 bg-[#1a1a1c] border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none text-white placeholder-gray-500 text-sm"
+              ref={textareaRef}
+              placeholder="Describe your project... (required)"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              onKeyDown={handleTextareaKeyDown}
+              rows={5}
+              maxLength={500}
+              style={{ fontSize: '16px' }} // Prevents zoom on mobile
+              className="w-full px-4 py-2.5 bg-[#1a1a1c] border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none text-white placeholder-gray-500"
               disabled={saving || uploadingCover}
             />
+            <p className="text-xs text-gray-500 mt-1 text-right">{description.length}/500</p>
           </div>
 
           {/* Add Content Button */}
@@ -318,39 +405,119 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
             </div>
           )}
 
-          {/* Bottom Actions (matching the post modal design) */}
-          <div className="flex items-center gap-3 pt-2 border-t border-gray-700">
-            <button
-              disabled={saving || uploadingCover}
-              className="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 rounded-lg transition text-gray-400 disabled:opacity-50"
-              title="Save as draft"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-              </svg>
-              <span className="text-sm">Save as draft</span>
-            </button>
-            
-            <div className="flex gap-2 ml-auto">
-              <button
-                disabled={saving || uploadingCover}
-                className="p-2 hover:bg-gray-700 rounded-lg transition disabled:opacity-50"
-                title="Add audio"
-              >
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                </svg>
-              </button>
-              <button
-                disabled={saving || uploadingCover}
-                className="p-2 hover:bg-gray-700 rounded-lg transition disabled:opacity-50"
-                title="Add document"
-              >
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </button>
+          {/* Bottom Actions - Attachments */}
+          <div className="border-t border-gray-700 pt-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-400">Attachments</p>
+              
+              <div className="flex gap-2">
+                {/* Audio Attachment Button */}
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="audio-attachment-project"
+                    accept="audio/*"
+                    onChange={handleAudioAttachment}
+                    className="hidden"
+                    disabled={saving || uploadingCover || attachmentType === 'pdf'}
+                  />
+                  <label
+                    htmlFor="audio-attachment-project"
+                    className={`p-2 rounded-lg transition cursor-pointer inline-flex ${
+                      attachmentType === 'pdf'
+                        ? 'opacity-30 cursor-not-allowed'
+                        : attachmentType === 'audio'
+                        ? 'bg-cyan-500/20 hover:bg-cyan-500/30'
+                        : 'hover:bg-gray-700'
+                    }`}
+                    title={
+                      attachmentType === 'pdf'
+                        ? 'Remove PDF attachment first'
+                        : attachmentType === 'audio'
+                        ? 'Audio attached'
+                        : 'Add audio attachment'
+                    }
+                    onClick={(e) => {
+                      if (attachmentType === 'pdf') {
+                        e.preventDefault();
+                      }
+                    }}
+                  >
+                    <svg className={`w-5 h-5 ${attachmentType === 'audio' ? 'text-cyan-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                    </svg>
+                  </label>
+                </div>
+
+                {/* PDF Attachment Button */}
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="pdf-attachment-project"
+                    accept="application/pdf"
+                    onChange={handlePdfAttachment}
+                    className="hidden"
+                    disabled={saving || uploadingCover || attachmentType === 'audio'}
+                  />
+                  <label
+                    htmlFor="pdf-attachment-project"
+                    className={`p-2 rounded-lg transition cursor-pointer inline-flex ${
+                      attachmentType === 'audio'
+                        ? 'opacity-30 cursor-not-allowed'
+                        : attachmentType === 'pdf'
+                        ? 'bg-cyan-500/20 hover:bg-cyan-500/30'
+                        : 'hover:bg-gray-700'
+                    }`}
+                    title={
+                      attachmentType === 'audio'
+                        ? 'Remove audio attachment first'
+                        : attachmentType === 'pdf'
+                        ? 'PDF attached'
+                        : 'Add PDF attachment'
+                    }
+                    onClick={(e) => {
+                      if (attachmentType === 'audio') {
+                        e.preventDefault();
+                      }
+                    }}
+                  >
+                    <svg className={`w-5 h-5 ${attachmentType === 'pdf' ? 'text-cyan-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </label>
+                </div>
+
+                {/* Remove Attachment Button */}
+                {attachmentFile && (
+                  <button
+                    onClick={removeAttachment}
+                    className="p-2 rounded-lg transition hover:bg-red-500/20 text-red-400"
+                    title="Remove attachment"
+                  >
+                    <XMarkIcon className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
             </div>
+
+            {/* Attachment Preview */}
+            {attachmentFile && (
+              <div className="mt-2 p-2 bg-gray-800 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {attachmentType === 'audio' ? (
+                    <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  )}
+                  <span className="text-xs text-gray-300 truncate max-w-[200px]">{attachmentFile.name}</span>
+                </div>
+                <span className="text-xs text-gray-500">{(attachmentFile.size / 1024 / 1024).toFixed(2)} MB</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -398,12 +565,13 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
                   // Trigger file upload
                   const input = document.createElement('input');
                   input.type = 'file';
-                  input.accept = 'image/*,video/*';
+                  input.accept = 'image/*,video/*'; // Accept both images and videos
                   input.multiple = true;
                   input.onchange = async (e: any) => {
                     const files = Array.from(e.target.files || []) as File[];
                     for (const file of files) {
                       try {
+                        // Auto-detect content type
                         const contentType = file.type.startsWith('image/') ? 'photo' : 'video';
                         const uploadResponse = await uploadsAPI.uploadMedia(file, contentType);
                         setProjectMedia(prev => [...prev, {
@@ -411,6 +579,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
                           content_url: uploadResponse.data.url,
                           media_url: uploadResponse.data.url
                         }]);
+                        toast.success(`${contentType === 'photo' ? 'Image' : 'Video'} added`);
                       } catch (error) {
                         toast.error('Failed to upload file');
                       }
@@ -420,7 +589,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
                 }}
                 className="w-full p-4 bg-[#2a2d35] hover:bg-[#343840] rounded-xl transition text-left"
               >
-                <div className="font-semibold text-white mb-1">Upload new one</div>
+                <div className="font-semibold text-white mb-1">Upload new media</div>
                 <div className="text-sm text-gray-400">Upload photos or videos</div>
               </button>
             </div>
