@@ -725,6 +725,21 @@ select:disabled {
 @media (max-width: 768px) {
   .mini-player-mobile {
     padding-bottom: env(safe-area-inset-bottom);
+    display: block !important; /* Show on mobile */
+  }
+  
+  .mini-player-desktop {
+    display: none !important; /* Hide on mobile */
+  }
+}
+
+@media (min-width: 769px) {
+  .mini-player-mobile {
+    display: none !important; /* Hide on desktop */
+  }
+  
+  .mini-player-desktop {
+    display: flex !important; /* Show on desktop */
   }
 }
 

@@ -118,7 +118,7 @@ export default function MiniPlayer({
           bottom: '24px',
           left: '50%',
           transform: 'translateX(-50%)',
-          zIndex: 9998,
+          zIndex: 10000, // Above FeedModal (9999)
           width: '90%',
           maxWidth: '480px',
           background: 'rgba(17, 17, 17, 0.95)',
@@ -128,7 +128,7 @@ export default function MiniPlayer({
           borderRadius: '20px',
           boxShadow: '0 12px 48px rgba(0, 0, 0, 0.5)',
           padding: '16px',
-          display: 'none'
+          display: 'none' // Hidden on mobile, shown via CSS media query
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -328,13 +328,13 @@ export default function MiniPlayer({
           bottom: 0,
           left: 0,
           right: 0,
-          zIndex: 9998,
+          zIndex: 10000, // Above FeedModal (9999)
           background: 'rgba(17, 17, 17, 0.98)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           borderTop: '1px solid rgba(255, 255, 255, 0.12)',
           padding: '12px 16px',
-          display: 'block'
+          display: 'block' // Shown on mobile, hidden via CSS media query on desktop
         }}
       >
         {/* Progress Bar */}
