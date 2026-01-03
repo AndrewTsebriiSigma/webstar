@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { profileAPI, portfolioAPI, projectsAPI, economyAPI, analyticsAPI } from '@/lib/api';
@@ -66,6 +66,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [scrollY, setScrollY] = useState(0);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [navVisible, setNavVisible] = useState(true);
+  const [navPushUp, setNavPushUp] = useState(0);
+  
+  const dashboardRef = useRef<HTMLDivElement>(null);
   
   const isOwnProfile = user?.username === username;
   
@@ -73,36 +76,33 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const heightReduction = Math.min(scrollY / 100, 1); // Fast reduction over 100px
   const isScrolled = scrollY > 5; // Glassy activates almost immediately
   const isScrolledPastBanner = scrollY > 176;
-  
-  // Dashboard acts as ceiling - nav gets pushed off (no delay, follows scroll)
-  const dashboardLine = 310;
-  const navPushUp = scrollY > dashboardLine ? Math.min(scrollY - dashboardLine, 60) : 0;
 
   useEffect(() => {
     loadProfile();
   }, [username]);
 
-  // Scroll listener for animated nav with hide/show on direction
+  // Scroll listener - dashboard acts as ceiling for nav
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
-      // Determine scroll direction - hide on scroll down, show on scroll up
-      if (currentScrollY > lastScrollY && currentScrollY > 280) {
-        // Scrolling DOWN past threshold - hide nav at dashboard
-        setNavVisible(false);
-      } else {
-        // Scrolling UP or near top - show nav
-        setNavVisible(true);
-      }
-      
-      setLastScrollY(currentScrollY);
       setScrollY(currentScrollY);
+      
+      // Check dashboard position - nav can't pass it
+      if (dashboardRef.current) {
+        const dashboardTop = dashboardRef.current.getBoundingClientRect().top;
+        const navHeight = 54; // approx nav height when shrunk
+        
+        if (dashboardTop < navHeight) {
+          setNavPushUp(Math.min(navHeight - dashboardTop, 60));
+        } else {
+          setNavPushUp(0);
+        }
+      }
     };
     
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+  }, []);
 
   const loadProfile = async () => {
     try {
@@ -346,6 +346,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Dashboard Strip - Compact for owner only */}
       {isOwnProfile && (
         <div 
+          ref={dashboardRef}
           className="dashboard-strip"
           style={{ 
             display: 'flex',
