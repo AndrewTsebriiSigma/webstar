@@ -14,7 +14,7 @@ interface UploadPortfolioModalProps {
 export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: UploadPortfolioModalProps) {
   // Content type selector
   const [contentTypeMenuOpen, setContentTypeMenuOpen] = useState(true);
-  const [selectedContentType, setSelectedContentType] = useState<'photo' | 'video' | 'audio' | 'pdf' | 'text' | null>(null);
+  const [selectedContentType, setSelectedContentType] = useState<'media' | 'audio' | 'pdf' | 'text' | null>(null);
   
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>('');
@@ -30,8 +30,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Determine if attachments are allowed (avoid duplicates)
-  const canAddAudioAttachment = selectedContentType === 'photo' || selectedContentType === 'video';
-  const canAddPdfAttachment = selectedContentType === 'photo' || selectedContentType === 'video';
+  const canAddAudioAttachment = selectedContentType === 'media';
+  const canAddPdfAttachment = selectedContentType === 'media';
 
   if (!isOpen) return null;
 
@@ -67,7 +67,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
     }
   };
 
-  const handleContentTypeSelect = (type: 'photo' | 'video' | 'audio' | 'pdf' | 'text') => {
+  const handleContentTypeSelect = (type: 'media' | 'audio' | 'pdf' | 'text') => {
     setSelectedContentType(type);
     setContentTypeMenuOpen(false);
   };
@@ -77,33 +77,33 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
     if (!selectedFile) return;
 
     // Validate based on selected content type
-    if (selectedContentType === 'photo' && !selectedFile.type.startsWith('image/')) {
-      toast.error('Please select an image file');
-      return;
-    }
-    if (selectedContentType === 'video' && !selectedFile.type.startsWith('video/')) {
-      toast.error('Please select a video file');
-      return;
-    }
-    if (selectedContentType === 'audio' && !selectedFile.type.startsWith('audio/')) {
+    if (selectedContentType === 'media') {
+      if (!selectedFile.type.startsWith('image/') && !selectedFile.type.startsWith('video/')) {
+        toast.error('Please select an image or video file');
+        return;
+      }
+    } else if (selectedContentType === 'audio' && !selectedFile.type.startsWith('audio/')) {
       toast.error('Please select an audio file');
       return;
-    }
-    if (selectedContentType === 'pdf' && selectedFile.type !== 'application/pdf') {
+    } else if (selectedContentType === 'pdf' && selectedFile.type !== 'application/pdf') {
       toast.error('Please select a PDF file');
       return;
     }
 
     // Check file size
-    const maxSize = selectedContentType === 'video' ? 200 * 1024 * 1024 
-                  : selectedContentType === 'audio' ? 10 * 1024 * 1024 
-                  : selectedContentType === 'pdf' ? 10 * 1024 * 1024
+    const isVideo = selectedFile.type.startsWith('video/');
+    const isAudio = selectedFile.type.startsWith('audio/');
+    const isPdf = selectedFile.type === 'application/pdf';
+    
+    const maxSize = isVideo ? 200 * 1024 * 1024 
+                  : isAudio ? 10 * 1024 * 1024 
+                  : isPdf ? 10 * 1024 * 1024
                   : 5 * 1024 * 1024; // photo
     
     if (selectedFile.size > maxSize) {
-      const sizeMB = selectedContentType === 'video' ? '200MB' 
-                   : selectedContentType === 'audio' ? '10MB'
-                   : selectedContentType === 'pdf' ? '10MB'
+      const sizeMB = isVideo ? '200MB' 
+                   : isAudio ? '10MB'
+                   : isPdf ? '10MB'
                    : '5MB';
       toast.error(`File must be less than ${sizeMB}`);
       return;
@@ -112,7 +112,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
     setFile(selectedFile);
     
     // Create preview for images only
-    if (selectedContentType === 'photo') {
+    if (selectedFile.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result as string);
@@ -265,13 +265,24 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
           return;
         }
         
+        // Determine actual content type from file
+        let actualContentType: string = selectedContentType;
+        if (selectedContentType === 'media') {
+          // Auto-detect based on file type
+          if (file!.type.startsWith('image/')) {
+            actualContentType = 'photo';
+          } else if (file!.type.startsWith('video/')) {
+            actualContentType = 'video';
+          }
+        }
+        
         // Upload main file
-        const uploadResponse = await uploadsAPI.uploadMedia(file!, selectedContentType);
+        const uploadResponse = await uploadsAPI.uploadMedia(file!, actualContentType);
         const contentUrl = uploadResponse.data.url;
         
         setUploadProgress(70);
 
-        // TODO: Handle attachment upload if present
+        // Handle attachment upload if present
         let attachmentUrl = null;
         if (attachmentFile && attachmentType) {
           const attachmentResponse = await uploadsAPI.uploadMedia(attachmentFile, attachmentType);
@@ -280,7 +291,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
 
         // Create portfolio item
         await portfolioAPI.createItem({
-          content_type: selectedContentType,
+          content_type: actualContentType,
           content_url: contentUrl,
           description: description || null,
           aspect_ratio: '1:1',
@@ -340,25 +351,9 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
             </div>
 
             <div className="p-4 space-y-3">
-              {/* Photo */}
+              {/* Video & Photo (Merged) */}
               <button
-                onClick={() => handleContentTypeSelect('photo')}
-                className="w-full flex items-center gap-4 p-4 bg-gray-900 hover:bg-gray-800 rounded-xl transition text-left border border-gray-800 hover:border-cyan-500"
-              >
-                <div className="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-base font-semibold text-white">Photo</h3>
-                  <p className="text-sm text-gray-400">Share an image</p>
-                </div>
-              </button>
-
-              {/* Video */}
-              <button
-                onClick={() => handleContentTypeSelect('video')}
+                onClick={() => handleContentTypeSelect('media')}
                 className="w-full flex items-center gap-4 p-4 bg-gray-900 hover:bg-gray-800 rounded-xl transition text-left border border-gray-800 hover:border-cyan-500"
               >
                 <div className="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -367,8 +362,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-white">Video</h3>
-                  <p className="text-sm text-gray-400">Share a video clip</p>
+                  <h3 className="text-base font-semibold text-white">Video & Photo</h3>
+                  <p className="text-sm text-gray-400">Share images or videos</p>
                 </div>
               </button>
 
@@ -435,11 +430,11 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
                 </svg>
               </button>
               <h2 className="text-lg font-bold text-white">
-                {selectedContentType === 'photo' ? 'Upload Photo' :
-                 selectedContentType === 'video' ? 'Upload Video' :
+                {selectedContentType === 'media' ? 'Upload Photo/Video' :
                  selectedContentType === 'audio' ? 'Upload Audio' :
                  selectedContentType === 'pdf' ? 'Upload PDF' :
-                 'Write Text Post'}
+                 selectedContentType === 'text' ? 'Write Text Post' :
+                 'Create Post'}
               </h2>
               <button
                 onClick={handleSubmit}
@@ -473,19 +468,26 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
                                   </svg>
                                   <p className="text-sm">🎵 Audio File</p>
                                 </>
-                              ) : selectedContentType === 'video' ? (
+                              ) : selectedContentType === 'media' && file?.type.startsWith('video/') ? (
                                 <>
                                   <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                   </svg>
                                   <p className="text-sm">🎬 Video File</p>
                                 </>
-                              ) : (
+                              ) : selectedContentType === 'pdf' ? (
                                 <>
                                   <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                   </svg>
                                   <p className="text-sm">📄 PDF Document</p>
+                                </>
+                              ) : (
+                                <>
+                                  <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                  <p className="text-sm">📷 Media File</p>
                                 </>
                               )}
                               <p className="text-xs mt-1">{file?.name}</p>
@@ -504,10 +506,10 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
                           type="file"
                           id="file-upload-edit"
                           accept={
-                            selectedContentType === 'photo' ? 'image/*' :
-                            selectedContentType === 'video' ? 'video/*' :
+                            selectedContentType === 'media' ? 'image/*,video/*' :
                             selectedContentType === 'audio' ? 'audio/*' :
-                            'application/pdf'
+                            selectedContentType === 'pdf' ? 'application/pdf' :
+                            'image/*,video/*'
                           }
                           onChange={handleFileSelect}
                           className="hidden"
@@ -524,14 +526,13 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                           </svg>
                           <p className="text-sm font-medium">
-                            {selectedContentType === 'photo' ? 'Click to upload photo' :
-                             selectedContentType === 'video' ? 'Click to upload video' :
+                            {selectedContentType === 'media' ? 'Click to upload photo or video' :
                              selectedContentType === 'audio' ? 'Click to upload audio' :
-                             'Click to upload PDF'}
+                             selectedContentType === 'pdf' ? 'Click to upload PDF' :
+                             'Click to upload file'}
                           </p>
                           <p className="text-xs mt-1">
-                            {selectedContentType === 'photo' ? 'Max 5MB' :
-                             selectedContentType === 'video' ? 'Max 200MB' :
+                            {selectedContentType === 'media' ? 'Max 200MB' :
                              'Max 10MB'}
                           </p>
                         </div>
@@ -539,10 +540,10 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
                           type="file"
                           id="file-upload"
                           accept={
-                            selectedContentType === 'photo' ? 'image/*' :
-                            selectedContentType === 'video' ? 'video/*' :
+                            selectedContentType === 'media' ? 'image/*,video/*' :
                             selectedContentType === 'audio' ? 'audio/*' :
-                            'application/pdf'
+                            selectedContentType === 'pdf' ? 'application/pdf' :
+                            'image/*,video/*'
                           }
                           onChange={handleFileSelect}
                           className="hidden"
@@ -656,8 +657,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
               )}
             </div>
 
-            {/* Footer with Attachment Actions (only for photo/video) */}
-            {selectedContentType !== 'text' && (selectedContentType === 'photo' || selectedContentType === 'video') && (
+            {/* Footer with Attachment Actions (only for media) */}
+            {selectedContentType === 'media' && (
               <div className="border-t border-gray-800 p-4">
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-gray-400">Attachments</p>
