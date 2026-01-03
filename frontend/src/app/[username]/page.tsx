@@ -69,10 +69,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
   
   const isOwnProfile = user?.username === username;
   
-  // Scroll animation calculations - shrink to 0 by dashboard (~280px)
-  const heightReduction = Math.min(scrollY / 280, 1); // Full reduction by dashboard
+  // Scroll animation calculations - instant response
+  const heightReduction = Math.min(scrollY / 100, 1); // Fast reduction over 100px
   const isScrolled = scrollY > 5; // Glassy activates almost immediately
   const isScrolledPastBanner = scrollY > 176;
+  const shouldHideNav = scrollY > 280; // Disappear at dashboard
 
   useEffect(() => {
     loadProfile();
@@ -157,11 +158,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Mobile Header - Animated on scroll, hidden in viewer mode */}
       {!viewerMode && (
         <header 
-          className={`top-nav ${isScrolled ? 'glassy' : ''}`}
+          className={`top-nav ${isScrolled ? 'glassy' : ''} ${shouldHideNav ? 'nav-hidden' : ''}`}
           style={{
-            paddingTop: `${11 - (11 * heightReduction)}px`,
-            paddingBottom: `${11 - (11 * heightReduction)}px`,
-            transition: 'padding 0.15s ease'
+            paddingTop: `${11 - (5 * heightReduction)}px`,
+            paddingBottom: `${11 - (5 * heightReduction)}px`,
+            transition: 'all 0.25s ease'
           }}
         >
           {/* Post - Left */}
