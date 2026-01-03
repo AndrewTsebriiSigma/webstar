@@ -27,11 +27,11 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
   const getIcon = (type: string) => {
     switch (type) {
       case 'view':
-        return <EyeIcon className="w-[19px] h-[19px]" style={{ color: '#00C2FF' }} />;
+        return <EyeIcon className="w-5 h-5" style={{ color: '#00C2FF' }} />;
       case 'update':
-        return <Cog6ToothIcon className="w-[19px] h-[19px]" style={{ color: '#00C2FF' }} />;
+        return <Cog6ToothIcon className="w-5 h-5" style={{ color: '#00C2FF' }} />;
       default:
-        return <EyeIcon className="w-[19px] h-[19px]" style={{ color: '#00C2FF' }} />;
+        return <EyeIcon className="w-5 h-5" style={{ color: '#00C2FF' }} />;
     }
   };
 
@@ -72,7 +72,7 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
               className="flex items-center gap-3 cursor-pointer"
               style={{
                 padding: '12px 16px',
-                background: notification.unread ? 'rgba(255, 255, 255, 0.03)' : 'transparent',
+                background: notification.unread ? 'rgba(0, 194, 255, 0.08)' : 'transparent',
                 borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
                 transition: 'background 0.15s ease'
               }}
@@ -81,8 +81,8 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
               <div 
                 className="flex-shrink-0 flex items-center justify-center"
                 style={{
-                  width: '27px',
-                  height: '27px',
+                  width: '36px',
+                  height: '36px',
                   borderRadius: '50%',
                   background: 'rgba(0, 194, 255, 0.12)'
                 }}
