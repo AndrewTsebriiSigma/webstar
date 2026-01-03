@@ -622,7 +622,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             >
               {tab}
               {activeTab === tab.toLowerCase() && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-[3px] bg-cyan-500" />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-[3px] bg-cyan-500" />
               )}
             </button>
           ))}
