@@ -69,8 +69,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
   
   const isOwnProfile = user?.username === username;
   
-  // Scroll animation calculations - instant response
-  const heightReduction = Math.min(scrollY / 100, 1); // Fast reduction over 100px
+  // Scroll animation calculations - shrink to 0 by dashboard (~280px)
+  const heightReduction = Math.min(scrollY / 280, 1); // Full reduction by dashboard
   const isScrolled = scrollY > 5; // Glassy activates almost immediately
   const isScrolledPastBanner = scrollY > 176;
 
@@ -159,8 +159,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
         <header 
           className={`top-nav ${isScrolled ? 'glassy' : ''}`}
           style={{
-            paddingTop: `${11 - (5 * heightReduction)}px`,
-            paddingBottom: `${11 - (5 * heightReduction)}px`,
+            paddingTop: `${11 - (11 * heightReduction)}px`,
+            paddingBottom: `${11 - (11 * heightReduction)}px`,
             transition: 'padding 0.15s ease'
           }}
         >
@@ -605,7 +605,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
       {/* Tabs */}
       <div 
-        className="sticky top-[49px] z-30 backdrop-blur-md border-b border-gray-800"
+        className="z-30 backdrop-blur-md border-b border-gray-800"
         style={{ background: 'rgba(17, 17, 17, 0.9)', marginTop: '80px' }}
       >
         <div className="flex">
