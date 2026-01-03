@@ -189,13 +189,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   return (
     <>
-      {/* Glass Overlay - subtle blur, preserve tone */}
+      {/* Glass Overlay - subtle blur */}
       <div 
         className="fixed inset-0 z-50"
         style={{ 
-          background: 'rgba(17, 17, 17, 0.75)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)'
+          background: 'rgba(17, 17, 17, 0.85)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)'
         }}
       >
         {/* Full Screen Modal - semi-transparent to see blur */}
@@ -206,7 +206,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           {/* Header - 55px height, centered vertically */}
           <div 
             className="flex items-center justify-between flex-shrink-0"
-            style={{ 
+          style={{ 
               height: '55px',
               padding: '0 16px',
               background: '#0D0D0D',
@@ -214,24 +214,24 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             }}
           >
             <h2 style={{ fontSize: '20px', fontWeight: 600, color: '#FFFFFF' }}>Settings</h2>
-            <button
-              onClick={onClose}
+          <button
+            onClick={onClose}
               className="flex items-center justify-center hover:opacity-70 transition-opacity"
               style={{ width: '28px', height: '28px' }}
-            >
+          >
               <XMarkIcon style={{ width: '24px', height: '24px', color: 'rgba(255, 255, 255, 0.5)' }} />
-            </button>
-          </div>
+          </button>
+        </div>
 
           {/* Content - Scrollable */}
           <div 
             className="flex-1 overflow-y-auto"
             style={{ padding: '24px 16px' }}
           >
-            {activeSection === null ? (
+          {activeSection === null ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 {/* ACCOUNT */}
-                <div>
+              <div>
                   <SectionHeader icon={icons.account} label="Account" />
                   <GlassCard>
                     <RowItem label="Email" onClick={() => setActiveSection('email')} showChevron />
@@ -241,16 +241,16 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       showDivider={false}
                       rightElement={
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {loading2FAStatus && (
+                      {loading2FAStatus && (
                             <div className="w-4 h-4 border-2 border-gray-600 border-t-cyan-400 rounded-full animate-spin" />
-                          )}
+                      )}
                           <Toggle enabled={settings.twoFactorEnabled} onToggle={handle2FAToggle} disabled={loading2FAStatus} />
-                        </div>
+                    </div>
                       }
                     />
                   </GlassCard>
                 </div>
-
+                
                 {/* PRIVACY */}
                 <div>
                   <SectionHeader icon={icons.privacy} label="Privacy" />
@@ -262,7 +262,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     <RowItem label="Blocked Users" onClick={() => setActiveSection('blocked')} showChevron showDivider={false} />
                   </GlassCard>
                 </div>
-
+                
                 {/* NOTIFICATIONS */}
                 <div>
                   <SectionHeader icon={icons.notifications} label="Notifications" />
@@ -278,16 +278,16 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     />
                   </GlassCard>
                 </div>
-
+                
                 {/* LEGAL */}
-                <div>
+              <div>
                   <SectionHeader icon={icons.legal} label="Legal" />
                   <GlassCard>
                     <RowItem label="Terms" onClick={() => setActiveSection('terms')} showChevron />
                     <RowItem label="Privacy" onClick={() => setActiveSection('privacy-policy')} showChevron showDivider={false} />
                   </GlassCard>
                 </div>
-
+                
                 {/* LOGOUT */}
                 <div style={{ marginTop: '8px' }}>
                   <button
@@ -308,54 +308,54 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     <ArrowRightOnRectangleIcon style={{ width: '20px', height: '20px', color: '#EF4444' }} />
                     <span style={{ fontSize: '15px', fontWeight: 500, color: '#EF4444' }}>Log Out</span>
                   </button>
-                </div>
               </div>
-            ) : (
+            </div>
+          ) : (
               /* Subsection Views */
               <div>
-                <button
-                  onClick={() => setActiveSection(null)}
+              <button
+                onClick={() => setActiveSection(null)}
                   className="flex items-center gap-2 mb-6 hover:opacity-70 transition-opacity"
                   style={{ color: '#00C2FF' }}
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
                   <span style={{ fontSize: '15px', fontWeight: 500 }}>Back</span>
-                </button>
+              </button>
 
-                {activeSection === 'email' && (
-                  <div>
+              {activeSection === 'email' && (
+                <div>
                     <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#FFFFFF', marginBottom: '16px' }}>Change Email</h3>
                     <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Coming soon...</p>
-                  </div>
-                )}
-                {activeSection === 'password' && (
-                  <div>
+                </div>
+              )}
+              {activeSection === 'password' && (
+                <div>
                     <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#FFFFFF', marginBottom: '16px' }}>Change Password</h3>
                     <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Coming soon...</p>
-                  </div>
-                )}
-                {activeSection === 'blocked' && (
-                  <div>
+                </div>
+              )}
+              {activeSection === 'blocked' && (
+                <div>
                     <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#FFFFFF', marginBottom: '16px' }}>Blocked Users</h3>
                     <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>No blocked users</p>
-                  </div>
-                )}
-                {activeSection === 'terms' && (
-                  <div>
+                </div>
+              )}
+              {activeSection === 'terms' && (
+                <div>
                     <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#FFFFFF', marginBottom: '16px' }}>Terms of Service</h3>
                     <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Terms content...</p>
-                  </div>
-                )}
-                {activeSection === 'privacy-policy' && (
-                  <div>
+                </div>
+              )}
+              {activeSection === 'privacy-policy' && (
+                <div>
                     <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#FFFFFF', marginBottom: '16px' }}>Privacy Policy</h3>
                     <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Privacy content...</p>
-                  </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
+          )}
           </div>
         </div>
       </div>
