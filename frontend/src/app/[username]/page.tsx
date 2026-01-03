@@ -159,8 +159,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
         <header 
           className={`top-nav ${isScrolled ? 'glassy' : ''} ${!navVisible ? 'nav-hidden' : ''}`}
           style={{
-            paddingTop: `${13 - (7 * heightReduction)}px`,
-            paddingBottom: `${13 - (7 * heightReduction)}px`,
+            paddingTop: `${9 - (3 * heightReduction)}px`,
+            paddingBottom: `${9 - (3 * heightReduction)}px`,
             transition: 'all 0.35s ease'
           }}
         >
