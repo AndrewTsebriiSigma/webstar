@@ -24,7 +24,7 @@ const Toggle = ({ enabled, onToggle, disabled }: { enabled: boolean; onToggle: (
       width: '51px',
       height: '31px',
       borderRadius: '16px',
-      background: enabled ? '#00C2FF' : 'rgba(255, 255, 255, 0.1)',
+      background: enabled ? '#00C2FF' : 'rgba(120, 120, 128, 0.32)',
     }}
   >
     <span
@@ -50,7 +50,7 @@ const SectionHeader = ({ icon, label }: { icon: React.ReactNode; label: string }
       paddingLeft: '4px'
     }}
   >
-    <span style={{ color: '#00C2FF', width: '16px', height: '16px' }}>{icon}</span>
+    <span style={{ color: 'rgba(255, 255, 255, 0.4)', width: '16px', height: '16px' }}>{icon}</span>
     <span style={{ 
       fontSize: '11px', 
       fontWeight: 700, 
@@ -66,12 +66,11 @@ const SectionHeader = ({ icon, label }: { icon: React.ReactNode; label: string }
 // Glass Card container
 const GlassCard = ({ children }: { children: React.ReactNode }) => (
   <div style={{
-    background: 'rgba(255, 255, 255, 0.03)',
+    background: 'rgba(255, 255, 255, 0.04)',
     borderRadius: '16px',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
     backdropFilter: 'blur(20px)',
     WebkitBackdropFilter: 'blur(20px)',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
     overflow: 'hidden'
   }}>
     {children}
