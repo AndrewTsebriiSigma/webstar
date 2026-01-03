@@ -121,12 +121,12 @@ async def upload_media(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
-    """Upload media file (photo, video, audio) to S3 or local storage."""
+    """Upload media file (photo, video, audio, pdf) to S3 or local storage."""
     try:
         logger.info(f"Upload request - media_type: {media_type}, file.content_type: {file.content_type}, filename: {file.filename}")
         
         # Validate media type
-        valid_media_types = ["photo", "video", "audio"]
+        valid_media_types = ["photo", "video", "audio", "pdf"]
         if media_type not in valid_media_types:
             raise HTTPException(status_code=400, detail=f"Invalid media type: {media_type}")
         
@@ -143,7 +143,8 @@ async def upload_media(
                 "video/ogg",
                 "application/octet-stream"  # Fallback for unknown types
             ],
-            "audio": ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/mp4"]
+            "audio": ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/mp4"],
+            "pdf": ["application/pdf"]
         }
         
         # Check if content type is valid for the media type
@@ -171,11 +172,12 @@ async def upload_media(
         # Read file content
         content = await file.read()
         
-        # Validate file size (200MB max for videos, 5MB for photos, 10MB for audio)
+        # Validate file size (200MB max for videos, 10MB for audio/pdf, 5MB for photos)
         max_sizes = {
             "photo": 5 * 1024 * 1024,      # 5MB
             "video": 200 * 1024 * 1024,    # 200MB
-            "audio": 10 * 1024 * 1024      # 10MB
+            "audio": 10 * 1024 * 1024,     # 10MB
+            "pdf": 10 * 1024 * 1024        # 10MB
         }
         
         if len(content) > max_sizes[media_type]:

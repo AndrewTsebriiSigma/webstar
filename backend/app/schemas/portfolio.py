@@ -5,7 +5,7 @@ from typing import Optional
 
 class PortfolioItemCreate(BaseModel):
     """Create portfolio item."""
-    content_type: str = Field(..., description="photo, video, audio, text, or link")
+    content_type: str = Field(..., description="photo, video, audio, pdf, text, or link")
     content_url: Optional[str] = None  # Optional for text posts
     thumbnail_url: Optional[str] = None
     title: Optional[str] = None
