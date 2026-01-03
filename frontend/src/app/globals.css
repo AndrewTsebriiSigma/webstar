@@ -462,19 +462,20 @@ input[type="range"].slider-thumb::-moz-range-thumb:hover {
 
 .nav-badge {
   position: absolute;
-  top: -2px;
-  right: -2px;
-  min-width: 15px;
-  height: 15px;
+  top: -3px;
+  right: 1px;
+  min-width: 17px;
+  height: 17px;
   padding: 0 4px;
   background: #00C2FF;
   border-radius: 999px;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   color: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
+  line-height: 1;
 }
 
 /* webSTAR Component Styles */
