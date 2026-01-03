@@ -74,37 +74,36 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   if (!isOpen) return null;
 
-  // Toggle component - fixed positioning
+  // Toggle component - clean implementation
   const Toggle = ({ enabled, onToggle, disabled }: { enabled: boolean; onToggle: () => void; disabled?: boolean }) => (
-    <button
-      onClick={onToggle}
-      disabled={disabled}
+    <div
+      onClick={disabled ? undefined : onToggle}
       style={{
-        position: 'relative',
+        display: 'inline-flex',
+        alignItems: 'center',
         width: '46px',
         height: '28px',
         borderRadius: '14px',
+        padding: '2px',
         background: enabled ? '#00C2FF' : '#39393D',
-        border: 'none',
-        cursor: 'pointer',
-        transition: 'background 0.3s ease',
-        opacity: disabled ? 0.5 : 1
+        cursor: disabled ? 'default' : 'pointer',
+        opacity: disabled ? 0.5 : 1,
+        transition: 'background 0.2s ease',
+        boxSizing: 'border-box'
       }}
     >
-      <span
+      <div
         style={{
-          position: 'absolute',
-          top: '2px',
-          left: enabled ? '20px' : '2px',
           width: '24px',
           height: '24px',
-          borderRadius: '50%',
+          borderRadius: '12px',
           background: '#FFFFFF',
-          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
-          transition: 'left 0.3s ease'
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
+          transform: enabled ? 'translateX(18px)' : 'translateX(0)',
+          transition: 'transform 0.2s ease'
         }}
       />
-    </button>
+    </div>
   );
 
   // Section Header component
@@ -190,13 +189,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   return (
     <>
-      {/* Glass Overlay - stronger blur, more transparent */}
+      {/* Glass Overlay - subtle blur, preserve tone */}
       <div 
         className="fixed inset-0 z-50"
         style={{ 
-          background: 'rgba(0, 0, 0, 0.5)',
-          backdropFilter: 'blur(30px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(30px) saturate(180%)'
+          background: 'rgba(17, 17, 17, 0.75)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)'
         }}
       >
         {/* Full Screen Modal - semi-transparent to see blur */}
