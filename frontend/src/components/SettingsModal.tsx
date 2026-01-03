@@ -14,6 +14,108 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
+// Custom Toggle Switch matching Figma specs
+const Toggle = ({ enabled, onToggle, disabled }: { enabled: boolean; onToggle: () => void; disabled?: boolean }) => (
+  <button
+    onClick={onToggle}
+    disabled={disabled}
+    className="relative transition-colors duration-200 disabled:opacity-50"
+    style={{
+      width: '51px',
+      height: '31px',
+      borderRadius: '16px',
+      background: enabled ? '#00C2FF' : 'rgba(255, 255, 255, 0.1)',
+    }}
+  >
+    <span
+      className="absolute top-[2px] transition-transform duration-200"
+      style={{
+        width: '27px',
+        height: '27px',
+        borderRadius: '50%',
+        background: '#FFFFFF',
+        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+        left: enabled ? '22px' : '2px',
+      }}
+    />
+  </button>
+);
+
+// Section Header with icon
+const SectionHeader = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
+  <div 
+    className="flex items-center gap-2"
+    style={{ 
+      marginBottom: '8px',
+      paddingLeft: '4px'
+    }}
+  >
+    <span style={{ color: '#00C2FF', width: '16px', height: '16px' }}>{icon}</span>
+    <span style={{ 
+      fontSize: '11px', 
+      fontWeight: 700, 
+      letterSpacing: '0.5px',
+      color: 'rgba(255, 255, 255, 0.4)',
+      textTransform: 'uppercase'
+    }}>
+      {label}
+    </span>
+  </div>
+);
+
+// Glass Card container
+const GlassCard = ({ children }: { children: React.ReactNode }) => (
+  <div style={{
+    background: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: '16px',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+    overflow: 'hidden'
+  }}>
+    {children}
+  </div>
+);
+
+// Row Item
+const RowItem = ({ 
+  label, 
+  onClick, 
+  rightElement,
+  showChevron = false,
+  showDivider = true 
+}: { 
+  label: string; 
+  onClick?: () => void;
+  rightElement?: React.ReactNode;
+  showChevron?: boolean;
+  showDivider?: boolean;
+}) => (
+  <>
+    <div
+      onClick={onClick}
+      className={onClick ? 'cursor-pointer hover:bg-white/[0.02] active:bg-white/[0.04]' : ''}
+      style={{
+        height: '56px',
+        padding: '0 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        transition: 'background 0.15s ease'
+      }}
+    >
+      <span style={{ fontSize: '15px', fontWeight: 400, color: '#FFFFFF' }}>{label}</span>
+      {rightElement || (showChevron && (
+        <ChevronRightIcon style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.3)' }} />
+      ))}
+    </div>
+    {showDivider && (
+      <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.08)', marginLeft: '16px' }} />
+    )}
+  </>
+);
+
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const router = useRouter();
   const { logout } = useAuth();
@@ -22,27 +124,20 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [show2FADisable, setShow2FADisable] = useState(false);
   const [loading2FAStatus, setLoading2FAStatus] = useState(false);
   const [settings, setSettings] = useState({
-    // Account
     email: '',
-    // Privacy
     publicProfile: true,
     blockedUsers: [] as string[],
-    // Notifications
     pushNotifications: true,
     emailNotifications: true,
-    // Security
     twoFactorEnabled: false,
   });
 
   useEffect(() => {
-    // Load user settings from localStorage
     const savedSettings = localStorage.getItem('userSettings');
     if (savedSettings) {
       const parsed = JSON.parse(savedSettings);
       setSettings((prev) => ({ ...prev, ...parsed }));
     }
-    
-    // Load 2FA status from API when modal opens
     if (isOpen) {
       load2FAStatus();
     }
@@ -52,13 +147,9 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setLoading2FAStatus(true);
     try {
       const response = await settingsAPI.get2FAStatus();
-      setSettings((prev) => ({
-        ...prev,
-        twoFactorEnabled: response.data.is_enabled,
-      }));
-    } catch (error: any) {
+      setSettings((prev) => ({ ...prev, twoFactorEnabled: response.data.is_enabled }));
+    } catch (error) {
       console.error('Error loading 2FA status:', error);
-      // Don't show error toast, just fail silently
     } finally {
       setLoading2FAStatus(false);
     }
@@ -66,363 +157,198 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   const saveSettings = () => {
     localStorage.setItem('userSettings', JSON.stringify(settings));
-    toast.success('Settings saved');
   };
 
   const toggleSetting = (key: keyof typeof settings) => {
-    setSettings((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
+    setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
+    setTimeout(saveSettings, 0);
   };
 
   const handle2FAToggle = () => {
     if (settings.twoFactorEnabled) {
-      // Disable 2FA - show verification modal
       setShow2FADisable(true);
     } else {
-      // Enable 2FA - show setup modal
       setShow2FASetup(true);
     }
   };
 
-  const handle2FASuccess = () => {
-    // Reload 2FA status after successful enable/disable
-    load2FAStatus();
-  };
+  const handle2FASuccess = () => load2FAStatus();
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0"
-        style={{
-          background: 'rgba(0, 0, 0, 0.7)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)'
-        }}
-        onClick={onClose}
-      />
+  // Icons for sections
+  const icons = {
+    account: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
+    privacy: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>,
+    notifications: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>,
+    legal: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  };
 
-      {/* Modal */}
+  return (
+    <div 
+      className="fixed inset-0 z-50"
+      style={{ 
+        background: 'rgba(0, 0, 0, 0.4)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)'
+      }}
+    >
+      {/* Full Screen Modal */}
       <div 
-        className="relative rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden"
-        style={{ 
-          background: 'rgba(17, 17, 17, 0.98)',
-          backdropFilter: 'blur(60px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(60px) saturate(200%)',
-          border: '1px solid rgba(255, 255, 255, 0.06)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
-        }}
+        className="w-full h-full flex flex-col"
+        style={{ background: '#111111' }}
       >
-        {/* Header */}
+        {/* Header - Darker */}
         <div 
-          className="sticky top-0 border-b px-5 py-3 flex items-center justify-between z-10"
+          className="flex items-center justify-between flex-shrink-0"
           style={{ 
-            background: 'rgba(17, 17, 17, 0.95)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderColor: 'rgba(255, 255, 255, 0.06)'
+            padding: '16px 16px 12px',
+            background: '#0D0D0D',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
           }}
         >
-          <h2 className="text-xl font-bold text-white">Settings</h2>
+          <h2 style={{ fontSize: '20px', fontWeight: 600, color: '#FFFFFF' }}>Settings</h2>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-white/5 rounded-lg transition"
+            className="flex items-center justify-center hover:opacity-70 transition-opacity"
+            style={{ 
+              width: '28px', 
+              height: '28px',
+            }}
           >
-            <XMarkIcon className="w-5 h-5 text-gray-400" />
+            <XMarkIcon style={{ width: '24px', height: '24px', color: 'rgba(255, 255, 255, 0.5)' }} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto max-h-[calc(90vh-60px)]">
+        <div 
+          className="flex-1 overflow-y-auto"
+          style={{ padding: '24px 16px' }}
+        >
           {activeSection === null ? (
-            // Main Menu
-            <div className="p-4 space-y-4">
-              {/* ACCOUNT Section */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* ACCOUNT */}
               <div>
-                <div className="flex items-center gap-2 mb-2 text-gray-500 text-xs font-semibold uppercase tracking-wider">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <span>ACCOUNT</span>
-                </div>
-                
-                <div className="space-y-0">
-                  <button
-                    onClick={() => setActiveSection('email')}
-                    className="w-full flex items-center justify-between px-3.5 py-3 hover:bg-white/5 transition text-left rounded-none first:rounded-t-2xl"
-                    style={{ background: 'rgb(28, 30, 31)' }}
-                  >
-                    <span className="text-white text-sm">Email</span>
-                    <ChevronRightIcon className="w-4 h-4 text-gray-400" />
-                  </button>
-                  
-                  <button
-                    onClick={() => setActiveSection('password')}
-                    className="w-full flex items-center justify-between px-3.5 py-3 hover:bg-white/5 transition text-left border-t rounded-none"
-                    style={{ 
-                      background: 'rgb(28, 30, 31)',
-                      borderColor: 'rgba(255, 255, 255, 0.05)'
-                    }}
-                  >
-                    <span className="text-white text-sm">Password</span>
-                    <ChevronRightIcon className="w-4 h-4 text-gray-400" />
-                  </button>
-                  
-                  <div 
-                    className="flex items-center justify-between px-3.5 py-3 border-t rounded-none last:rounded-b-2xl"
-                    style={{ 
-                      background: 'rgb(28, 30, 31)',
-                      borderColor: 'rgba(255, 255, 255, 0.05)'
-                    }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-white text-sm">2FA</span>
-                      {loading2FAStatus && (
-                        <div className="w-3 h-3 border-2 border-gray-600 border-t-cyan-500 rounded-full animate-spin"></div>
-                      )}
-                    </div>
-                    <button
-                      onClick={handle2FAToggle}
-                      disabled={loading2FAStatus}
-                      className={`relative inline-flex h-6 w-10 items-center rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed ${
-                        settings.twoFactorEnabled ? 'bg-cyan-500' : 'bg-gray-600'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                          settings.twoFactorEnabled ? 'translate-x-5' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
+                <SectionHeader icon={icons.account} label="Account" />
+                <GlassCard>
+                  <RowItem label="Email" onClick={() => setActiveSection('email')} showChevron />
+                  <RowItem label="Password" onClick={() => setActiveSection('password')} showChevron />
+                  <RowItem 
+                    label="2FA" 
+                    showDivider={false}
+                    rightElement={
+                      <div className="flex items-center gap-2">
+                        {loading2FAStatus && (
+                          <div className="w-4 h-4 border-2 border-gray-600 border-t-cyan-400 rounded-full animate-spin" />
+                        )}
+                        <Toggle enabled={settings.twoFactorEnabled} onToggle={handle2FAToggle} disabled={loading2FAStatus} />
+                      </div>
+                    }
+                  />
+                </GlassCard>
               </div>
 
-              {/* PRIVACY Section */}
+              {/* PRIVACY */}
               <div>
-                <div className="flex items-center gap-2 mb-2 text-gray-500 text-xs font-semibold uppercase tracking-wider">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                  <span>PRIVACY</span>
-                </div>
-                
-                <div className="space-y-0">
-                  <div 
-                    className="flex items-center justify-between px-3.5 py-3 rounded-t-2xl"
-                    style={{ background: 'rgb(28, 30, 31)' }}
-                  >
-                    <span className="text-white text-sm">Public Profile</span>
-                    <button
-                      onClick={() => {
-                        toggleSetting('publicProfile');
-                        saveSettings();
-                      }}
-                      className={`relative inline-flex h-6 w-10 items-center rounded-full transition ${
-                        settings.publicProfile ? 'bg-cyan-500' : 'bg-gray-600'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                          settings.publicProfile ? 'translate-x-5' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                  </div>
-                  
-                  <button
-                    onClick={() => setActiveSection('blocked')}
-                    className="w-full flex items-center justify-between px-3.5 py-3 hover:bg-white/5 transition text-left border-t rounded-b-2xl"
-                    style={{ 
-                      background: 'rgb(28, 30, 31)',
-                      borderColor: 'rgba(255, 255, 255, 0.05)'
-                    }}
-                  >
-                    <span className="text-white text-sm">Blocked Users</span>
-                    <ChevronRightIcon className="w-4 h-4 text-gray-400" />
-                  </button>
-                </div>
+                <SectionHeader icon={icons.privacy} label="Privacy" />
+                <GlassCard>
+                  <RowItem 
+                    label="Public Profile" 
+                    rightElement={<Toggle enabled={settings.publicProfile} onToggle={() => toggleSetting('publicProfile')} />}
+                  />
+                  <RowItem label="Blocked Users" onClick={() => setActiveSection('blocked')} showChevron showDivider={false} />
+                </GlassCard>
               </div>
 
-              {/* NOTIFICATIONS Section */}
+              {/* NOTIFICATIONS */}
               <div>
-                <div className="flex items-center gap-2 mb-2 text-gray-500 text-xs font-semibold uppercase tracking-wider">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                  <span>NOTIFICATIONS</span>
-                </div>
-                
-                <div className="space-y-0">
-                  <div 
-                    className="flex items-center justify-between px-3.5 py-3 rounded-t-2xl"
-                    style={{ background: 'rgb(28, 30, 31)' }}
-                  >
-                    <span className="text-white text-sm">Push</span>
-                    <button
-                      onClick={() => {
-                        toggleSetting('pushNotifications');
-                        saveSettings();
-                      }}
-                      className={`relative inline-flex h-6 w-10 items-center rounded-full transition ${
-                        settings.pushNotifications ? 'bg-cyan-500' : 'bg-gray-600'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                          settings.pushNotifications ? 'translate-x-5' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                  </div>
-                  
-                  <div 
-                    className="flex items-center justify-between px-3.5 py-3 border-t rounded-b-2xl"
-                    style={{ 
-                      background: 'rgb(28, 30, 31)',
-                      borderColor: 'rgba(255, 255, 255, 0.05)'
-                    }}
-                  >
-                    <span className="text-white text-sm">Email</span>
-                    <button
-                      onClick={() => {
-                        toggleSetting('emailNotifications');
-                        saveSettings();
-                      }}
-                      className={`relative inline-flex h-6 w-10 items-center rounded-full transition ${
-                        settings.emailNotifications ? 'bg-cyan-500' : 'bg-gray-600'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                          settings.emailNotifications ? 'translate-x-5' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
+                <SectionHeader icon={icons.notifications} label="Notifications" />
+                <GlassCard>
+                  <RowItem 
+                    label="Push" 
+                    rightElement={<Toggle enabled={settings.pushNotifications} onToggle={() => toggleSetting('pushNotifications')} />}
+                  />
+                  <RowItem 
+                    label="Email" 
+                    showDivider={false}
+                    rightElement={<Toggle enabled={settings.emailNotifications} onToggle={() => toggleSetting('emailNotifications')} />}
+                  />
+                </GlassCard>
               </div>
 
-              {/* LEGAL Section */}
+              {/* LEGAL */}
               <div>
-                <div className="flex items-center gap-2 mb-2 text-gray-500 text-xs font-semibold uppercase tracking-wider">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <span>LEGAL</span>
-                </div>
-                
-                <div className="space-y-0">
-                  <button
-                    onClick={() => setActiveSection('terms')}
-                    className="w-full flex items-center justify-between px-3.5 py-3 hover:bg-white/5 transition text-left rounded-t-2xl"
-                    style={{ background: 'rgb(28, 30, 31)' }}
-                  >
-                    <span className="text-white text-sm">Terms</span>
-                    <ChevronRightIcon className="w-4 h-4 text-gray-400" />
-                  </button>
-                  
-                  <button
-                    onClick={() => setActiveSection('privacy-policy')}
-                    className="w-full flex items-center justify-between px-3.5 py-3 hover:bg-white/5 transition text-left border-t rounded-b-2xl"
-                    style={{ 
-                      background: 'rgb(28, 30, 31)',
-                      borderColor: 'rgba(255, 255, 255, 0.05)'
-                    }}
-                  >
-                    <span className="text-white text-sm">Privacy</span>
-                    <ChevronRightIcon className="w-4 h-4 text-gray-400" />
-                  </button>
-                </div>
+                <SectionHeader icon={icons.legal} label="Legal" />
+                <GlassCard>
+                  <RowItem label="Terms" onClick={() => setActiveSection('terms')} showChevron />
+                  <RowItem label="Privacy" onClick={() => setActiveSection('privacy-policy')} showChevron showDivider={false} />
+                </GlassCard>
               </div>
 
-              {/* ACCOUNT ACTIONS Section */}
-              <div>
-                <div className="flex items-center gap-2 mb-2 text-gray-500 text-xs font-semibold uppercase tracking-wider">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  <span>ACTIONS</span>
-                </div>
-                
-                <div>
-                  <button
-                    onClick={() => {
-                      logout();
-                      onClose();
-                      toast.success('Logged out successfully');
-                      router.push('/auth/login');
-                    }}
-                    className="w-full flex items-center justify-between px-3.5 py-3 bg-red-900/20 hover:bg-red-900/30 border border-red-800/50 rounded-2xl transition text-left group"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <ArrowRightOnRectangleIcon className="w-4 h-4 text-red-400" />
-                      <span className="text-red-400 text-sm font-medium">Log Out</span>
-                    </div>
-                  </button>
-                </div>
+              {/* LOGOUT - at bottom with some spacing */}
+              <div style={{ marginTop: '8px' }}>
+                <button
+                  onClick={() => {
+                    logout();
+                    onClose();
+                    toast.success('Logged out successfully');
+                    router.push('/auth/login');
+                  }}
+                  className="w-full flex items-center justify-center gap-2 hover:opacity-80 transition-opacity"
+                  style={{
+                    height: '56px',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.2)',
+                    borderRadius: '16px',
+                  }}
+                >
+                  <ArrowRightOnRectangleIcon style={{ width: '20px', height: '20px', color: '#EF4444' }} />
+                  <span style={{ fontSize: '15px', fontWeight: 500, color: '#EF4444' }}>Log Out</span>
+                </button>
               </div>
             </div>
           ) : (
-            // Subsection Views
-            <div className="p-6">
+            /* Subsection Views */
+            <div>
               <button
                 onClick={() => setActiveSection(null)}
-                className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 mb-6 transition"
+                className="flex items-center gap-2 mb-6 hover:opacity-70 transition-opacity"
+                style={{ color: '#00C2FF' }}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                <span>Back</span>
+                <span style={{ fontSize: '15px', fontWeight: 500 }}>Back</span>
               </button>
 
               {activeSection === 'email' && (
                 <div>
-                  <h3 className="text-xl font-bold text-white mb-4">Change Email</h3>
-                  <p className="text-gray-400 mb-4">Coming soon...</p>
+                  <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#FFFFFF', marginBottom: '16px' }}>Change Email</h3>
+                  <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Coming soon...</p>
                 </div>
               )}
-
               {activeSection === 'password' && (
                 <div>
-                  <h3 className="text-xl font-bold text-white mb-4">Change Password</h3>
-                  <p className="text-gray-400 mb-4">Coming soon...</p>
+                  <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#FFFFFF', marginBottom: '16px' }}>Change Password</h3>
+                  <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Coming soon...</p>
                 </div>
               )}
-
               {activeSection === 'blocked' && (
                 <div>
-                  <h3 className="text-xl font-bold text-white mb-4">Blocked Users</h3>
-                  {settings.blockedUsers.length === 0 ? (
-                    <p className="text-gray-400">No blocked users</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {settings.blockedUsers.map((user) => (
-                        <div key={user} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
-                          <span className="text-white">@{user}</span>
-                          <button className="text-red-400 hover:text-red-300 text-sm">Unblock</button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#FFFFFF', marginBottom: '16px' }}>Blocked Users</h3>
+                  <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>No blocked users</p>
                 </div>
               )}
-
               {activeSection === 'terms' && (
                 <div>
-                  <h3 className="text-xl font-bold text-white mb-4">Terms of Service</h3>
-                  <p className="text-gray-400">Terms of service content...</p>
+                  <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#FFFFFF', marginBottom: '16px' }}>Terms of Service</h3>
+                  <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Terms content...</p>
                 </div>
               )}
-
               {activeSection === 'privacy-policy' && (
                 <div>
-                  <h3 className="text-xl font-bold text-white mb-4">Privacy Policy</h3>
-                  <p className="text-gray-400">Privacy policy content...</p>
+                  <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#FFFFFF', marginBottom: '16px' }}>Privacy Policy</h3>
+                  <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Privacy content...</p>
                 </div>
               )}
             </div>
@@ -431,17 +357,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       </div>
 
       {/* 2FA Modals */}
-      <Setup2FAModal 
-        isOpen={show2FASetup} 
-        onClose={() => setShow2FASetup(false)}
-        onSuccess={handle2FASuccess}
-      />
-      <Disable2FAModal 
-        isOpen={show2FADisable} 
-        onClose={() => setShow2FADisable(false)}
-        onSuccess={handle2FASuccess}
-      />
+      <Setup2FAModal isOpen={show2FASetup} onClose={() => setShow2FASetup(false)} onSuccess={handle2FASuccess} />
+      <Disable2FAModal isOpen={show2FADisable} onClose={() => setShow2FADisable(false)} onSuccess={handle2FASuccess} />
     </div>
   );
 }
-
