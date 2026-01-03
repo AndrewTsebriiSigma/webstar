@@ -355,7 +355,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             cursor: 'pointer',
             transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
             padding: '10px 16px 10px 24px',
-            margin: '0 16px 20px',
+            margin: '0 16px 14px',
             width: 'calc(100% - 32px)',
             height: '60px'
           }}
@@ -379,7 +379,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: 'flex-start', 
-                gap: '8px'
+                gap: '3px'
               }}
             >
               <div 
@@ -455,7 +455,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
               title="Portfolio"
             >
-              <img src="/layers.svg" alt="Portfolio" style={{ width: '16px', height: '16px', filter: 'invert(1) opacity(0.44)' }} />
+              <img src="/layers.svg" alt="Portfolio" style={{ width: '20px', height: '20px', filter: 'invert(1) opacity(0.44)' }} />
             </button>
             <button 
               className="action-button"
@@ -498,7 +498,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
               title="Customize"
             >
-              <img src="/palette.svg" alt="Customize" style={{ width: '16px', height: '16px', filter: 'invert(1) opacity(0.44)' }} />
+              <img src="/palette.svg" alt="Customize" style={{ width: '20px', height: '20px', filter: 'invert(1) opacity(0.44)' }} />
             </button>
           </div>
         </div>
@@ -514,7 +514,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 className="action-btn custom-btn"
                 style={{
                   flex: '0 0 calc(65% - 4px)',
-                  height: '30px',
+                  height: '32px',
                   background: '#1F1F1F',
                   border: '1px solid #353535',
                   color: '#C7C7C7',
@@ -553,7 +553,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 className="action-btn"
                 style={{
                   flex: '0 0 calc(35% - 4px)',
-                  height: '30px',
+                  height: '32px',
                   background: '#1F1F1F',
                   border: '1px solid #353535',
                   color: '#C7C7C7',
