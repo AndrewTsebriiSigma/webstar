@@ -73,7 +73,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const heightReduction = Math.min(scrollY / 100, 1); // Fast reduction over 100px
   const isScrolled = scrollY > 5; // Glassy activates almost immediately
   const isScrolledPastBanner = scrollY > 176;
-  const shouldHideNav = scrollY > 280; // Disappear at dashboard
+  const shouldHideNav = scrollY > 370; // Disappear when reaching dashboard
 
   useEffect(() => {
     loadProfile();
