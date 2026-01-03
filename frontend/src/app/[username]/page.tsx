@@ -69,8 +69,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
   
   const isOwnProfile = user?.username === username;
   
-  // Scroll animation calculations
-  const heightReduction = Math.min(scrollY / 200, 1); // Slower reduction over 200px
+  // Scroll animation calculations - instant response
+  const heightReduction = Math.min(scrollY / 100, 1); // Fast reduction over 100px
   const isScrolled = scrollY > 5; // Glassy activates almost immediately
   const isScrolledPastBanner = scrollY > 176;
 
@@ -84,8 +84,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
       const currentScrollY = window.scrollY;
       
       // Determine scroll direction - hide on scroll down, show on scroll up
-      if (currentScrollY > lastScrollY && currentScrollY > 400) {
-        // Scrolling DOWN past threshold - hide nav (later at 400px)
+      if (currentScrollY > lastScrollY && currentScrollY > 280) {
+        // Scrolling DOWN past threshold - hide nav at dashboard
         setNavVisible(false);
       } else {
         // Scrolling UP or near top - show nav
@@ -161,7 +161,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
           style={{
             paddingTop: `${11 - (5 * heightReduction)}px`,
             paddingBottom: `${11 - (5 * heightReduction)}px`,
-            transition: 'all 0.35s ease'
+            transition: 'padding 0.15s ease'
           }}
         >
           {/* Post - Left */}
@@ -169,12 +169,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <button 
               onClick={() => setShowCreateContentModal(true)}
               className={`nav-btn ${isScrolled ? 'glassy-btn' : ''}`}
-              style={{
-                transform: `scale(${1 - (0.14 * heightReduction)})`,
-                transition: 'all 0.35s ease'
-              }}
             >
-              <PlusIcon className="text-white w-[22px] h-[22px]" />
+              <PlusIcon 
+                className="text-white" 
+                style={{ 
+                  width: `${22 - (3 * heightReduction)}px`, 
+                  height: `${22 - (3 * heightReduction)}px` 
+                }} 
+              />
             </button>
           ) : (
             <div className="w-8"></div>
@@ -188,7 +190,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 fontSize: `${17 - (2 * heightReduction)}px`,
                 fontWeight: 700,
                 letterSpacing: '-0.3px',
-                transition: 'all 0.35s ease'
+                transition: 'font-size 0.15s ease'
               }}
             >
               WebSTAR
@@ -199,12 +201,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
           <button 
             onClick={() => setShowNotifications(true)}
             className={`nav-btn ${isScrolled ? 'glassy-btn' : ''}`}
-            style={{
-              transform: `scale(${1 - (0.15 * heightReduction)})`,
-              transition: 'all 0.35s ease'
-            }}
           >
-              <BellIcon className="text-white w-[22px] h-[22px]" />
+            <BellIcon 
+              className="text-white" 
+              style={{ 
+                width: `${22 - (3 * heightReduction)}px`, 
+                height: `${22 - (3 * heightReduction)}px` 
+              }} 
+            />
             {isOwnProfile && (
               <span className="nav-badge">3</span>
             )}
