@@ -157,7 +157,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Mobile Header - Animated on scroll, hidden in viewer mode */}
       {!viewerMode && (
         <header 
-          className={`top-nav ${isScrolled ? 'glassy' : ''} ${!navVisible ? 'nav-hidden' : ''}`}
+          className={`top-nav ${isScrolled ? 'glassy' : ''}`}
           style={{
             paddingTop: `${11 - (5 * heightReduction)}px`,
             paddingBottom: `${11 - (5 * heightReduction)}px`,
@@ -613,7 +613,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <button
               key={tab}
               onClick={() => setActiveTab(tab.toLowerCase())}
-              className={`flex-1 py-3 text-base font-semibold transition-colors duration-300 ease-out relative ${
+              className={`flex-1 py-3 text-base font-semibold relative ${
                 activeTab === tab.toLowerCase()
                   ? 'text-white'
                   : 'text-gray-500'
