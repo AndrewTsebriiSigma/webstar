@@ -15,10 +15,29 @@ interface NotificationsPanelProps {
   onClose: () => void;
 }
 
+// Mock notifications data
 const mockNotifications: Notification[] = [
-  { id: '1', type: 'view', title: '12 new profile views today', time: '8h ago', unread: true },
-  { id: '2', type: 'update', title: 'Profile updated successfully', time: '1d ago', unread: false },
-  { id: '3', type: 'view', title: '24 new profile views this week', time: '3d ago', unread: false },
+  {
+    id: '1',
+    type: 'view',
+    title: '12 new profile views today',
+    time: '8h ago',
+    unread: true,
+  },
+  {
+    id: '2',
+    type: 'update',
+    title: 'Profile updated successfully',
+    time: '1d ago',
+    unread: false,
+  },
+  {
+    id: '3',
+    type: 'view',
+    title: '24 new profile views this week',
+    time: '3d ago',
+    unread: false,
+  },
 ];
 
 export default function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps) {
@@ -27,81 +46,69 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
   const getIcon = (type: string) => {
     switch (type) {
       case 'view':
-        return <EyeIcon className="w-[19px] h-[19px]" style={{ color: '#00C2FF' }} />;
+        return <EyeIcon className="w-5 h-5 text-cyan-400" />;
       case 'update':
-        return <Cog6ToothIcon className="w-[19px] h-[19px]" style={{ color: '#00C2FF' }} />;
+        return <Cog6ToothIcon className="w-5 h-5 text-cyan-400" />;
       default:
-        return <EyeIcon className="w-[19px] h-[19px]" style={{ color: '#00C2FF' }} />;
+        return <EyeIcon className="w-5 h-5 text-cyan-400" />;
     }
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50"
-      style={{ 
-        background: 'rgba(17, 17, 17, 0.92)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)'
-      }}
-    >
-      <div className="w-full h-full flex flex-col" style={{ background: 'transparent' }}>
-        {/* Header - 55px */}
-        <div 
-          className="flex items-center justify-between flex-shrink-0"
-          style={{ 
-            height: '55px',
-            padding: '0 16px',
-            background: '#0D0D0D',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
-          }}
-        >
+    <>
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 backdrop-blur-sm z-50"
+        style={{ background: 'rgba(17, 17, 17, 0.5)' }}
+        onClick={onClose}
+      />
+      
+      {/* Panel */}
+      <div className="fixed top-0 right-0 w-full max-w-md h-full bg-gray-950 border-l border-gray-800 z-50 shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-800">
           <div className="flex items-center gap-2">
-            <span style={{ fontSize: '20px', fontWeight: 600, color: '#FFFFFF' }}>Notifications</span>
-            <span style={{ padding: '2px 8px', background: '#00C2FF', borderRadius: '999px', fontSize: '11px', fontWeight: 700, color: '#FFFFFF' }}>1</span>
+            <h2 className="text-lg font-bold text-white">Notifications</h2>
+            <span className="px-2 py-0.5 bg-cyan-500 text-white text-xs rounded-full font-semibold">
+              1
+            </span>
           </div>
-          <button onClick={onClose} className="flex items-center justify-center hover:opacity-70 transition-opacity" style={{ width: '28px', height: '28px' }}>
-            <XMarkIcon style={{ width: '24px', height: '24px', color: 'rgba(255, 255, 255, 0.5)' }} />
+          <button
+            onClick={onClose}
+            className="p-1.5 hover:bg-gray-800 rounded-lg transition"
+          >
+            <XMarkIcon className="w-5 h-5 text-gray-400" />
           </button>
         </div>
 
-        {/* Notifications List - divider style */}
-        <div className="flex-1 overflow-y-auto">
+        {/* Notifications List */}
+        <div className="overflow-y-auto h-[calc(100%-64px)]">
           {mockNotifications.map((notification) => (
             <div
               key={notification.id}
-              className="flex items-center gap-3 cursor-pointer"
-              style={{
-                padding: '12px 16px',
-                background: notification.unread ? 'rgba(255, 255, 255, 0.03)' : 'transparent',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-                transition: 'background 0.15s ease'
-              }}
+              className={`flex items-start gap-3 p-4 border-b border-gray-800 hover:bg-gray-900/50 transition cursor-pointer ${
+                notification.unread ? 'bg-gray-900/30' : ''
+              }`}
             >
-              {/* Icon with circle background */}
-              <div 
-                className="flex-shrink-0 flex items-center justify-center"
-                style={{
-                  width: '27px',
-                  height: '27px',
-                  borderRadius: '50%',
-                  background: 'rgba(0, 194, 255, 0.12)'
-                }}
-              >
+              <div className="flex-shrink-0 mt-0.5">
                 {getIcon(notification.type)}
               </div>
               <div className="flex-1 min-w-0">
-                <p style={{ fontSize: '14px', fontWeight: 500, color: '#FFFFFF', marginBottom: '2px' }}>{notification.title}</p>
-                <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)' }}>{notification.time}</p>
+                <p className="text-sm text-white font-medium mb-1">
+                  {notification.title}
+                </p>
+                <p className="text-xs text-gray-400">{notification.time}</p>
               </div>
               {notification.unread && (
                 <div className="flex-shrink-0">
-                  <div style={{ width: '8px', height: '8px', background: '#00C2FF', borderRadius: '50%' }} />
+                  <div className="w-2 h-2 bg-cyan-500 rounded-full" />
                 </div>
               )}
             </div>
           ))}
         </div>
       </div>
-    </div>
+    </>
   );
 }
+
