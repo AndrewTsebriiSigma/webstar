@@ -845,6 +845,14 @@ html {
     min-width: 44px;
   }
   
+  /* Keep nav buttons at 32px on mobile */
+  .nav-btn {
+    min-height: 32px !important;
+    min-width: 32px !important;
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
   /* Dashboard icon buttons - override to 40px on mobile */
   .dashboard-actions .action-button {
     height: 40px !important;
