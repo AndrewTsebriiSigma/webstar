@@ -608,8 +608,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
         className="sticky top-[49px] z-30 backdrop-blur-md border-b border-gray-800"
         style={{ background: 'rgba(17, 17, 17, 0.9)', marginTop: '80px' }}
       >
-        <div className="flex relative">
-          {['Portfolio', 'Projects', 'About'].map((tab, index) => (
+        <div className="flex">
+          {['Portfolio', 'Projects', 'About'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab.toLowerCase())}
@@ -620,16 +620,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }`}
             >
               {tab}
+              {activeTab === tab.toLowerCase() && (
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-[3px] bg-cyan-500" />
+              )}
             </button>
           ))}
-          {/* Animated indicator */}
-          <div 
-            className="absolute bottom-0 h-[3px] bg-cyan-500 transition-all duration-300 ease-out"
-            style={{
-              width: '80px',
-              left: `calc(${['portfolio', 'projects', 'about'].indexOf(activeTab)} * 33.333% + 16.666% - 40px)`
-            }}
-          />
         </div>
       </div>
 
