@@ -462,14 +462,14 @@ input[type="range"].slider-thumb::-moz-range-thumb:hover {
 
 .nav-badge {
   position: absolute;
-  top: -2px;
-  right: 2px;
-  min-width: 14px;
-  height: 14px;
-  padding: 0 3px;
+  top: -3px;
+  right: 1px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
   background: #00C2FF;
   border-radius: 999px;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
   color: #FFFFFF;
   display: flex;
