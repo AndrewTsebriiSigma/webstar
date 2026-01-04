@@ -162,11 +162,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
           }}
         >
           {/* Post - Left */}
-          {isOwnProfile ? (
-            <button 
-              onClick={() => setShowCreateContentModal(true)}
+            {isOwnProfile ? (
+              <button 
+                onClick={() => setShowCreateContentModal(true)}
               className="nav-btn"
-            >
+              >
               <PlusIcon 
                 className="text-white" 
                 style={{ 
@@ -174,11 +174,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   height: `${22 - (3 * heightReduction)}px` 
                 }} 
               />
-            </button>
-          ) : (
-            <div className="w-8"></div>
-          )}
-          
+              </button>
+            ) : (
+              <div className="w-8"></div>
+            )}
+            
           {/* Brand Name - Center */}
           <div className="nav-center">
             <span 
@@ -194,10 +194,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
           </div>
           
           {/* Notifications - Right */}
-          <button 
-            onClick={() => setShowNotifications(true)}
+              <button 
+                onClick={() => setShowNotifications(true)}
             className="nav-btn"
-          >
+              >
             <BellIcon 
               className="text-white" 
               style={{ 
@@ -205,13 +205,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 height: `${22 - (3 * heightReduction)}px` 
               }} 
             />
-            {isOwnProfile && (
+                {isOwnProfile && (
               <span 
                 className="nav-badge"
                 style={{ transform: `scale(${1 - (0.15 * heightReduction)})` }}
               >3</span>
-            )}
-          </button>
+                )}
+              </button>
         </header>
       )}
 

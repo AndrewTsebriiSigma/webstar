@@ -55,11 +55,14 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
 
   // Connect editing
   const [showAddConnect, setShowAddConnect] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
-  const [nickname, setNickname] = useState('');
-  const [showPlatformSelector, setShowPlatformSelector] = useState(false);
+  const [selectedPlatformForLink, setSelectedPlatformForLink] = useState<string | null>(null);
+  const [linkUsername, setLinkUsername] = useState('');
   const [savedLinks, setSavedLinks] = useState<Record<string, string>>({});
-  const platformSelectorRef = useRef<HTMLDivElement>(null);
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
+    social: true,
+    professional: true,
+    creative: true,
+  });
 
   // Dynamic placeholder animation
   useEffect(() => {
@@ -117,6 +120,84 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
       }
     };
   }, [editingAbout]);
+
+  // Platform categories configuration
+  const PLATFORM_CATEGORIES = {
+    social: {
+      label: 'SOCIAL',
+      platforms: [
+        { id: 'instagram', name: 'Instagram', icon: '📷', color: '#E4405F', domain: 'instagram.com' },
+        { id: 'facebook', name: 'Facebook', icon: '👤', color: '#1877F2', domain: 'facebook.com' },
+        { id: 'x', name: 'X', icon: '𝕏', color: '#000000', domain: 'x.com' },
+        { id: 'snapchat', name: 'Snapchat', icon: '👻', color: '#FFFC00', domain: 'snapchat.com' },
+        { id: 'pinterest', name: 'Pinterest', icon: '📌', color: '#E60023', domain: 'pinterest.com' },
+        { id: 'tiktok', name: 'TikTok', icon: '🎵', color: '#000000', domain: 'tiktok.com' },
+        { id: 'reddit', name: 'Reddit', icon: '🤖', color: '#FF4500', domain: 'reddit.com' },
+      ]
+    },
+    professional: {
+      label: 'PROFESSIONAL',
+      platforms: [
+        { id: 'linkedin', name: 'LinkedIn', icon: 'in', color: '#0A66C2', domain: 'linkedin.com' },
+        { id: 'github', name: 'GitHub', icon: '⚡', color: '#181717', domain: 'github.com' },
+        { id: 'behance', name: 'Behance', icon: 'Be', color: '#1769FF', domain: 'behance.net' },
+        { id: 'dribbble', name: 'Dribbble', icon: '🏀', color: '#EA4C89', domain: 'dribbble.com' },
+      ]
+    },
+    creative: {
+      label: 'CREATIVE',
+      platforms: [
+        { id: 'youtube', name: 'YouTube', icon: '▶️', color: '#FF0000', domain: 'youtube.com' },
+        { id: 'spotify', name: 'Spotify', icon: '🎧', color: '#1DB954', domain: 'spotify.com' },
+        { id: 'soundcloud', name: 'SoundCloud', icon: '☁️', color: '#FF3300', domain: 'soundcloud.com' },
+      ]
+    }
+  };
+
+  const toggleCategory = (category: string) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
+
+  const handlePlatformClick = (platformId: string) => {
+    setSelectedPlatformForLink(platformId);
+    setLinkUsername('');
+  };
+
+  const savePlatformLink = async () => {
+    if (!selectedPlatformForLink || !linkUsername.trim()) {
+      toast.error('Please enter your username');
+      return;
+    }
+
+    try {
+      // Find platform details
+      let platformDomain = '';
+      for (const category of Object.values(PLATFORM_CATEGORIES)) {
+        const platform = category.platforms.find(p => p.id === selectedPlatformForLink);
+        if (platform) {
+          platformDomain = platform.domain;
+          break;
+        }
+      }
+
+      const link = `${platformDomain}/${linkUsername.trim()}`;
+      const updatedLinks = { ...savedLinks, [selectedPlatformForLink]: link };
+      
+      await profileAPI.updateMe({ social_links: JSON.stringify(updatedLinks) });
+      
+      setSavedLinks(updatedLinks);
+      setShowAddConnect(false);
+      setSelectedPlatformForLink(null);
+      setLinkUsername('');
+      toast.success('Social link added!');
+      onUpdate();
+    } catch (error) {
+      toast.error('Failed to save social link');
+    }
+  };
 
   const startEditingAbout = () => {
     setAboutText(profile?.about || '');
@@ -231,57 +312,6 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
     }
   }, [profile]);
 
-  // Handle click outside platform selector
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (platformSelectorRef.current && !platformSelectorRef.current.contains(event.target as Node)) {
-        setShowPlatformSelector(false);
-      }
-    }
-
-    if (showPlatformSelector) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [showPlatformSelector]);
-
-  const saveConnect = async () => {
-    if (!selectedPlatform || !nickname.trim()) {
-      toast.error('Please select a platform and enter a nickname');
-      return;
-    }
-
-    try {
-      const platformDomains: Record<string, string> = {
-        instagram: 'instagram.com',
-        linkedin: 'linkedin.com',
-        facebook: 'facebook.com',
-        snapchat: 'snapchat.com',
-        x: 'x.com',
-        github: 'github.com',
-        pinterest: 'pinterest.com',
-      };
-
-      const domain = platformDomains[selectedPlatform];
-      const link = `${domain}/${nickname.trim()}`;
-      
-      const updatedLinks = { ...savedLinks, [selectedPlatform]: link };
-      await profileAPI.updateMe({ social_links: JSON.stringify(updatedLinks) });
-      
-      setSavedLinks(updatedLinks);
-      setShowAddConnect(false);
-      setSelectedPlatform(null);
-      setNickname('');
-      setShowPlatformSelector(false);
-      toast.success('Social link added!');
-      onUpdate();
-    } catch (error) {
-      toast.error('Failed to save social link');
-    }
-  };
-
   const removeConnect = async (platform: string) => {
     try {
       const updatedLinks = { ...savedLinks };
@@ -293,6 +323,15 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
     } catch (error) {
       toast.error('Failed to remove social link');
     }
+  };
+
+  // Get platform details by ID
+  const getPlatformDetails = (platformId: string) => {
+    for (const category of Object.values(PLATFORM_CATEGORIES)) {
+      const platform = category.platforms.find(p => p.id === platformId);
+      if (platform) return platform;
+    }
+    return null;
   };
 
   const addSkill = () => {
@@ -1055,348 +1094,367 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
         </div>
 
         {showAddConnect && isOwnProfile ? (
-          <div style={{ maxWidth: '336px', margin: '0 auto' }}>
-            <div className="flex items-center" style={{ gap: 'var(--space-1)', marginBottom: 'var(--space-2)' }}>
-              {/* Platform Selector */}
-              <div className="relative flex-1" ref={platformSelectorRef}>
-              <button
-                  onClick={() => setShowPlatformSelector(!showPlatformSelector)}
-                  className="w-full flex items-center justify-center transition"
-                  style={{
-                    padding: 'var(--space-2)',
-                    height: 'var(--height-primary-btn)',
-                    background: 'var(--bg-surface-strong)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 'var(--radius-md)',
-                    color: 'var(--text-primary)',
-                    fontSize: '13px',
-                    gap: 'var(--space-1)',
-                  }}
-                >
-                  {selectedPlatform ? (
-                    <>
-                      {selectedPlatform === 'instagram' && (
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                        </svg>
-                      )}
-                      {selectedPlatform === 'linkedin' && (
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                        </svg>
-                      )}
-                      {selectedPlatform === 'facebook' && (
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                        </svg>
-                      )}
-                      {selectedPlatform === 'snapchat' && (
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.18-.022.345-.03.51.075.045.203.09.401.09.3-.016.659-.12 1.033-.301.165-.088.344-.104.464-.104.182 0 .359.029.509.09.45.149.734.479.734.838.015.449-.39.839-1.213 1.168-.089.029-.209.075-.344.119-.45.135-1.139.36-1.333.81-.09.224-.061.524.12.868l.015.015c.06.136 1.526 3.475 4.791 4.014.255.044.435.27.42.509 0 .075-.015.149-.045.225-.24.569-1.273.988-3.146 1.271-.059.091-.12.375-.164.57-.029.179-.074.36-.134.553-.076.271-.27.405-.555.405h-.03c-.135 0-.313-.031-.538-.074-.36-.075-.765-.135-1.273-.135-.3 0-.599.015-.913.074-.6.104-1.123.464-1.723.884-.853.599-1.826 1.288-3.294 1.288-.06 0-.119-.015-.18-.015h-.149c-1.468 0-2.427-.675-3.279-1.288-.599-.42-1.107-.779-1.707-.884-.314-.045-.629-.074-.928-.074-.54 0-.958.089-1.272.149-.211.043-.391.074-.54.074-.374 0-.523-.224-.583-.42-.061-.192-.09-.389-.135-.567-.046-.181-.105-.494-.166-.57-1.918-.222-2.95-.642-3.189-1.226-.031-.063-.052-.12-.055-.18-.015-.226.126-.464.359-.524 3.346-.54 4.766-3.915 4.791-3.951.151-.375.151-.645.09-.837-.195-.458-.884-.658-1.332-.809-.121-.029-.24-.074-.346-.119-1.107-.435-1.257-.93-1.197-1.273.09-.479.674-.793 1.168-.793.146 0 .27.029.383.074.42.194.789.3 1.104.3.234 0 .384-.06.465-.105l-.046-.569c-.098-1.626-.225-3.651.307-4.837C7.392 1.077 10.739.807 11.727.807l.419-.015h.06z"/>
-                        </svg>
-                      )}
-                      {selectedPlatform === 'x' && (
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                        </svg>
-                      )}
-                      {selectedPlatform === 'github' && (
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
-                        </svg>
-                      )}
-                      {selectedPlatform === 'pinterest' && (
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/>
-                        </svg>
-                      )}
-                      <span className="capitalize" style={{ fontSize: '13px' }}>{selectedPlatform === 'x' ? 'X (Twitter)' : selectedPlatform}</span>
-                    </>
-                  ) : (
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Select platform</span>
-                  )}
-              </button>
-                {showPlatformSelector && (
-                  <div 
-                    className="absolute top-full left-0 right-0 z-50"
+          <div style={{ maxWidth: '336px', margin: '0 auto', position: 'relative', minHeight: '300px' }}>
+            
+            {/* Step 1: Platform Grid (hidden when platform selected) */}
+            <div
+              style={{
+                opacity: selectedPlatformForLink ? 0 : 1,
+                transform: selectedPlatformForLink ? 'scale(0.95)' : 'scale(1)',
+                transition: 'all 200ms cubic-bezier(0.25, 0.8, 0.25, 1)',
+                pointerEvents: selectedPlatformForLink ? 'none' : 'auto',
+                position: selectedPlatformForLink ? 'absolute' : 'relative',
+                inset: 0,
+              }}
+            >
+              {Object.entries(PLATFORM_CATEGORIES).map(([categoryKey, category]) => (
+                <div key={categoryKey} style={{ marginBottom: 'var(--space-4)' }}>
+                  {/* Category Header */}
+                  <button
+                    onClick={() => toggleCategory(categoryKey)}
+                    className="w-full flex items-center justify-between transition"
                     style={{
-                      marginTop: '4px',
-                      background: 'var(--bg-surface-strong)',
-                      border: '1px solid var(--border)',
-                      borderRadius: 'var(--radius-md)',
-                      boxShadow: 'var(--shadow-card)',
+                      padding: 'var(--space-2) 0',
+                      color: 'var(--text-secondary)',
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      letterSpacing: '0.8px',
+                      textAlign: 'left',
                     }}
                   >
-              <button
-                      onClick={() => {
-                        setSelectedPlatform('instagram');
-                        setShowPlatformSelector(false);
-                      }}
-                      className="w-full flex items-center transition"
-                      style={{
-                        padding: 'var(--space-2)',
-                        gap: 'var(--space-2)',
-                        color: 'var(--text-primary)',
-                        fontSize: '13px',
-                      }}
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                      </svg>
-                      <span>Instagram</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedPlatform('linkedin');
-                        setShowPlatformSelector(false);
-                      }}
-                      className="w-full flex items-center transition border-t"
-                      style={{
-                        padding: 'var(--space-2)',
-                        gap: 'var(--space-2)',
-                        color: 'var(--text-primary)',
-                        fontSize: '13px',
-                        borderTopColor: 'var(--border)',
-                      }}
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                      </svg>
-                      <span>LinkedIn</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedPlatform('facebook');
-                        setShowPlatformSelector(false);
-                      }}
-                      className="w-full flex items-center transition border-t"
-                      style={{
-                        padding: 'var(--space-2)',
-                        gap: 'var(--space-2)',
-                        color: 'var(--text-primary)',
-                        fontSize: '13px',
-                        borderTopColor: 'var(--border)',
-                      }}
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                      </svg>
-                      <span>Facebook</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedPlatform('snapchat');
-                        setShowPlatformSelector(false);
-                      }}
-                      className="w-full flex items-center transition border-t"
-                      style={{
-                        padding: 'var(--space-2)',
-                        gap: 'var(--space-2)',
-                        color: 'var(--text-primary)',
-                        fontSize: '13px',
-                        borderTopColor: 'var(--border)',
-                      }}
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.18-.022.345-.03.51.075.045.203.09.401.09.3-.016.659-.12 1.033-.301.165-.088.344-.104.464-.104.182 0 .359.029.509.09.45.149.734.479.734.838.015.449-.39.839-1.213 1.168-.089.029-.209.075-.344.119-.45.135-1.139.36-1.333.81-.09.224-.061.524.12.868l.015.015c.06.136 1.526 3.475 4.791 4.014.255.044.435.27.42.509 0 .075-.015.149-.045.225-.24.569-1.273.988-3.146 1.271-.059.091-.12.375-.164.57-.029.179-.074.36-.134.553-.076.271-.27.405-.555.405h-.03c-.135 0-.313-.031-.538-.074-.36-.075-.765-.135-1.273-.135-.3 0-.599.015-.913.074-.6.104-1.123.464-1.723.884-.853.599-1.826 1.288-3.294 1.288-.06 0-.119-.015-.18-.015h-.149c-1.468 0-2.427-.675-3.279-1.288-.599-.42-1.107-.779-1.707-.884-.314-.045-.629-.074-.928-.074-.54 0-.958.089-1.272.149-.211.043-.391.074-.54.074-.374 0-.523-.224-.583-.42-.061-.192-.09-.389-.135-.567-.046-.181-.105-.494-.166-.57-1.918-.222-2.95-.642-3.189-1.226-.031-.063-.052-.12-.055-.18-.015-.226.126-.464.359-.524 3.346-.54 4.766-3.915 4.791-3.951.151-.375.151-.645.09-.837-.195-.458-.884-.658-1.332-.809-.121-.029-.24-.074-.346-.119-1.107-.435-1.257-.93-1.197-1.273.09-.479.674-.793 1.168-.793.146 0 .27.029.383.074.42.194.789.3 1.104.3.234 0 .384-.06.465-.105l-.046-.569c-.098-1.626-.225-3.651.307-4.837C7.392 1.077 10.739.807 11.727.807l.419-.015h.06z"/>
-                      </svg>
-                      <span>Snapchat</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedPlatform('x');
-                        setShowPlatformSelector(false);
-                      }}
-                      className="w-full flex items-center transition border-t"
-                      style={{
-                        padding: 'var(--space-2)',
-                        gap: 'var(--space-2)',
-                        color: 'var(--text-primary)',
-                        fontSize: '13px',
-                        borderTopColor: 'var(--border)',
-                      }}
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                      </svg>
-                      <span>X (Twitter)</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedPlatform('github');
-                        setShowPlatformSelector(false);
-                      }}
-                      className="w-full flex items-center transition border-t"
-                      style={{
-                        padding: 'var(--space-2)',
-                        gap: 'var(--space-2)',
-                        color: 'var(--text-primary)',
-                        fontSize: '13px',
-                        borderTopColor: 'var(--border)',
-                      }}
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
-                      </svg>
-                      <span>GitHub</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedPlatform('pinterest');
-                        setShowPlatformSelector(false);
-                      }}
-                      className="w-full flex items-center transition border-t"
-                      style={{
-                        padding: 'var(--space-2)',
-                        gap: 'var(--space-2)',
-                        color: 'var(--text-primary)',
-                        fontSize: '13px',
-                        borderTopColor: 'var(--border)',
-                      }}
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/>
-                      </svg>
-                      <span>Pinterest</span>
-              </button>
-            </div>
-                )}
-              </div>
+                    <span>{category.label}</span>
+                    <span style={{ 
+                      transform: expandedCategories[categoryKey] ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 200ms',
+                    }}>▼</span>
+                  </button>
 
-              {/* Nickname Input */}
-              <input
-                type="text"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                placeholder="nickname"
-                className="flex-1 transition"
-                style={{
-                  padding: 'var(--space-2)',
-                  height: 'var(--height-primary-btn)',
-                  background: 'var(--bg-surface-strong)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-md)',
-                  color: 'var(--text-primary)',
-                  fontSize: '13px',
-                }}
-              />
-
-              {/* Save Button */}
-              <button
-                onClick={saveConnect}
-                className="transition whitespace-nowrap"
-                style={{
-                  padding: 'var(--space-2) var(--space-3)',
-                  height: 'var(--height-primary-btn)',
-                  background: 'var(--blue)',
-                  border: 'none',
-                  borderRadius: 'var(--radius-md)',
-                  color: 'white',
-                  fontSize: '13px',
-                  fontWeight: '600',
-                }}
-              >
-                Save
-              </button>
+                  {/* Platform Grid */}
+                  {expandedCategories[categoryKey] && (
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(4, 1fr)',
+                        gap: 'var(--space-3)',
+                      }}
+                    >
+                      {category.platforms.map((platform) => {
+                        const isConnected = savedLinks.hasOwnProperty(platform.id);
+                        return (
+                          <button
+                            key={platform.id}
+                            onClick={() => !isConnected && handlePlatformClick(platform.id)}
+                            disabled={isConnected}
+                            className="transition"
+                            style={{
+                              aspectRatio: '1',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              background: isConnected ? 'var(--bg-surface-strong)' : 'var(--bg-surface)',
+                              border: isConnected ? '2px solid var(--blue)' : '1px solid var(--border)',
+                              borderRadius: 'var(--radius-lg)',
+                              cursor: isConnected ? 'not-allowed' : 'pointer',
+                              opacity: isConnected ? 0.5 : 1,
+                              boxShadow: isConnected ? '0 0 0 4px var(--blue-10)' : 'none',
+                              position: 'relative',
+                            }}
+                            title={platform.name}
+                            onMouseEnter={(e) => {
+                              if (!isConnected) {
+                                e.currentTarget.style.borderColor = 'var(--blue)';
+                                e.currentTarget.style.transform = 'scale(1.05)';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isConnected) {
+                                e.currentTarget.style.borderColor = 'var(--border)';
+                                e.currentTarget.style.transform = 'scale(1)';
+                              }
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: '24px',
+                                marginBottom: '4px',
+                              }}
+                            >
+                              {platform.icon}
+                            </span>
+                            {isConnected && (
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  top: '4px',
+                                  right: '4px',
+                                  width: '16px',
+                                  height: '16px',
+                                  borderRadius: '50%',
+                                  background: 'var(--blue)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '10px',
+                                }}
+                              >
+                                ✓
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
 
               {/* Cancel Button */}
               <button
                 onClick={() => {
                   setShowAddConnect(false);
-                  setSelectedPlatform(null);
-                  setNickname('');
-                  setShowPlatformSelector(false);
+                  setSelectedPlatformForLink(null);
+                  setLinkUsername('');
                 }}
-                className="transition whitespace-nowrap"
+                className="w-full transition"
                 style={{
-                  padding: 'var(--space-2) var(--space-3)',
                   height: 'var(--height-primary-btn)',
                   background: 'var(--bg-surface-strong)',
                   border: '1px solid var(--border)',
                   borderRadius: 'var(--radius-md)',
                   color: 'var(--text-primary)',
-                  fontSize: '13px',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  marginTop: 'var(--space-4)',
                 }}
               >
                 Cancel
               </button>
             </div>
+
+            {/* Step 2: Username Input (shown when platform selected) */}
+            <div
+              style={{
+                opacity: selectedPlatformForLink ? 1 : 0,
+                transform: selectedPlatformForLink ? 'scale(1)' : 'scale(0.95)',
+                transition: 'all 200ms cubic-bezier(0.25, 0.8, 0.25, 1)',
+                pointerEvents: selectedPlatformForLink ? 'auto' : 'none',
+                position: selectedPlatformForLink ? 'relative' : 'absolute',
+                inset: 0,
+              }}
+            >
+              {selectedPlatformForLink && getPlatformDetails(selectedPlatformForLink) && (
+                <div
+                  style={{
+                    padding: 'var(--space-4)',
+                    background: 'var(--bg-surface-strong)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-xl)',
+                  }}
+                >
+                  {/* Platform Info */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
+                    <div
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: 'var(--radius-lg)',
+                        background: 'var(--bg-surface)',
+                        border: '1px solid var(--border)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '24px',
+                      }}
+                    >
+                      {getPlatformDetails(selectedPlatformForLink)!.icon}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '2px' }}>
+                        {getPlatformDetails(selectedPlatformForLink)!.name}
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                        {getPlatformDetails(selectedPlatformForLink)!.domain}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Username Input */}
+                  <div style={{ marginBottom: 'var(--space-4)' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: 'var(--space-2)' }}>
+                      Enter your username
+                    </label>
+                    <input
+                      type="text"
+                      value={linkUsername}
+                      onChange={(e) => setLinkUsername(e.target.value)}
+                      placeholder="yourhandle"
+                      autoFocus
+                      onKeyPress={(e) => e.key === 'Enter' && savePlatformLink()}
+                      className="w-full transition"
+                      style={{
+                        padding: 'var(--space-3) var(--space-4)',
+                        height: 'var(--height-primary-btn)',
+                        background: 'var(--bg-surface)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 'var(--radius-md)',
+                        color: 'var(--text-primary)',
+                        fontSize: '15px',
+                      }}
+                    />
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                    <button
+                      onClick={() => {
+                        setSelectedPlatformForLink(null);
+                        setLinkUsername('');
+                      }}
+                      className="flex-1 transition"
+                      style={{
+                        height: 'var(--height-primary-btn)',
+                        background: 'var(--bg-surface)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 'var(--radius-md)',
+                        color: 'var(--text-primary)',
+                        fontSize: '15px',
+                        fontWeight: '600',
+                      }}
+                    >
+                      ← Back
+                    </button>
+                    <button
+                      onClick={savePlatformLink}
+                      disabled={!linkUsername.trim()}
+                      className="flex-1 transition"
+                      style={{
+                        height: 'var(--height-primary-btn)',
+                        background: linkUsername.trim() ? 'var(--blue)' : 'var(--bg-surface-strong)',
+                        border: 'none',
+                        borderRadius: 'var(--radius-md)',
+                        color: linkUsername.trim() ? 'white' : 'var(--text-secondary)',
+                        fontSize: '15px',
+                        fontWeight: '600',
+                        opacity: linkUsername.trim() ? 1 : 0.5,
+                        cursor: linkUsername.trim() ? 'pointer' : 'not-allowed',
+                      }}
+                    >
+                      Connect
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div style={{ maxWidth: '336px', margin: '0 auto' }}>
             {Object.keys(savedLinks).length > 0 ? (
-              <div className="flex flex-wrap" style={{ gap: 'var(--space-4)' }}>
-                {Object.entries(savedLinks).map(([platform, link]) => (
-                  <div key={platform} className="relative group">
-                    <a
-                      href={link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center transition"
-                      style={{
-                        width: 'var(--height-icon-button)',
-                        height: 'var(--height-icon-button)',
-                        background: 'var(--bg-surface-strong)',
-                        borderRadius: 'var(--radius-md)',
-                      }}
-                    >
-                      {platform === 'instagram' && (
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-primary)' }}>
-                          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                        </svg>
-                      )}
-                      {platform === 'linkedin' && (
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-primary)' }}>
-                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                        </svg>
-                      )}
-                      {platform === 'facebook' && (
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-primary)' }}>
-                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                        </svg>
-                      )}
-                      {platform === 'snapchat' && (
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-primary)' }}>
-                          <path d="M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.18-.022.345-.03.51.075.045.203.09.401.09.3-.016.659-.12 1.033-.301.165-.088.344-.104.464-.104.182 0 .359.029.509.09.45.149.734.479.734.838.015.449-.39.839-1.213 1.168-.089.029-.209.075-.344.119-.45.135-1.139.36-1.333.81-.09.224-.061.524.12.868l.015.015c.06.136 1.526 3.475 4.791 4.014.255.044.435.27.42.509 0 .075-.015.149-.045.225-.24.569-1.273.988-3.146 1.271-.059.091-.12.375-.164.57-.029.179-.074.36-.134.553-.076.271-.27.405-.555.405h-.03c-.135 0-.313-.031-.538-.074-.36-.075-.765-.135-1.273-.135-.3 0-.599.015-.913.074-.6.104-1.123.464-1.723.884-.853.599-1.826 1.288-3.294 1.288-.06 0-.119-.015-.18-.015h-.149c-1.468 0-2.427-.675-3.279-1.288-.599-.42-1.107-.779-1.707-.884-.314-.045-.629-.074-.928-.074-.54 0-.958.089-1.272.149-.211.043-.391.074-.54.074-.374 0-.523-.224-.583-.42-.061-.192-.09-.389-.135-.567-.046-.181-.105-.494-.166-.57-1.918-.222-2.95-.642-3.189-1.226-.031-.063-.052-.12-.055-.18-.015-.226.126-.464.359-.524 3.346-.54 4.766-3.915 4.791-3.951.151-.375.151-.645.09-.837-.195-.458-.884-.658-1.332-.809-.121-.029-.24-.074-.346-.119-1.107-.435-1.257-.93-1.197-1.273.09-.479.674-.793 1.168-.793.146 0 .27.029.383.074.42.194.789.3 1.104.3.234 0 .384-.06.465-.105l-.046-.569c-.098-1.626-.225-3.651.307-4.837C7.392 1.077 10.739.807 11.727.807l.419-.015h.06z"/>
-                        </svg>
-                      )}
-                      {platform === 'x' && (
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-primary)' }}>
-                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                        </svg>
-                      )}
-                      {platform === 'github' && (
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-primary)' }}>
-                          <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
-                        </svg>
-                      )}
-                      {platform === 'pinterest' && (
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-primary)' }}>
-                          <path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/>
-                        </svg>
-                      )}
-                    </a>
-                    {isOwnProfile && (
-                      <button
-                        onClick={() => removeConnect(platform)}
-                        className="absolute transition flex items-center justify-center"
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(4, 1fr)',
+                  gap: 'var(--space-3)',
+                }}
+              >
+                {Object.entries(savedLinks).map(([platformId, link]) => {
+                  const platformDetails = getPlatformDetails(platformId);
+                  if (!platformDetails) return null;
+                  
+                  return (
+                    <div key={platformId} className="relative group">
+                      <a
+                        href={`https://${link}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="transition"
                         style={{
-                          top: '-8px',
-                          right: '-8px',
-                          width: '20px',
-                          height: '20px',
-                          background: 'var(--error)',
-                          borderRadius: '50%',
-                          opacity: 0,
+                          aspectRatio: '1',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: 'var(--bg-surface-strong)',
+                          border: '2px solid var(--blue)',
+                          borderRadius: 'var(--radius-lg)',
+                          fontSize: '24px',
+                          boxShadow: '0 0 0 4px var(--blue-10)',
+                          position: 'relative',
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                        onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}
+                        title={`${platformDetails.name}: ${link}`}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'scale(1.05)';
+                          e.currentTarget.style.boxShadow = '0 0 0 4px var(--blue-20), 0 4px 12px rgba(0, 194, 255, 0.2)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)';
+                          e.currentTarget.style.boxShadow = '0 0 0 4px var(--blue-10)';
+                        }}
                       >
-                        <XMarkIcon className="w-3 h-3" style={{ color: 'white' }} />
-                      </button>
-                    )}
-                  </div>
-                ))}
+                        {platformDetails.icon}
+                        {/* Checkmark badge */}
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: '4px',
+                            right: '4px',
+                            width: '16px',
+                            height: '16px',
+                            borderRadius: '50%',
+                            background: 'var(--blue)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '10px',
+                            color: 'white',
+                          }}
+                        >
+                          ✓
+                        </div>
+                      </a>
+                      
+                      {/* Remove button (owner only) */}
+                      {isOwnProfile && (
+                        <button
+                          onClick={() => removeConnect(platformId)}
+                          className="transition"
+                          style={{
+                            position: 'absolute',
+                            top: '-8px',
+                            left: '-8px',
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '50%',
+                            background: 'var(--error)',
+                            border: '2px solid var(--bg-surface)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
+                            fontSize: '14px',
+                            fontWeight: '700',
+                            opacity: 0,
+                            cursor: 'pointer',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'scale(1.1)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'scale(1)';
+                          }}
+                          onFocus={(e) => {
+                            e.currentTarget.style.opacity = '1';
+                          }}
+                          onBlur={(e) => {
+                            e.currentTarget.style.opacity = '0';
+                          }}
+                        >
+                          <XMarkIcon className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               isOwnProfile && (
