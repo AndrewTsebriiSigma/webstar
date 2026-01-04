@@ -21,6 +21,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
   const [selectedPortfolioIds, setSelectedPortfolioIds] = useState<Set<number>>(new Set());
   const [projectMedia, setProjectMedia] = useState<any[]>([]);
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -42,6 +43,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
   if (!isOpen) return null;
 
   const handleReset = () => {
+    setTitle('');
     setDescription('');
     setCoverFile(null);
     setCoverPreview('');
@@ -136,8 +138,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
   };
 
   const handleSubmit = async () => {
-    if (!description.trim()) {
-      toast.error('Project description is required');
+    if (!title.trim()) {
+      toast.error('Project title is required');
       return;
     }
 
@@ -153,10 +155,10 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
         setUploadingCover(false);
       }
 
-      // Create project - Note: title removed, description is required now
+      // Create project with title
       const projectResponse = await projectsAPI.createProject({
-        title: description.substring(0, 100), // Use first 100 chars of description as title for backend
-        description: description || null,
+        title: title.trim(),
+        description: description.trim() || null,
         cover_image: coverUrl || null,
         tags: null,
         tools: null,
@@ -197,8 +199,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
   };
 
   const handleSaveAsDraft = async () => {
-    if (!description.trim()) {
-      toast.error('Project description is required');
+    if (!title.trim()) {
+      toast.error('Project title is required');
       return;
     }
 
@@ -214,10 +216,10 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
         setUploadingCover(false);
       }
 
-      // Create project as draft
+      // Create project as draft with title
       const projectResponse = await projectsAPI.createProject({
-        title: description.substring(0, 100),
-        description: description || null,
+        title: title.trim(),
+        description: description.trim() || null,
         cover_image: coverUrl || null,
         tags: null,
         tools: null,
@@ -276,7 +278,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
           <h2 className="text-lg font-bold text-white">Create Project</h2>
           <button
             onClick={handleSubmit}
-            disabled={saving || uploadingCover || !description.trim()}
+            disabled={saving || uploadingCover || !title.trim()}
             className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving || uploadingCover ? 'Creating...' : 'Publish'}
@@ -334,11 +336,34 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
             )}
           </div>
 
+          {/* Title Input */}
+          <div>
+            <label htmlFor="project-title" className="block text-sm font-medium text-gray-300 mb-2">
+              Project Title *
+            </label>
+            <input
+              type="text"
+              id="project-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="My Awesome Project"
+              maxLength={100}
+              style={{ fontSize: '16px' }} // Prevents zoom on mobile
+              className="w-full px-4 py-2.5 bg-[#1a1a1c] border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white placeholder-gray-500"
+              disabled={saving || uploadingCover}
+            />
+            <p className="text-xs text-gray-500 mt-1 text-right">{title.length}/100</p>
+          </div>
+
           {/* Description Input with Rich Text Editing */}
           <div>
+            <label htmlFor="project-description" className="block text-sm font-medium text-gray-300 mb-2">
+              Description (optional)
+            </label>
             <textarea
+              id="project-description"
               ref={textareaRef}
-              placeholder="Describe your project... (required)"
+              placeholder="Describe your project..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               onKeyDown={handleTextareaKeyDown}
@@ -348,7 +373,10 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
               className="w-full px-4 py-2.5 bg-[#1a1a1c] border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none text-white placeholder-gray-500"
               disabled={saving || uploadingCover}
             />
-            <p className="text-xs text-gray-500 mt-1 text-right">{description.length}/500</p>
+            <div className="flex justify-between items-center mt-1">
+              <p className="text-xs text-gray-500">Tip: Type "- " and press Tab for bullet points</p>
+              <p className="text-xs text-gray-500">{description.length}/500</p>
+            </div>
           </div>
 
           {/* Add Content Button */}
@@ -417,7 +445,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
         <div className="border-t border-gray-700 p-4">
           <button
             onClick={handleSaveAsDraft}
-            disabled={saving || uploadingCover || !description.trim()}
+            disabled={saving || uploadingCover || !title.trim()}
             className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving || uploadingCover ? 'Saving...' : 'Save as draft'}
