@@ -105,10 +105,18 @@ async def setup_profile(
     current_user: User = Depends(get_current_user)
 ):
     """Complete profile setup for OAuth users (set username and name)."""
+    # Get fresh user from current session (avoid session conflict)
+    user = session.get(User, current_user.id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
     # Check if username is already taken
     existing_username = session.exec(
         select(User).where(
-            (User.username == profile_data.username) & (User.id != current_user.id)
+            (User.username == profile_data.username) & (User.id != user.id)
         )
     ).first()
     if existing_username:
@@ -125,32 +133,30 @@ async def setup_profile(
             detail="Username must be 3-20 characters and contain only letters, numbers, and underscores"
         )
     
-    # Update user
-    current_user.username = profile_data.username
-    current_user.full_name = profile_data.full_name
-    current_user.profile_setup_completed = True
-    session.add(current_user)
+    # Update user (already in session, no need to add)
+    user.username = profile_data.username
+    user.full_name = profile_data.full_name
+    user.profile_setup_completed = True
     
     # Update profile display name
-    profile = session.exec(select(Profile).where(Profile.user_id == current_user.id)).first()
+    profile = session.exec(select(Profile).where(Profile.user_id == user.id)).first()
     if profile:
         profile.display_name = profile_data.full_name
-        session.add(profile)
     
     session.commit()
-    session.refresh(current_user)
+    session.refresh(user)
     
     # Check onboarding status
-    onboarding = session.exec(select(OnboardingProgress).where(OnboardingProgress.user_id == current_user.id)).first()
+    onboarding = session.exec(select(OnboardingProgress).where(OnboardingProgress.user_id == user.id)).first()
     onboarding_completed = onboarding.completed if onboarding else False
     
     return UserResponse(
-        id=current_user.id,
-        email=current_user.email,
-        username=current_user.username,
-        full_name=current_user.full_name,
-        is_active=current_user.is_active,
-        created_at=current_user.created_at.isoformat(),
+        id=user.id,
+        email=user.email,
+        username=user.username,
+        full_name=user.full_name,
+        is_active=user.is_active,
+        created_at=user.created_at.isoformat(),
         onboarding_completed=onboarding_completed,
         profile_setup_completed=True
     )
