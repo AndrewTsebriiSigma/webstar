@@ -37,10 +37,11 @@ async def get_portfolio_items(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
-    """Get user's portfolio items."""
+    """Get user's portfolio items (excluding drafts)."""
     items = session.exec(
         select(PortfolioItem)
         .where(PortfolioItem.user_id == current_user.id)
+        .where(PortfolioItem.is_draft == False)
         .order_by(PortfolioItem.order)
     ).all()
     
@@ -55,6 +56,45 @@ async def get_portfolio_items(
             description=item.description,
             text_content=item.text_content,
             aspect_ratio=item.aspect_ratio,
+            attachment_url=item.attachment_url,
+            attachment_type=item.attachment_type,
+            is_draft=item.is_draft,
+            views=item.views,
+            clicks=item.clicks,
+            order=item.order,
+            created_at=item.created_at.isoformat()
+        )
+        for item in items
+    ]
+
+
+@router.get("/drafts", response_model=List[PortfolioItemResponse])
+async def get_draft_items(
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    """Get user's draft portfolio items."""
+    items = session.exec(
+        select(PortfolioItem)
+        .where(PortfolioItem.user_id == current_user.id)
+        .where(PortfolioItem.is_draft == True)
+        .order_by(PortfolioItem.created_at.desc())
+    ).all()
+    
+    return [
+        PortfolioItemResponse(
+            id=item.id,
+            user_id=item.user_id,
+            content_type=item.content_type,
+            content_url=item.content_url,
+            thumbnail_url=item.thumbnail_url,
+            title=item.title,
+            description=item.description,
+            text_content=item.text_content,
+            aspect_ratio=item.aspect_ratio,
+            attachment_url=item.attachment_url,
+            attachment_type=item.attachment_type,
+            is_draft=item.is_draft,
             views=item.views,
             clicks=item.clicks,
             order=item.order,
@@ -69,7 +109,7 @@ async def get_user_portfolio_items(
     username: str,
     session: Session = Depends(get_session)
 ):
-    """Get another user's portfolio items (public)."""
+    """Get another user's portfolio items (public, excluding drafts)."""
     user = session.exec(select(User).where(User.username == username)).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -77,6 +117,7 @@ async def get_user_portfolio_items(
     items = session.exec(
         select(PortfolioItem)
         .where(PortfolioItem.user_id == user.id)
+        .where(PortfolioItem.is_draft == False)
         .order_by(PortfolioItem.order)
     ).all()
     
@@ -91,6 +132,9 @@ async def get_user_portfolio_items(
             description=item.description,
             text_content=item.text_content,
             aspect_ratio=item.aspect_ratio,
+            attachment_url=item.attachment_url,
+            attachment_type=item.attachment_type,
+            is_draft=item.is_draft,
             views=item.views,
             clicks=item.clicks,
             order=item.order,
@@ -108,7 +152,7 @@ async def create_portfolio_item(
 ):
     """Create a new portfolio item."""
     # Validate content type
-    valid_types = ["photo", "video", "audio", "text", "link"]
+    valid_types = ["photo", "video", "audio", "pdf", "text", "link"]
     if item_data.content_type not in valid_types:
         raise HTTPException(
             status_code=400,
@@ -145,23 +189,28 @@ async def create_portfolio_item(
         description=item_data.description,
         text_content=item_data.text_content,
         aspect_ratio=item_data.aspect_ratio,
+        attachment_url=item_data.attachment_url,
+        attachment_type=item_data.attachment_type,
+        is_draft=item_data.is_draft,
         order=order
     )
     session.add(item)
     session.commit()
     session.refresh(item)
     
-    # Update profile portfolio count
-    profile = session.exec(select(Profile).where(Profile.user_id == current_user.id)).first()
-    if profile:
-        profile.portfolio_items_count += 1
-        session.add(profile)
-        session.commit()
-    
-    # Award points for first upload
-    existing_count = len(max_order)
-    if existing_count == 0:
-        await award_points_portfolio(current_user.id, "first_media_upload", 30, session)
+    # Only update profile count and award points if not a draft
+    if not item_data.is_draft:
+        # Update profile portfolio count
+        profile = session.exec(select(Profile).where(Profile.user_id == current_user.id)).first()
+        if profile:
+            profile.portfolio_items_count += 1
+            session.add(profile)
+            session.commit()
+        
+        # Award points for first upload
+        existing_count = len([i for i in max_order if not i.is_draft])
+        if existing_count == 0:
+            await award_points_portfolio(current_user.id, "first_media_upload", 30, session)
     
     return PortfolioItemResponse(
         id=item.id,
@@ -173,6 +222,9 @@ async def create_portfolio_item(
         description=item.description,
         text_content=item.text_content,
         aspect_ratio=item.aspect_ratio,
+        attachment_url=item.attachment_url,
+        attachment_type=item.attachment_type,
+        is_draft=item.is_draft,
         views=item.views,
         clicks=item.clicks,
         order=item.order,
@@ -213,6 +265,56 @@ async def update_portfolio_item(
         description=item.description,
         text_content=item.text_content,
         aspect_ratio=item.aspect_ratio,
+        attachment_url=item.attachment_url,
+        attachment_type=item.attachment_type,
+        is_draft=item.is_draft,
+        views=item.views,
+        clicks=item.clicks,
+        order=item.order,
+        created_at=item.created_at.isoformat()
+    )
+
+
+@router.post("/{item_id}/publish", response_model=PortfolioItemResponse)
+async def publish_draft(
+    item_id: int,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    """Publish a draft portfolio item."""
+    item = session.get(PortfolioItem, item_id)
+    if not item or item.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Portfolio item not found")
+    
+    if not item.is_draft:
+        raise HTTPException(status_code=400, detail="Item is already published")
+    
+    # Mark as published
+    item.is_draft = False
+    session.add(item)
+    
+    # Update profile portfolio count
+    profile = session.exec(select(Profile).where(Profile.user_id == current_user.id)).first()
+    if profile:
+        profile.portfolio_items_count += 1
+        session.add(profile)
+    
+    session.commit()
+    session.refresh(item)
+    
+    return PortfolioItemResponse(
+        id=item.id,
+        user_id=item.user_id,
+        content_type=item.content_type,
+        content_url=item.content_url,
+        thumbnail_url=item.thumbnail_url,
+        title=item.title,
+        description=item.description,
+        text_content=item.text_content,
+        aspect_ratio=item.aspect_ratio,
+        attachment_url=item.attachment_url,
+        attachment_type=item.attachment_type,
+        is_draft=item.is_draft,
         views=item.views,
         clicks=item.clicks,
         order=item.order,

@@ -69,6 +69,9 @@ export interface PortfolioItem {
   description: string | null;
   text_content: string | null;
   aspect_ratio: string | null;
+  attachment_url?: string | null;
+  attachment_type?: string | null;
+  is_draft: boolean;
   views: number;
   clicks: number;
   order: number;

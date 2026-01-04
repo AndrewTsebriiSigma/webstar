@@ -121,11 +121,15 @@ export const portfolioAPI = {
   
   getUserItems: (username: string) => api.get(`/api/portfolio/user/${username}`),
   
+  getDrafts: () => api.get('/api/portfolio/drafts'),
+  
   createItem: (data: any) => api.post('/api/portfolio', data),
   
   updateItem: (id: number, data: any) => api.put(`/api/portfolio/${id}`, data),
   
   deleteItem: (id: number) => api.delete(`/api/portfolio/${id}`),
+  
+  publishDraft: (id: number) => api.post(`/api/portfolio/${id}/publish`),
   
   trackView: (id: number) => api.post(`/api/portfolio/${id}/view`),
   

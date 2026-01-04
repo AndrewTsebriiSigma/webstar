@@ -108,11 +108,16 @@ class PortfolioItem(SQLModel, table=True):
     title: Optional[str] = None
     description: Optional[str] = None
     text_content: Optional[str] = Field(default=None, max_length=500)  # For text posts
+    attachment_url: Optional[str] = None  # For audio/PDF attachments
+    attachment_type: Optional[str] = None  # 'audio' or 'pdf'
     
     # Format info
     aspect_ratio: Optional[str] = None  # '1:1', '4:5', '9:16', '16:9'
     file_size: Optional[int] = None
     duration: Optional[int] = None  # For audio/video in seconds
+    
+    # Draft status
+    is_draft: bool = Field(default=False)
     
     # Analytics
     views: int = Field(default=0)
@@ -138,6 +143,9 @@ class Project(SQLModel, table=True):
     tags: Optional[str] = None  # Comma-separated
     tools: Optional[str] = None  # Comma-separated tools used
     project_url: Optional[str] = None  # External project link
+    
+    # Draft status
+    is_draft: bool = Field(default=False)
     
     # Analytics
     views: int = Field(default=0)

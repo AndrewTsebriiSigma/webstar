@@ -417,7 +417,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
           </div>
           <div className="dashboard-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             <button 
-              onClick={() => router.push('/profile/edit')}
+              onClick={() => router.push('/drafts')}
               className="action-button"
               style={{
                 width: '55px',
@@ -456,9 +456,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
               onMouseUp={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
               }}
-              title="Portfolio"
+              title="Drafts"
             >
-              <img src="/layers.svg" alt="Portfolio" style={{ width: '20px', height: '20px', filter: 'invert(1) opacity(0.44)' }} />
+              <img src="/layers.svg" alt="Drafts" style={{ width: '20px', height: '20px', filter: 'invert(1) opacity(0.44)' }} />
             </button>
             <button 
               className="action-button"

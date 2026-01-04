@@ -12,6 +12,9 @@ class PortfolioItemCreate(BaseModel):
     description: Optional[str] = None
     text_content: Optional[str] = Field(None, max_length=500)  # For text posts
     aspect_ratio: Optional[str] = None
+    attachment_url: Optional[str] = None  # For audio/PDF attachments
+    attachment_type: Optional[str] = None  # 'audio' or 'pdf'
+    is_draft: bool = False
 
 
 class PortfolioItemUpdate(BaseModel):
@@ -32,6 +35,9 @@ class PortfolioItemResponse(BaseModel):
     description: Optional[str]
     text_content: Optional[str]
     aspect_ratio: Optional[str]
+    attachment_url: Optional[str]
+    attachment_type: Optional[str]
+    is_draft: bool
     views: int
     clicks: int
     order: int
@@ -46,6 +52,7 @@ class ProjectCreate(BaseModel):
     tags: Optional[str] = None
     tools: Optional[str] = None
     project_url: Optional[str] = None
+    is_draft: bool = False
 
 
 class ProjectUpdate(BaseModel):
@@ -69,6 +76,7 @@ class ProjectResponse(BaseModel):
     tags: Optional[str]
     tools: Optional[str]
     project_url: Optional[str]
+    is_draft: bool
     views: int
     clicks: int
     order: int
