@@ -650,7 +650,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
         {activeTab === 'portfolio' && (
           <div style={{ 
-            maxWidth: '430px', 
             margin: '0 auto',
             width: '100%',
             padding: '0 5px'
