@@ -669,6 +669,143 @@ function FeedPostContent({
           )}
         </div>
       )}
+
+      {/* Attachments */}
+      {post.attachment_url && post.attachment_type && (
+        <div style={{ marginTop: '16px' }}>
+          {post.attachment_type === 'audio' && (
+            <div 
+              style={{
+                padding: '16px',
+                borderRadius: '12px',
+                background: 'rgba(10, 132, 255, 0.08)',
+                border: '1px solid rgba(10, 132, 255, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}
+            >
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: 'rgba(10, 132, 255, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#00C2FF"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M9 18V5l12-2v13" />
+                  <circle cx="6" cy="18" r="3" />
+                  <circle cx="18" cy="16" r="3" />
+                </svg>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: '#FFFFFF',
+                  marginBottom: '4px'
+                }}>
+                  Audio Attachment
+                </div>
+                <audio 
+                  controls 
+                  style={{ 
+                    width: '100%', 
+                    height: '32px',
+                    outline: 'none'
+                  }}
+                  src={post.attachment_url.startsWith('http') 
+                    ? post.attachment_url 
+                    : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${post.attachment_url}`}
+                >
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
+            </div>
+          )}
+          
+          {post.attachment_type === 'pdf' && (
+            <div 
+              style={{
+                padding: '16px',
+                borderRadius: '12px',
+                background: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid rgba(239, 68, 68, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}
+            >
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '8px',
+                background: 'rgba(239, 68, 68, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#EF4444"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: '#FFFFFF',
+                  marginBottom: '4px'
+                }}>
+                  PDF Document
+                </div>
+                <a
+                  href={post.attachment_url.startsWith('http') 
+                    ? post.attachment_url 
+                    : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${post.attachment_url}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontSize: '13px',
+                    color: '#EF4444',
+                    textDecoration: 'none',
+                    fontWeight: 600
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.textDecoration = 'underline';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.textDecoration = 'none';
+                  }}
+                >
+                  View Document →
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

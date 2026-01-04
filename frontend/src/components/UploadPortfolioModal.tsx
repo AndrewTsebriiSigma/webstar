@@ -295,9 +295,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
           content_url: contentUrl,
           description: description || null,
           aspect_ratio: '1:1',
-          // TODO: Add attachment fields when backend is ready
-          // attachment_url: attachmentUrl,
-          // attachment_type: attachmentType,
+          attachment_url: attachmentUrl,
+          attachment_type: attachmentType,
         });
 
         setUploadProgress(100);
@@ -384,9 +383,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
           description: description || null,
           aspect_ratio: '1:1',
           is_draft: true,
-          // TODO: Add attachment fields when backend is ready
-          // attachment_url: attachmentUrl,
-          // attachment_type: attachmentType,
+          attachment_url: attachmentUrl,
+          attachment_type: attachmentType,
         });
 
         setUploadProgress(100);
