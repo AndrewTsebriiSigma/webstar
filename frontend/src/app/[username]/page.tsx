@@ -349,18 +349,18 @@ export default function ProfilePage({ params }: { params: { username: string } }
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: 'rgba(255, 255, 255, 0.06)',
+            background: 'rgba(31, 31, 31, 0.8)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
-            borderRadius: '16px',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+            borderRadius: '20px',
             cursor: 'pointer',
             transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-            padding: '10px 16px 10px 24px',
+            padding: '12px 16px 12px 20px',
             margin: '0 16px 14px',
             width: 'calc(100% - 32px)',
-            height: '60px'
+            height: '64px'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
@@ -420,13 +420,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
               onClick={() => router.push('/profile/edit')}
               className="action-button"
               style={{
-                width: '55px',
-                height: '40px',
-                borderRadius: '20px',
-                background: '#2A2A2A',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid #414141',
+                width: '48px',
+                height: '48px',
+                borderRadius: '14px',
+                background: '#232323',
+                border: '1px solid #3A3A3A',
                 color: '#707070',
                 display: 'flex',
                 alignItems: 'center',
@@ -437,16 +435,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 padding: 0
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.color = '#f5f5f5';
+                e.currentTarget.style.background = '#2A2A2A';
+                e.currentTarget.style.borderColor = '#4A4A4A';
                 const img = e.currentTarget.querySelector('img');
-                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.7)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#2A2A2A';
-                e.currentTarget.style.borderColor = '#414141';
-                e.currentTarget.style.color = '#707070';
+                e.currentTarget.style.background = '#232323';
+                e.currentTarget.style.borderColor = '#3A3A3A';
                 const img = e.currentTarget.querySelector('img');
                 if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
               }}
@@ -463,13 +459,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <button 
               className="action-button"
               style={{
-                width: '55px',
-                height: '40px',
-                borderRadius: '20px',
-                background: '#2A2A2A',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid #414141',
+                width: '48px',
+                height: '48px',
+                borderRadius: '14px',
+                background: '#232323',
+                border: '1px solid #3A3A3A',
                 color: '#707070',
                 display: 'flex',
                 alignItems: 'center',
@@ -480,16 +474,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 padding: 0
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.color = '#f5f5f5';
+                e.currentTarget.style.background = '#2A2A2A';
+                e.currentTarget.style.borderColor = '#4A4A4A';
                 const img = e.currentTarget.querySelector('img');
-                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.7)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#2A2A2A';
-                e.currentTarget.style.borderColor = '#414141';
-                e.currentTarget.style.color = '#707070';
+                e.currentTarget.style.background = '#232323';
+                e.currentTarget.style.borderColor = '#3A3A3A';
                 const img = e.currentTarget.querySelector('img');
                 if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
               }}
