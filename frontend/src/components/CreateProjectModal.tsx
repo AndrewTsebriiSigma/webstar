@@ -274,22 +274,13 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
             <ArrowLeftIcon className="w-5 h-5 text-gray-400" />
           </button>
           <h2 className="text-lg font-bold text-white">Create Project</h2>
-          <div className="flex gap-2">
-            <button
-              onClick={handleSaveAsDraft}
-              disabled={saving || uploadingCover || !description.trim()}
-              className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving || uploadingCover ? 'Saving...' : 'Save as draft'}
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={saving || uploadingCover || !description.trim()}
-              className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving || uploadingCover ? 'Creating...' : 'Publish'}
-            </button>
-          </div>
+          <button
+            onClick={handleSubmit}
+            disabled={saving || uploadingCover || !description.trim()}
+            className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving || uploadingCover ? 'Creating...' : 'Publish'}
+          </button>
         </div>
 
         {/* Content */}
@@ -420,6 +411,17 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
               </p>
             </div>
           )}
+        </div>
+
+        {/* Footer with Save as Draft */}
+        <div className="border-t border-gray-700 p-4">
+          <button
+            onClick={handleSaveAsDraft}
+            disabled={saving || uploadingCover || !description.trim()}
+            className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving || uploadingCover ? 'Saving...' : 'Save as draft'}
+          </button>
         </div>
       </div>
 

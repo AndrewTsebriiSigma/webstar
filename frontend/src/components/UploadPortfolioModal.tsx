@@ -525,22 +525,13 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
                  selectedContentType === 'text' ? 'Write Text Post' :
                  'Create Post'}
               </h2>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleSaveAsDraft}
-                  disabled={uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file)}
-                  className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {uploading ? 'Saving...' : 'Save as draft'}
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  disabled={uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file)}
-                  className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {uploading ? 'Publishing...' : 'Publish'}
-                </button>
-              </div>
+              <button
+                onClick={handleSubmit}
+                disabled={uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file)}
+                className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {uploading ? 'Publishing...' : 'Publish'}
+              </button>
             </div>
 
             <div className="p-4 space-y-4">
@@ -759,7 +750,13 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
             {selectedContentType && selectedContentType !== 'audio' && selectedContentType !== 'pdf' && selectedContentType !== 'text' && (
               <div className="border-t border-gray-800 p-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-400">Attachments</p>
+                  <button
+                    onClick={handleSaveAsDraft}
+                    disabled={uploading || !file}
+                    className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {uploading ? 'Saving...' : 'Save as draft'}
+                  </button>
                   
                   <div className="flex gap-2">
                     {/* Audio Attachment Button (Music Note Icon) */}
@@ -839,6 +836,19 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Footer for Audio, PDF, and Text posts (no attachments, just Save as Draft) */}
+            {selectedContentType && (selectedContentType === 'audio' || selectedContentType === 'pdf' || selectedContentType === 'text') && (
+              <div className="border-t border-gray-800 p-4">
+                <button
+                  onClick={handleSaveAsDraft}
+                  disabled={uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file)}
+                  className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {uploading ? 'Saving...' : 'Save as draft'}
+                </button>
               </div>
             )}
           </>
