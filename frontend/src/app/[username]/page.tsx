@@ -235,8 +235,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 onClick={() => setViewerMode(!viewerMode)}
                 className="flex items-center justify-center"
                 style={{ 
-                  width: '28px',
-                  height: '28px',
+                  width: '30px',
+                  height: '30px',
                   borderRadius: '50%',
                   background: viewerMode ? '#00C2FF' : 'rgba(0, 0, 0, 0.35)',
                   backdropFilter: 'blur(20px)',
@@ -249,14 +249,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 title={viewerMode ? 'Exit viewer mode' : 'Enter viewer mode'}
               >
-                <EyeIcon className="w-[18px] h-[18px]" />
+                <EyeIcon className="w-[21px] h-[21px]" />
               </button>
               <button 
                 onClick={() => setShowSettingsModal(true)}
                 className="flex items-center justify-center"
                 style={{ 
-                  width: '28px',
-                  height: '28px',
+                  width: '30px',
+                  height: '30px',
                   borderRadius: '50%',
                   background: 'rgba(0, 0, 0, 0.35)',
                   backdropFilter: 'blur(20px)',
@@ -269,7 +269,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 title="Settings"
               >
-                <Cog6ToothIcon className="w-[18px] h-[18px]" />
+                <Cog6ToothIcon className="w-[21px] h-[21px]" />
               </button>
             </div>
           )}
@@ -302,10 +302,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
         </div>
       </div>
 
-      {/* Profile Info - Mathematical spacing */}
-      <div className="profile-info" style={{ padding: '10px 24px 18px', textAlign: 'center' }}>
+      {/* Profile Info - Tight Apple-like spacing */}
+      <div className="profile-info" style={{ padding: '8px 24px 16px', textAlign: 'center' }}>
         {/* Name + Badge */}
-        <div className="flex items-center justify-center gap-1.5" style={{ marginTop: '12px', marginBottom: '6px' }}>
+        <div className="flex items-center justify-center gap-1.5 mt-2 mb-1">
           <h1 className="text-xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)', letterSpacing: '-0.2px' }}>
             {profile.display_name || username}
           </h1>
@@ -315,12 +315,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
         </div>
         
         {/* Bio */}
-        <p className="text-sm px-2" style={{ 
+        <p className="text-sm mb-2 px-2" style={{ 
           color: 'rgba(255, 255, 255, 0.75)',
           fontSize: '15px',
           lineHeight: '1.4',
-          opacity: 0.9,
-          marginBottom: '8px'
+          opacity: 0.9
         }}>
           {profile.bio || 'Make original the only standard.'}
         </p>
@@ -421,9 +420,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
               onClick={() => router.push('/profile/edit')}
               className="action-button"
               style={{
-                width: '50px',
-                height: '36px',
-                borderRadius: '18px',
+                width: '55px',
+                height: '40px',
+                borderRadius: '20px',
                 background: '#2A2A2A',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
@@ -459,14 +458,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
               title="Portfolio"
             >
-              <img src="/layers.svg" alt="Portfolio" style={{ width: '18px', height: '18px', filter: 'invert(1) opacity(0.44)' }} />
+              <img src="/layers.svg" alt="Portfolio" style={{ width: '20px', height: '20px', filter: 'invert(1) opacity(0.44)' }} />
             </button>
             <button 
               className="action-button"
               style={{
-                width: '50px',
-                height: '36px',
-                borderRadius: '18px',
+                width: '55px',
+                height: '40px',
+                borderRadius: '20px',
                 background: '#2A2A2A',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
@@ -502,7 +501,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
               title="Customize"
             >
-              <img src="/palette.svg" alt="Customize" style={{ width: '18px', height: '18px', filter: 'invert(1) opacity(0.44)' }} />
+              <img src="/palette.svg" alt="Customize" style={{ width: '20px', height: '20px', filter: 'invert(1) opacity(0.44)' }} />
             </button>
           </div>
         </div>
@@ -510,15 +509,15 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
       {/* Action Buttons - Compact */}
       <div style={{ padding: '0 16px', marginBottom: '12px' }}>
-        <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+        <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
           {isOwnProfile ? (
             <>
               <button 
                 onClick={() => setShowShareModal(true)}
                 className="action-btn custom-btn"
                 style={{
-                  flex: '0 0 calc(65% - 5px)',
-                  height: '34px',
+                  flex: '0 0 calc(65% - 4px)',
+                  height: '32px',
                   background: '#1F1F1F',
                   border: '1px solid #353535',
                   color: '#C7C7C7',
@@ -556,8 +555,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
               <button 
                 className="action-btn"
                 style={{
-                  flex: '0 0 calc(35% - 5px)',
-                  height: '34px',
+                  flex: '0 0 calc(35% - 4px)',
+                  height: '32px',
                   background: '#1F1F1F',
                   border: '1px solid #353535',
                   color: '#C7C7C7',
