@@ -608,7 +608,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Tabs */}
       <div 
         className="z-30 backdrop-blur-md border-b border-gray-800"
-        style={{ background: 'rgba(17, 17, 17, 0.9)', marginTop: '80px' }}
+        style={{ background: 'rgba(17, 17, 17, 0.9)', marginTop: '28px' }}
       >
         <div className="flex relative">
           {/* Sliding indicator */}
