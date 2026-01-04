@@ -235,13 +235,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 onClick={() => setViewerMode(!viewerMode)}
                 className="flex items-center justify-center"
                 style={{ 
-                  width: '24px',
-                  height: '24px',
+                  width: '18px',
+                  height: '18px',
                   borderRadius: '50%',
-                  background: viewerMode ? '#00C2FF' : 'rgba(0, 0, 0, 0.35)',
+                  background: viewerMode ? '#00C2FF' : 'rgba(0, 0, 0, 0.25)',
                   backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
-                  color: '#FFFFFF',
+                  color: 'rgba(255, 255, 255, 0.85)',
                   transition: 'all 150ms cubic-bezier(0.22, 0.61, 0.36, 1)'
                 }}
                 onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
@@ -255,13 +255,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 onClick={() => setShowSettingsModal(true)}
                 className="flex items-center justify-center"
                 style={{ 
-                  width: '24px',
-                  height: '24px',
+                  width: '18px',
+                  height: '18px',
                   borderRadius: '50%',
-                  background: 'rgba(0, 0, 0, 0.35)',
+                  background: 'rgba(0, 0, 0, 0.25)',
                   backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
-                  color: '#FFFFFF',
+                  color: 'rgba(255, 255, 255, 0.85)',
                   transition: 'all 150ms cubic-bezier(0.22, 0.61, 0.36, 1)'
                 }}
                 onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
