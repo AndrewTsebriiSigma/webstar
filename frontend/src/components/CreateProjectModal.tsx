@@ -22,8 +22,6 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
   const [selectedPortfolioIds, setSelectedPortfolioIds] = useState<Set<number>>(new Set());
   const [projectMedia, setProjectMedia] = useState<any[]>([]);
   const [description, setDescription] = useState('');
-  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
-  const [attachmentType, setAttachmentType] = useState<'audio' | 'pdf' | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Load user's portfolio items
@@ -52,8 +50,6 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
     setShowAddContentModal(false);
     setProjectMedia([]);
     setSelectedPortfolioIds(new Set());
-    setAttachmentFile(null);
-    setAttachmentType(null);
   };
 
   const handleClose = () => {
@@ -117,50 +113,6 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
     }
   };
 
-  // Attachment handlers
-  const handleAudioAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
-
-    if (!selectedFile.type.startsWith('audio/')) {
-      toast.error('Please select an audio file');
-      return;
-    }
-
-    if (selectedFile.size > 10 * 1024 * 1024) {
-      toast.error('Audio file must be less than 10MB');
-      return;
-    }
-
-    setAttachmentFile(selectedFile);
-    setAttachmentType('audio');
-    toast.success('Audio attachment added');
-  };
-
-  const handlePdfAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
-
-    if (selectedFile.type !== 'application/pdf') {
-      toast.error('Please select a PDF file');
-      return;
-    }
-
-    if (selectedFile.size > 10 * 1024 * 1024) {
-      toast.error('PDF file must be less than 10MB');
-      return;
-    }
-
-    setAttachmentFile(selectedFile);
-    setAttachmentType('pdf');
-    toast.success('PDF attachment added');
-  };
-
-  const removeAttachment = () => {
-    setAttachmentFile(null);
-    setAttachmentType(null);
-  };
-
   const handleCoverSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -199,13 +151,6 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
         const response = await uploadsAPI.uploadProjectCover(coverFile);
         coverUrl = response.data.url;
         setUploadingCover(false);
-      }
-
-      // Handle attachment upload if present
-      let attachmentUrl = null;
-      if (attachmentFile && attachmentType) {
-        const attachmentResponse = await uploadsAPI.uploadMedia(attachmentFile, attachmentType);
-        attachmentUrl = attachmentResponse.data.url;
       }
 
       // Create project - Note: title removed, description is required now
@@ -251,6 +196,68 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
     }
   };
 
+  const handleSaveAsDraft = async () => {
+    if (!description.trim()) {
+      toast.error('Project description is required');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      let coverUrl = '';
+      
+      // Upload cover image if selected
+      if (coverFile) {
+        setUploadingCover(true);
+        const response = await uploadsAPI.uploadProjectCover(coverFile);
+        coverUrl = response.data.url;
+        setUploadingCover(false);
+      }
+
+      // Create project as draft
+      const projectResponse = await projectsAPI.createProject({
+        title: description.substring(0, 100),
+        description: description || null,
+        cover_image: coverUrl || null,
+        tags: null,
+        tools: null,
+        project_url: null,
+        is_draft: true,
+      });
+
+      const projectId = projectResponse.data.id;
+
+      // Add project media
+      if (projectMedia.length > 0) {
+        for (const media of projectMedia) {
+          try {
+            await projectsAPI.addProjectMedia(projectId, {
+              media_url: media.media_url || media.content_url,
+              media_type: media.content_type,
+              thumbnail_url: media.thumbnail_url || null
+            });
+          } catch (error) {
+            console.error('Failed to add media:', error);
+          }
+        }
+      }
+
+      toast.success('Draft saved! 📝');
+      
+      handleReset();
+      setProjectMedia([]);
+      setSelectedPortfolioIds(new Set());
+      onSuccess();
+      onClose();
+    } catch (error: any) {
+      console.error('Save draft error:', error);
+      toast.error(error.response?.data?.detail || 'Failed to save draft');
+    } finally {
+      setSaving(false);
+      setUploadingCover(false);
+    }
+  };
+
   return (
     <div 
       className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4"
@@ -267,13 +274,22 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
             <ArrowLeftIcon className="w-5 h-5 text-gray-400" />
           </button>
           <h2 className="text-lg font-bold text-white">Create Project</h2>
-          <button
-            onClick={handleSubmit}
-            disabled={saving || uploadingCover || !description.trim()}
-            className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {saving || uploadingCover ? 'Creating...' : 'Publish'}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleSaveAsDraft}
+              disabled={saving || uploadingCover || !description.trim()}
+              className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving || uploadingCover ? 'Saving...' : 'Save as draft'}
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={saving || uploadingCover || !description.trim()}
+              className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving || uploadingCover ? 'Creating...' : 'Publish'}
+            </button>
+          </div>
         </div>
 
         {/* Content */}
@@ -404,121 +420,6 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
               </p>
             </div>
           )}
-
-          {/* Bottom Actions - Attachments */}
-          <div className="border-t border-gray-700 pt-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-400">Attachments</p>
-              
-              <div className="flex gap-2">
-                {/* Audio Attachment Button */}
-                <div className="relative">
-                  <input
-                    type="file"
-                    id="audio-attachment-project"
-                    accept="audio/*"
-                    onChange={handleAudioAttachment}
-                    className="hidden"
-                    disabled={saving || uploadingCover || attachmentType === 'pdf'}
-                  />
-                  <label
-                    htmlFor="audio-attachment-project"
-                    className={`p-2 rounded-lg transition cursor-pointer inline-flex ${
-                      attachmentType === 'pdf'
-                        ? 'opacity-30 cursor-not-allowed'
-                        : attachmentType === 'audio'
-                        ? 'bg-cyan-500/20 hover:bg-cyan-500/30'
-                        : 'hover:bg-gray-700'
-                    }`}
-                    title={
-                      attachmentType === 'pdf'
-                        ? 'Remove PDF attachment first'
-                        : attachmentType === 'audio'
-                        ? 'Audio attached'
-                        : 'Add audio attachment'
-                    }
-                    onClick={(e) => {
-                      if (attachmentType === 'pdf') {
-                        e.preventDefault();
-                      }
-                    }}
-                  >
-                    <svg className={`w-5 h-5 ${attachmentType === 'audio' ? 'text-cyan-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                    </svg>
-                  </label>
-                </div>
-
-                {/* PDF Attachment Button */}
-                <div className="relative">
-                  <input
-                    type="file"
-                    id="pdf-attachment-project"
-                    accept="application/pdf"
-                    onChange={handlePdfAttachment}
-                    className="hidden"
-                    disabled={saving || uploadingCover || attachmentType === 'audio'}
-                  />
-                  <label
-                    htmlFor="pdf-attachment-project"
-                    className={`p-2 rounded-lg transition cursor-pointer inline-flex ${
-                      attachmentType === 'audio'
-                        ? 'opacity-30 cursor-not-allowed'
-                        : attachmentType === 'pdf'
-                        ? 'bg-cyan-500/20 hover:bg-cyan-500/30'
-                        : 'hover:bg-gray-700'
-                    }`}
-                    title={
-                      attachmentType === 'audio'
-                        ? 'Remove audio attachment first'
-                        : attachmentType === 'pdf'
-                        ? 'PDF attached'
-                        : 'Add PDF attachment'
-                    }
-                    onClick={(e) => {
-                      if (attachmentType === 'audio') {
-                        e.preventDefault();
-                      }
-                    }}
-                  >
-                    <svg className={`w-5 h-5 ${attachmentType === 'pdf' ? 'text-cyan-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </label>
-                </div>
-
-                {/* Remove Attachment Button */}
-                {attachmentFile && (
-                  <button
-                    onClick={removeAttachment}
-                    className="p-2 rounded-lg transition hover:bg-red-500/20 text-red-400"
-                    title="Remove attachment"
-                  >
-                    <XMarkIcon className="w-5 h-5" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Attachment Preview */}
-            {attachmentFile && (
-              <div className="mt-2 p-2 bg-gray-800 rounded-lg flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {attachmentType === 'audio' ? (
-                    <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                    </svg>
-                  ) : (
-                    <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  )}
-                  <span className="text-xs text-gray-300 truncate max-w-[200px]">{attachmentFile.name}</span>
-                </div>
-                <span className="text-xs text-gray-500">{(attachmentFile.size / 1024 / 1024).toFixed(2)} MB</span>
-              </div>
-            )}
-          </div>
         </div>
       </div>
 

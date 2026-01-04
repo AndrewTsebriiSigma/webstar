@@ -30,8 +30,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Determine if attachments are allowed (avoid duplicates)
-  const canAddAudioAttachment = selectedContentType === 'media';
-  const canAddPdfAttachment = selectedContentType === 'media';
+  const canAddAudioAttachment = selectedContentType === 'media'; // Only for media, not for audio
+  const canAddPdfAttachment = selectedContentType === 'media'; // Only for media
 
   if (!isOpen) return null;
 
@@ -316,6 +316,95 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
     }
   };
 
+  const handleSaveAsDraft = async () => {
+    // Validation
+    if (selectedContentType === 'text' && !textContent.trim()) {
+      toast.error('Please enter some text');
+      return;
+    }
+    
+    if (selectedContentType !== 'text' && !file) {
+      toast.error('Please select a file');
+      return;
+    }
+
+    setUploading(true);
+    
+    try {
+      setUploadProgress(30);
+
+      if (selectedContentType === 'text') {
+        // Text draft flow
+        await portfolioAPI.createItem({
+          content_type: 'text',
+          content_url: null,
+          text_content: textContent.trim(),
+          description: description || null,
+          aspect_ratio: '4:5',
+          is_draft: true,
+        });
+        
+        setUploadProgress(100);
+        toast.success('Draft saved! 📝');
+      } else {
+        // Media draft flow
+        if (!selectedContentType) {
+          toast.error('Please select a content type');
+          return;
+        }
+        
+        // Determine actual content type from file
+        let actualContentType: string = selectedContentType;
+        if (selectedContentType === 'media') {
+          // Auto-detect based on file type
+          if (file!.type.startsWith('image/')) {
+            actualContentType = 'photo';
+          } else if (file!.type.startsWith('video/')) {
+            actualContentType = 'video';
+          }
+        }
+        
+        // Upload main file
+        const uploadResponse = await uploadsAPI.uploadMedia(file!, actualContentType);
+        const contentUrl = uploadResponse.data.url;
+        
+        setUploadProgress(70);
+
+        // Handle attachment upload if present
+        let attachmentUrl = null;
+        if (attachmentFile && attachmentType) {
+          const attachmentResponse = await uploadsAPI.uploadMedia(attachmentFile, attachmentType);
+          attachmentUrl = attachmentResponse.data.url;
+        }
+
+        // Create portfolio item as draft
+        await portfolioAPI.createItem({
+          content_type: actualContentType,
+          content_url: contentUrl,
+          description: description || null,
+          aspect_ratio: '1:1',
+          is_draft: true,
+          // TODO: Add attachment fields when backend is ready
+          // attachment_url: attachmentUrl,
+          // attachment_type: attachmentType,
+        });
+
+        setUploadProgress(100);
+        toast.success('Draft saved! 📝');
+      }
+      
+      handleReset();
+      onSuccess();
+      onClose();
+    } catch (error: any) {
+      console.error('Save draft error:', error);
+      toast.error(error.response?.data?.detail || 'Failed to save draft');
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
   return (
     <div 
       className="fixed inset-0 flex items-center justify-center z-50 p-4"
@@ -436,13 +525,22 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
                  selectedContentType === 'text' ? 'Write Text Post' :
                  'Create Post'}
               </h2>
-              <button
-                onClick={handleSubmit}
-                disabled={uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file)}
-                className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {uploading ? 'Publishing...' : 'Publish'}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveAsDraft}
+                  disabled={uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file)}
+                  className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {uploading ? 'Saving...' : 'Save as draft'}
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file)}
+                  className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {uploading ? 'Publishing...' : 'Publish'}
+                </button>
+              </div>
             </div>
 
             <div className="p-4 space-y-4">
@@ -657,14 +755,14 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
               )}
             </div>
 
-            {/* Footer with Attachment Actions (only for media) */}
-            {selectedContentType === 'media' && (
+            {/* Footer with Attachment Actions (disabled for audio and PDF main content) */}
+            {selectedContentType && selectedContentType !== 'audio' && selectedContentType !== 'pdf' && selectedContentType !== 'text' && (
               <div className="border-t border-gray-800 p-4">
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-gray-400">Attachments</p>
                   
                   <div className="flex gap-2">
-                    {/* Audio Attachment Button */}
+                    {/* Audio Attachment Button (Music Note Icon) */}
                     <div className="relative">
                       <input
                         type="file"
@@ -702,7 +800,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
                       </label>
                     </div>
 
-                    {/* PDF Attachment Button */}
+                    {/* PDF Attachment Button (File Icon) */}
                     <div className="relative">
                       <input
                         type="file"
