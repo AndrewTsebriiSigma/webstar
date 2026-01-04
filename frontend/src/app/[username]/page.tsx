@@ -653,7 +653,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             maxWidth: '430px', 
             margin: '0 auto',
             width: '100%',
-            padding: '0 12px'
+            padding: '0 5px'
           }}>
             {portfolioItems.length > 0 ? (
               <div 
@@ -661,7 +661,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '8px',
+                  gap: '5px',
                   width: '100%'
                 }}
               >

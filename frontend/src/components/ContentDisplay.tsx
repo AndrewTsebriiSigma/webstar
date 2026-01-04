@@ -135,7 +135,7 @@ function AudioDisplayCompact({ item, onClick }: { item: PortfolioItem; onClick?:
       style={{
         width: '100%',
         height: '100%',
-        borderRadius: '16px',
+        borderRadius: '5px',
         background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.12), rgba(0, 194, 255, 0.08))',
         border: '1px solid rgba(10, 132, 255, 0.25)',
         padding: '24px 20px',
@@ -295,7 +295,7 @@ function AudioDisplay({ item, isActive }: { item: PortfolioItem; isActive?: bool
       style={{
         width: '100%',
         height: '100%',
-        borderRadius: '16px',
+        borderRadius: '5px',
         background: 'rgba(10, 132, 255, 0.08)',
         border: '1px solid rgba(10, 132, 255, 0.2)',
         padding: '20px',
@@ -486,7 +486,7 @@ function TextDisplayCompact({ item, onClick }: { item: PortfolioItem; onClick?: 
       style={{
         width: '100%',
         height: '100%',
-        borderRadius: '16px',
+        borderRadius: '5px',
         background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.05), rgba(118, 75, 162, 0.05))',
         border: '1px solid rgba(255, 255, 255, 0.08)',
         padding: '20px 16px',
@@ -602,7 +602,7 @@ function TextDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => v
       style={{
         width: '100%',
         height: '100%',
-        borderRadius: '16px',
+        borderRadius: '5px',
         background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.05), rgba(118, 75, 162, 0.05))',
         border: '1px solid rgba(255, 255, 255, 0.08)',
         padding: '32px',
