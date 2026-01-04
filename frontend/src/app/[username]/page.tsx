@@ -358,7 +358,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             cursor: 'pointer',
             transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
             padding: '10px 16px 10px 24px',
-            margin: '0 16px 14px',
+            margin: '0 16px 10px',
             width: 'calc(100% - 32px)',
             height: '60px'
           }}
