@@ -10,9 +10,9 @@ import secrets
 
 from app.db.base import get_session
 from app.db.models import User, Profile, OnboardingProgress, UserPoints
-from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token, decode_token
+from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token, decode_token, get_current_user
 from app.core.config import settings
-from app.schemas.auth import UserRegister, UserLogin, Token, RefreshToken, GoogleAuth, UserResponse, LoginResponse, Verify2FALoginRequest
+from app.schemas.auth import UserRegister, UserLogin, Token, RefreshToken, GoogleAuth, UserResponse, LoginResponse, Verify2FALoginRequest, ProfileSetup
 from app.services.totp_service import TOTPService
 from datetime import timedelta
 
@@ -92,8 +92,67 @@ async def register(user_data: UserRegister, session: Session = Depends(get_sessi
             full_name=user.full_name,
             is_active=user.is_active,
             created_at=user.created_at.isoformat(),
-            onboarding_completed=False
+            onboarding_completed=False,
+            profile_setup_completed=True
         )
+    )
+
+
+@router.post("/setup-profile", response_model=UserResponse)
+async def setup_profile(
+    profile_data: ProfileSetup,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    """Complete profile setup for OAuth users (set username and name)."""
+    # Check if username is already taken
+    existing_username = session.exec(
+        select(User).where(
+            (User.username == profile_data.username) & (User.id != current_user.id)
+        )
+    ).first()
+    if existing_username:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already taken"
+        )
+    
+    # Validate username format (alphanumeric, underscore, 3-20 chars)
+    import re
+    if not re.match(r'^[a-zA-Z0-9_]{3,20}$', profile_data.username):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username must be 3-20 characters and contain only letters, numbers, and underscores"
+        )
+    
+    # Update user
+    current_user.username = profile_data.username
+    current_user.full_name = profile_data.full_name
+    current_user.profile_setup_completed = True
+    session.add(current_user)
+    
+    # Update profile display name
+    profile = session.exec(select(Profile).where(Profile.user_id == current_user.id)).first()
+    if profile:
+        profile.display_name = profile_data.full_name
+        session.add(profile)
+    
+    session.commit()
+    session.refresh(current_user)
+    
+    # Check onboarding status
+    onboarding = session.exec(select(OnboardingProgress).where(OnboardingProgress.user_id == current_user.id)).first()
+    onboarding_completed = onboarding.completed if onboarding else False
+    
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        username=current_user.username,
+        full_name=current_user.full_name,
+        is_active=current_user.is_active,
+        created_at=current_user.created_at.isoformat(),
+        onboarding_completed=onboarding_completed,
+        profile_setup_completed=True
     )
 
 
@@ -155,23 +214,18 @@ async def google_callback(request: Request, session: Session = Depends(get_sessi
                 session.add(user)
                 session.commit()
             else:
-                # Create new user
-                # Generate username from email
-                username = email.split('@')[0].lower().replace('.', '').replace('-', '')
-                # Ensure username is unique
-                counter = 1
-                original_username = username
-                while session.exec(select(User).where(User.username == username)).first():
-                    username = f"{original_username}{counter}"
-                    counter += 1
+                # Create new user with temporary username
+                # Generate temporary username (will be changed in profile setup)
+                temp_username = f"temp_{secrets.token_urlsafe(8)}"
                 
                 user = User(
                     email=email,
-                    username=username,
-                    full_name=name,
+                    username=temp_username,
+                    full_name=name or '',  # Store name from Google, can be edited
                     google_id=google_id,
                     oauth_provider='google',
-                    is_active=True
+                    is_active=True,
+                    profile_setup_completed=False  # New OAuth users need to set username
                 )
                 session.add(user)
                 session.commit()
@@ -191,9 +245,10 @@ async def google_callback(request: Request, session: Session = Depends(get_sessi
                 
                 session.commit()
         
-        # Check onboarding status
+        # Check onboarding and profile setup status
         onboarding = session.exec(select(OnboardingProgress).where(OnboardingProgress.user_id == user.id)).first()
         onboarding_completed = onboarding.completed if onboarding else False
+        profile_setup_completed = user.profile_setup_completed
         
         # Create tokens
         access_token = create_access_token({"sub": user.id})
@@ -204,7 +259,7 @@ async def google_callback(request: Request, session: Session = Depends(get_sessi
         
         # Always redirect to the callback page first
         redirect_url = f"{frontend_url}/auth/callback/google"
-        redirect_url += f"?access_token={access_token}&refresh_token={refresh_token_str}&user_id={user.id}&username={user.username}&email={user.email}&onboarding_completed={onboarding_completed}"
+        redirect_url += f"?access_token={access_token}&refresh_token={refresh_token_str}&user_id={user.id}&username={user.username}&email={user.email}&full_name={user.full_name or ''}&onboarding_completed={onboarding_completed}&profile_setup_completed={profile_setup_completed}"
         
         return RedirectResponse(url=redirect_url)
         

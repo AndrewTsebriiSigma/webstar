@@ -27,6 +27,12 @@ class RefreshToken(BaseModel):
     refresh_token: str
 
 
+class ProfileSetup(BaseModel):
+    """Profile setup for OAuth users (username and name)."""
+    username: str
+    full_name: str
+
+
 class UserResponse(BaseModel):
     """User response schema."""
     id: int
@@ -36,6 +42,7 @@ class UserResponse(BaseModel):
     is_active: bool
     created_at: str
     onboarding_completed: bool
+    profile_setup_completed: bool = True
 
 
 class LoginResponse(BaseModel):

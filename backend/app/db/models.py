@@ -19,6 +19,9 @@ class User(SQLModel, table=True):
     google_id: Optional[str] = Field(default=None, unique=True, index=True)
     oauth_provider: Optional[str] = None  # 'google', etc.
     
+    # Profile setup (for OAuth users who need to set username/name)
+    profile_setup_completed: bool = Field(default=True)  # True for manual signup, False for new OAuth users
+    
     # 2FA
     is_2fa_enabled: bool = Field(default=False)
     totp_secret: Optional[str] = None

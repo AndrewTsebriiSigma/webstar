@@ -2,8 +2,11 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from sqlmodel import Session, select
 
 from app.core.config import settings
 
@@ -62,4 +65,47 @@ def decode_token(token: str) -> Optional[dict]:
         return payload
     except JWTError:
         return None
+
+
+# HTTP Bearer token scheme
+security = HTTPBearer()
+
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    session: Session = Depends(lambda: None)  # Will be overridden in router
+):
+    """Get current authenticated user from JWT token."""
+    from app.db.models import User
+    from app.db.base import get_session
+    
+    if session is None:
+        session = next(get_session())
+    
+    token = credentials.credentials
+    
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    try:
+        payload = decode_token(token)
+        if payload is None:
+            raise credentials_exception
+        
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+        
+        user_id = int(user_id)
+    except (ValueError, JWTError):
+        raise credentials_exception
+    
+    user = session.get(User, user_id)
+    if user is None or not user.is_active:
+        raise credentials_exception
+    
+    return user
 

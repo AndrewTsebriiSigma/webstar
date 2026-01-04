@@ -16,7 +16,9 @@ function GoogleCallbackContent() {
       const userId = searchParams.get('user_id');
       const username = searchParams.get('username');
       const email = searchParams.get('email');
+      const fullName = searchParams.get('full_name');
       const onboardingCompleted = searchParams.get('onboarding_completed') === 'true';
+      const profileSetupCompleted = searchParams.get('profile_setup_completed') === 'true';
       const error = searchParams.get('error');
       const errorMessage = searchParams.get('message');
 
@@ -28,7 +30,7 @@ function GoogleCallbackContent() {
       }
 
       // Validate required parameters
-      if (!accessToken || !refreshToken || !userId || !username || !email) {
+      if (!accessToken || !refreshToken || !userId || !email) {
         toast.error('Invalid authentication response');
         router.push('/auth/login');
         return;
@@ -41,17 +43,25 @@ function GoogleCallbackContent() {
         id: parseInt(userId),
         email,
         username,
-        onboarding_completed: onboardingCompleted
+        full_name: fullName || '',
+        onboarding_completed: onboardingCompleted,
+        profile_setup_completed: profileSetupCompleted
       }));
 
       // Show success message
       toast.success('Welcome! Successfully signed in with Google');
 
-      // Redirect based on onboarding status
-      if (onboardingCompleted) {
-        window.location.href = `/${username}`;
-      } else {
+      // Redirect based on setup status
+      // Priority: Profile Setup -> Onboarding -> Profile Page
+      if (!profileSetupCompleted) {
+        // New OAuth user needs to set username/name
+        window.location.href = '/auth/setup-profile';
+      } else if (!onboardingCompleted) {
+        // Profile set up, but onboarding not complete
         window.location.href = '/onboarding';
+      } else {
+        // Everything complete, go to profile
+        window.location.href = `/${username}`;
       }
     };
 
