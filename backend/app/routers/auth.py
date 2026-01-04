@@ -256,7 +256,26 @@ async def google_callback(request: Request, session: Session = Depends(get_sessi
         onboarding_completed = onboarding.completed if onboarding else False
         profile_setup_completed = user.profile_setup_completed
         
-        # Create tokens
+        # Check if 2FA is enabled
+        if user.is_2fa_enabled:
+            # If 2FA is enabled, redirect to 2FA verification page
+            # Don't create full access tokens yet
+            temp_token_data = {
+                "sub": user.id,
+                "type": "pending_2fa",  # Match the expected type in verify-2fa endpoint
+                "oauth_login": True  # Flag to indicate this is OAuth login
+            }
+            temp_token = create_access_token(temp_token_data, timedelta(minutes=5))
+            
+            # Get the first CORS origin (frontend URL)
+            frontend_url = settings.CORS_ORIGINS[0] if isinstance(settings.CORS_ORIGINS, list) else settings.CORS_ORIGINS.split(',')[0].strip()
+            
+            redirect_url = f"{frontend_url}/auth/2fa-verify"
+            redirect_url += f"?temp_token={temp_token}&user_id={user.id}&username={user.username}&email={user.email}&full_name={user.full_name or ''}&onboarding_completed={onboarding_completed}&profile_setup_completed={profile_setup_completed}&oauth_login=true"
+            
+            return RedirectResponse(url=redirect_url)
+        
+        # Create tokens (only if 2FA is not enabled)
         access_token = create_access_token({"sub": user.id})
         refresh_token_str = create_refresh_token({"sub": user.id})
         
@@ -521,7 +540,8 @@ async def verify_2fa_login(
             full_name=user.full_name,
             is_active=user.is_active,
             created_at=user.created_at.isoformat(),
-            onboarding_completed=onboarding_completed
+            onboarding_completed=onboarding_completed,
+            profile_setup_completed=user.profile_setup_completed  # Include this field
         )
     )
 
