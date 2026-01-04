@@ -341,7 +341,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
       </div>
 
       {/* Dashboard Strip - Compact for owner only */}
-      {isOwnProfile && (
+      {isOwnProfile && !viewerMode && (
         <div 
           ref={dashboardRef}
           className="dashboard-strip"
@@ -510,7 +510,89 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Action Buttons - Compact */}
       <div style={{ padding: '0 16px', marginBottom: '12px' }}>
         <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-          {isOwnProfile ? (
+          {isOwnProfile && !viewerMode ? (
+            <>
+              <button 
+                onClick={() => setShowShareModal(true)}
+                className="action-btn custom-btn"
+                style={{
+                  flex: '0 0 calc(65% - 4px)',
+                  height: '32px',
+                  background: '#1F1F1F',
+                  border: '1px solid #353535',
+                  color: '#C7C7C7',
+                  cursor: 'pointer',
+                  padding: '5px 20px',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  textTransform: 'none',
+                  letterSpacing: '-0.2px',
+                  transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                  textAlign: 'center',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#1F1F1F';
+                  e.currentTarget.style.borderColor = '#353535';
+                  e.currentTarget.style.color = '#C7C7C7';
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = 'scale(0.96)';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                Message Me
+              </button>
+              <button 
+                className="action-btn"
+                style={{
+                  flex: '0 0 calc(35% - 4px)',
+                  height: '32px',
+                  background: '#1F1F1F',
+                  border: '1px solid #353535',
+                  color: '#C7C7C7',
+                  cursor: 'pointer',
+                  padding: '5px 20px',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  textTransform: 'none',
+                  letterSpacing: '-0.2px',
+                  transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                  textAlign: 'center',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#1F1F1F';
+                  e.currentTarget.style.borderColor = '#353535';
+                  e.currentTarget.style.color = '#C7C7C7';
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = 'scale(0.96)';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                Email
+              </button>
+            </>
+          ) : isOwnProfile && viewerMode ? (
             <>
               <button 
                 onClick={() => setShowShareModal(true)}
