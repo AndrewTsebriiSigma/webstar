@@ -302,10 +302,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
         </div>
       </div>
 
-      {/* Profile Info - Compact design */}
-      <div className="profile-info" style={{ padding: '12px 24px 32px', textAlign: 'center' }}>
+      {/* Profile Info - Tight Apple-like spacing */}
+      <div className="profile-info" style={{ padding: '8px 24px 16px', textAlign: 'center' }}>
         {/* Name + Badge */}
-        <div className="flex items-center justify-center gap-1.5 mb-1 pt-3">
+        <div className="flex items-center justify-center gap-1.5 mt-2 mb-1">
           <h1 className="text-xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)', letterSpacing: '-0.2px' }}>
             {profile.display_name || username}
           </h1>
@@ -314,8 +314,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
           )}
         </div>
         
-        {/* Bio - Smaller font */}
-        <p className="text-sm mb-3 px-2" style={{ 
+        {/* Bio */}
+        <p className="text-sm mb-2 px-2" style={{ 
           color: 'rgba(255, 255, 255, 0.75)',
           fontSize: '15px',
           lineHeight: '1.4',
@@ -324,8 +324,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
           {profile.bio || 'Make original the only standard.'}
         </p>
 
-        {/* Location & Role - Compact */}
-        <div className="flex items-center justify-center gap-2 flex-wrap mb-3 px-2">
+        {/* Location & Role */}
+        <div className="flex items-center justify-center gap-2 flex-wrap px-2">
           <div className="flex items-center gap-1" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
             <MapPinIcon className="w-3.5 h-3.5" />
             <span>{profile.location || 'Paris, France'}</span>
