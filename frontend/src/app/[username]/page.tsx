@@ -639,7 +639,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
       </div>
 
       {/* Tab Content */}
-      <div className={`py-4 ${activeTab !== 'portfolio' ? 'px-3' : ''}`}>
+      <div className={`${activeTab === 'portfolio' ? 'pt-[5px]' : 'py-4 px-3'}`}>
         {activeTab === 'about' && (
           <AboutSection
             isOwnProfile={isOwnProfile}
