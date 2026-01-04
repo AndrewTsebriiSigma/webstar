@@ -13,7 +13,7 @@ class UserRegister(BaseModel):
 
 class UserLogin(BaseModel):
     """User login schema."""
-    email: EmailStr
+    email: str  # Accepts both email and username
     password: str
 
 
