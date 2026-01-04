@@ -302,10 +302,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
         </div>
       </div>
 
-      {/* Profile Info - Tight Apple-like spacing */}
-      <div className="profile-info" style={{ padding: '8px 24px 16px', textAlign: 'center' }}>
+      {/* Profile Info - Compact design */}
+      <div className="profile-info" style={{ padding: '12px 24px 32px', textAlign: 'center' }}>
         {/* Name + Badge */}
-        <div className="flex items-center justify-center gap-1.5 mt-2 mb-1">
+        <div className="flex items-center justify-center gap-1.5 mb-1 pt-3">
           <h1 className="text-xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)', letterSpacing: '-0.2px' }}>
             {profile.display_name || username}
           </h1>
@@ -314,8 +314,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
           )}
         </div>
         
-        {/* Bio */}
-        <p className="text-sm mb-2 px-2" style={{ 
+        {/* Bio - Smaller font */}
+        <p className="text-sm mb-3 px-2" style={{ 
           color: 'rgba(255, 255, 255, 0.75)',
           fontSize: '15px',
           lineHeight: '1.4',
@@ -324,8 +324,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
           {profile.bio || 'Make original the only standard.'}
         </p>
 
-        {/* Location & Role */}
-        <div className="flex items-center justify-center gap-2 flex-wrap px-2">
+        {/* Location & Role - Compact */}
+        <div className="flex items-center justify-center gap-2 flex-wrap mb-3 px-2">
           <div className="flex items-center gap-1" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
             <MapPinIcon className="w-3.5 h-3.5" />
             <span>{profile.location || 'Paris, France'}</span>
@@ -349,18 +349,18 @@ export default function ProfilePage({ params }: { params: { username: string } }
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: 'rgba(31, 31, 31, 0.8)',
+            background: 'rgba(255, 255, 255, 0.06)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
-            borderRadius: '20px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+            borderRadius: '16px',
             cursor: 'pointer',
             transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-            padding: '12px 16px 12px 20px',
+            padding: '10px 16px 10px 24px',
             margin: '0 16px 14px',
             width: 'calc(100% - 32px)',
-            height: '64px'
+            height: '60px'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
@@ -420,11 +420,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
               onClick={() => router.push('/profile/edit')}
               className="action-button"
               style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '14px',
-                background: '#232323',
-                border: '1px solid #3A3A3A',
+                width: '55px',
+                height: '40px',
+                borderRadius: '20px',
+                background: '#2A2A2A',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid #414141',
                 color: '#707070',
                 display: 'flex',
                 alignItems: 'center',
@@ -435,14 +437,16 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 padding: 0
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#2A2A2A';
-                e.currentTarget.style.borderColor = '#4A4A4A';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.color = '#f5f5f5';
                 const img = e.currentTarget.querySelector('img');
-                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.7)';
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#232323';
-                e.currentTarget.style.borderColor = '#3A3A3A';
+                e.currentTarget.style.background = '#2A2A2A';
+                e.currentTarget.style.borderColor = '#414141';
+                e.currentTarget.style.color = '#707070';
                 const img = e.currentTarget.querySelector('img');
                 if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
               }}
@@ -459,11 +463,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <button 
               className="action-button"
               style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '14px',
-                background: '#232323',
-                border: '1px solid #3A3A3A',
+                width: '55px',
+                height: '40px',
+                borderRadius: '20px',
+                background: '#2A2A2A',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid #414141',
                 color: '#707070',
                 display: 'flex',
                 alignItems: 'center',
@@ -474,14 +480,16 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 padding: 0
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#2A2A2A';
-                e.currentTarget.style.borderColor = '#4A4A4A';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.color = '#f5f5f5';
                 const img = e.currentTarget.querySelector('img');
-                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.7)';
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#232323';
-                e.currentTarget.style.borderColor = '#3A3A3A';
+                e.currentTarget.style.background = '#2A2A2A';
+                e.currentTarget.style.borderColor = '#414141';
+                e.currentTarget.style.color = '#707070';
                 const img = e.currentTarget.querySelector('img');
                 if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
               }}
