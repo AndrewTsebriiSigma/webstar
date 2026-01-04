@@ -235,8 +235,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 onClick={() => setViewerMode(!viewerMode)}
                 className="flex items-center justify-center"
                 style={{ 
-                  width: '26px',
-                  height: '26px',
+                  width: '24px',
+                  height: '24px',
                   borderRadius: '50%',
                   background: viewerMode ? '#00C2FF' : 'rgba(0, 0, 0, 0.35)',
                   backdropFilter: 'blur(20px)',
@@ -249,14 +249,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 title={viewerMode ? 'Exit viewer mode' : 'Enter viewer mode'}
               >
-                <EyeIcon className="w-[22px] h-[22px]" />
+                <EyeIcon className="w-[21px] h-[21px]" />
               </button>
               <button 
                 onClick={() => setShowSettingsModal(true)}
                 className="flex items-center justify-center"
                 style={{ 
-                  width: '26px',
-                  height: '26px',
+                  width: '24px',
+                  height: '24px',
                   borderRadius: '50%',
                   background: 'rgba(0, 0, 0, 0.35)',
                   backdropFilter: 'blur(20px)',
@@ -269,7 +269,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 title="Settings"
               >
-                <Cog6ToothIcon className="w-[22px] h-[22px]" />
+                <Cog6ToothIcon className="w-[21px] h-[21px]" />
               </button>
             </div>
           )}
