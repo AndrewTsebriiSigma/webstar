@@ -12,6 +12,7 @@ interface AuthContextType {
   googleLogin: (token: string) => Promise<void>;
   logout: () => void;
   updateUser: (user: User) => void;
+  setAuthTokens: (accessToken: string, refreshToken: string, user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -82,8 +83,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(updatedUser);
   };
 
+  const setAuthTokens = (accessToken: string, refreshToken: string, userData: User) => {
+    localStorage.setItem('access_token', accessToken);
+    localStorage.setItem('refresh_token', refreshToken);
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, googleLogin, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, googleLogin, logout, updateUser, setAuthTokens }}>
       {children}
     </AuthContext.Provider>
   );

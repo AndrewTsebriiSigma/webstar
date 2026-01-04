@@ -4,10 +4,12 @@ import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { authAPI } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 function TwoFactorVerifyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { updateUser } = useAuth();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [tempToken, setTempToken] = useState('');
@@ -65,14 +67,21 @@ function TwoFactorVerifyContent() {
       localStorage.setItem('refresh_token', response.data.refresh_token);
       
       const userData = response.data.user;
-      localStorage.setItem('user', JSON.stringify({
+      const userObject = {
         id: userData.id,
         email: userData.email,
         username: userData.username,
         full_name: userData.full_name || '',
         onboarding_completed: userData.onboarding_completed,
-        profile_setup_completed: userData.profile_setup_completed
-      }));
+        profile_setup_completed: userData.profile_setup_completed,
+        is_active: userData.is_active,
+        created_at: userData.created_at
+      };
+      
+      localStorage.setItem('user', JSON.stringify(userObject));
+      
+      // UPDATE AUTHCONTEXT STATE - Critical for immediate state sync!
+      updateUser(userObject);
 
       toast.success('Successfully verified!');
 
