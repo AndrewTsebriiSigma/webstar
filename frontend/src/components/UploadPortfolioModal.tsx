@@ -509,25 +509,25 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           </>
         ) : (
           <>
-            {/* Upload Interface - Clean Header */}
+            {/* Upload Interface - Header matching Settings/Notifications */}
             <div 
               className="flex items-center justify-between px-4 sticky top-0 z-10"
               style={{
-                height: '56px',
-                background: 'rgba(18, 18, 18, 0.95)',
-                backdropFilter: 'blur(20px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                height: '55px',
+                background: 'rgba(17, 17, 17, 0.92)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
                 borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
               }}
             >
-              {/* Left: Back arrow + Dynamic title */}
-              <div className="flex items-center gap-3">
+              {/* Left: Back arrow + Dynamic title - closer together */}
+              <div className="flex items-center gap-2">
                 <button
                   onClick={handleBack}
                   disabled={uploading}
                   className="transition disabled:opacity-50"
                 >
-                  <svg className="w-[18px] h-[18px] text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <svg className="w-[16px] h-[16px] text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
@@ -538,7 +538,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                    selectedContentType === 'text' ? 'Text Post' : 'Post'}
                 </h2>
               </div>
-              {/* Right: Publish - narrower */}
+              {/* Right: Publish - 32px height, wider */}
               <button
                 onClick={handleSubmit}
                 disabled={uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file)}
@@ -546,7 +546,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 style={{
                   background: '#00C2FF',
                   color: '#fff',
-                  padding: '8px 14px',
+                  height: '32px',
+                  padding: '0 20px',
                 }}
               >
                 {uploading ? '...' : 'Publish'}
@@ -669,12 +670,12 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     )}
                   </div>
 
-                  {/* Caption Input - Glass Style with char count */}
+                  {/* Caption Input - Smaller, compact */}
                   <div
                     style={{
                       background: 'rgba(255, 255, 255, 0.03)',
                       border: '1px solid rgba(255, 255, 255, 0.08)',
-                      borderRadius: '12px',
+                      borderRadius: '10px',
                       position: 'relative',
                     }}
                   >
@@ -688,7 +689,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                         }
                       }}
                       onKeyDown={handleTextareaKeyDown}
-                      rows={4}
+                      rows={2}
                       maxLength={280}
                       style={{ 
                         fontSize: '16px', // Prevents zoom on iOS
@@ -696,8 +697,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                         border: 'none',
                         outline: 'none',
                         width: '100%',
-                        padding: '14px 16px',
-                        paddingBottom: '32px',
+                        padding: '12px 14px',
+                        paddingBottom: '28px',
                         color: '#fff',
                         resize: 'none',
                       }}
@@ -706,33 +707,37 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     <span 
                       style={{ 
                         position: 'absolute', 
-                        bottom: '10px', 
-                        right: '14px', 
-                        fontSize: '12px', 
-                        color: 'rgba(255,255,255,0.4)' 
+                        bottom: '8px', 
+                        right: '12px', 
+                        fontSize: '11px', 
+                        color: 'rgba(255,255,255,0.35)' 
                       }}
                     >
                       {description.length}/280
                     </span>
                   </div>
 
-                  {/* Inline Toolbar - Save draft + Attachments */}
-                  <div className="flex items-center gap-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  {/* Inline Toolbar - Save draft left, icons anchored right */}
+                  <div className="flex items-center justify-between" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    {/* Left: Save as draft */}
                     <button
                       onClick={handleSaveAsDraft}
                       disabled={uploading || !file}
                       className="flex items-center gap-2 transition disabled:opacity-40"
                     >
-                      {/* Floppy disk icon */}
-                      <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                      {/* Floppy disk save icon - bolder */}
+                      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 3h11l5 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 3v5h8V3" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 14h10v7H7z" />
                       </svg>
                       <span className="text-[14px] font-medium">Save as draft</span>
                     </button>
                     
-                    {/* Audio attachment */}
+                    {/* Right: Attachment icons */}
                     {selectedContentType === 'media' && (
-                      <>
+                      <div className="flex items-center gap-4">
+                        {/* Audio attachment */}
                         <input
                           type="file"
                           id="audio-attachment-inline"
@@ -746,13 +751,13 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           className="cursor-pointer transition"
                           style={{ opacity: (!canAddAudioAttachment || attachmentType === 'pdf') ? 0.3 : 1 }}
                         >
-                          <svg className="w-[20px] h-[20px]" fill="none" stroke={attachmentType === 'audio' ? '#00C2FF' : 'currentColor'} strokeWidth={1.5} viewBox="0 0 24 24">
+                          <svg className="w-[18px] h-[18px]" fill="none" stroke={attachmentType === 'audio' ? '#00C2FF' : 'currentColor'} strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                           </svg>
                         </label>
 
-                        {/* Image icon - disabled since already uploading media */}
-                        <svg className="w-[20px] h-[20px] opacity-30" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                        {/* Image icon - disabled */}
+                        <svg className="w-[18px] h-[18px] opacity-30" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                         </svg>
 
@@ -770,11 +775,11 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           className="cursor-pointer transition"
                           style={{ opacity: (!canAddPdfAttachment || attachmentType === 'audio') ? 0.3 : 1 }}
                         >
-                          <svg className="w-[20px] h-[20px]" fill="none" stroke={attachmentType === 'pdf' ? '#00C2FF' : 'currentColor'} strokeWidth={1.5} viewBox="0 0 24 24">
+                          <svg className="w-[18px] h-[18px]" fill="none" stroke={attachmentType === 'pdf' ? '#00C2FF' : 'currentColor'} strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                           </svg>
                         </label>
-                      </>
+                      </div>
                     )}
                   </div>
 
@@ -808,12 +813,12 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 </>
               ) : (
                 <>
-                  {/* Text Post Interface - Glass Style */}
+                  {/* Text Post Interface - Compact */}
                   <div
                     style={{
                       background: 'rgba(255, 255, 255, 0.03)',
                       border: '1px solid rgba(255, 255, 255, 0.08)',
-                      borderRadius: '12px',
+                      borderRadius: '10px',
                       position: 'relative',
                     }}
                   >
@@ -827,7 +832,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                         }
                       }}
                       onKeyDown={handleTextareaKeyDown}
-                      rows={6}
+                      rows={4}
                       maxLength={280}
                       style={{ 
                         fontSize: '16px', // Prevents zoom on iOS
@@ -835,8 +840,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                         border: 'none',
                         outline: 'none',
                         width: '100%',
-                        padding: '14px 16px',
-                        paddingBottom: '32px',
+                        padding: '12px 14px',
+                        paddingBottom: '28px',
                         color: '#fff',
                         resize: 'none',
                       }}
@@ -845,10 +850,10 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     <span 
                       style={{ 
                         position: 'absolute', 
-                        bottom: '10px', 
-                        right: '14px', 
-                        fontSize: '12px', 
-                        color: 'rgba(255,255,255,0.4)' 
+                        bottom: '8px', 
+                        right: '12px', 
+                        fontSize: '11px', 
+                        color: 'rgba(255,255,255,0.35)' 
                       }}
                     >
                       {textContent.length}/280
@@ -856,14 +861,17 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                   </div>
 
                   {/* Inline Toolbar for Text Post */}
-                  <div className="flex items-center gap-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  <div className="flex items-center" style={{ color: 'rgba(255,255,255,0.5)' }}>
                     <button
                       onClick={handleSaveAsDraft}
                       disabled={uploading || !textContent.trim()}
                       className="flex items-center gap-2 transition disabled:opacity-40"
                     >
-                      <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                      {/* Floppy disk save icon - bolder */}
+                      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 3h11l5 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 3v5h8V3" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 14h10v7H7z" />
                       </svg>
                       <span className="text-[14px] font-medium">Save as draft</span>
                     </button>
