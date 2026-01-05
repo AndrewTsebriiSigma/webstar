@@ -114,14 +114,14 @@ export default function CreateContentModal({
           onClick={postExpanded ? handleCollapse : handlePostClick}
           className="w-full transition-all duration-200 ease-out"
           style={{ 
-            padding: postExpanded ? '8px 12px' : '12px',
+            padding: postExpanded ? '10px 12px' : '12px',
             background: 'transparent'
           }}
         >
           {postExpanded ? (
-            // Shrunk header - just "Post" text, tappable to go back
+            // Shrunk header - same size/color as original Post title
             <div className="flex items-center justify-center">
-              <span className="text-[13px] font-semibold text-gray-400">Post</span>
+              <span className="text-[15px] font-semibold text-white">Post</span>
             </div>
           ) : (
             // Original Post option - UNCHANGED
@@ -154,9 +154,9 @@ export default function CreateContentModal({
         <div 
           className="transition-all duration-200 ease-out overflow-hidden"
           style={{
-            maxHeight: postExpanded ? '140px' : '0',
+            maxHeight: postExpanded ? '100px' : '0',
             opacity: postExpanded ? 1 : 0,
-            padding: postExpanded ? '12px' : '0 12px'
+            padding: postExpanded ? '8px 12px' : '0 12px'
           }}
         >
           <div className="grid grid-cols-4 gap-1">
@@ -164,18 +164,21 @@ export default function CreateContentModal({
               <button
                 key={item.type}
                 onClick={() => handleTypeSelect(item.type)}
-                className="flex flex-col items-center gap-2 p-2 rounded-xl transition-all duration-150"
+                className="flex flex-col items-center gap-1 p-1.5 rounded-xl transition-all duration-150"
                 style={{ background: 'transparent' }}
                 onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               >
                 <div 
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                  style={{ background: item.gradient }}
+                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  style={{ 
+                    background: 'transparent',
+                    border: '1px solid rgba(255, 255, 255, 0.1)'
+                  }}
                 >
-                  <span style={{ color: item.color }}>{item.icon}</span>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>{item.icon}</span>
                 </div>
-                <span className="text-[11px] font-medium text-gray-400">{item.label}</span>
+                <span className="text-[10px] font-medium text-gray-500">{item.label}</span>
               </button>
             ))}
           </div>
