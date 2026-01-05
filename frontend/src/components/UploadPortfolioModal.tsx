@@ -524,7 +524,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Upload overlay - hypnotizing animation */}
+        {/* Upload overlay - circular progress with percentage */}
         {uploading && (
           <div 
             className="absolute inset-0 z-20 flex flex-col items-center justify-center"
@@ -534,22 +534,26 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
             }}
           >
             <div className="relative">
+              {/* Circular progress */}
               <div 
-                className="w-16 h-16 rounded-full"
+                className="w-16 h-16 rounded-full flex items-center justify-center"
                 style={{
-                  background: 'linear-gradient(135deg, #00C2FF 0%, #0066FF 100%)',
-                  animation: 'pulse-glow 1.5s ease-in-out infinite',
+                  background: `conic-gradient(#00C2FF ${uploadProgress * 3.6}deg, rgba(255,255,255,0.08) 0deg)`,
+                  animation: 'pulse-glow 2s ease-in-out infinite',
                 }}
-              />
-              <div 
-                className="absolute inset-0 w-16 h-16 rounded-full"
-                style={{
-                  border: '2px solid rgba(0, 194, 255, 0.3)',
-                  animation: 'ripple 1.5s ease-out infinite',
-                }}
-              />
+              >
+                <div 
+                  className="w-12 h-12 rounded-full"
+                  style={{ background: 'rgba(20, 20, 20, 1)' }}
+                />
+              </div>
             </div>
-            <p className="mt-6 text-white/60 text-sm">Uploading...</p>
+            <p 
+              className="mt-5 text-white/80 text-lg font-medium"
+              style={{ fontVariantNumeric: 'tabular-nums' }}
+            >
+              {uploadProgress}%
+            </p>
           </div>
         )}
 
@@ -804,7 +808,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           borderRadius: '0 10px 10px 0',
                           opacity: attachmentSwipeX > 0 ? 1 : 0,
                           pointerEvents: attachmentSwipeX > 0 ? 'auto' : 'none',
-                          transition: 'opacity 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                          transition: 'opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
                         }}
                       >
                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -822,7 +826,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           borderRadius: attachmentSwipeX > 0 ? '10px 0 0 10px' : '10px',
                           padding: '0 12px',
                           transform: `translateX(-${attachmentSwipeX}px)`,
-                          transition: 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-radius 0.2s ease-out, background 0.2s ease-out',
+                          transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), border-radius 0.2s ease-out, background 0.2s ease-out',
                         }}
                         onTouchStart={handleSwipeStart}
                         onTouchMove={handleSwipeMove}
@@ -1059,18 +1063,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 </>
               )}
 
-              {/* Upload Progress */}
-              {uploading && (
-                <div className="mt-4">
-                  <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-cyan-500 transition-all duration-300"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-center text-gray-400 mt-2">Uploading... {uploadProgress}%</p>
-                </div>
-              )}
             </div>
       </div>
     </div>
