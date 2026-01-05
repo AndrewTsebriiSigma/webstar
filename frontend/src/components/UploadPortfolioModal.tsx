@@ -13,8 +13,7 @@ interface UploadPortfolioModalProps {
 }
 
 export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initialContentType }: UploadPortfolioModalProps) {
-  // Content type selector - skip menu if type is pre-selected
-  const [contentTypeMenuOpen, setContentTypeMenuOpen] = useState(!initialContentType);
+  // Type is always pre-selected from CreateContentModal
   const [selectedContentType, setSelectedContentType] = useState<'media' | 'audio' | 'pdf' | 'text' | null>(initialContentType || null);
   
   const [file, setFile] = useState<File | null>(null);
@@ -46,17 +45,12 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   useEffect(() => {
     if (initialContentType) {
       setSelectedContentType(initialContentType);
-      setContentTypeMenuOpen(false);
-    } else {
-      setContentTypeMenuOpen(true);
-      setSelectedContentType(null);
     }
   }, [initialContentType, isOpen]);
 
   if (!isOpen) return null;
 
   const handleReset = () => {
-    setContentTypeMenuOpen(true);
     setSelectedContentType(null);
     setFile(null);
     setPreview('');
@@ -80,11 +74,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
       handleReset();
       onClose(); // Close entirely, go back to CreateContentModal
     }
-  };
-
-  const handleContentTypeSelect = (type: 'media' | 'audio' | 'pdf' | 'text') => {
-    setSelectedContentType(type);
-    setContentTypeMenuOpen(false);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -420,116 +409,46 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
   return (
     <div 
-      className="fixed inset-0 z-50"
+      className="fixed inset-0 z-50 flex items-start justify-center"
       style={{
-        background: 'rgba(0, 0, 0, 0.6)',
-        backdropFilter: 'blur(20px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(180%)'
+        background: 'rgba(0, 0, 0, 0.5)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        paddingTop: '5vh',
       }}
       onClick={handleClose}
     >
+      {/* Centered floating popup - mobile first */}
       <div 
         ref={scrollContainerRef}
-        className="w-full h-full overflow-y-auto"
+        className="w-full overflow-y-auto"
         style={{
-          background: 'rgba(18, 18, 18, 0.85)',
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom))', // Space for keyboard
+          maxWidth: 'calc(100% - 24px)',
+          maxHeight: '58vh',
+          minHeight: '280px',
+          background: 'rgba(18, 18, 18, 0.95)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          borderRadius: '20px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {contentTypeMenuOpen ? (
-          <>
-            {/* Content Type Selection Menu */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-800">
-              <h2 className="text-lg font-bold text-white">Create Post</h2>
-              <button
-                onClick={handleClose}
-                className="p-1.5 hover:bg-gray-800 rounded-lg transition"
-              >
-                <XMarkIcon className="w-5 h-5 text-gray-400" />
-              </button>
-            </div>
-
-            <div className="p-4 space-y-3">
-              {/* Video & Photo (Merged) */}
-              <button
-                onClick={() => handleContentTypeSelect('media')}
-                className="w-full flex items-center gap-4 p-4 bg-gray-900 hover:bg-gray-800 rounded-xl transition text-left border border-gray-800 hover:border-cyan-500"
-              >
-                <div className="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-base font-semibold text-white">Video & Photo</h3>
-                  <p className="text-sm text-gray-400">Share images or videos</p>
-                </div>
-              </button>
-
-              {/* Audio */}
-              <button
-                onClick={() => handleContentTypeSelect('audio')}
-                className="w-full flex items-center gap-4 p-4 bg-gray-900 hover:bg-gray-800 rounded-xl transition text-left border border-gray-800 hover:border-cyan-500"
-              >
-                <div className="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-base font-semibold text-white">Audio</h3>
-                  <p className="text-sm text-gray-400">Share music or audio</p>
-                </div>
-              </button>
-
-              {/* PDF */}
-              <button
-                onClick={() => handleContentTypeSelect('pdf')}
-                className="w-full flex items-center gap-4 p-4 bg-gray-900 hover:bg-gray-800 rounded-xl transition text-left border border-gray-800 hover:border-cyan-500"
-              >
-                <div className="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-base font-semibold text-white">PDF Document</h3>
-                  <p className="text-sm text-gray-400">Share a PDF file</p>
-                </div>
-              </button>
-
-              {/* Text */}
-              <button
-                onClick={() => handleContentTypeSelect('text')}
-                className="w-full flex items-center gap-4 p-4 bg-gray-900 hover:bg-gray-800 rounded-xl transition text-left border border-gray-800 hover:border-cyan-500"
-              >
-                <div className="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-base font-semibold text-white">Text Post</h3>
-                  <p className="text-sm text-gray-400">Share your thoughts</p>
-                </div>
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Upload Interface - Header matching Settings/Notifications */}
-            <div 
-              className="flex items-center justify-between sticky top-0 z-10"
-              style={{
-                height: '55px',
-                background: 'rgba(17, 17, 17, 0.92)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-                padding: '0 16px',
-              }}
-            >
+        {/* Header */}
+        <div 
+          className="flex items-center justify-between sticky top-0 z-10"
+          style={{
+            height: '55px',
+            background: 'rgba(17, 17, 17, 0.98)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            borderTopLeftRadius: '20px',
+            borderTopRightRadius: '20px',
+            padding: '0 16px',
+          }}
+        >
               {/* Left: Back arrow + Dynamic title - equal gaps */}
               <div className="flex items-center" style={{ gap: '10px' }}>
                 <button
@@ -904,9 +823,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 </div>
               )}
             </div>
-
-          </>
-        )}
       </div>
     </div>
   );
