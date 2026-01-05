@@ -242,12 +242,12 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <div className="absolute top-4 left-4 right-4 flex justify-between">
               <button 
                 onClick={() => setViewerMode(!viewerMode)}
-                className="flex items-center justify-center"
+                className="banner-action-btn flex items-center justify-center"
                 style={{ 
-                  width: '18px',
-                  height: '18px',
+                  width: '37px',
+                  height: '37px',
                   borderRadius: '50%',
-                  background: viewerMode ? '#00C2FF' : 'rgba(0, 0, 0, 0.25)',
+                  background: viewerMode ? '#00C2FF' : 'rgba(0, 0, 0, 0.35)',
                   backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
                   color: 'rgba(255, 255, 255, 0.85)',
@@ -258,16 +258,16 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 title={viewerMode ? 'Exit viewer mode' : 'Enter viewer mode'}
               >
-                <EyeIcon className="w-[21px] h-[21px]" />
+                <EyeIcon className="w-[20px] h-[20px]" />
               </button>
               <button 
                 onClick={() => setShowSettingsModal(true)}
-                className="flex items-center justify-center"
+                className="banner-action-btn flex items-center justify-center"
                 style={{ 
-                  width: '18px',
-                  height: '18px',
+                  width: '37px',
+                  height: '37px',
                   borderRadius: '50%',
-                  background: 'rgba(0, 0, 0, 0.25)',
+                  background: 'rgba(0, 0, 0, 0.35)',
                   backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
                   color: 'rgba(255, 255, 255, 0.85)',
@@ -278,7 +278,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 title="Settings"
               >
-                <Cog6ToothIcon className="w-[21px] h-[21px]" />
+                <Cog6ToothIcon className="w-[20px] h-[20px]" />
               </button>
             </div>
           )}

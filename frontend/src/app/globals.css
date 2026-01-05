@@ -775,6 +775,14 @@ html {
     min-height: 44px;
     min-width: 44px;
   }
+  
+  /* Banner action buttons (View/Settings) - 15% smaller */
+  .banner-action-btn {
+    min-height: 37px !important;
+    min-width: 37px !important;
+    width: 37px !important;
+    height: 37px !important;
+  }
 }
 
 /* Safe area insets for iOS */
