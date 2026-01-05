@@ -48,6 +48,16 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     }
   }, [initialContentType, isOpen]);
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleReset = () => {
@@ -411,47 +421,46 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     <div 
       className="fixed inset-0 z-50 flex items-start justify-center"
       style={{
-        background: 'rgba(0, 0, 0, 0.4)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
+        background: 'rgba(0, 0, 0, 0.6)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
         paddingTop: '5vh',
         paddingBottom: '20vh',
       }}
       onClick={handleClose}
     >
-      {/* Centered floating popup - 75vh, glass morphism */}
+      {/* Centered floating popup - Glass Modal */}
       <div 
         ref={scrollContainerRef}
         className="w-full overflow-y-auto"
         style={{
           maxWidth: 'calc(100% - 24px)',
           height: '75vh',
-          background: 'rgba(18, 18, 18, 0.85)',
+          background: 'rgba(18, 18, 18, 0.95)',
           backdropFilter: 'blur(20px) saturate(180%)',
           WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           borderRadius: '16px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          padding: '8px',
+          boxShadow: '0 -4px 32px rgba(0, 0, 0, 0.5)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header - 25px padding left/right */}
+        {/* Header - 25px padding */}
         <div 
           className="flex items-center justify-between sticky top-0 z-10"
           style={{
             height: '55px',
-            background: 'rgba(18, 18, 18, 0.95)',
+            background: 'rgba(18, 18, 18, 0.98)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-            borderTopLeftRadius: '12px',
-            borderTopRightRadius: '12px',
+            borderTopLeftRadius: '16px',
+            borderTopRightRadius: '16px',
             padding: '0 25px',
           }}
         >
-              {/* Left: Back arrow + Dynamic title - 25px from edge */}
-              <div className="flex items-center" style={{ gap: '12px' }}>
+              {/* Left: Back arrow + Dynamic title - 25px gap */}
+              <div className="flex items-center" style={{ gap: '25px' }}>
                 <button
                   onClick={handleBack}
                   disabled={uploading}
@@ -474,7 +483,9 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 disabled={uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file)}
                 className="text-[14px] font-semibold rounded-[8px] transition disabled:opacity-50 disabled:cursor-not-allowed publish-btn"
                 style={{
-                  background: '#00C2FF',
+                  background: uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file) 
+                    ? 'rgba(255, 255, 255, 0.2)' 
+                    : '#00C2FF',
                   color: '#fff',
                   height: '32px',
                   padding: '0 28px',
@@ -484,7 +495,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               </button>
             </div>
 
-            <div className="p-4 space-y-4">
+            {/* Content area - 6px side padding */}
+            <div style={{ padding: '16px 6px' }} className="space-y-4">
               {selectedContentType !== 'text' ? (
                 <>
                   {/* File Upload Area - Glass Card */}
@@ -600,13 +612,15 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     )}
                   </div>
 
-                  {/* Caption Input - Smaller font, 170 char limit */}
+                  {/* Caption Input - Glass style with focus states */}
                   <div
+                    className="caption-input-wrapper"
                     style={{
-                      background: 'rgba(255, 255, 255, 0.03)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
                       borderRadius: '10px',
                       position: 'relative',
+                      transition: 'all 0.2s ease',
                     }}
                   >
                     <textarea
@@ -618,7 +632,17 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           setDescription(e.target.value);
                         }
                       }}
-                      onFocus={handleDescriptionFocus}
+                      onFocus={(e) => {
+                        handleDescriptionFocus();
+                        e.currentTarget.parentElement!.style.borderColor = 'rgba(0, 194, 255, 0.3)';
+                        e.currentTarget.parentElement!.style.background = 'rgba(255, 255, 255, 0.04)';
+                        e.currentTarget.parentElement!.style.boxShadow = '0 0 0 2px rgba(0, 194, 255, 0.1)';
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.parentElement!.style.borderColor = 'rgba(255, 255, 255, 0.06)';
+                        e.currentTarget.parentElement!.style.background = 'rgba(255, 255, 255, 0.02)';
+                        e.currentTarget.parentElement!.style.boxShadow = 'none';
+                      }}
                       onKeyDown={handleTextareaKeyDown}
                       rows={2}
                       maxLength={170}
@@ -630,7 +654,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                         width: '100%',
                         padding: '12px 14px',
                         paddingBottom: '24px',
-                        color: '#fff',
+                        color: '#FFFFFF',
                         resize: 'none',
                       }}
                       disabled={uploading}
@@ -641,15 +665,15 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                         bottom: '6px', 
                         right: '12px', 
                         fontSize: '11px', 
-                        color: 'rgba(255,255,255,0.35)' 
+                        color: description.length > 161 ? '#FF453A' : description.length > 136 ? '#FF9F0A' : 'var(--text-tertiary, rgba(255,255,255,0.4))'
                       }}
                     >
                       {description.length}/170
                     </span>
                   </div>
 
-                  {/* Inline Toolbar - 10px closer, 25px between icons */}
-                  <div className="flex items-center justify-between" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px', marginTop: '-6px' }}>
+                  {/* Inline Toolbar - 21px gap */}
+                  <div className="flex items-center justify-between" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px', marginTop: '21px' }}>
                     {/* Left: Save as draft */}
                     <button
                       onClick={handleSaveAsDraft}
@@ -744,13 +768,14 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 </>
               ) : (
                 <>
-                  {/* Text Post Interface - 170 char limit */}
+                  {/* Text Post Interface - Glass style with focus states */}
                   <div
                     style={{
-                      background: 'rgba(255, 255, 255, 0.03)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
                       borderRadius: '10px',
                       position: 'relative',
+                      transition: 'all 0.2s ease',
                     }}
                   >
                     <textarea
@@ -762,7 +787,17 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           setTextContent(e.target.value);
                         }
                       }}
-                      onFocus={handleDescriptionFocus}
+                      onFocus={(e) => {
+                        handleDescriptionFocus();
+                        e.currentTarget.parentElement!.style.borderColor = 'rgba(0, 194, 255, 0.3)';
+                        e.currentTarget.parentElement!.style.background = 'rgba(255, 255, 255, 0.04)';
+                        e.currentTarget.parentElement!.style.boxShadow = '0 0 0 2px rgba(0, 194, 255, 0.1)';
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.parentElement!.style.borderColor = 'rgba(255, 255, 255, 0.06)';
+                        e.currentTarget.parentElement!.style.background = 'rgba(255, 255, 255, 0.02)';
+                        e.currentTarget.parentElement!.style.boxShadow = 'none';
+                      }}
                       onKeyDown={handleTextareaKeyDown}
                       rows={4}
                       maxLength={170}
@@ -774,7 +809,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                         width: '100%',
                         padding: '12px 14px',
                         paddingBottom: '24px',
-                        color: '#fff',
+                        color: '#FFFFFF',
                         resize: 'none',
                       }}
                       disabled={uploading}
@@ -785,15 +820,15 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                         bottom: '6px', 
                         right: '12px', 
                         fontSize: '11px', 
-                        color: 'rgba(255,255,255,0.35)' 
+                        color: textContent.length > 161 ? '#FF453A' : textContent.length > 136 ? '#FF9F0A' : 'var(--text-tertiary, rgba(255,255,255,0.4))'
                       }}
                     >
                       {textContent.length}/170
                     </span>
                   </div>
 
-                  {/* Inline Toolbar for Text Post - 10px closer */}
-                  <div className="flex items-center" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px', marginTop: '-6px' }}>
+                  {/* Inline Toolbar for Text Post - 21px gap */}
+                  <div className="flex items-center" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px', marginTop: '21px' }}>
                     <button
                       onClick={handleSaveAsDraft}
                       disabled={uploading || !textContent.trim()}
