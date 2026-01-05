@@ -796,9 +796,9 @@ html {
     height: 37px !important;
   }
   
-  /* Upload modal publish button - 40% narrower on mobile */
+  /* Upload modal publish button - 35% wider on mobile */
   .publish-btn {
-    padding: 0 16px !important;
+    padding: 0 32px !important;
     min-width: auto !important;
     min-height: 32px !important;
   }

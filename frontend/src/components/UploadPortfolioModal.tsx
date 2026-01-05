@@ -91,13 +91,24 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     }
   }, [initialContentType, isOpen]);
 
-  // Lock body scroll when modal is open
+  // Lock body scroll when modal is open - Safari mobile fix
   useEffect(() => {
     if (isOpen) {
+      const scrollY = window.scrollY;
       document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.touchAction = 'none';
     }
     return () => {
+      const scrollY = document.body.style.top;
       document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.touchAction = '';
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
     };
   }, [isOpen]);
 
@@ -488,22 +499,19 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header - glassy to match content, no harsh line */}
+        {/* Header - seamless with container, no separate background */}
         <div 
           className="flex items-center justify-between sticky top-0 z-10"
           style={{
             height: '55px',
-            background: 'rgba(18, 18, 18, 0.8)',
-            backdropFilter: 'blur(32px)',
-            WebkitBackdropFilter: 'blur(32px)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
+            background: 'rgba(18, 18, 18, 0.95)',
             borderTopLeftRadius: '16px',
             borderTopRightRadius: '16px',
             padding: '0 20px',
           }}
         >
-              {/* Left: Back arrow + Dynamic title - 6px gap (matching left padding) */}
-              <div className="flex items-center" style={{ gap: '6px' }}>
+              {/* Left: Back arrow + Dynamic title - 4px gap (tighter) */}
+              <div className="flex items-center" style={{ gap: '4px' }}>
                 <button
                   onClick={handleBack}
                   disabled={uploading}
@@ -538,13 +546,10 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               </button>
             </div>
 
-            {/* Content area - 10px side padding, more glassy */}
+            {/* Content area - 10px side padding, no separate background to avoid line */}
             <div 
               style={{ 
                 padding: '16px 10px',
-                background: 'rgba(18, 18, 18, 0.6)',
-                backdropFilter: 'blur(32px) saturate(200%)',
-                WebkitBackdropFilter: 'blur(32px) saturate(200%)',
               }} 
               className="space-y-4"
             >
@@ -720,16 +725,18 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
                   {/* Attachment Display - Right under caption, 50px height, swipe to delete */}
                   {attachmentFile && attachmentType && (
-                    <div className="relative overflow-hidden rounded-[10px]" style={{ marginTop: '8px' }}>
-                      {/* Delete button - tappable */}
+                    <div className="relative overflow-hidden" style={{ marginTop: '8px', borderRadius: '10px' }}>
+                      {/* Delete button - tappable, matching corners */}
                       <button 
                         onClick={handleDeleteTap}
                         className="absolute inset-y-0 right-0 flex items-center justify-center"
                         style={{
                           width: '70px',
                           background: '#FF453A',
+                          borderRadius: '0 10px 10px 0',
                           opacity: attachmentSwipeX > 0 ? 1 : 0,
                           pointerEvents: attachmentSwipeX > 0 ? 'auto' : 'none',
+                          transition: 'opacity 0.2s ease',
                         }}
                       >
                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -737,49 +744,54 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                         </svg>
                       </button>
                       
-                      {/* Attachment content - swipeable, 50px height */}
+                      {/* Attachment content - swipeable, 50px height, tap to cancel delete */}
                       <div 
                         className="flex items-center gap-3 relative"
                         style={{
                           height: '50px',
-                          background: 'rgba(255, 255, 255, 0.02)',
+                          background: attachmentSwipeX > 0 ? 'rgba(40, 40, 40, 0.98)' : 'rgba(255, 255, 255, 0.02)',
                           border: '1px solid rgba(255, 255, 255, 0.06)',
-                          borderRadius: '10px',
+                          borderRadius: attachmentSwipeX > 0 ? '10px 0 0 10px' : '10px',
                           padding: '0 12px',
                           transform: `translateX(-${attachmentSwipeX}px)`,
-                          transition: attachmentSwipeX === 0 ? 'transform 0.2s ease' : 'none',
+                          transition: 'transform 0.2s ease, border-radius 0.2s ease, background 0.2s ease',
                         }}
                         onTouchStart={handleSwipeStart}
                         onTouchMove={handleSwipeMove}
                         onTouchEnd={handleSwipeEnd}
+                        onClick={() => attachmentSwipeX > 0 && setAttachmentSwipeX(0)}
                       >
-                        {/* Album art / icon */}
+                        {/* Album art / icon - cleaner style */}
                         <div 
                           className="flex items-center justify-center flex-shrink-0"
                           style={{
                             width: '36px',
                             height: '36px',
-                            background: 'linear-gradient(135deg, rgba(0, 194, 255, 0.2) 0%, rgba(0, 122, 255, 0.2) 100%)',
-                            borderRadius: '8px',
+                            background: attachmentType === 'audio' 
+                              ? 'linear-gradient(145deg, #2D2D2D 0%, #1A1A1A 100%)'
+                              : 'linear-gradient(145deg, #2D2D2D 0%, #1A1A1A 100%)',
+                            borderRadius: '6px',
+                            border: '1px solid rgba(255,255,255,0.06)',
                           }}
                         >
                           {attachmentType === 'audio' ? (
-                            <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V4.5l-10.5 3v9.75" />
+                            <svg className="w-[18px] h-[18px]" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth={1.5} viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V4.5l-10.5 3v9.75M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z" />
                             </svg>
                           ) : (
-                            <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                            <svg className="w-[18px] h-[18px]" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth={1.5} viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                             </svg>
                           )}
                         </div>
                         
-                        {/* File name */}
+                        {/* File info - title and subtitle like music player */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-[13px] text-white font-medium truncate">{attachmentFile.name}</p>
+                          <p className="text-[13px] text-white font-medium truncate">{attachmentFile.name.replace(/\.[^/.]+$/, '')}</p>
+                          <p className="text-[11px] text-gray-400 truncate">Unknown Artist</p>
                         </div>
                         
-                        {/* Play button for audio - compact rounded square like image */}
+                        {/* Play button for audio - circular, compact like reference */}
                         {attachmentType === 'audio' && (
                           <>
                             <audio 
@@ -789,21 +801,21 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                               className="hidden"
                             />
                             <button
-                              onClick={toggleAudioPlay}
+                              onClick={(e) => { e.stopPropagation(); toggleAudioPlay(); }}
                               className="flex items-center justify-center flex-shrink-0"
                               style={{
-                                width: '32px',
-                                height: '32px',
-                                background: 'rgba(30, 30, 30, 0.95)',
-                                borderRadius: '10px',
+                                width: '28px',
+                                height: '28px',
+                                background: '#1C1C1E',
+                                borderRadius: '50%',
                               }}
                             >
                               {isPlaying ? (
-                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
                                   <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
                                 </svg>
                               ) : (
-                                <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-3 h-3 text-white" style={{ marginLeft: '2px' }} fill="currentColor" viewBox="0 0 24 24">
                                   <path d="M8 5v14l11-7z" />
                                 </svg>
                               )}
