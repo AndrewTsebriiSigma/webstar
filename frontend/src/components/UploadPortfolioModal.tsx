@@ -34,10 +34,10 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Scroll to top when focusing textarea (so keyboard doesn't cover input)
+  // Scroll caption into view when focusing (so keyboard doesn't cover it)
   const handleDescriptionFocus = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    if (textareaRef.current) {
+      textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   };
 
@@ -492,8 +492,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
             padding: '0 20px',
           }}
         >
-              {/* Left: Back arrow + Dynamic title - 14px gap */}
-              <div className="flex items-center" style={{ gap: '14px' }}>
+              {/* Left: Back arrow + Dynamic title - 10px gap */}
+              <div className="flex items-center" style={{ gap: '10px' }}>
                 <button
                   onClick={handleBack}
                   disabled={uploading}
@@ -529,7 +529,15 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
             </div>
 
             {/* Content area - 10px side padding, glassy */}
-            <div style={{ padding: '16px 10px' }} className="space-y-4">
+            <div 
+              style={{ 
+                padding: '16px 10px',
+                background: 'rgba(18, 18, 18, 0.85)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              }} 
+              className="space-y-4"
+            >
               {selectedContentType !== 'text' ? (
                 <>
                   {/* File Upload Area - Glass Card */}
@@ -705,8 +713,102 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     </span>
                   </div>
 
-                  {/* Inline Toolbar - 14px gap */}
-                  <div className="flex items-center justify-between" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px', marginTop: '14px' }}>
+                  {/* Attachment Display - Right under caption, 50px height, swipe to delete */}
+                  {attachmentFile && attachmentType && (
+                    <div className="relative overflow-hidden rounded-[10px]" style={{ marginTop: '8px' }}>
+                      {/* Delete background */}
+                      <div 
+                        className="absolute inset-y-0 right-0 flex items-center justify-end pr-4"
+                        style={{
+                          width: '80px',
+                          background: '#FF453A',
+                          opacity: attachmentSwipeX / 80,
+                        }}
+                      >
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </div>
+                      
+                      {/* Attachment content - swipeable, 50px height */}
+                      <div 
+                        className="flex items-center gap-3 relative"
+                        style={{
+                          height: '50px',
+                          background: 'rgba(255, 255, 255, 0.02)',
+                          border: '1px solid rgba(255, 255, 255, 0.06)',
+                          borderRadius: '10px',
+                          padding: '0 12px',
+                          transform: `translateX(-${attachmentSwipeX}px)`,
+                          transition: attachmentSwipeX === 0 ? 'transform 0.2s ease' : 'none',
+                        }}
+                        onTouchStart={handleSwipeStart}
+                        onTouchMove={handleSwipeMove}
+                        onTouchEnd={handleSwipeEnd}
+                      >
+                        {/* Album art / icon */}
+                        <div 
+                          className="flex items-center justify-center flex-shrink-0"
+                          style={{
+                            width: '36px',
+                            height: '36px',
+                            background: 'linear-gradient(135deg, rgba(0, 194, 255, 0.2) 0%, rgba(0, 122, 255, 0.2) 100%)',
+                            borderRadius: '8px',
+                          }}
+                        >
+                          {attachmentType === 'audio' ? (
+                            <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V4.5l-10.5 3v9.75" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                            </svg>
+                          )}
+                        </div>
+                        
+                        {/* File name */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] text-white font-medium truncate">{attachmentFile.name}</p>
+                        </div>
+                        
+                        {/* Play button for audio */}
+                        {attachmentType === 'audio' && (
+                          <>
+                            <audio 
+                              ref={audioRef} 
+                              src={URL.createObjectURL(attachmentFile)}
+                              onEnded={() => setIsPlaying(false)}
+                              className="hidden"
+                            />
+                            <button
+                              onClick={toggleAudioPlay}
+                              className="flex items-center justify-center"
+                              style={{
+                                width: '30px',
+                                height: '30px',
+                                background: 'rgba(0, 194, 255, 0.15)',
+                                borderRadius: '50%',
+                              }}
+                            >
+                              {isPlaying ? (
+                                <svg className="w-3.5 h-3.5 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                                </svg>
+                              ) : (
+                                <svg className="w-3.5 h-3.5 text-cyan-400 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M8 5v14l11-7z" />
+                                </svg>
+                              )}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Inline Toolbar - 12px gap */}
+                  <div className="flex items-center justify-between" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px', marginTop: '12px' }}>
                     {/* Left: Save as draft */}
                     <button
                       onClick={handleSaveAsDraft}
@@ -770,99 +872,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                       </div>
                     )}
                   </div>
-
-                  {/* Attachment Display - Swipe to delete (iOS style) */}
-                  {attachmentFile && attachmentType && (
-                    <div className="relative overflow-hidden rounded-[10px]">
-                      {/* Delete background */}
-                      <div 
-                        className="absolute inset-y-0 right-0 flex items-center justify-end pr-4"
-                        style={{
-                          width: '80px',
-                          background: '#FF453A',
-                          opacity: attachmentSwipeX / 80,
-                        }}
-                      >
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </div>
-                      
-                      {/* Attachment content - swipeable */}
-                      <div 
-                        className="flex items-center gap-3 relative"
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.02)',
-                          border: '1px solid rgba(255, 255, 255, 0.06)',
-                          borderRadius: '10px',
-                          padding: '10px 12px',
-                          transform: `translateX(-${attachmentSwipeX}px)`,
-                          transition: attachmentSwipeX === 0 ? 'transform 0.2s ease' : 'none',
-                        }}
-                        onTouchStart={handleSwipeStart}
-                        onTouchMove={handleSwipeMove}
-                        onTouchEnd={handleSwipeEnd}
-                      >
-                        {/* Album art / icon */}
-                        <div 
-                          className="flex items-center justify-center flex-shrink-0"
-                          style={{
-                            width: '40px',
-                            height: '40px',
-                            background: 'linear-gradient(135deg, rgba(0, 194, 255, 0.2) 0%, rgba(0, 122, 255, 0.2) 100%)',
-                            borderRadius: '8px',
-                          }}
-                        >
-                          {attachmentType === 'audio' ? (
-                            <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V4.5l-10.5 3v9.75" />
-                            </svg>
-                          ) : (
-                            <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                            </svg>
-                          )}
-                        </div>
-                        
-                        {/* File name */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[13px] text-white font-medium truncate">{attachmentFile.name}</p>
-                        </div>
-                        
-                        {/* Play button for audio */}
-                        {attachmentType === 'audio' && (
-                          <>
-                            <audio 
-                              ref={audioRef} 
-                              src={URL.createObjectURL(attachmentFile)}
-                              onEnded={() => setIsPlaying(false)}
-                              className="hidden"
-                            />
-                            <button
-                              onClick={toggleAudioPlay}
-                              className="flex items-center justify-center"
-                              style={{
-                                width: '32px',
-                                height: '32px',
-                                background: 'rgba(0, 194, 255, 0.15)',
-                                borderRadius: '50%',
-                              }}
-                            >
-                              {isPlaying ? (
-                                <svg className="w-4 h-4 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                                </svg>
-                              ) : (
-                                <svg className="w-4 h-4 text-cyan-400 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M8 5v14l11-7z" />
-                                </svg>
-                              )}
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </>
               ) : (
                 <>
@@ -925,8 +934,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     </span>
                   </div>
 
-                  {/* Inline Toolbar for Text Post - 14px gap */}
-                  <div className="flex items-center" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px', marginTop: '14px' }}>
+                  {/* Inline Toolbar for Text Post - 12px gap */}
+                  <div className="flex items-center" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px', marginTop: '12px' }}>
                     <button
                       onClick={handleSaveAsDraft}
                       disabled={uploading || !textContent.trim()}
