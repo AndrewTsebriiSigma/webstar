@@ -29,6 +29,14 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   
   const [description, setDescription] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Handle scroll to top on description focus (prevents iOS zoom issues)
+  const handleDescriptionFocus = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   // Determine if attachments are allowed (avoid duplicates)
   const canAddAudioAttachment = selectedContentType === 'media'; // Only for media, not for audio
@@ -421,6 +429,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
       onClick={handleClose}
     >
       <div 
+        ref={scrollContainerRef}
         className="w-full h-full overflow-y-auto"
         style={{
           background: 'rgba(18, 18, 18, 0.85)',
@@ -689,11 +698,12 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           setDescription(e.target.value);
                         }
                       }}
+                      onFocus={handleDescriptionFocus}
                       onKeyDown={handleTextareaKeyDown}
                       rows={2}
                       maxLength={170}
                       style={{ 
-                        fontSize: '14px',
+                        fontSize: '16px', // Prevents iOS zoom
                         background: 'transparent',
                         border: 'none',
                         outline: 'none',
@@ -832,11 +842,12 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           setTextContent(e.target.value);
                         }
                       }}
+                      onFocus={handleDescriptionFocus}
                       onKeyDown={handleTextareaKeyDown}
                       rows={4}
                       maxLength={170}
                       style={{ 
-                        fontSize: '14px',
+                        fontSize: '16px', // Prevents iOS zoom
                         background: 'transparent',
                         border: 'none',
                         outline: 'none',
