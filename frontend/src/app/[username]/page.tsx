@@ -108,12 +108,21 @@ export default function ProfilePage({ params }: { params: { username: string } }
       const projectsRes = await projectsAPI.getUserProjects(username);
       setProjects(projectsRes.data);
 
+      // Non-critical data - don't fail the whole page if these error
       if (isOwnProfile) {
-        const pointsRes = await economyAPI.getPoints();
-        setPoints(pointsRes.data);
+        try {
+          const pointsRes = await economyAPI.getPoints();
+          setPoints(pointsRes.data);
+        } catch (e) {
+          console.log('Points not available');
+        }
 
-        const metricsRes = await analyticsAPI.getProfileAnalytics();
-        setMetrics(metricsRes.data);
+        try {
+          const metricsRes = await analyticsAPI.getProfileAnalytics();
+          setMetrics(metricsRes.data);
+        } catch (e) {
+          console.log('Metrics not available');
+        }
       }
     } catch (error) {
       toast.error('Failed to load profile');
