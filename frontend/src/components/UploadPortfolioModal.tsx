@@ -509,7 +509,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
         backdropFilter: 'blur(14px)',
         WebkitBackdropFilter: 'blur(14px)',
         paddingTop: '5vh',
-        paddingBottom: '20vh',
+        paddingBottom: '35vh',
         // Fade animation
         opacity: isVisible ? 1 : 0,
         transition: 'opacity 0.15s ease-out',
@@ -752,7 +752,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                       border: '1px solid rgba(255, 255, 255, 0.06)',
                       borderRadius: '10px',
                       position: 'relative',
-                      transition: 'all 0.2s ease',
+                      transition: 'box-shadow 0s, border 0s',
                     }}
                     onClick={() => attachmentSwipeX > 0 && setAttachmentSwipeX(0)}
                   >
@@ -886,11 +886,9 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                             onChange={(e) => setAttachmentFileName(e.target.value)}
                             onFocus={(e) => {
                               e.currentTarget.style.boxShadow = '0 0 0 1px rgba(0, 194, 255, 0.3)';
-                              e.currentTarget.style.background = 'rgba(0, 194, 255, 0.05)';
                             }}
                             onBlur={(e) => {
                               e.currentTarget.style.boxShadow = 'none';
-                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
                             }}
                             className="text-[11px] font-normal bg-transparent outline-none w-full"
                             style={{ 
@@ -1004,11 +1002,13 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
             </div>
             
-            {/* Sticky Footer - Draft toolbar with gradient fade */}
+            {/* Sticky Footer - Draft toolbar with glassy effect */}
             <div 
               className="relative"
               style={{
-                background: 'rgba(20, 20, 20, 1)',
+                background: 'rgba(20, 20, 20, 0.85)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
                 borderTop: '1px solid rgba(255, 255, 255, 0.06)',
                 borderBottomLeftRadius: '16px',
                 borderBottomRightRadius: '16px',
@@ -1016,18 +1016,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
               }}
             >
-              {/* Gradient fade above */}
-              <div 
-                style={{
-                  position: 'absolute',
-                  top: '-24px',
-                  left: 0,
-                  right: 0,
-                  height: '24px',
-                  background: 'linear-gradient(to top, rgba(20, 20, 20, 1) 0%, transparent 100%)',
-                  pointerEvents: 'none',
-                }}
-              />
               
               <div 
                 className="flex items-center justify-between" 
