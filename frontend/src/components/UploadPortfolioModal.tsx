@@ -506,10 +506,10 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
       }}
       onClick={handleClose}
     >
-      {/* Centered floating popup - 85% solid card */}
+      {/* Centered floating popup - 85% solid card with flex layout */}
       <div 
         ref={scrollContainerRef}
-        className="w-full overflow-y-auto relative"
+        className="w-full relative flex flex-col"
         style={{
           maxWidth: 'calc(100% - 24px)',
           height: '75vh',
@@ -605,8 +605,9 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               </button>
             </div>
 
-            {/* Content area - 10px side padding, tap to close delete mode */}
+            {/* Content area - scrollable, tap to close delete mode */}
             <div 
+              className="flex-1 overflow-y-auto"
               style={{ 
                 padding: '16px 10px',
                 background: 'transparent',
