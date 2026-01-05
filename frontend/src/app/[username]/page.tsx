@@ -703,7 +703,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
         style={{ background: 'rgba(17, 17, 17, 0.9)', marginTop: '28px' }}
       >
         <div className="flex relative">
-          {/* Sliding indicator */}
+          {/* Sliding indicator - 10% wider, subtle gradient */}
           <div 
             className="absolute bottom-0 h-[3px] transition-transform duration-300 ease-out"
             style={{
@@ -711,7 +711,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
               transform: `translateX(${['portfolio', 'projects', 'about'].indexOf(activeTab) * 100}%)`
             }}
           >
-            <div className="w-20 h-full bg-cyan-500 mx-auto" />
+            <div 
+              className="h-full mx-auto" 
+              style={{ 
+                width: '88px',
+                background: 'linear-gradient(90deg, #00C2FF 0%, #0099CC 100%)',
+                borderRadius: '2px'
+              }} 
+            />
           </div>
           
           {['Portfolio', 'Projects', 'About'].map((tab) => (
