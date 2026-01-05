@@ -415,42 +415,43 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         paddingTop: '5vh',
-        paddingBottom: '10vh',
+        paddingBottom: '20vh',
       }}
       onClick={handleClose}
     >
-      {/* Centered floating popup - BIGGER 85vh, glassy */}
+      {/* Centered floating popup - 75vh, glass morphism */}
       <div 
         ref={scrollContainerRef}
         className="w-full overflow-y-auto"
         style={{
           maxWidth: 'calc(100% - 24px)',
-          height: '85vh',
-          background: 'rgba(22, 22, 22, 0.92)',
-          backdropFilter: 'blur(40px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-          borderRadius: '24px',
-          boxShadow: '0 12px 48px rgba(0, 0, 0, 0.5)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          height: '75vh',
+          background: 'rgba(18, 18, 18, 0.85)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          borderRadius: '16px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          padding: '8px',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header - glassy */}
+        {/* Header - 25px padding left/right */}
         <div 
           className="flex items-center justify-between sticky top-0 z-10"
           style={{
             height: '55px',
-            background: 'rgba(22, 22, 22, 0.95)',
+            background: 'rgba(18, 18, 18, 0.95)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-            borderTopLeftRadius: '24px',
-            borderTopRightRadius: '24px',
-            padding: '0 16px',
+            borderTopLeftRadius: '12px',
+            borderTopRightRadius: '12px',
+            padding: '0 25px',
           }}
         >
-              {/* Left: Back arrow + Dynamic title - equal gaps */}
-              <div className="flex items-center" style={{ gap: '10px' }}>
+              {/* Left: Back arrow + Dynamic title - 25px from edge */}
+              <div className="flex items-center" style={{ gap: '12px' }}>
                 <button
                   onClick={handleBack}
                   disabled={uploading}
@@ -647,8 +648,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     </span>
                   </div>
 
-                  {/* Inline Toolbar - 10px extra padding from sides, 25px between icons */}
-                  <div className="flex items-center justify-between" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px' }}>
+                  {/* Inline Toolbar - 10px closer, 25px between icons */}
+                  <div className="flex items-center justify-between" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px', marginTop: '-6px' }}>
                     {/* Left: Save as draft */}
                     <button
                       onClick={handleSaveAsDraft}
@@ -791,8 +792,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     </span>
                   </div>
 
-                  {/* Inline Toolbar for Text Post - with padding */}
-                  <div className="flex items-center" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px' }}>
+                  {/* Inline Toolbar for Text Post - 10px closer */}
+                  <div className="flex items-center" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px', marginTop: '-6px' }}>
                     <button
                       onClick={handleSaveAsDraft}
                       disabled={uploading || !textContent.trim()}
