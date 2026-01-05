@@ -509,7 +509,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           </>
         ) : (
           <>
-            {/* Upload Interface - Glass Header */}
+            {/* Upload Interface - Clean Header */}
             <div 
               className="flex items-center justify-between px-4 sticky top-0 z-10"
               style={{
@@ -520,26 +520,27 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
               }}
             >
-              <button
-                onClick={handleBack}
-                disabled={uploading}
-                className="p-2 rounded-[10px] transition disabled:opacity-50"
-                style={{ background: 'rgba(255, 255, 255, 0.03)' }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'}
-              >
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <h2 className="text-[15px] font-semibold text-white">Post</h2>
+              {/* Left: Back arrow + Post title */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleBack}
+                  disabled={uploading}
+                  className="transition disabled:opacity-50"
+                >
+                  <svg className="w-[18px] h-[18px] text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <h2 className="text-[15px] font-semibold text-white">Post</h2>
+              </div>
+              {/* Right: Publish */}
               <button
                 onClick={handleSubmit}
                 disabled={uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file)}
                 className="px-4 py-2 text-[14px] font-semibold rounded-[10px] transition disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   background: '#00C2FF',
-                  color: '#000',
+                  color: '#fff',
                 }}
               >
                 {uploading ? '...' : 'Publish'}
@@ -662,33 +663,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     )}
                   </div>
 
-                  {/* Title Input - Glass Style */}
-                  <div
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.03)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                      borderRadius: '12px',
-                    }}
-                  >
-                    <input
-                      type="text"
-                      placeholder="Title*"
-                      value={description.split('\n')[0] || ''}
-                      onChange={(e) => setDescription(e.target.value)}
-                      maxLength={100}
-                      style={{ 
-                        fontSize: '15px',
-                        background: 'transparent',
-                        border: 'none',
-                        outline: 'none',
-                        width: '100%',
-                        padding: '14px 16px',
-                        color: '#fff',
-                      }}
-                      disabled={uploading}
-                    />
-                  </div>
-
                   {/* Description Input - Glass Style */}
                   <div
                     style={{
@@ -804,7 +778,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               )}
             </div>
 
-            {/* Fixed Bottom Toolbar - Glass Style with Keyboard Space */}
+            {/* Fixed Bottom Toolbar - Clean with Keyboard Space */}
             <div 
               className="fixed bottom-0 left-0 right-0 z-20"
               style={{
@@ -817,25 +791,21 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               }}
             >
               <div className="flex items-center justify-between">
-                {/* Save as Draft - Left */}
+                {/* Save as Draft - Left - No background */}
                 <button
                   onClick={handleSaveAsDraft}
                   disabled={uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-[10px] transition disabled:opacity-40"
-                  style={{ 
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    color: 'rgba(255,255,255,0.7)',
-                  }}
+                  className="flex items-center gap-2 transition disabled:opacity-40"
                 >
-                  <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <svg className="w-[20px] h-[20px]" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth={1.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
                   </svg>
-                  <span className="text-[14px] font-semibold">Save as draft</span>
+                  <span className="text-[14px] font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>Save as draft</span>
                 </button>
                 
-                {/* Attachment Icons - Right (only for media type) */}
+                {/* Attachment Icons - Right - No backgrounds */}
                 {selectedContentType === 'media' && (
-                  <div className="flex gap-2">
+                  <div className="flex gap-4">
                     {/* Audio Attachment */}
                     <div className="relative">
                       <input
@@ -848,9 +818,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                       />
                       <label
                         htmlFor="audio-attachment"
-                        className="p-2.5 rounded-[10px] transition cursor-pointer inline-flex"
+                        className="transition cursor-pointer inline-flex"
                         style={{ 
-                          background: attachmentType === 'audio' ? 'rgba(0, 194, 255, 0.15)' : 'rgba(255, 255, 255, 0.03)',
                           opacity: (!canAddAudioAttachment || attachmentType === 'pdf') ? 0.3 : 1,
                         }}
                         onClick={(e) => {
@@ -877,9 +846,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                       />
                       <label
                         htmlFor="pdf-attachment"
-                        className="p-2.5 rounded-[10px] transition cursor-pointer inline-flex"
+                        className="transition cursor-pointer inline-flex"
                         style={{ 
-                          background: attachmentType === 'pdf' ? 'rgba(0, 194, 255, 0.15)' : 'rgba(255, 255, 255, 0.03)',
                           opacity: (!canAddPdfAttachment || attachmentType === 'audio') ? 0.3 : 1,
                         }}
                         onClick={(e) => {
