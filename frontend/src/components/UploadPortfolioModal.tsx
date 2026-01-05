@@ -580,7 +580,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           }}
         >
               {/* Left: Close button + title - 20px gap (matches side padding) */}
-              <div className="flex items-center" style={{ gap: '20px' }}>
+              <div className="flex items-center">
                 <button
                   onClick={handleBack}
                   disabled={uploading}
@@ -590,7 +590,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
-                <h2 className="text-[15px] font-semibold text-white">
+                <h2 style={{ marginLeft: '20px' }} className="text-[15px] font-semibold text-white">
                   {selectedContentType === 'media' ? 'Media Post' :
                    selectedContentType === 'audio' ? 'Audio Post' :
                    selectedContentType === 'pdf' ? 'PDF Post' :
@@ -878,28 +878,37 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           )}
                         </div>
                         
-                        {/* File name - Apple focus glow with subtle background highlight */}
-                        <div className="flex-1 min-w-0 flex items-center">
+                        {/* File name - Apple focus glow on wrapper like caption */}
+                        <div 
+                          className="flex-1 min-w-0 flex items-center"
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.02)',
+                            borderRadius: '4px',
+                            border: '1px solid rgba(255, 255, 255, 0.06)',
+                            transition: 'box-shadow 0s, border 0s',
+                          }}
+                        >
                           <input
                             type="text"
                             value={attachmentFileName}
                             onChange={(e) => setAttachmentFileName(e.target.value)}
                             onFocus={(e) => {
-                              e.currentTarget.style.boxShadow = '0 0 0 1px rgba(0, 194, 255, 0.3)';
+                              e.currentTarget.parentElement!.style.boxShadow = '0 0 0 1px rgba(0, 194, 255, 0.3)';
+                              e.currentTarget.parentElement!.style.border = '1px solid transparent';
                             }}
                             onBlur={(e) => {
-                              e.currentTarget.style.boxShadow = 'none';
+                              e.currentTarget.parentElement!.style.boxShadow = 'none';
+                              e.currentTarget.parentElement!.style.border = '1px solid rgba(255, 255, 255, 0.06)';
                             }}
                             className="text-[11px] font-normal bg-transparent outline-none w-full"
                             style={{ 
                               padding: '4px 6px',
                               border: 'none',
-                              borderRadius: '2px',
-                              background: 'rgba(255, 255, 255, 0.02)',
+                              borderRadius: '4px',
+                              background: 'transparent',
                               color: 'rgba(255, 255, 255, 0.7)',
                               height: '28px',
                               caretColor: '#00C2FF',
-                              transition: 'box-shadow 0s',
                             }}
                           />
                         </div>
@@ -1002,13 +1011,11 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
             </div>
             
-            {/* Sticky Footer - Draft toolbar with glassy effect */}
+            {/* Sticky Footer - Draft toolbar, transparent to match content area */}
             <div 
               className="relative"
               style={{
-                background: 'rgba(20, 20, 20, 0.85)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
+                background: 'transparent',
                 borderBottomLeftRadius: '16px',
                 borderBottomRightRadius: '16px',
                 padding: '12px 16px',
