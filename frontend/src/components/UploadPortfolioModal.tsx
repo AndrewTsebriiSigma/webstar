@@ -31,9 +31,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   const [attachmentFileName, setAttachmentFileName] = useState('');
   const [isRemovingAttachment, setIsRemovingAttachment] = useState(false);
   
-  // Smooth progress animation with ref to avoid stale closures
-  const displayProgressRef = useRef(0);
-  const [displayProgress, setDisplayProgress] = useState(0);
+  // Progress display - using uploadProgress directly (animation disabled for debugging)
+  const displayProgress = uploadProgress;
   const attachmentNameRef = useRef<HTMLInputElement>(null);
   
   const [description, setDescription] = useState('');
@@ -265,35 +264,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     }, 250);
   };
   
-  // Smooth progress animation - using ref to avoid stale closure issues
-  useEffect(() => {
-    if (uploadProgress === 0) {
-      displayProgressRef.current = 0;
-      setDisplayProgress(0);
-      return;
-    }
-    
-    let animationId: number;
-    
-    const animate = () => {
-      if (displayProgressRef.current < uploadProgress) {
-        const diff = uploadProgress - displayProgressRef.current;
-        // Spring-like increment - faster when far, slower when close
-        const increment = Math.max(1, Math.ceil(diff * 0.15));
-        displayProgressRef.current = Math.min(displayProgressRef.current + increment, uploadProgress);
-        setDisplayProgress(displayProgressRef.current);
-        
-        if (displayProgressRef.current < uploadProgress) {
-          animationId = requestAnimationFrame(animate);
-        }
-      }
-    };
-    
-    animationId = requestAnimationFrame(animate);
-    
-    return () => cancelAnimationFrame(animationId);
-  }, [uploadProgress]);
-
   // Rich text editing features
   const handleTextareaKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Tab') {
