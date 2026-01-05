@@ -493,7 +493,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     <div 
       className="fixed inset-0 z-50 flex items-start justify-center"
       style={{
-        background: 'rgba(0, 0, 0, 0.85)',
+        background: 'rgba(0, 0, 0, 0.6)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         paddingTop: '5vh',
@@ -504,15 +504,14 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
       }}
       onClick={handleClose}
     >
-      {/* Centered floating popup - Glass Card (NO blur - backdrop does it) */}
+      {/* Centered floating popup - Solid dark card (visible against lighter backdrop) */}
       <div 
         ref={scrollContainerRef}
         className="w-full overflow-y-auto"
         style={{
           maxWidth: 'calc(100% - 24px)',
           height: '75vh',
-          background: 'rgba(18, 18, 18, 0.85)',
-          // NO backdropFilter - Layer 2 (backdrop overlay) already does the blur
+          background: 'rgba(17, 17, 17, 0.95)',
           borderRadius: '16px',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
