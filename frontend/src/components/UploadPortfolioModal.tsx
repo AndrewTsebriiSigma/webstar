@@ -493,9 +493,9 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     <div 
       className="fixed inset-0 z-50 flex items-start justify-center"
       style={{
-        background: 'rgba(0, 0, 0, 0.4)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
+        background: 'rgba(0, 0, 0, 0.3)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
         paddingTop: '5vh',
         paddingBottom: '20vh',
         // Fade animation
@@ -504,14 +504,14 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
       }}
       onClick={handleClose}
     >
-      {/* Centered floating popup - 90% transparent card */}
+      {/* Centered floating popup - 45% solid card */}
       <div 
         ref={scrollContainerRef}
         className="w-full overflow-y-auto"
         style={{
           maxWidth: 'calc(100% - 24px)',
           height: '75vh',
-          background: 'rgba(20, 20, 20, 0.1)',
+          background: 'rgba(20, 20, 20, 0.45)',
           borderRadius: '16px',
           border: '1px solid rgba(255, 255, 255, 0.1)',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
