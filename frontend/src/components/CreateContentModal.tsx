@@ -18,9 +18,9 @@ export default function CreateContentModal({
   if (!isOpen) return null;
 
   // Nav base height ~50px, shrinks by ~10px max
-  // Dropdown sits right below with 4px gap
+  // Dropdown sits right below with 6px gap
   const navHeight = 50 - (10 * navHeightReduction);
-  const dropdownTop = navHeight + 4;
+  const dropdownTop = navHeight + 6;
 
   return (
     <div 
