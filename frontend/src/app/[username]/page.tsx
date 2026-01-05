@@ -50,6 +50,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [loading, setLoading] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [selectedPostType, setSelectedPostType] = useState<'media' | 'audio' | 'pdf' | 'text' | null>(null);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showEditAboutModal, setShowEditAboutModal] = useState(false);
@@ -903,15 +904,22 @@ export default function ProfilePage({ params }: { params: { username: string } }
       <CreateContentModal
         isOpen={showCreateContentModal}
         onClose={() => setShowCreateContentModal(false)}
-        onSelectPost={() => setShowUploadModal(true)}
+        onSelectPost={(type) => {
+          setSelectedPostType(type || null);
+          setShowUploadModal(true);
+        }}
         onSelectProject={() => setShowProjectModal(true)}
         navHeightReduction={heightReduction}
       />
 
       <UploadPortfolioModal
         isOpen={showUploadModal}
-        onClose={() => setShowUploadModal(false)}
+        onClose={() => {
+          setShowUploadModal(false);
+          setSelectedPostType(null);
+        }}
         onSuccess={loadProfile}
+        initialContentType={selectedPostType}
       />
 
       <CreateProjectModal

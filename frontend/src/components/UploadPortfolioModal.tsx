@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, KeyboardEvent } from 'react';
+import { useState, useRef, useEffect, KeyboardEvent } from 'react';
 import { uploadsAPI, portfolioAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { XMarkIcon } from '@heroicons/react/24/outline';
@@ -9,12 +9,13 @@ interface UploadPortfolioModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  initialContentType?: 'media' | 'audio' | 'pdf' | 'text' | null;
 }
 
-export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: UploadPortfolioModalProps) {
-  // Content type selector
-  const [contentTypeMenuOpen, setContentTypeMenuOpen] = useState(true);
-  const [selectedContentType, setSelectedContentType] = useState<'media' | 'audio' | 'pdf' | 'text' | null>(null);
+export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initialContentType }: UploadPortfolioModalProps) {
+  // Content type selector - skip menu if type is pre-selected
+  const [contentTypeMenuOpen, setContentTypeMenuOpen] = useState(!initialContentType);
+  const [selectedContentType, setSelectedContentType] = useState<'media' | 'audio' | 'pdf' | 'text' | null>(initialContentType || null);
   
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>('');
@@ -32,6 +33,17 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess }: Upl
   // Determine if attachments are allowed (avoid duplicates)
   const canAddAudioAttachment = selectedContentType === 'media'; // Only for media, not for audio
   const canAddPdfAttachment = selectedContentType === 'media'; // Only for media
+
+  // Sync state when initialContentType changes
+  useEffect(() => {
+    if (initialContentType) {
+      setSelectedContentType(initialContentType);
+      setContentTypeMenuOpen(false);
+    } else {
+      setContentTypeMenuOpen(true);
+      setSelectedContentType(null);
+    }
+  }, [initialContentType, isOpen]);
 
   if (!isOpen) return null;
 
