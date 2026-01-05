@@ -31,7 +31,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   const [attachmentFileName, setAttachmentFileName] = useState('');
   const [isRemovingAttachment, setIsRemovingAttachment] = useState(false);
   
-  // Smooth progress animation
+  // Smooth progress animation with ref to avoid stale closures
+  const displayProgressRef = useRef(0);
   const [displayProgress, setDisplayProgress] = useState(0);
   const attachmentNameRef = useRef<HTMLInputElement>(null);
   
@@ -264,39 +265,33 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     }, 250);
   };
   
-  // Smooth progress animation - safe implementation with cleanup
+  // Smooth progress animation - using ref to avoid stale closure issues
   useEffect(() => {
     if (uploadProgress === 0) {
+      displayProgressRef.current = 0;
       setDisplayProgress(0);
       return;
     }
     
     let animationId: number;
-    let current = displayProgress;
     
     const animate = () => {
-      if (current < uploadProgress) {
-        const diff = uploadProgress - current;
+      if (displayProgressRef.current < uploadProgress) {
+        const diff = uploadProgress - displayProgressRef.current;
         // Spring-like increment - faster when far, slower when close
         const increment = Math.max(1, Math.ceil(diff * 0.15));
-        current = Math.min(current + increment, uploadProgress);
-        setDisplayProgress(current);
+        displayProgressRef.current = Math.min(displayProgressRef.current + increment, uploadProgress);
+        setDisplayProgress(displayProgressRef.current);
         
-        if (current < uploadProgress) {
+        if (displayProgressRef.current < uploadProgress) {
           animationId = requestAnimationFrame(animate);
         }
       }
     };
     
-    if (uploadProgress > current) {
-      animationId = requestAnimationFrame(animate);
-    }
+    animationId = requestAnimationFrame(animate);
     
-    return () => {
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-      }
-    };
+    return () => cancelAnimationFrame(animationId);
   }, [uploadProgress]);
 
   // Rich text editing features
