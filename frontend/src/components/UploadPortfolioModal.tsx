@@ -412,22 +412,19 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
   return (
     <div 
-      className="fixed inset-0 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 z-50"
       style={{
-        background: 'rgba(0, 0, 0, 0.7)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)'
+        background: 'rgba(0, 0, 0, 0.6)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)'
       }}
       onClick={handleClose}
     >
       <div 
-        className="rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+        className="w-full h-full overflow-y-auto"
         style={{
-          background: 'rgba(17, 17, 17, 0.98)',
-          backdropFilter: 'blur(60px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(60px) saturate(200%)',
-          border: '1px solid rgba(255, 255, 255, 0.06)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
+          background: 'rgba(18, 18, 18, 0.85)',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom))', // Space for keyboard
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -512,86 +509,105 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           </>
         ) : (
           <>
-            {/* Upload Interface */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-800">
+            {/* Upload Interface - Glass Header */}
+            <div 
+              className="flex items-center justify-between px-4 sticky top-0 z-10"
+              style={{
+                height: '56px',
+                background: 'rgba(18, 18, 18, 0.95)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+              }}
+            >
               <button
                 onClick={handleBack}
                 disabled={uploading}
-                className="p-1.5 hover:bg-gray-800 rounded-lg transition disabled:opacity-50"
+                className="p-2 rounded-[10px] transition disabled:opacity-50"
+                style={{ background: 'rgba(255, 255, 255, 0.03)' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'}
               >
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <h2 className="text-lg font-bold text-white">
-                {selectedContentType === 'media' ? 'Upload Photo/Video' :
-                 selectedContentType === 'audio' ? 'Upload Audio' :
-                 selectedContentType === 'pdf' ? 'Upload PDF' :
-                 selectedContentType === 'text' ? 'Write Text Post' :
-                 'Create Post'}
-              </h2>
+              <h2 className="text-[15px] font-semibold text-white">Post</h2>
               <button
                 onClick={handleSubmit}
                 disabled={uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file)}
-                className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 text-[14px] font-semibold rounded-[10px] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  background: '#00C2FF',
+                  color: '#000',
+                }}
               >
-                {uploading ? 'Publishing...' : 'Publish'}
+                {uploading ? '...' : 'Publish'}
               </button>
             </div>
 
             <div className="p-4 space-y-4">
               {selectedContentType !== 'text' ? (
                 <>
-                  {/* File Upload Area */}
-                  <div>
+                  {/* File Upload Area - Glass Card */}
+                  <div
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '16px',
+                      overflow: 'hidden',
+                    }}
+                  >
                     {preview || file ? (
                       <div className="relative">
                         {preview ? (
                           <img
                             src={preview}
                             alt="Preview"
-                            className="w-full rounded-xl object-cover max-h-80"
+                            className="w-full object-cover"
+                            style={{ maxHeight: '300px', borderRadius: '16px' }}
                           />
                         ) : (
-                          <div className="w-full h-64 bg-gray-800 rounded-xl flex items-center justify-center">
-                            <div className="text-center text-gray-400">
+                          <div className="w-full flex items-center justify-center" style={{ height: '250px', background: 'rgba(0,0,0,0.3)' }}>
+                            <div className="text-center" style={{ color: 'rgba(255,255,255,0.5)' }}>
                               {selectedContentType === 'audio' ? (
                                 <>
-                                  <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                                  <svg className="w-16 h-16 mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                                   </svg>
-                                  <p className="text-sm">🎵 Audio File</p>
+                                  <p className="text-[13px]">Audio File</p>
                                 </>
                               ) : selectedContentType === 'media' && file?.type.startsWith('video/') ? (
                                 <>
-                                  <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                  <svg className="w-16 h-16 mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                   </svg>
-                                  <p className="text-sm">🎬 Video File</p>
+                                  <p className="text-[13px]">Video File</p>
                                 </>
                               ) : selectedContentType === 'pdf' ? (
                                 <>
-                                  <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                  <svg className="w-16 h-16 mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                   </svg>
-                                  <p className="text-sm">📄 PDF Document</p>
+                                  <p className="text-[13px]">PDF Document</p>
                                 </>
                               ) : (
                                 <>
-                                  <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  <svg className="w-16 h-16 mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                   </svg>
-                                  <p className="text-sm">📷 Media File</p>
+                                  <p className="text-[13px]">Media File</p>
                                 </>
                               )}
-                              <p className="text-xs mt-1">{file?.name}</p>
+                              <p className="text-[11px] mt-1 opacity-60">{file?.name}</p>
                             </div>
                           </div>
                         )}
                         {!uploading && (
                           <label
                             htmlFor="file-upload-edit"
-                            className="absolute top-2 right-2 px-3 py-1 bg-gray-900/80 hover:bg-gray-800 text-white text-xs rounded-lg cursor-pointer transition"
+                            className="absolute top-3 right-3 px-3 py-1.5 text-white text-[12px] font-medium rounded-[8px] cursor-pointer transition"
+                            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)' }}
                           >
                             Change
                           </label>
@@ -613,21 +629,21 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     ) : (
                       <label
                         htmlFor="file-upload"
-                        className="block w-full h-64 border-2 border-dashed border-gray-700 rounded-xl hover:border-cyan-500 transition cursor-pointer"
+                        className="block w-full cursor-pointer transition"
+                        style={{ height: '250px' }}
                       >
-                        <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                          <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        <div className="flex flex-col items-center justify-center h-full" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                          <svg className="w-20 h-20 mb-3" fill="currentColor" viewBox="0 0 24 24" style={{ opacity: 0.6 }}>
+                            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
                           </svg>
-                          <p className="text-sm font-medium">
-                            {selectedContentType === 'media' ? 'Click to upload photo or video' :
-                             selectedContentType === 'audio' ? 'Click to upload audio' :
-                             selectedContentType === 'pdf' ? 'Click to upload PDF' :
-                             'Click to upload file'}
+                          <p className="text-[14px] font-medium">
+                            {selectedContentType === 'media' ? 'Tap to upload photo or video' :
+                             selectedContentType === 'audio' ? 'Tap to upload audio' :
+                             selectedContentType === 'pdf' ? 'Tap to upload PDF' :
+                             'Tap to upload file'}
                           </p>
-                          <p className="text-xs mt-1">
-                            {selectedContentType === 'media' ? 'Max 200MB' :
-                             'Max 10MB'}
+                          <p className="text-[12px] mt-1 opacity-60">
+                            {selectedContentType === 'media' ? 'Max 200MB' : 'Max 10MB'}
                           </p>
                         </div>
                         <input
@@ -646,24 +662,61 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     )}
                   </div>
 
-                  {/* Description Input */}
-                  <div>
+                  {/* Title Input - Glass Style */}
+                  <div
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '12px',
+                    }}
+                  >
+                    <input
+                      type="text"
+                      placeholder="Title*"
+                      value={description.split('\n')[0] || ''}
+                      onChange={(e) => setDescription(e.target.value)}
+                      maxLength={100}
+                      style={{ 
+                        fontSize: '15px',
+                        background: 'transparent',
+                        border: 'none',
+                        outline: 'none',
+                        width: '100%',
+                        padding: '14px 16px',
+                        color: '#fff',
+                      }}
+                      disabled={uploading}
+                    />
+                  </div>
+
+                  {/* Description Input - Glass Style */}
+                  <div
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '12px',
+                    }}
+                  >
                     <textarea
                       ref={textareaRef}
-                      placeholder="Add a description (optional)"
+                      placeholder="Description (boost discovery)"
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       onKeyDown={handleTextareaKeyDown}
-                      rows={4}
+                      rows={3}
                       maxLength={500}
-                      style={{ fontSize: '16px' }} // Prevents zoom on iOS
-                      className="w-full px-4 py-2.5 bg-[#1a1a1c] border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none text-white placeholder-gray-500"
+                      style={{ 
+                        fontSize: '15px',
+                        background: 'transparent',
+                        border: 'none',
+                        outline: 'none',
+                        width: '100%',
+                        padding: '14px 16px',
+                        color: '#fff',
+                        resize: 'none',
+                      }}
                       disabled={uploading}
                     />
-                    <div className="flex justify-between items-center mt-1">
-                      <p className="text-xs text-gray-500">Tip: Type "- " and press Tab for bullet points</p>
-                      <p className="text-xs text-gray-500">{description.length}/500</p>
-                    </div>
                   </div>
 
                   {/* Attachment Display */}
@@ -751,20 +804,39 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               )}
             </div>
 
-            {/* Footer with Attachment Actions (disabled for audio and PDF main content) */}
-            {selectedContentType && selectedContentType !== 'audio' && selectedContentType !== 'pdf' && selectedContentType !== 'text' && (
-              <div className="border-t border-gray-800 p-4">
-                <div className="flex items-center justify-between">
-                  <button
-                    onClick={handleSaveAsDraft}
-                    disabled={uploading || !file}
-                    className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {uploading ? 'Saving...' : 'Save as draft'}
-                  </button>
-                  
+            {/* Fixed Bottom Toolbar - Glass Style with Keyboard Space */}
+            <div 
+              className="fixed bottom-0 left-0 right-0 z-20"
+              style={{
+                background: 'rgba(18, 18, 18, 0.95)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                padding: '12px 16px',
+                paddingBottom: 'calc(12px + env(safe-area-inset-bottom))',
+              }}
+            >
+              <div className="flex items-center justify-between">
+                {/* Save as Draft - Left */}
+                <button
+                  onClick={handleSaveAsDraft}
+                  disabled={uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-[10px] transition disabled:opacity-40"
+                  style={{ 
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    color: 'rgba(255,255,255,0.7)',
+                  }}
+                >
+                  <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                  </svg>
+                  <span className="text-[14px] font-semibold">Save as draft</span>
+                </button>
+                
+                {/* Attachment Icons - Right (only for media type) */}
+                {selectedContentType === 'media' && (
                   <div className="flex gap-2">
-                    {/* Audio Attachment Button (Music Note Icon) */}
+                    {/* Audio Attachment */}
                     <div className="relative">
                       <input
                         type="file"
@@ -776,33 +848,24 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                       />
                       <label
                         htmlFor="audio-attachment"
-                        className={`p-2 rounded-lg transition cursor-pointer inline-flex ${
-                          !canAddAudioAttachment || attachmentType === 'pdf'
-                            ? 'opacity-30 cursor-not-allowed'
-                            : attachmentType === 'audio'
-                            ? 'bg-cyan-500/20 hover:bg-cyan-500/30'
-                            : 'hover:bg-gray-700'
-                        }`}
-                        title={
-                          attachmentType === 'pdf'
-                            ? 'Remove PDF attachment first'
-                            : attachmentType === 'audio'
-                            ? 'Audio attached'
-                            : 'Add audio attachment'
-                        }
+                        className="p-2.5 rounded-[10px] transition cursor-pointer inline-flex"
+                        style={{ 
+                          background: attachmentType === 'audio' ? 'rgba(0, 194, 255, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                          opacity: (!canAddAudioAttachment || attachmentType === 'pdf') ? 0.3 : 1,
+                        }}
                         onClick={(e) => {
                           if (!canAddAudioAttachment || attachmentType === 'pdf') {
                             e.preventDefault();
                           }
                         }}
                       >
-                        <svg className={`w-5 h-5 ${attachmentType === 'audio' ? 'text-cyan-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                        <svg className="w-[20px] h-[20px]" fill="none" stroke={attachmentType === 'audio' ? '#00C2FF' : 'rgba(255,255,255,0.5)'} strokeWidth={1.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                         </svg>
                       </label>
                     </div>
 
-                    {/* PDF Attachment Button (File Icon) */}
+                    {/* PDF Attachment */}
                     <div className="relative">
                       <input
                         type="file"
@@ -814,48 +877,26 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                       />
                       <label
                         htmlFor="pdf-attachment"
-                        className={`p-2 rounded-lg transition cursor-pointer inline-flex ${
-                          !canAddPdfAttachment || attachmentType === 'audio'
-                            ? 'opacity-30 cursor-not-allowed'
-                            : attachmentType === 'pdf'
-                            ? 'bg-cyan-500/20 hover:bg-cyan-500/30'
-                            : 'hover:bg-gray-700'
-                        }`}
-                        title={
-                          attachmentType === 'audio'
-                            ? 'Remove audio attachment first'
-                            : attachmentType === 'pdf'
-                            ? 'PDF attached'
-                            : 'Add PDF attachment'
-                        }
+                        className="p-2.5 rounded-[10px] transition cursor-pointer inline-flex"
+                        style={{ 
+                          background: attachmentType === 'pdf' ? 'rgba(0, 194, 255, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                          opacity: (!canAddPdfAttachment || attachmentType === 'audio') ? 0.3 : 1,
+                        }}
                         onClick={(e) => {
                           if (!canAddPdfAttachment || attachmentType === 'audio') {
                             e.preventDefault();
                           }
                         }}
                       >
-                        <svg className={`w-5 h-5 ${attachmentType === 'pdf' ? 'text-cyan-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <svg className="w-[20px] h-[20px]" fill="none" stroke={attachmentType === 'pdf' ? '#00C2FF' : 'rgba(255,255,255,0.5)'} strokeWidth={1.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                         </svg>
                       </label>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
-            )}
-
-            {/* Footer for Audio, PDF, and Text posts (no attachments, just Save as Draft) */}
-            {selectedContentType && (selectedContentType === 'audio' || selectedContentType === 'pdf' || selectedContentType === 'text') && (
-              <div className="border-t border-gray-800 p-4">
-                <button
-                  onClick={handleSaveAsDraft}
-                  disabled={uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file)}
-                  className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {uploading ? 'Saving...' : 'Save as draft'}
-                </button>
-              </div>
-            )}
+            </div>
           </>
         )}
       </div>
