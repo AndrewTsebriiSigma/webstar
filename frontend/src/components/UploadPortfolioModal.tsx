@@ -571,13 +571,11 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               </button>
             </div>
 
-            {/* Content area - 10px side padding, glassy background */}
+            {/* Content area - 10px side padding, transparent (no line bug) */}
             <div 
               style={{ 
                 padding: '16px 10px',
-                background: 'rgba(255, 255, 255, 0.02)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
+                background: 'transparent',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '10px',
