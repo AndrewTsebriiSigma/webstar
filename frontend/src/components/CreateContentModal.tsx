@@ -17,9 +17,9 @@ export default function CreateContentModal({
 }: CreateContentModalProps) {
   if (!isOpen) return null;
 
-  // Nav base height ~50px, shrinks by ~10px max
-  // Dropdown sits right below with 6px gap
-  const navHeight = 50 - (10 * navHeightReduction);
+  // Nav base height ~54px (11px padding + 32px button + 11px padding), shrinks by ~10px max
+  // Dropdown sits right below with 6px gap - sticky to nav
+  const navHeight = 54 - (10 * navHeightReduction);
   const dropdownTop = navHeight + 6;
 
   return (
