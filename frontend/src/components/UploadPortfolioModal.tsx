@@ -520,7 +520,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
               }}
             >
-              {/* Left: Back arrow + Post title */}
+              {/* Left: Back arrow + Dynamic title */}
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleBack}
@@ -531,16 +531,22 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-                <h2 className="text-[15px] font-semibold text-white">Post</h2>
+                <h2 className="text-[15px] font-semibold text-white">
+                  {selectedContentType === 'media' ? 'Media Post' :
+                   selectedContentType === 'audio' ? 'Audio Post' :
+                   selectedContentType === 'pdf' ? 'PDF Post' :
+                   selectedContentType === 'text' ? 'Text Post' : 'Post'}
+                </h2>
               </div>
-              {/* Right: Publish */}
+              {/* Right: Publish - narrower */}
               <button
                 onClick={handleSubmit}
                 disabled={uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file)}
-                className="px-4 py-2 text-[14px] font-semibold rounded-[10px] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="text-[14px] font-semibold rounded-[8px] transition disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   background: '#00C2FF',
                   color: '#fff',
+                  padding: '8px 14px',
                 }}
               >
                 {uploading ? '...' : 'Publish'}
@@ -663,34 +669,113 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     )}
                   </div>
 
-                  {/* Description Input - Glass Style */}
+                  {/* Caption Input - Glass Style with char count */}
                   <div
                     style={{
                       background: 'rgba(255, 255, 255, 0.03)',
                       border: '1px solid rgba(255, 255, 255, 0.08)',
                       borderRadius: '12px',
+                      position: 'relative',
                     }}
                   >
                     <textarea
                       ref={textareaRef}
-                      placeholder="Description (boost discovery)"
+                      placeholder="Add a caption..."
                       value={description}
-                      onChange={(e) => setDescription(e.target.value)}
+                      onChange={(e) => {
+                        if (e.target.value.length <= 280) {
+                          setDescription(e.target.value);
+                        }
+                      }}
                       onKeyDown={handleTextareaKeyDown}
-                      rows={3}
-                      maxLength={500}
+                      rows={4}
+                      maxLength={280}
                       style={{ 
-                        fontSize: '15px',
+                        fontSize: '16px', // Prevents zoom on iOS
                         background: 'transparent',
                         border: 'none',
                         outline: 'none',
                         width: '100%',
                         padding: '14px 16px',
+                        paddingBottom: '32px',
                         color: '#fff',
                         resize: 'none',
                       }}
                       disabled={uploading}
                     />
+                    <span 
+                      style={{ 
+                        position: 'absolute', 
+                        bottom: '10px', 
+                        right: '14px', 
+                        fontSize: '12px', 
+                        color: 'rgba(255,255,255,0.4)' 
+                      }}
+                    >
+                      {description.length}/280
+                    </span>
+                  </div>
+
+                  {/* Inline Toolbar - Save draft + Attachments */}
+                  <div className="flex items-center gap-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    <button
+                      onClick={handleSaveAsDraft}
+                      disabled={uploading || !file}
+                      className="flex items-center gap-2 transition disabled:opacity-40"
+                    >
+                      {/* Floppy disk icon */}
+                      <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                      </svg>
+                      <span className="text-[14px] font-medium">Save as draft</span>
+                    </button>
+                    
+                    {/* Audio attachment */}
+                    {selectedContentType === 'media' && (
+                      <>
+                        <input
+                          type="file"
+                          id="audio-attachment-inline"
+                          accept="audio/*"
+                          onChange={handleAudioAttachment}
+                          className="hidden"
+                          disabled={uploading || !canAddAudioAttachment || attachmentType === 'pdf'}
+                        />
+                        <label
+                          htmlFor="audio-attachment-inline"
+                          className="cursor-pointer transition"
+                          style={{ opacity: (!canAddAudioAttachment || attachmentType === 'pdf') ? 0.3 : 1 }}
+                        >
+                          <svg className="w-[20px] h-[20px]" fill="none" stroke={attachmentType === 'audio' ? '#00C2FF' : 'currentColor'} strokeWidth={1.5} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                          </svg>
+                        </label>
+
+                        {/* Image icon - disabled since already uploading media */}
+                        <svg className="w-[20px] h-[20px] opacity-30" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                        </svg>
+
+                        {/* PDF attachment */}
+                        <input
+                          type="file"
+                          id="pdf-attachment-inline"
+                          accept="application/pdf"
+                          onChange={handlePdfAttachment}
+                          className="hidden"
+                          disabled={uploading || !canAddPdfAttachment || attachmentType === 'audio'}
+                        />
+                        <label
+                          htmlFor="pdf-attachment-inline"
+                          className="cursor-pointer transition"
+                          style={{ opacity: (!canAddPdfAttachment || attachmentType === 'audio') ? 0.3 : 1 }}
+                        >
+                          <svg className="w-[20px] h-[20px]" fill="none" stroke={attachmentType === 'pdf' ? '#00C2FF' : 'currentColor'} strokeWidth={1.5} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                          </svg>
+                        </label>
+                      </>
+                    )}
                   </div>
 
                   {/* Attachment Display */}
@@ -723,43 +808,65 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 </>
               ) : (
                 <>
-                  {/* Text Post Interface */}
-                  <div>
+                  {/* Text Post Interface - Glass Style */}
+                  <div
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '12px',
+                      position: 'relative',
+                    }}
+                  >
                     <textarea
                       ref={textareaRef}
-                      placeholder="What's on your mind?"
+                      placeholder="What's new?"
                       value={textContent}
                       onChange={(e) => {
-                        if (e.target.value.length <= 500) {
+                        if (e.target.value.length <= 280) {
                           setTextContent(e.target.value);
                         }
                       }}
                       onKeyDown={handleTextareaKeyDown}
-                      rows={8}
-                      maxLength={500}
-                      style={{ fontSize: '16px' }} // Prevents zoom on iOS
-                      className="w-full px-4 py-2.5 bg-[#1a1a1c] border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none text-white placeholder-gray-500"
+                      rows={6}
+                      maxLength={280}
+                      style={{ 
+                        fontSize: '16px', // Prevents zoom on iOS
+                        background: 'transparent',
+                        border: 'none',
+                        outline: 'none',
+                        width: '100%',
+                        padding: '14px 16px',
+                        paddingBottom: '32px',
+                        color: '#fff',
+                        resize: 'none',
+                      }}
                       disabled={uploading}
                     />
-                    <div className="flex justify-between items-center mt-1">
-                      <p className="text-xs text-gray-500">Tip: Type "- " and press Tab for bullet points</p>
-                      <p className="text-xs text-gray-500">{textContent.length}/500</p>
-                    </div>
+                    <span 
+                      style={{ 
+                        position: 'absolute', 
+                        bottom: '10px', 
+                        right: '14px', 
+                        fontSize: '12px', 
+                        color: 'rgba(255,255,255,0.4)' 
+                      }}
+                    >
+                      {textContent.length}/280
+                    </span>
                   </div>
 
-                  {/* Optional Description */}
-                  <div>
-                    <textarea
-                      placeholder="Add tags or additional context (optional)"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      rows={2}
-                      maxLength={200}
-                      style={{ fontSize: '16px' }}
-                      className="w-full px-4 py-2.5 bg-[#1a1a1c] border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none text-white placeholder-gray-500 text-sm"
-                      disabled={uploading}
-                    />
-                    <p className="text-xs text-gray-500 mt-1 text-right">{description.length}/200</p>
+                  {/* Inline Toolbar for Text Post */}
+                  <div className="flex items-center gap-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    <button
+                      onClick={handleSaveAsDraft}
+                      disabled={uploading || !textContent.trim()}
+                      className="flex items-center gap-2 transition disabled:opacity-40"
+                    >
+                      <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                      </svg>
+                      <span className="text-[14px] font-medium">Save as draft</span>
+                    </button>
                   </div>
                 </>
               )}
@@ -778,93 +885,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               )}
             </div>
 
-            {/* Fixed Bottom Toolbar - Clean with Keyboard Space */}
-            <div 
-              className="fixed bottom-0 left-0 right-0 z-20"
-              style={{
-                background: 'rgba(18, 18, 18, 0.95)',
-                backdropFilter: 'blur(20px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-                padding: '12px 16px',
-                paddingBottom: 'calc(12px + env(safe-area-inset-bottom))',
-              }}
-            >
-              <div className="flex items-center justify-between">
-                {/* Save as Draft - Left - No background */}
-                <button
-                  onClick={handleSaveAsDraft}
-                  disabled={uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file)}
-                  className="flex items-center gap-2 transition disabled:opacity-40"
-                >
-                  <svg className="w-[20px] h-[20px]" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth={1.5} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
-                  </svg>
-                  <span className="text-[14px] font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>Save as draft</span>
-                </button>
-                
-                {/* Attachment Icons - Right - No backgrounds */}
-                {selectedContentType === 'media' && (
-                  <div className="flex gap-4">
-                    {/* Audio Attachment */}
-                    <div className="relative">
-                      <input
-                        type="file"
-                        id="audio-attachment"
-                        accept="audio/*"
-                        onChange={handleAudioAttachment}
-                        className="hidden"
-                        disabled={uploading || !canAddAudioAttachment || attachmentType === 'pdf'}
-                      />
-                      <label
-                        htmlFor="audio-attachment"
-                        className="transition cursor-pointer inline-flex"
-                        style={{ 
-                          opacity: (!canAddAudioAttachment || attachmentType === 'pdf') ? 0.3 : 1,
-                        }}
-                        onClick={(e) => {
-                          if (!canAddAudioAttachment || attachmentType === 'pdf') {
-                            e.preventDefault();
-                          }
-                        }}
-                      >
-                        <svg className="w-[20px] h-[20px]" fill="none" stroke={attachmentType === 'audio' ? '#00C2FF' : 'rgba(255,255,255,0.5)'} strokeWidth={1.5} viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                        </svg>
-                      </label>
-                    </div>
-
-                    {/* PDF Attachment */}
-                    <div className="relative">
-                      <input
-                        type="file"
-                        id="pdf-attachment"
-                        accept="application/pdf"
-                        onChange={handlePdfAttachment}
-                        className="hidden"
-                        disabled={uploading || !canAddPdfAttachment || attachmentType === 'audio'}
-                      />
-                      <label
-                        htmlFor="pdf-attachment"
-                        className="transition cursor-pointer inline-flex"
-                        style={{ 
-                          opacity: (!canAddPdfAttachment || attachmentType === 'audio') ? 0.3 : 1,
-                        }}
-                        onClick={(e) => {
-                          if (!canAddPdfAttachment || attachmentType === 'audio') {
-                            e.preventDefault();
-                          }
-                        }}
-                      >
-                        <svg className="w-[20px] h-[20px]" fill="none" stroke={attachmentType === 'pdf' ? '#00C2FF' : 'rgba(255,255,255,0.5)'} strokeWidth={1.5} viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                        </svg>
-                      </label>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
           </>
         )}
       </div>
