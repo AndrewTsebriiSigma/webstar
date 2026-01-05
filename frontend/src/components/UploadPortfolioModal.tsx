@@ -509,7 +509,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
         backdropFilter: 'blur(14px)',
         WebkitBackdropFilter: 'blur(14px)',
         paddingTop: '5vh',
-        paddingBottom: '35vh',
+        paddingBottom: '45vh',
         // Fade animation
         opacity: isVisible ? 1 : 0,
         transition: 'opacity 0.15s ease-out',
@@ -579,8 +579,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
             padding: '0 20px',
           }}
         >
-              {/* Left: Close button + title - tight 4px gap (matches left padding) */}
-              <div className="flex items-center" style={{ gap: '4px' }}>
+              {/* Left: Close button + title - 20px gap (matches side padding) */}
+              <div className="flex items-center" style={{ gap: '20px' }}>
                 <button
                   onClick={handleBack}
                   disabled={uploading}
@@ -899,7 +899,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                               color: 'rgba(255, 255, 255, 0.7)',
                               height: '28px',
                               caretColor: '#00C2FF',
-                              transition: 'box-shadow 0.15s ease, background 0.15s ease',
+                              transition: 'box-shadow 0s',
                             }}
                           />
                         </div>
@@ -1009,7 +1009,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 background: 'rgba(20, 20, 20, 0.85)',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
-                borderTop: '1px solid rgba(255, 255, 255, 0.06)',
                 borderBottomLeftRadius: '16px',
                 borderBottomRightRadius: '16px',
                 padding: '12px 16px',
