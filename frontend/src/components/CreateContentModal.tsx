@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface CreateContentModalProps {
   isOpen: boolean;
@@ -18,8 +18,21 @@ export default function CreateContentModal({
   navHeightReduction = 0,
 }: CreateContentModalProps) {
   const [postExpanded, setPostExpanded] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
-  if (!isOpen) return null;
+  // Entrance animation
+  useEffect(() => {
+    if (isOpen) {
+      // Small delay for entrance animation
+      requestAnimationFrame(() => setIsVisible(true));
+    } else {
+      setIsVisible(false);
+      setIsClosing(false);
+    }
+  }, [isOpen]);
+
+  if (!isOpen && !isClosing) return null;
 
   const navHeight = 54 - (10 * navHeightReduction);
   const dropdownTop = navHeight + 6;
@@ -72,8 +85,13 @@ export default function CreateContentModal({
   ];
 
   const handleClose = () => {
-    setPostExpanded(false);
-    onClose();
+    setIsClosing(true);
+    setIsVisible(false);
+    setTimeout(() => {
+      setPostExpanded(false);
+      setIsClosing(false);
+      onClose();
+    }, 150); // Match animation duration
   };
 
   const handlePostClick = () => {
@@ -81,9 +99,14 @@ export default function CreateContentModal({
   };
 
   const handleTypeSelect = (type: 'media' | 'audio' | 'pdf' | 'text') => {
-    onSelectPost(type);
-    setPostExpanded(false);
-    onClose();
+    setIsClosing(true);
+    setIsVisible(false);
+    setTimeout(() => {
+      onSelectPost(type);
+      setPostExpanded(false);
+      setIsClosing(false);
+      onClose();
+    }, 150);
   };
 
   const handleCollapse = () => {
@@ -93,7 +116,11 @@ export default function CreateContentModal({
   return (
     <div 
       className="fixed inset-0 z-50"
-      style={{ background: 'rgba(0, 0, 0, 0.3)' }}
+      style={{ 
+        background: 'rgba(0, 0, 0, 0.3)',
+        opacity: isVisible ? 1 : 0,
+        transition: 'opacity 0.15s ease-out'
+      }}
       onClick={handleClose}
     >
       <div 
@@ -105,7 +132,12 @@ export default function CreateContentModal({
           WebkitBackdropFilter: 'blur(24px) saturate(180%)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '16px',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          // Entrance & exit animation - subtle scale + fade
+          transform: isVisible ? 'scale(1) translateY(0)' : 'scale(0.97) translateY(-6px)',
+          opacity: isVisible ? 1 : 0,
+          transition: 'transform 0.15s ease-out, opacity 0.15s ease-out',
+          transformOrigin: 'top center'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -191,8 +223,14 @@ export default function CreateContentModal({
         >
           <button
             onClick={() => {
-              onSelectProject();
-              handleClose();
+              setIsClosing(true);
+              setIsVisible(false);
+              setTimeout(() => {
+                onSelectProject();
+                setPostExpanded(false);
+                setIsClosing(false);
+                onClose();
+              }, 150);
             }}
             className="w-full flex items-center gap-3 p-3 transition-colors"
             style={{ background: 'transparent' }}
