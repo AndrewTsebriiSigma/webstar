@@ -616,7 +616,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
             >
               {selectedContentType !== 'text' ? (
                 <>
-                  {/* File Upload Area - Glass Card */}
+                  {/* File Upload Area - Glass Card, tap closes delete */}
                   <div
                     style={{
                       background: 'rgba(255, 255, 255, 0.03)',
@@ -624,6 +624,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                       borderRadius: '16px',
                       overflow: 'hidden',
                     }}
+                    onClick={() => attachmentSwipeX > 0 && setAttachmentSwipeX(0)}
                   >
                     {preview || file ? (
                       <div className="relative">
@@ -726,7 +727,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     )}
                   </div>
 
-                  {/* Caption Input - Glass style with focus states */}
+                  {/* Caption Input - Glass style with focus states, tap closes delete */}
                   <div
                     className="caption-input-wrapper"
                     style={{
@@ -736,6 +737,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                       position: 'relative',
                       transition: 'all 0.2s ease',
                     }}
+                    onClick={() => attachmentSwipeX > 0 && setAttachmentSwipeX(0)}
                   >
                     <textarea
                       ref={textareaRef}
@@ -749,9 +751,11 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                       onFocus={(e) => {
                         handleDescriptionFocus();
                         e.currentTarget.parentElement!.style.boxShadow = '0 0 0 1px rgba(0, 194, 255, 0.3)';
+                        e.currentTarget.parentElement!.style.border = '1px solid transparent';
                       }}
                       onBlur={(e) => {
                         e.currentTarget.parentElement!.style.boxShadow = 'none';
+                        e.currentTarget.parentElement!.style.border = '1px solid rgba(255, 255, 255, 0.06)';
                       }}
                       onKeyDown={handleTextareaKeyDown}
                       rows={2}
@@ -844,18 +848,20 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           )}
                         </div>
                         
-                        {/* File name - narrower, no roundings, subtle background */}
-                        <div className="flex-1 min-w-0">
+                        {/* File name - narrower input, smaller text, less bright */}
+                        <div className="flex-1 min-w-0 flex items-center">
                           <input
                             type="text"
                             value={attachmentFileName || attachmentFile.name.replace(/\.[^/.]+$/, '')}
                             onChange={(e) => setAttachmentFileName(e.target.value)}
-                            className="text-[13px] text-white font-medium bg-transparent outline-none w-full"
+                            className="text-[12px] font-medium bg-transparent outline-none w-full"
                             style={{ 
-                              padding: '2px 4px',
+                              padding: '4px 6px',
                               border: 'none',
                               borderRadius: '0',
                               background: 'rgba(255, 255, 255, 0.02)',
+                              color: 'rgba(255, 255, 255, 0.7)',
+                              height: '28px',
                             }}
                           />
                         </div>
@@ -901,8 +907,12 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     </div>
                   )}
 
-                  {/* Inline Toolbar - fixed 6px gap */}
-                  <div className="flex items-center justify-between" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px', marginTop: '6px' }}>
+                  {/* Inline Toolbar - fixed 6px gap, tap closes delete */}
+                  <div 
+                    className="flex items-center justify-between" 
+                    style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px', marginTop: '6px' }}
+                    onClick={() => attachmentSwipeX > 0 && setAttachmentSwipeX(0)}
+                  >
                     {/* Left: Save as draft */}
                     <button
                       onClick={handleSaveAsDraft}
