@@ -69,13 +69,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
   const handleBack = () => {
     if (!uploading) {
-      setContentTypeMenuOpen(true);
-      setSelectedContentType(null);
-      setFile(null);
-      setPreview('');
-      setTextContent('');
-      setAttachmentFile(null);
-      setAttachmentType(null);
+      handleReset();
+      onClose(); // Close entirely, go back to CreateContentModal
     }
   };
 
