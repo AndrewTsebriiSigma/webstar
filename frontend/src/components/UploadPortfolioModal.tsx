@@ -31,7 +31,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Handle scroll to top on description focus (prevents iOS zoom issues)
+  // Scroll to top when focusing textarea (so keyboard doesn't cover input)
   const handleDescriptionFocus = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
@@ -703,7 +703,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                       rows={2}
                       maxLength={170}
                       style={{ 
-                        fontSize: '16px', // Prevents iOS zoom
+                        fontSize: '14px',
                         background: 'transparent',
                         border: 'none',
                         outline: 'none',
@@ -847,7 +847,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                       rows={4}
                       maxLength={170}
                       style={{ 
-                        fontSize: '16px', // Prevents iOS zoom
+                        fontSize: '14px',
                         background: 'transparent',
                         border: 'none',
                         outline: 'none',

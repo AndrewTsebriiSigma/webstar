@@ -105,6 +105,18 @@
     -moz-osx-font-smoothing: grayscale;
   }
   
+  /* Prevent iOS zoom on input focus (allows smaller fonts) */
+  input, textarea, select {
+    touch-action: manipulation;
+  }
+  
+  @supports (-webkit-touch-callout: none) {
+    /* iOS specific - prevent auto-zoom on focus */
+    input, textarea, select {
+      font-size: max(14px, 1em);
+    }
+  }
+  
   /* Container Utility */
   .container-centered {
     max-width: var(--container-max-w);
