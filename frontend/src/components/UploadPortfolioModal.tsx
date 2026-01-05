@@ -507,7 +507,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
       {/* Centered floating popup - 85% solid card */}
       <div 
         ref={scrollContainerRef}
-        className="w-full overflow-y-auto"
+        className="w-full overflow-y-auto relative"
         style={{
           maxWidth: 'calc(100% - 24px)',
           height: '75vh',
@@ -522,6 +522,35 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Upload overlay - hypnotizing animation */}
+        {uploading && (
+          <div 
+            className="absolute inset-0 z-20 flex flex-col items-center justify-center"
+            style={{
+              background: 'rgba(20, 20, 20, 0.95)',
+              borderRadius: '16px',
+            }}
+          >
+            <div className="relative">
+              <div 
+                className="w-16 h-16 rounded-full"
+                style={{
+                  background: 'linear-gradient(135deg, #00C2FF 0%, #0066FF 100%)',
+                  animation: 'pulse-glow 1.5s ease-in-out infinite',
+                }}
+              />
+              <div 
+                className="absolute inset-0 w-16 h-16 rounded-full"
+                style={{
+                  border: '2px solid rgba(0, 194, 255, 0.3)',
+                  animation: 'ripple 1.5s ease-out infinite',
+                }}
+              />
+            </div>
+            <p className="mt-6 text-white/60 text-sm">Uploading...</p>
+          </div>
+        )}
+
         {/* Header - solid dark, vertically centered */}
         <div 
           className="flex items-center justify-between sticky top-0 z-10"
@@ -570,7 +599,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               </button>
             </div>
 
-            {/* Content area - 10px side padding, transparent (no line bug) */}
+            {/* Content area - 10px side padding, tap to close delete mode */}
             <div 
               style={{ 
                 padding: '16px 10px',
@@ -578,6 +607,11 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '10px',
+              }}
+              onClick={() => {
+                if (attachmentSwipeX > 0) {
+                  setAttachmentSwipeX(0);
+                }
               }}
             >
               {selectedContentType !== 'text' ? (
@@ -712,7 +746,13 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           setDescription(e.target.value);
                         }
                       }}
-                      onFocus={() => handleDescriptionFocus()}
+                      onFocus={(e) => {
+                        handleDescriptionFocus();
+                        e.currentTarget.parentElement!.style.boxShadow = '0 0 0 1px rgba(0, 194, 255, 0.3)';
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.parentElement!.style.boxShadow = 'none';
+                      }}
                       onKeyDown={handleTextareaKeyDown}
                       rows={2}
                       maxLength={170}
@@ -804,7 +844,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           )}
                         </div>
                         
-                        {/* File name - editable, tight, no stroke */}
+                        {/* File name - narrower, no roundings, subtle background */}
                         <div className="flex-1 min-w-0">
                           <input
                             type="text"
@@ -812,10 +852,10 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                             onChange={(e) => setAttachmentFileName(e.target.value)}
                             className="text-[13px] text-white font-medium bg-transparent outline-none w-full"
                             style={{ 
-                              padding: '3px 6px',
+                              padding: '2px 4px',
                               border: 'none',
-                              borderRadius: '4px',
-                              background: 'rgba(255, 255, 255, 0.03)',
+                              borderRadius: '0',
+                              background: 'rgba(255, 255, 255, 0.02)',
                             }}
                           />
                         </div>
