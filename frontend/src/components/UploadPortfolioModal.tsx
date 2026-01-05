@@ -523,7 +523,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header - solid dark */}
+        {/* Header - solid dark, vertically centered */}
         <div 
           className="flex items-center justify-between sticky top-0 z-10"
           style={{
@@ -535,8 +535,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
             padding: '0 20px',
           }}
         >
-              {/* Left: Close button + Dynamic title - 4px gap (tighter) */}
-              <div className="flex items-center" style={{ gap: '4px' }}>
+              {/* Left: Close button + Dynamic title - same gap as side padding (20px) */}
+              <div className="flex items-center" style={{ gap: '20px' }}>
                 <button
                   onClick={handleBack}
                   disabled={uploading}
@@ -715,15 +715,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           setDescription(e.target.value);
                         }
                       }}
-                      onFocus={(e) => {
-                        handleDescriptionFocus();
-                        e.currentTarget.parentElement!.style.borderColor = 'rgba(0, 194, 255, 0.3)';
-                        e.currentTarget.parentElement!.style.background = 'rgba(255, 255, 255, 0.04)';
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.parentElement!.style.borderColor = 'rgba(255, 255, 255, 0.06)';
-                        e.currentTarget.parentElement!.style.background = 'rgba(255, 255, 255, 0.02)';
-                      }}
+                      onFocus={() => handleDescriptionFocus()}
                       onKeyDown={handleTextareaKeyDown}
                       rows={2}
                       maxLength={170}
@@ -753,9 +745,9 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     </span>
                   </div>
 
-                  {/* Attachment Display - Right under caption, 50px height, swipe to delete */}
+                  {/* Attachment Display - Apple-like 8px spacing, 44px height, swipe to delete */}
                   {attachmentFile && attachmentType && (
-                    <div className="relative overflow-hidden" style={{ marginTop: '4px', borderRadius: '10px' }}>
+                    <div className="relative overflow-hidden" style={{ marginTop: '8px', borderRadius: '10px' }}>
                       {/* Delete button - tappable, matching corners */}
                       <button 
                         onClick={handleDeleteTap}
@@ -774,11 +766,11 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                         </svg>
                       </button>
                       
-                      {/* Attachment content - swipeable, 50px height, tap to cancel delete */}
+                      {/* Attachment content - swipeable, 44px height, tap to cancel delete */}
                       <div 
                         className="flex items-center gap-3 relative"
                         style={{
-                          height: '50px',
+                          height: '44px',
                           background: attachmentSwipeX > 0 ? 'rgba(40, 40, 40, 0.98)' : 'rgba(255, 255, 255, 0.02)',
                           border: '1px solid rgba(255, 255, 255, 0.06)',
                           borderRadius: attachmentSwipeX > 0 ? '10px 0 0 10px' : '10px',
@@ -815,25 +807,14 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           )}
                         </div>
                         
-                        {/* File name - editable, line style, no roundings */}
+                        {/* File name - simple text, no editing block look */}
                         <div className="flex-1 min-w-0">
-                          <input
-                            ref={attachmentNameRef}
-                            type="text"
-                            value={attachmentFileName || attachmentFile.name.replace(/\.[^/.]+$/, '')}
-                            onChange={(e) => setAttachmentFileName(e.target.value)}
-                            onFocus={() => attachmentNameRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-                            className="text-white font-medium bg-transparent outline-none w-full"
-                            style={{ 
-                              fontSize: '13px',
-                              borderBottom: '1px solid rgba(255,255,255,0.1)',
-                              paddingBottom: '2px',
-                              borderRadius: '0',
-                            }}
-                          />
+                          <span className="text-[13px] text-white font-medium truncate block">
+                            {attachmentFileName || attachmentFile.name.replace(/\.[^/.]+$/, '')}
+                          </span>
                         </div>
                         
-                        {/* Play button for audio - 32px circle, 12px icon */}
+                        {/* Play button for audio - forced 32px */}
                         {attachmentType === 'audio' && (
                           <>
                             <audio 
@@ -844,20 +825,25 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                             />
                             <button
                               onClick={(e) => { e.stopPropagation(); toggleAudioPlay(); }}
-                              className="flex items-center justify-center flex-shrink-0"
+                              className="flex items-center justify-center"
                               style={{
                                 width: '32px',
                                 height: '32px',
+                                minWidth: '32px',
+                                minHeight: '32px',
+                                maxWidth: '32px',
+                                maxHeight: '32px',
                                 background: '#1C1C1E',
                                 borderRadius: '50%',
+                                flexShrink: 0,
                               }}
                             >
                               {isPlaying ? (
-                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <svg style={{ width: '12px', height: '12px' }} fill="white" viewBox="0 0 24 24">
                                   <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
                                 </svg>
                               ) : (
-                                <svg className="w-3 h-3 text-white" style={{ marginLeft: '2px' }} fill="currentColor" viewBox="0 0 24 24">
+                                <svg style={{ width: '12px', height: '12px', marginLeft: '2px' }} fill="white" viewBox="0 0 24 24">
                                   <path d="M8 5v14l11-7z" />
                                 </svg>
                               )}
@@ -868,8 +854,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     </div>
                   )}
 
-                  {/* Inline Toolbar - 21px gap */}
-                  <div className="flex items-center justify-between" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px', marginTop: '21px' }}>
+                  {/* Inline Toolbar - Apple-like 12px gap */}
+                  <div className="flex items-center justify-between" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px', marginTop: '12px' }}>
                     {/* Left: Save as draft */}
                     <button
                       onClick={handleSaveAsDraft}
@@ -955,15 +941,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           setTextContent(e.target.value);
                         }
                       }}
-                      onFocus={(e) => {
-                        handleDescriptionFocus();
-                        e.currentTarget.parentElement!.style.borderColor = 'rgba(0, 194, 255, 0.3)';
-                        e.currentTarget.parentElement!.style.background = 'rgba(255, 255, 255, 0.04)';
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.parentElement!.style.borderColor = 'rgba(255, 255, 255, 0.06)';
-                        e.currentTarget.parentElement!.style.background = 'rgba(255, 255, 255, 0.02)';
-                      }}
+                      onFocus={() => handleDescriptionFocus()}
                       onKeyDown={handleTextareaKeyDown}
                       rows={4}
                       maxLength={170}
