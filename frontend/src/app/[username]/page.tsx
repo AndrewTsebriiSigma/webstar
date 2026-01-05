@@ -303,7 +303,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
       </div>
 
       {/* Profile Info - Compact design */}
-      <div className="profile-info" style={{ padding: '12px 24px 32px', textAlign: 'center' }}>
+      <div className="profile-info" style={{ padding: viewerMode ? '8px 24px 32px' : '12px 24px 32px', textAlign: 'center' }}>
         {/* Name + Badge */}
         <div className="flex items-center justify-center gap-1.5 mb-1 pt-3">
           <h1 className="text-xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)', letterSpacing: '-0.2px' }}>
