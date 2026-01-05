@@ -783,6 +783,13 @@ html {
     width: 37px !important;
     height: 37px !important;
   }
+  
+  /* Upload modal publish button - 40% narrower on mobile */
+  .publish-btn {
+    padding: 0 16px !important;
+    min-width: auto !important;
+    min-height: 32px !important;
+  }
 }
 
 /* Safe area insets for iOS */

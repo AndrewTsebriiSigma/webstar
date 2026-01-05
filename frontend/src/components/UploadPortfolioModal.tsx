@@ -511,17 +511,18 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           <>
             {/* Upload Interface - Header matching Settings/Notifications */}
             <div 
-              className="flex items-center justify-between px-4 sticky top-0 z-10"
+              className="flex items-center justify-between sticky top-0 z-10"
               style={{
                 height: '55px',
                 background: 'rgba(17, 17, 17, 0.92)',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
                 borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                padding: '0 16px',
               }}
             >
-              {/* Left: Back arrow + Dynamic title - closer together */}
-              <div className="flex items-center gap-2">
+              {/* Left: Back arrow + Dynamic title - equal gaps */}
+              <div className="flex items-center" style={{ gap: '10px' }}>
                 <button
                   onClick={handleBack}
                   disabled={uploading}
@@ -538,16 +539,16 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                    selectedContentType === 'text' ? 'Text Post' : 'Post'}
                 </h2>
               </div>
-              {/* Right: Publish - 32px height, wider */}
+              {/* Right: Publish - 32px height, wider desktop, narrower mobile */}
               <button
                 onClick={handleSubmit}
                 disabled={uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file)}
-                className="text-[14px] font-semibold rounded-[8px] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="text-[14px] font-semibold rounded-[8px] transition disabled:opacity-50 disabled:cursor-not-allowed publish-btn"
                 style={{
                   background: '#00C2FF',
                   color: '#fff',
                   height: '32px',
-                  padding: '0 20px',
+                  padding: '0 28px',
                 }}
               >
                 {uploading ? '...' : 'Publish'}
@@ -670,7 +671,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     )}
                   </div>
 
-                  {/* Caption Input - Smaller, compact */}
+                  {/* Caption Input - Smaller font, 170 char limit */}
                   <div
                     style={{
                       background: 'rgba(255, 255, 255, 0.03)',
@@ -684,21 +685,21 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                       placeholder="Add a caption..."
                       value={description}
                       onChange={(e) => {
-                        if (e.target.value.length <= 280) {
+                        if (e.target.value.length <= 170) {
                           setDescription(e.target.value);
                         }
                       }}
                       onKeyDown={handleTextareaKeyDown}
                       rows={2}
-                      maxLength={280}
+                      maxLength={170}
                       style={{ 
-                        fontSize: '16px', // Prevents zoom on iOS
+                        fontSize: '14px',
                         background: 'transparent',
                         border: 'none',
                         outline: 'none',
                         width: '100%',
                         padding: '12px 14px',
-                        paddingBottom: '28px',
+                        paddingBottom: '24px',
                         color: '#fff',
                         resize: 'none',
                       }}
@@ -707,18 +708,18 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     <span 
                       style={{ 
                         position: 'absolute', 
-                        bottom: '8px', 
+                        bottom: '6px', 
                         right: '12px', 
                         fontSize: '11px', 
                         color: 'rgba(255,255,255,0.35)' 
                       }}
                     >
-                      {description.length}/280
+                      {description.length}/170
                     </span>
                   </div>
 
-                  {/* Inline Toolbar - Save draft left, icons anchored right */}
-                  <div className="flex items-center justify-between" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  {/* Inline Toolbar - 10px extra padding from sides, 25px between icons */}
+                  <div className="flex items-center justify-between" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px' }}>
                     {/* Left: Save as draft */}
                     <button
                       onClick={handleSaveAsDraft}
@@ -734,9 +735,9 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                       <span className="text-[14px] font-medium">Save as draft</span>
                     </button>
                     
-                    {/* Right: Attachment icons */}
+                    {/* Right: Attachment icons - 25px gap */}
                     {selectedContentType === 'media' && (
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center" style={{ gap: '25px' }}>
                         {/* Audio attachment */}
                         <input
                           type="file"
@@ -813,7 +814,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 </>
               ) : (
                 <>
-                  {/* Text Post Interface - Compact */}
+                  {/* Text Post Interface - 170 char limit */}
                   <div
                     style={{
                       background: 'rgba(255, 255, 255, 0.03)',
@@ -827,21 +828,21 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                       placeholder="What's new?"
                       value={textContent}
                       onChange={(e) => {
-                        if (e.target.value.length <= 280) {
+                        if (e.target.value.length <= 170) {
                           setTextContent(e.target.value);
                         }
                       }}
                       onKeyDown={handleTextareaKeyDown}
                       rows={4}
-                      maxLength={280}
+                      maxLength={170}
                       style={{ 
-                        fontSize: '16px', // Prevents zoom on iOS
+                        fontSize: '14px',
                         background: 'transparent',
                         border: 'none',
                         outline: 'none',
                         width: '100%',
                         padding: '12px 14px',
-                        paddingBottom: '28px',
+                        paddingBottom: '24px',
                         color: '#fff',
                         resize: 'none',
                       }}
@@ -850,18 +851,18 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     <span 
                       style={{ 
                         position: 'absolute', 
-                        bottom: '8px', 
+                        bottom: '6px', 
                         right: '12px', 
                         fontSize: '11px', 
                         color: 'rgba(255,255,255,0.35)' 
                       }}
                     >
-                      {textContent.length}/280
+                      {textContent.length}/170
                     </span>
                   </div>
 
-                  {/* Inline Toolbar for Text Post */}
-                  <div className="flex items-center" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  {/* Inline Toolbar for Text Post - with padding */}
+                  <div className="flex items-center" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px' }}>
                     <button
                       onClick={handleSaveAsDraft}
                       disabled={uploading || !textContent.trim()}
