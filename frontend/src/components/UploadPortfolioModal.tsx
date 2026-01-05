@@ -411,41 +411,41 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     <div 
       className="fixed inset-0 z-50 flex items-start justify-center"
       style={{
-        background: 'rgba(0, 0, 0, 0.5)',
+        background: 'rgba(0, 0, 0, 0.4)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         paddingTop: '5vh',
+        paddingBottom: '10vh',
       }}
       onClick={handleClose}
     >
-      {/* Centered floating popup - mobile first */}
+      {/* Centered floating popup - BIGGER 85vh, glassy */}
       <div 
         ref={scrollContainerRef}
         className="w-full overflow-y-auto"
         style={{
           maxWidth: 'calc(100% - 24px)',
-          maxHeight: '58vh',
-          minHeight: '280px',
-          background: 'rgba(18, 18, 18, 0.95)',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          borderRadius: '20px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          height: '85vh',
+          background: 'rgba(22, 22, 22, 0.92)',
+          backdropFilter: 'blur(40px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+          borderRadius: '24px',
+          boxShadow: '0 12px 48px rgba(0, 0, 0, 0.5)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
+        {/* Header - glassy */}
         <div 
           className="flex items-center justify-between sticky top-0 z-10"
           style={{
             height: '55px',
-            background: 'rgba(17, 17, 17, 0.98)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
+            background: 'rgba(22, 22, 22, 0.95)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
             borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-            borderTopLeftRadius: '20px',
-            borderTopRightRadius: '20px',
+            borderTopLeftRadius: '24px',
+            borderTopRightRadius: '24px',
             padding: '0 16px',
           }}
         >
