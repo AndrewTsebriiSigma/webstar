@@ -97,6 +97,10 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     }
   }, [initialContentType, isOpen]);
 
+  // Animation states
+  const [isClosing, setIsClosing] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+
   // Lock body scroll when modal is open - Safari mobile fix
   useEffect(() => {
     if (isOpen) {
@@ -106,6 +110,11 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
       document.body.style.top = `-${scrollY}px`;
       document.body.style.width = '100%';
       document.body.style.touchAction = 'none';
+      // Entrance animation
+      requestAnimationFrame(() => setIsVisible(true));
+    } else {
+      setIsVisible(false);
+      setIsClosing(false);
     }
     return () => {
       const scrollY = document.body.style.top;
@@ -118,7 +127,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen && !isClosing) return null;
 
   const handleReset = () => {
     setSelectedContentType(null);
@@ -127,6 +136,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     setTextContent('');
     setAttachmentFile(null);
     setAttachmentType(null);
+    setAttachmentFileName('');
     setDescription('');
     setUploading(false);
     setUploadProgress(0);
@@ -134,17 +144,18 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
   const handleClose = () => {
     if (!uploading) {
-      handleReset();
-      onClose();
+      setIsClosing(true);
+      setIsVisible(false);
+      setTimeout(() => {
+        handleReset();
+        setIsClosing(false);
+        onClose();
+      }, 150);
     }
   };
 
-  const handleBack = () => {
-    if (!uploading) {
-      handleReset();
-      onClose(); // Close entirely, go back to CreateContentModal
-    }
-  };
+  // Back = Close (no going back to CreateContentModal)
+  const handleBack = handleClose;
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -487,10 +498,13 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
         WebkitBackdropFilter: 'blur(20px)',
         paddingTop: '5vh',
         paddingBottom: '20vh',
+        // Fade animation
+        opacity: isVisible ? 1 : 0,
+        transition: 'opacity 0.15s ease-out',
       }}
       onClick={handleClose}
     >
-      {/* Centered floating popup - Glass Modal with proper glassy effect */}
+      {/* Centered floating popup - Glass Modal with animations */}
       <div 
         ref={scrollContainerRef}
         className="w-full overflow-y-auto"
@@ -502,6 +516,10 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           borderRadius: '16px',
           border: '1px solid rgba(255, 255, 255, 0.08)',
+          // Scale + slide animation
+          transform: isVisible ? 'scale(1) translateY(0)' : 'scale(0.98) translateY(8px)',
+          opacity: isVisible ? 1 : 0,
+          transition: 'transform 0.15s ease-out, opacity 0.15s ease-out',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -517,7 +535,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
             padding: '0 20px',
           }}
         >
-              {/* Left: Back arrow + Dynamic title - 4px gap (tighter) */}
+              {/* Left: Close button + Dynamic title - 4px gap (tighter) */}
               <div className="flex items-center" style={{ gap: '4px' }}>
                 <button
                   onClick={handleBack}
@@ -525,7 +543,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                   className="transition disabled:opacity-50"
                 >
                   <svg className="w-[16px] h-[16px] text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
                 <h2 className="text-[15px] font-semibold text-white">
