@@ -763,11 +763,11 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                         </svg>
                       </button>
                       
-                      {/* Attachment content - swipeable, 55px height, Apple physics */}
+                      {/* Attachment content - swipeable, 50px height, Apple physics */}
                       <div 
                         className="flex items-center gap-3 relative"
                         style={{
-                          height: '55px',
+                          height: '50px',
                           background: attachmentSwipeX > 0 ? 'rgba(40, 40, 40, 0.98)' : 'rgba(255, 255, 255, 0.02)',
                           border: '1px solid rgba(255, 255, 255, 0.06)',
                           borderRadius: attachmentSwipeX > 0 ? '10px 0 0 10px' : '10px',
@@ -804,7 +804,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           )}
                         </div>
                         
-                        {/* File name - editable with compact frame */}
+                        {/* File name - editable, tight, no stroke */}
                         <div className="flex-1 min-w-0">
                           <input
                             type="text"
@@ -812,15 +812,15 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                             onChange={(e) => setAttachmentFileName(e.target.value)}
                             className="text-[13px] text-white font-medium bg-transparent outline-none w-full"
                             style={{ 
-                              padding: '4px 8px',
-                              border: '1px solid rgba(255, 255, 255, 0.15)',
-                              borderRadius: '6px',
-                              background: 'rgba(255, 255, 255, 0.05)',
+                              padding: '3px 6px',
+                              border: 'none',
+                              borderRadius: '4px',
+                              background: 'rgba(255, 255, 255, 0.03)',
                             }}
                           />
                         </div>
                         
-                        {/* Play button for audio - visible color, rounded icon */}
+                        {/* Play button for audio - centered, 35px circle */}
                         {attachmentType === 'audio' && (
                           <>
                             <audio 
@@ -833,12 +833,12 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                               onClick={(e) => { e.stopPropagation(); toggleAudioPlay(); }}
                               className="flex items-center justify-center"
                               style={{
-                                width: '32px',
-                                height: '32px',
-                                minWidth: '32px',
-                                minHeight: '32px',
-                                maxWidth: '32px',
-                                maxHeight: '32px',
+                                width: '35px',
+                                height: '35px',
+                                minWidth: '35px',
+                                minHeight: '35px',
+                                maxWidth: '35px',
+                                maxHeight: '35px',
                                 background: 'rgba(255, 255, 255, 0.12)',
                                 borderRadius: '50%',
                                 flexShrink: 0,
@@ -850,8 +850,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                                   <rect x="14" y="4" width="4" height="16" rx="1" />
                                 </svg>
                               ) : (
-                                <svg style={{ width: '14px', height: '14px', marginLeft: '2px' }} fill="white" viewBox="0 0 24 24">
-                                  <path d="M8 5.14v13.72a1 1 0 001.5.86l11-6.86a1 1 0 000-1.72l-11-6.86a1 1 0 00-1.5.86z" />
+                                <svg style={{ width: '14px', height: '14px' }} fill="white" viewBox="0 0 24 24">
+                                  <path d="M8 5v14l11-7z" />
                                 </svg>
                               )}
                             </button>
@@ -861,8 +861,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     </div>
                   )}
 
-                  {/* Inline Toolbar - dynamic spacing based on attachment */}
-                  <div className="flex items-center justify-between" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px', marginTop: attachmentFile ? '8px' : '10px' }}>
+                  {/* Inline Toolbar - fixed 6px gap */}
+                  <div className="flex items-center justify-between" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px', marginTop: '6px' }}>
                     {/* Left: Save as draft */}
                     <button
                       onClick={handleSaveAsDraft}
