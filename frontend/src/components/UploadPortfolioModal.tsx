@@ -224,6 +224,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
     setAttachmentFile(selectedFile);
     setAttachmentType('audio');
+    setAttachmentFileName(selectedFile.name.replace(/\.[^/.]+$/, ''));
     toast.success('Audio attachment added');
   };
 
@@ -243,6 +244,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
     setAttachmentFile(selectedFile);
     setAttachmentType('pdf');
+    setAttachmentFileName(selectedFile.name.replace(/\.[^/.]+$/, ''));
     toast.success('PDF attachment added');
   };
 
@@ -848,20 +850,27 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           )}
                         </div>
                         
-                        {/* File name - narrower input, smaller text, less bright */}
+                        {/* File name - Apple focus glow, smaller text */}
                         <div className="flex-1 min-w-0 flex items-center">
                           <input
                             type="text"
-                            value={attachmentFileName || attachmentFile.name.replace(/\.[^/.]+$/, '')}
+                            value={attachmentFileName}
                             onChange={(e) => setAttachmentFileName(e.target.value)}
-                            className="text-[12px] font-medium bg-transparent outline-none w-full"
+                            onFocus={(e) => {
+                              e.currentTarget.style.boxShadow = '0 0 0 1px rgba(0, 194, 255, 0.3)';
+                            }}
+                            onBlur={(e) => {
+                              e.currentTarget.style.boxShadow = 'none';
+                            }}
+                            className="text-[11px] font-normal bg-transparent outline-none w-full"
                             style={{ 
                               padding: '4px 6px',
                               border: 'none',
-                              borderRadius: '0',
+                              borderRadius: '2px',
                               background: 'rgba(255, 255, 255, 0.02)',
                               color: 'rgba(255, 255, 255, 0.7)',
                               height: '28px',
+                              caretColor: '#00C2FF',
                             }}
                           />
                         </div>
