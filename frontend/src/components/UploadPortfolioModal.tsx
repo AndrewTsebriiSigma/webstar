@@ -504,18 +504,18 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
       }}
       onClick={handleClose}
     >
-      {/* Centered floating popup - Glass Modal with animations */}
+      {/* Centered floating popup - Glass Card (NO blur - backdrop does it) */}
       <div 
         ref={scrollContainerRef}
         className="w-full overflow-y-auto"
         style={{
           maxWidth: 'calc(100% - 24px)',
           height: '75vh',
-          background: 'rgba(18, 18, 18, 0.8)',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          background: 'rgba(18, 18, 18, 0.85)',
+          // NO backdropFilter - Layer 2 (backdrop overlay) already does the blur
           borderRadius: '16px',
           border: '1px solid rgba(255, 255, 255, 0.08)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
           // Scale + slide animation
           transform: isVisible ? 'scale(1) translateY(0)' : 'scale(0.98) translateY(8px)',
           opacity: isVisible ? 1 : 0,
