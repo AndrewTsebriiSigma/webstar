@@ -264,25 +264,39 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     }, 250);
   };
   
-  // Smooth progress animation - animate from current to target with spring
+  // Smooth progress animation - safe implementation with cleanup
   useEffect(() => {
-    if (uploadProgress > displayProgress) {
-      const step = () => {
-        setDisplayProgress(prev => {
-          const diff = uploadProgress - prev;
-          // Spring-like increment - faster when far, slower when close
-          const increment = Math.max(1, Math.ceil(diff * 0.15));
-          const next = Math.min(prev + increment, uploadProgress);
-          if (next < uploadProgress) {
-            requestAnimationFrame(step);
-          }
-          return next;
-        });
-      };
-      requestAnimationFrame(step);
-    } else if (uploadProgress === 0) {
+    if (uploadProgress === 0) {
       setDisplayProgress(0);
+      return;
     }
+    
+    let animationId: number;
+    let current = displayProgress;
+    
+    const animate = () => {
+      if (current < uploadProgress) {
+        const diff = uploadProgress - current;
+        // Spring-like increment - faster when far, slower when close
+        const increment = Math.max(1, Math.ceil(diff * 0.15));
+        current = Math.min(current + increment, uploadProgress);
+        setDisplayProgress(current);
+        
+        if (current < uploadProgress) {
+          animationId = requestAnimationFrame(animate);
+        }
+      }
+    };
+    
+    if (uploadProgress > current) {
+      animationId = requestAnimationFrame(animate);
+    }
+    
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
   }, [uploadProgress]);
 
   // Rich text editing features
