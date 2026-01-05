@@ -711,7 +711,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               transform: `translateX(${['portfolio', 'projects', 'about'].indexOf(activeTab) * 100}%)`
             }}
           >
-            <div className="w-20 h-full bg-cyan-500 mx-auto rounded-sm" />
+            <div className="w-[100px] h-full bg-cyan-500 mx-auto" />
           </div>
           
           {['Portfolio', 'Projects', 'About'].map((tab) => (
