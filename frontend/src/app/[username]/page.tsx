@@ -896,6 +896,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
         onClose={() => setShowCreateContentModal(false)}
         onSelectPost={() => setShowUploadModal(true)}
         onSelectProject={() => setShowProjectModal(true)}
+        navHeightReduction={heightReduction}
       />
 
       <UploadPortfolioModal

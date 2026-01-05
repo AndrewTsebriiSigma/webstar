@@ -5,6 +5,7 @@ interface CreateContentModalProps {
   onClose: () => void;
   onSelectPost: () => void;
   onSelectProject: () => void;
+  navHeightReduction?: number; // 0 to 1, how much nav has shrunk
 }
 
 export default function CreateContentModal({
@@ -12,8 +13,14 @@ export default function CreateContentModal({
   onClose,
   onSelectPost,
   onSelectProject,
+  navHeightReduction = 0,
 }: CreateContentModalProps) {
   if (!isOpen) return null;
+
+  // Nav base height ~50px, shrinks by ~10px max
+  // Dropdown sits right below with 4px gap
+  const navHeight = 50 - (10 * navHeightReduction);
+  const dropdownTop = navHeight + 4;
 
   return (
     <div 
@@ -23,11 +30,11 @@ export default function CreateContentModal({
       }}
       onClick={onClose}
     >
-      {/* Dropdown - full width, anchored below nav */}
+      {/* Dropdown - full width, anchored to nav */}
       <div 
         className="absolute left-3 right-3"
         style={{
-          top: '52px', // Tighter gap, anchored to nav
+          top: `${dropdownTop}px`,
           background: 'rgba(17, 17, 17, 0.85)',
           backdropFilter: 'blur(20px) saturate(180%)',
           WebkitBackdropFilter: 'blur(20px) saturate(180%)',
