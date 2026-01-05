@@ -18,26 +18,30 @@ export default function CreateContentModal({
   return (
     <div 
       className="fixed inset-0 z-50"
+      style={{
+        background: 'rgba(0, 0, 0, 0.3)', // Subtle dark overlay for focus
+      }}
       onClick={onClose}
     >
-      {/* Dropdown anchored below top nav, left side */}
+      {/* Dropdown - wider, with gap from top */}
       <div 
         className="absolute"
         style={{
-          top: '54px', // Below the nav bar
-          left: '12px', // Aligned to + button
-          width: '280px',
-          background: 'rgba(28, 28, 30, 0.98)',
-          backdropFilter: 'blur(40px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          top: '62px', // More gap from nav
+          left: '12px',
+          right: '60px', // Extends toward settings but leaves space
+          maxWidth: '340px',
+          background: 'rgba(17, 17, 17, 0.85)', // Glassy like settings
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          border: '1px solid rgba(255, 255, 255, 0.06)',
           borderRadius: '16px',
-          boxShadow: '0 8px 40px rgba(0, 0, 0, 0.5)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
           overflow: 'hidden'
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Post Option */}
+        {/* Post Option - Cyan/Blue gradient */}
         <button
           onClick={() => {
             onSelectPost();
@@ -49,11 +53,11 @@ export default function CreateContentModal({
           onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
         >
           <div 
-            className="flex items-center justify-center flex-shrink-0"
+            className="flex items-center justify-center flex-shrink-0 create-icon-cyan"
             style={{
               width: '44px',
               height: '44px',
-              background: 'rgba(0, 194, 255, 0.12)',
+              background: 'linear-gradient(135deg, rgba(0, 194, 255, 0.2) 0%, rgba(0, 122, 255, 0.2) 100%)',
               borderRadius: '10px'
             }}
           >
@@ -68,9 +72,9 @@ export default function CreateContentModal({
         </button>
 
         {/* Divider */}
-        <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.08)', margin: '0 12px' }} />
+        <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.06)', margin: '0 12px' }} />
 
-        {/* Project Option */}
+        {/* Project Option - Purple/Pink gradient */}
         <button
           onClick={() => {
             onSelectProject();
@@ -82,15 +86,15 @@ export default function CreateContentModal({
           onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
         >
           <div 
-            className="flex items-center justify-center flex-shrink-0"
+            className="flex items-center justify-center flex-shrink-0 create-icon-purple"
             style={{
               width: '44px',
               height: '44px',
-              background: 'rgba(0, 194, 255, 0.12)',
+              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%)',
               borderRadius: '10px'
             }}
           >
-            <svg className="w-5 h-5" fill="none" stroke="#00C2FF" strokeWidth={1.5} viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="#A78BFA" strokeWidth={1.5} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 10.5v6m3-3H9m4.06-7.19l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
             </svg>
           </div>
