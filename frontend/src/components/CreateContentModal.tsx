@@ -114,7 +114,7 @@ export default function CreateContentModal({
           onClick={postExpanded ? handleCollapse : handlePostClick}
           className="w-full transition-all duration-200 ease-out"
           style={{ 
-            padding: postExpanded ? '10px 12px' : '12px',
+            padding: postExpanded ? '6px 12px' : '12px',
             background: 'transparent'
           }}
         >
@@ -154,32 +154,35 @@ export default function CreateContentModal({
         <div 
           className="transition-all duration-200 ease-out overflow-hidden"
           style={{
-            maxHeight: postExpanded ? '100px' : '0',
+            maxHeight: postExpanded ? '90px' : '0',
             opacity: postExpanded ? 1 : 0,
-            padding: postExpanded ? '8px 12px' : '0 12px'
+            padding: postExpanded ? '6px 12px' : '0 12px'
           }}
         >
-          <div className="grid grid-cols-4 gap-1">
-            {postTypes.map((item) => (
-              <button
-                key={item.type}
-                onClick={() => handleTypeSelect(item.type)}
-                className="flex flex-col items-center gap-1 p-1.5 rounded-xl transition-all duration-150"
-                style={{ background: 'transparent' }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-              >
-                <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
-                  style={{ 
-                    background: 'transparent',
-                    border: '1px solid rgba(255, 255, 255, 0.1)'
-                  }}
+          <div className="flex items-center justify-center">
+            {postTypes.map((item, index) => (
+              <div key={item.type} className="flex items-center">
+                <button
+                  onClick={() => handleTypeSelect(item.type)}
+                  className="flex flex-col items-center gap-1.5 px-4 py-2 rounded-xl transition-all duration-150"
+                  style={{ background: 'transparent' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                 >
-                  <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>{item.icon}</span>
-                </div>
-                <span className="text-[10px] font-medium text-gray-500">{item.label}</span>
-              </button>
+                  <div className="w-10 h-10 flex items-center justify-center">
+                    <span style={{ color: item.color }}>{item.icon}</span>
+                  </div>
+                  <span className="text-[12px] font-medium text-white">{item.label}</span>
+                </button>
+                {/* Vertical divider between icons (not after last) */}
+                {index < postTypes.length - 1 && (
+                  <div style={{ 
+                    width: '1px', 
+                    height: '40px', 
+                    background: 'rgba(255, 255, 255, 0.06)' 
+                  }} />
+                )}
+              </div>
             ))}
           </div>
         </div>
