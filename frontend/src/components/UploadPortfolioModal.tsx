@@ -49,7 +49,11 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   const handleSwipeMove = (e: React.TouchEvent) => {
     const diff = attachmentStartX - e.touches[0].clientX;
     if (diff > 0) {
+      // Swiping left - open delete
       setAttachmentSwipeX(Math.min(diff, 80));
+    } else if (attachmentSwipeX > 0) {
+      // Swiping right when delete is open - close it
+      setAttachmentSwipeX(Math.max(0, 70 + diff));
     }
   };
 
@@ -475,36 +479,34 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     <div 
       className="fixed inset-0 z-50 flex items-start justify-center"
       style={{
-        background: 'rgba(0, 0, 0, 0.6)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
+        background: 'rgba(17, 17, 17, 0.92)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
         paddingTop: '5vh',
         paddingBottom: '20vh',
       }}
       onClick={handleClose}
     >
-      {/* Centered floating popup - Glass Modal - More glassy */}
+      {/* Centered floating popup - Glass Modal like Settings */}
       <div 
         ref={scrollContainerRef}
         className="w-full overflow-y-auto"
         style={{
           maxWidth: 'calc(100% - 24px)',
           height: '75vh',
-          background: 'rgba(18, 18, 18, 0.7)',
-          backdropFilter: 'blur(32px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(32px) saturate(200%)',
+          background: 'transparent',
           borderRadius: '16px',
-          boxShadow: '0 -4px 32px rgba(0, 0, 0, 0.4)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header - seamless with container, no separate background */}
+        {/* Header - solid dark like Settings */}
         <div 
           className="flex items-center justify-between sticky top-0 z-10"
           style={{
             height: '55px',
-            background: 'rgba(18, 18, 18, 0.95)',
+            background: '#0D0D0D',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
             borderTopLeftRadius: '16px',
             borderTopRightRadius: '16px',
             padding: '0 20px',
@@ -546,12 +548,15 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               </button>
             </div>
 
-            {/* Content area - 10px side padding, no separate background to avoid line */}
+            {/* Content area - 10px side padding, transparent like Settings */}
             <div 
               style={{ 
                 padding: '16px 10px',
-              }} 
-              className="space-y-4"
+                background: 'transparent',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+              }}
             >
               {selectedContentType !== 'text' ? (
                 <>
@@ -791,7 +796,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           <p className="text-[11px] text-gray-400 truncate">Unknown Artist</p>
                         </div>
                         
-                        {/* Play button for audio - circular, compact like reference */}
+                        {/* Play button for audio - 30% smaller circle (20px), bigger icon (12px) */}
                         {attachmentType === 'audio' && (
                           <>
                             <audio 
@@ -804,8 +809,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                               onClick={(e) => { e.stopPropagation(); toggleAudioPlay(); }}
                               className="flex items-center justify-center flex-shrink-0"
                               style={{
-                                width: '28px',
-                                height: '28px',
+                                width: '20px',
+                                height: '20px',
                                 background: '#1C1C1E',
                                 borderRadius: '50%',
                               }}
@@ -815,7 +820,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                                   <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
                                 </svg>
                               ) : (
-                                <svg className="w-3 h-3 text-white" style={{ marginLeft: '2px' }} fill="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-3 h-3 text-white" style={{ marginLeft: '1px' }} fill="currentColor" viewBox="0 0 24 24">
                                   <path d="M8 5v14l11-7z" />
                                 </svg>
                               )}
