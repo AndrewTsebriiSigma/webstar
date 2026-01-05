@@ -900,6 +900,15 @@ input::selection, textarea::selection {
   background: rgba(0, 194, 255, 0.2);
 }
 
-input:focus, textarea:focus {
-  outline: none;
+/* Kill native focus ring completely */
+input:focus, textarea:focus,
+input:focus-visible, textarea:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.caption-input-wrapper textarea:focus,
+.caption-input-wrapper textarea:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }

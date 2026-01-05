@@ -565,8 +565,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
             padding: '0 20px',
           }}
         >
-              {/* Left: Close button + Dynamic title - same gap as side padding (20px) */}
-              <div className="flex items-center" style={{ gap: '20px' }}>
+              {/* Left: Close button + title - tight 8px gap */}
+              <div className="flex items-center" style={{ gap: '8px' }}>
                 <button
                   onClick={handleBack}
                   disabled={uploading}
@@ -750,6 +750,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           setDescription(e.target.value);
                         }
                       }}
+                      onClick={() => attachmentSwipeX > 0 && setAttachmentSwipeX(0)}
                       onFocus={(e) => {
                         handleDescriptionFocus();
                         e.currentTarget.parentElement!.style.boxShadow = '0 0 0 1px rgba(0, 194, 255, 0.3)';
@@ -767,6 +768,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                         background: 'transparent',
                         border: 'none',
                         outline: 'none',
+                        boxShadow: 'none',
+                        WebkitAppearance: 'none',
                         width: '100%',
                         padding: '12px 14px',
                         paddingBottom: '24px',
