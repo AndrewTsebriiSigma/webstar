@@ -29,6 +29,10 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   const [attachmentStartX, setAttachmentStartX] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [attachmentFileName, setAttachmentFileName] = useState('');
+  const [isRemovingAttachment, setIsRemovingAttachment] = useState(false);
+  
+  // Smooth progress animation
+  const [displayProgress, setDisplayProgress] = useState(0);
   const attachmentNameRef = useRef<HTMLInputElement>(null);
   
   const [description, setDescription] = useState('');
@@ -249,10 +253,37 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   };
 
   const removeAttachment = () => {
-    setAttachmentFile(null);
-    setAttachmentType(null);
-    setAttachmentFileName('');
+    // Smooth fade + slide out animation
+    setIsRemovingAttachment(true);
+    setTimeout(() => {
+      setAttachmentFile(null);
+      setAttachmentType(null);
+      setAttachmentFileName('');
+      setIsRemovingAttachment(false);
+      setAttachmentSwipeX(0);
+    }, 250);
   };
+  
+  // Smooth progress animation - animate from current to target with spring
+  useEffect(() => {
+    if (uploadProgress > displayProgress) {
+      const step = () => {
+        setDisplayProgress(prev => {
+          const diff = uploadProgress - prev;
+          // Spring-like increment - faster when far, slower when close
+          const increment = Math.max(1, Math.ceil(diff * 0.15));
+          const next = Math.min(prev + increment, uploadProgress);
+          if (next < uploadProgress) {
+            requestAnimationFrame(step);
+          }
+          return next;
+        });
+      };
+      requestAnimationFrame(step);
+    } else if (uploadProgress === 0) {
+      setDisplayProgress(0);
+    }
+  }, [uploadProgress]);
 
   // Rich text editing features
   const handleTextareaKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -524,7 +555,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Upload overlay - circular progress with percentage */}
+        {/* Upload overlay - circular progress with smooth animated percentage */}
         {uploading && (
           <div 
             className="absolute inset-0 z-20 flex flex-col items-center justify-center"
@@ -534,12 +565,12 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
             }}
           >
             <div className="relative">
-              {/* Circular progress */}
+              {/* Circular progress - uses displayProgress for smooth animation */}
               <div 
                 className="w-16 h-16 rounded-full flex items-center justify-center"
                 style={{
-                  background: `conic-gradient(#00C2FF ${uploadProgress * 3.6}deg, rgba(255,255,255,0.08) 0deg)`,
-                  animation: 'pulse-glow 2s ease-in-out infinite',
+                  background: `conic-gradient(#00C2FF ${displayProgress * 3.6}deg, rgba(255,255,255,0.08) 0deg)`,
+                  transition: 'background 0.1s ease-out',
                 }}
               >
                 <div 
@@ -552,7 +583,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               className="mt-5 text-white/80 text-lg font-medium"
               style={{ fontVariantNumeric: 'tabular-nums' }}
             >
-              {uploadProgress}%
+              {displayProgress}%
             </p>
           </div>
         )}
@@ -569,8 +600,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
             padding: '0 20px',
           }}
         >
-              {/* Left: Close button + title - tight 8px gap */}
-              <div className="flex items-center" style={{ gap: '8px' }}>
+              {/* Left: Close button + title - tight 4px gap (matches left padding) */}
+              <div className="flex items-center" style={{ gap: '4px' }}>
                 <button
                   onClick={handleBack}
                   disabled={uploading}
@@ -798,7 +829,17 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
                   {/* Attachment Display - Apple-like 8px spacing, 44px height, swipe to delete */}
                   {attachmentFile && attachmentType && (
-                    <div className="relative overflow-hidden" style={{ marginTop: '8px', borderRadius: '10px' }}>
+                    <div 
+                      className="relative overflow-hidden" 
+                      style={{ 
+                        marginTop: '8px', 
+                        borderRadius: '10px',
+                        // Removal animation - fade + slide + scale
+                        opacity: isRemovingAttachment ? 0 : 1,
+                        transform: isRemovingAttachment ? 'translateX(-100%) scale(0.95)' : 'translateX(0) scale(1)',
+                        transition: 'opacity 0.25s ease-out, transform 0.25s ease-out',
+                      }}
+                    >
                       {/* Delete button - tappable, Apple physics */}
                       <button 
                         onClick={handleDeleteTap}
@@ -858,7 +899,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           )}
                         </div>
                         
-                        {/* File name - Apple focus glow, smaller text */}
+                        {/* File name - Apple focus glow with subtle background highlight */}
                         <div className="flex-1 min-w-0 flex items-center">
                           <input
                             type="text"
@@ -866,9 +907,11 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                             onChange={(e) => setAttachmentFileName(e.target.value)}
                             onFocus={(e) => {
                               e.currentTarget.style.boxShadow = '0 0 0 1px rgba(0, 194, 255, 0.3)';
+                              e.currentTarget.style.background = 'rgba(0, 194, 255, 0.05)';
                             }}
                             onBlur={(e) => {
                               e.currentTarget.style.boxShadow = 'none';
+                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
                             }}
                             className="text-[11px] font-normal bg-transparent outline-none w-full"
                             style={{ 
@@ -879,6 +922,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                               color: 'rgba(255, 255, 255, 0.7)',
                               height: '28px',
                               caretColor: '#00C2FF',
+                              transition: 'box-shadow 0.15s ease, background 0.15s ease',
                             }}
                           />
                         </div>
@@ -924,75 +968,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     </div>
                   )}
 
-                  {/* Inline Toolbar - fixed 6px gap, tap closes delete */}
-                  <div 
-                    className="flex items-center justify-between" 
-                    style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px', marginTop: '6px' }}
-                    onClick={() => attachmentSwipeX > 0 && setAttachmentSwipeX(0)}
-                  >
-                    {/* Left: Save as draft */}
-                    <button
-                      onClick={handleSaveAsDraft}
-                      disabled={uploading || !file}
-                      className="flex items-center gap-2 transition disabled:opacity-40"
-                    >
-                      {/* Floppy disk save icon - bolder */}
-                      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 3h11l5 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 3v5h8V3" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 14h10v7H7z" />
-                      </svg>
-                      <span className="text-[14px] font-medium">Save as draft</span>
-                    </button>
-                    
-                    {/* Right: Attachment icons - order: Image, Audio, PDF (matching Post menu) */}
-                    {selectedContentType === 'media' && (
-                      <div className="flex items-center" style={{ gap: '25px' }}>
-                        {/* Image icon - disabled (already uploading media) */}
-                        <svg className="w-[18px] h-[18px] opacity-30" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                        </svg>
-
-                        {/* Audio attachment */}
-                        <input
-                          type="file"
-                          id="audio-attachment-inline"
-                          accept="audio/*"
-                          onChange={handleAudioAttachment}
-                          className="hidden"
-                          disabled={uploading || !canAddAudioAttachment || attachmentType === 'pdf'}
-                        />
-                        <label
-                          htmlFor="audio-attachment-inline"
-                          className="cursor-pointer transition"
-                          style={{ opacity: (!canAddAudioAttachment || attachmentType === 'pdf') ? 0.3 : 1 }}
-                        >
-                          <svg className="w-[18px] h-[18px]" fill="none" stroke={attachmentType === 'audio' ? '#00C2FF' : 'currentColor'} strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                          </svg>
-                        </label>
-
-                        {/* PDF attachment */}
-                        <input
-                          type="file"
-                          id="pdf-attachment-inline"
-                          accept="application/pdf"
-                          onChange={handlePdfAttachment}
-                          className="hidden"
-                          disabled={uploading || !canAddPdfAttachment || attachmentType === 'audio'}
-                        />
-                        <label
-                          htmlFor="pdf-attachment-inline"
-                          className="cursor-pointer transition"
-                          style={{ opacity: (!canAddPdfAttachment || attachmentType === 'audio') ? 0.3 : 1 }}
-                        >
-                          <svg className="w-[18px] h-[18px]" fill="none" stroke={attachmentType === 'pdf' ? '#00C2FF' : 'currentColor'} strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                          </svg>
-                        </label>
-                      </div>
-                    )}
-                  </div>
                 </>
               ) : (
                 <>
@@ -1045,25 +1020,102 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     </span>
                   </div>
 
-                  {/* Inline Toolbar for Text Post - 12px gap */}
-                  <div className="flex items-center" style={{ color: 'rgba(255,255,255,0.5)', padding: '0 6px', marginTop: '12px' }}>
-                    <button
-                      onClick={handleSaveAsDraft}
-                      disabled={uploading || !textContent.trim()}
-                      className="flex items-center gap-2 transition disabled:opacity-40"
-                    >
-                      {/* Floppy disk save icon - bolder */}
-                      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 3h11l5 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 3v5h8V3" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 14h10v7H7z" />
-                      </svg>
-                      <span className="text-[14px] font-medium">Save as draft</span>
-                    </button>
-                  </div>
                 </>
               )}
 
+            </div>
+            
+            {/* Sticky Footer - Draft toolbar with gradient fade */}
+            <div 
+              className="relative"
+              style={{
+                background: 'rgba(20, 20, 20, 1)',
+                borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                borderBottomLeftRadius: '16px',
+                borderBottomRightRadius: '16px',
+                padding: '12px 16px',
+                paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+              }}
+            >
+              {/* Gradient fade above */}
+              <div 
+                style={{
+                  position: 'absolute',
+                  top: '-24px',
+                  left: 0,
+                  right: 0,
+                  height: '24px',
+                  background: 'linear-gradient(to top, rgba(20, 20, 20, 1) 0%, transparent 100%)',
+                  pointerEvents: 'none',
+                }}
+              />
+              
+              <div 
+                className="flex items-center justify-between" 
+                style={{ color: 'rgba(255,255,255,0.5)' }}
+              >
+                {/* Left: Save as draft */}
+                <button
+                  onClick={handleSaveAsDraft}
+                  disabled={uploading || (selectedContentType === 'text' ? !textContent.trim() : !file)}
+                  className="flex items-center gap-2 transition disabled:opacity-40"
+                >
+                  <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 3h11l5 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 3v5h8V3" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 14h10v7H7z" />
+                  </svg>
+                  <span className="text-[14px] font-medium">Save as draft</span>
+                </button>
+                
+                {/* Right: Attachment icons (only for media posts) */}
+                {selectedContentType === 'media' && (
+                  <div className="flex items-center" style={{ gap: '25px' }}>
+                    {/* Image icon - disabled */}
+                    <svg className="w-[18px] h-[18px] opacity-30" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                    </svg>
+
+                    {/* Audio attachment */}
+                    <input
+                      type="file"
+                      id="audio-attachment-sticky"
+                      accept="audio/*"
+                      onChange={handleAudioAttachment}
+                      className="hidden"
+                      disabled={uploading || !canAddAudioAttachment || attachmentType === 'pdf'}
+                    />
+                    <label
+                      htmlFor="audio-attachment-sticky"
+                      className="cursor-pointer transition"
+                      style={{ opacity: (!canAddAudioAttachment || attachmentType === 'pdf') ? 0.3 : 1 }}
+                    >
+                      <svg className="w-[18px] h-[18px]" fill="none" stroke={attachmentType === 'audio' ? '#00C2FF' : 'currentColor'} strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                      </svg>
+                    </label>
+
+                    {/* PDF attachment */}
+                    <input
+                      type="file"
+                      id="pdf-attachment-sticky"
+                      accept="application/pdf"
+                      onChange={handlePdfAttachment}
+                      className="hidden"
+                      disabled={uploading || !canAddPdfAttachment || attachmentType === 'audio'}
+                    />
+                    <label
+                      htmlFor="pdf-attachment-sticky"
+                      className="cursor-pointer transition"
+                      style={{ opacity: (!canAddPdfAttachment || attachmentType === 'audio') ? 0.3 : 1 }}
+                    >
+                      <svg className="w-[18px] h-[18px]" fill="none" stroke={attachmentType === 'pdf' ? '#00C2FF' : 'currentColor'} strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                      </svg>
+                    </label>
+                  </div>
+                )}
+              </div>
             </div>
       </div>
     </div>
