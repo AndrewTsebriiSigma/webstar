@@ -28,6 +28,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   const [attachmentSwipeX, setAttachmentSwipeX] = useState(0);
   const [attachmentStartX, setAttachmentStartX] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [attachmentFileName, setAttachmentFileName] = useState('');
+  const attachmentNameRef = useRef<HTMLInputElement>(null);
   
   const [description, setDescription] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -236,6 +238,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   const removeAttachment = () => {
     setAttachmentFile(null);
     setAttachmentType(null);
+    setAttachmentFileName('');
   };
 
   // Rich text editing features
@@ -479,28 +482,30 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     <div 
       className="fixed inset-0 z-50 flex items-start justify-center"
       style={{
-        background: 'rgba(17, 17, 17, 0.92)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
+        background: 'rgba(0, 0, 0, 0.85)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
         paddingTop: '5vh',
         paddingBottom: '20vh',
       }}
       onClick={handleClose}
     >
-      {/* Centered floating popup - Glass Modal like Settings */}
+      {/* Centered floating popup - Glass Modal with proper glassy effect */}
       <div 
         ref={scrollContainerRef}
         className="w-full overflow-y-auto"
         style={{
           maxWidth: 'calc(100% - 24px)',
           height: '75vh',
-          background: 'transparent',
+          background: 'rgba(18, 18, 18, 0.8)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           borderRadius: '16px',
           border: '1px solid rgba(255, 255, 255, 0.08)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header - solid dark like Settings */}
+        {/* Header - solid dark */}
         <div 
           className="flex items-center justify-between sticky top-0 z-10"
           style={{
@@ -730,7 +735,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
                   {/* Attachment Display - Right under caption, 50px height, swipe to delete */}
                   {attachmentFile && attachmentType && (
-                    <div className="relative overflow-hidden" style={{ marginTop: '8px', borderRadius: '10px' }}>
+                    <div className="relative overflow-hidden" style={{ marginTop: '4px', borderRadius: '10px' }}>
                       {/* Delete button - tappable, matching corners */}
                       <button 
                         onClick={handleDeleteTap}
@@ -790,13 +795,20 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           )}
                         </div>
                         
-                        {/* File info - title and subtitle like music player */}
+                        {/* File name - editable, no zoom on focus */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-[13px] text-white font-medium truncate">{attachmentFile.name.replace(/\.[^/.]+$/, '')}</p>
-                          <p className="text-[11px] text-gray-400 truncate">Unknown Artist</p>
+                          <input
+                            ref={attachmentNameRef}
+                            type="text"
+                            value={attachmentFileName || attachmentFile.name.replace(/\.[^/.]+$/, '')}
+                            onChange={(e) => setAttachmentFileName(e.target.value)}
+                            onFocus={() => attachmentNameRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                            className="text-[13px] text-white font-medium truncate bg-transparent border-none outline-none w-full"
+                            style={{ fontSize: '16px' }}
+                          />
                         </div>
                         
-                        {/* Play button for audio - 30% smaller circle (20px), bigger icon (12px) */}
+                        {/* Play button for audio - 25% smaller circle (15px), bigger icon */}
                         {attachmentType === 'audio' && (
                           <>
                             <audio 
@@ -809,18 +821,18 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                               onClick={(e) => { e.stopPropagation(); toggleAudioPlay(); }}
                               className="flex items-center justify-center flex-shrink-0"
                               style={{
-                                width: '20px',
-                                height: '20px',
+                                width: '15px',
+                                height: '15px',
                                 background: '#1C1C1E',
                                 borderRadius: '50%',
                               }}
                             >
                               {isPlaying ? (
-                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-[8px] h-[8px] text-white" fill="currentColor" viewBox="0 0 24 24">
                                   <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
                                 </svg>
                               ) : (
-                                <svg className="w-3 h-3 text-white" style={{ marginLeft: '1px' }} fill="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-[8px] h-[8px] text-white" style={{ marginLeft: '1px' }} fill="currentColor" viewBox="0 0 24 24">
                                   <path d="M8 5v14l11-7z" />
                                 </svg>
                               )}
