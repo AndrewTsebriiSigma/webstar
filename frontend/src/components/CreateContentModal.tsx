@@ -35,12 +35,11 @@ export default function CreateContentModal({
         className="absolute left-3 right-3"
         style={{
           top: `${dropdownTop}px`,
-          background: 'rgba(17, 17, 17, 0.85)',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          border: '1px solid rgba(255, 255, 255, 0.06)',
+          background: 'rgba(18, 18, 18, 0.95)',
+          backdropFilter: 'blur(24px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+          border: '1px solid #2D2D2D',
           borderRadius: '16px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
           overflow: 'hidden'
         }}
         onClick={(e) => e.stopPropagation()}
