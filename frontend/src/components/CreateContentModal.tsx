@@ -164,13 +164,13 @@ export default function CreateContentModal({
               <button
                 key={item.type}
                 onClick={() => handleTypeSelect(item.type)}
-                className="flex flex-col items-center gap-1.5 p-1.5 rounded-xl transition-all duration-150"
+                className="flex flex-col items-center gap-1.5 p-1.5 rounded-[10px] transition-all duration-150"
                 style={{ background: 'transparent' }}
                 onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               >
                 <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  className="w-12 h-12 rounded-[10px] flex items-center justify-center"
                   style={{ background: item.gradient }}
                 >
                   <span style={{ color: item.color }}>{item.icon}</span>
