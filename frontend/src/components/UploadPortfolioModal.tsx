@@ -493,7 +493,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     <div 
       className="fixed inset-0 z-50 flex items-start justify-center"
       style={{
-        background: 'rgba(17, 17, 17, 0.92)',
+        background: 'rgba(0, 0, 0, 0.7)',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
         paddingTop: '5vh',
