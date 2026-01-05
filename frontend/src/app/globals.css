@@ -857,30 +857,4 @@ html {
   }
 }
 
-/* Create Menu - Animated Gradient Icons */
-.create-icon-cyan {
-  animation: gradientShiftCyan 3s ease infinite;
-}
-
-.create-icon-purple {
-  animation: gradientShiftPurple 3s ease infinite;
-}
-
-@keyframes gradientShiftCyan {
-  0%, 100% { 
-    background: linear-gradient(135deg, rgba(0, 194, 255, 0.2) 0%, rgba(0, 122, 255, 0.2) 100%); 
-  }
-  50% { 
-    background: linear-gradient(135deg, rgba(0, 122, 255, 0.25) 0%, rgba(0, 194, 255, 0.25) 100%); 
-  }
-}
-
-@keyframes gradientShiftPurple {
-  0%, 100% { 
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%); 
-  }
-  50% { 
-    background: linear-gradient(135deg, rgba(236, 72, 153, 0.25) 0%, rgba(139, 92, 246, 0.25) 100%); 
-  }
-}
 

@@ -19,19 +19,16 @@ export default function CreateContentModal({
     <div 
       className="fixed inset-0 z-50"
       style={{
-        background: 'rgba(0, 0, 0, 0.3)', // Subtle dark overlay for focus
+        background: 'rgba(0, 0, 0, 0.3)',
       }}
       onClick={onClose}
     >
-      {/* Dropdown - wider, with gap from top */}
+      {/* Dropdown - full width, anchored below nav */}
       <div 
-        className="absolute"
+        className="absolute left-3 right-3"
         style={{
-          top: '62px', // More gap from nav
-          left: '12px',
-          right: '60px', // Extends toward settings but leaves space
-          maxWidth: '340px',
-          background: 'rgba(17, 17, 17, 0.85)', // Glassy like settings
+          top: '52px', // Tighter gap, anchored to nav
+          background: 'rgba(17, 17, 17, 0.85)',
           backdropFilter: 'blur(20px) saturate(180%)',
           WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           border: '1px solid rgba(255, 255, 255, 0.06)',
@@ -41,7 +38,7 @@ export default function CreateContentModal({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Post Option - Cyan/Blue gradient */}
+        {/* Post Option - Cyan/Blue gradient (static) */}
         <button
           onClick={() => {
             onSelectPost();
@@ -53,7 +50,7 @@ export default function CreateContentModal({
           onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
         >
           <div 
-            className="flex items-center justify-center flex-shrink-0 create-icon-cyan"
+            className="flex items-center justify-center flex-shrink-0"
             style={{
               width: '44px',
               height: '44px',
@@ -74,7 +71,7 @@ export default function CreateContentModal({
         {/* Divider */}
         <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.06)', margin: '0 12px' }} />
 
-        {/* Project Option - Purple/Pink gradient */}
+        {/* Project Option - Purple/Pink gradient (static) */}
         <button
           onClick={() => {
             onSelectProject();
@@ -86,7 +83,7 @@ export default function CreateContentModal({
           onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
         >
           <div 
-            className="flex items-center justify-center flex-shrink-0 create-icon-purple"
+            className="flex items-center justify-center flex-shrink-0"
             style={{
               width: '44px',
               height: '44px',
