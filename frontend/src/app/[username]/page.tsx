@@ -285,21 +285,21 @@ export default function ProfilePage({ params }: { params: { username: string } }
           )}
         </div>
 
-        {/* Avatar - Square, 20% bigger (173px), covers 2/3 banner */}
-        <div className="relative px-4 -mt-28">
+        {/* Avatar - webSTAR: 144px, -80px overlap */}
+        <div className="relative px-4 -mt-20">
           <div className="flex items-center justify-center">
             {profile.profile_picture ? (
               <img
                 src={profile.profile_picture}
                 alt={profile.display_name || username}
-                className="w-[173px] h-[173px] rounded-[20px] object-cover"
+                className="w-[166px] h-[166px] rounded-full object-cover"
                 style={{
                   border: '6px solid #111111',
                   boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
                 }}
               />
             ) : (
-              <div className="w-[173px] h-[173px] rounded-[20px] bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-4xl font-bold"
+              <div className="w-[166px] h-[166px] rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-4xl font-bold"
                 style={{
                   border: '6px solid #111111',
                   boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
@@ -326,13 +326,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
           </div>
         </div>
         
-        {/* Bio - 10px font */}
-        <p className="px-2" style={{ 
+        {/* Bio - 10px gap */}
+        <p className="text-sm px-2" style={{ 
           color: 'rgba(255, 255, 255, 0.75)',
-          fontSize: '10px',
+          fontSize: '15px',
           lineHeight: '1.4',
           opacity: 0.9,
-          marginBottom: '6px'
+          marginBottom: '10px'
         }}>
           {profile.bio || 'Make original the only standard.'}
         </p>
