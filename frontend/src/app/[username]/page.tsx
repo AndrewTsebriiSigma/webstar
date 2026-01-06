@@ -315,7 +315,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Profile Info - Compact design */}
       <div className="profile-info" style={{ padding: viewerMode ? '0 24px 12px' : '0 24px 12px', textAlign: 'center' }}>
         {/* Name + Badge - Inline wrapper keeps badge beside name */}
-        <div className="flex items-center justify-center pt-2" style={{ marginBottom: '6px' }}>
+        <div className="flex items-center justify-center pt-2" style={{ marginBottom: '10px' }}>
           <div className="inline-flex items-center gap-1.5">
             <h1 className="text-xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)', letterSpacing: '-0.2px' }}>
               {profile.display_name || username}
@@ -332,7 +332,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
           fontSize: '15px',
           lineHeight: '1.4',
           opacity: 0.9,
-          marginBottom: '10px'
+          marginBottom: '8px'
         }}>
           {profile.bio || 'Make original the only standard.'}
         </p>
