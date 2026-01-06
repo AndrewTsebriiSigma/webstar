@@ -89,7 +89,6 @@ function PhotoDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => 
         overflow: 'hidden',
         cursor: onClick ? 'pointer' : 'default',
         background: 'rgba(255, 255, 255, 0.03)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
         transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)'
       }}
       onMouseEnter={(e) => {
@@ -137,7 +136,6 @@ function AudioDisplayCompact({ item, onClick }: { item: PortfolioItem; onClick?:
         height: '100%',
         borderRadius: '5px',
         background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.12), rgba(0, 194, 255, 0.08))',
-        border: '1px solid rgba(10, 132, 255, 0.25)',
         padding: '24px 20px',
         display: 'flex',
         flexDirection: 'column',
@@ -152,12 +150,10 @@ function AudioDisplayCompact({ item, onClick }: { item: PortfolioItem; onClick?:
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-4px)';
         e.currentTarget.style.boxShadow = '0 12px 32px rgba(10, 132, 255, 0.2)';
-        e.currentTarget.style.borderColor = 'rgba(10, 132, 255, 0.4)';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = 'translateY(0)';
         e.currentTarget.style.boxShadow = 'none';
-        e.currentTarget.style.borderColor = 'rgba(10, 132, 255, 0.25)';
       }}
     >
       {/* Background Equalizer Pattern */}
@@ -488,7 +484,6 @@ function TextDisplayCompact({ item, onClick }: { item: PortfolioItem; onClick?: 
         height: '100%',
         borderRadius: '5px',
         background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.05), rgba(118, 75, 162, 0.05))',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
         padding: '20px 16px',
         display: 'flex',
         flexDirection: 'column',
@@ -504,12 +499,10 @@ function TextDisplayCompact({ item, onClick }: { item: PortfolioItem; onClick?: 
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-4px)';
         e.currentTarget.style.boxShadow = '0 18px 40px rgba(10, 132, 255, 0.15)';
-        e.currentTarget.style.borderColor = 'rgba(10, 132, 255, 0.3)';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = 'translateY(0)';
         e.currentTarget.style.boxShadow = 'none';
-        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
       }}
     >
       {/* Decorative gradient orb - FIXED sizing */}
@@ -604,7 +597,6 @@ function TextDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => v
         height: '100%',
         borderRadius: '5px',
         background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.05), rgba(118, 75, 162, 0.05))',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
         padding: '32px',
         display: 'flex',
         flexDirection: 'column',
@@ -618,14 +610,12 @@ function TextDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => v
         if (onClick) {
           e.currentTarget.style.transform = 'translateY(-4px)';
           e.currentTarget.style.boxShadow = '0 18px 40px rgba(10, 132, 255, 0.15)';
-          e.currentTarget.style.borderColor = 'rgba(10, 132, 255, 0.3)';
         }
       }}
       onMouseLeave={(e) => {
         if (onClick) {
           e.currentTarget.style.transform = 'translateY(0)';
           e.currentTarget.style.boxShadow = 'none';
-          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
         }
       }}
     >
