@@ -18,7 +18,6 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
   const [uploadProgress, setUploadProgress] = useState(0);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState('');
-  const [showAddContentModal, setShowAddContentModal] = useState(false);
   const [showAttachExistingModal, setShowAttachExistingModal] = useState(false);
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
   const [selectedPortfolioIds, setSelectedPortfolioIds] = useState<Set<number>>(new Set());
@@ -26,12 +25,15 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const titleInputRef = useRef<HTMLInputElement>(null);
+  const titleTextareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Animation states
   const [isClosing, setIsClosing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  
+  // Add Content expandable state (like Post menu)
+  const [contentExpanded, setContentExpanded] = useState(false);
 
   // Load user's portfolio items
   useEffect(() => {
@@ -84,7 +86,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
     setSaving(false);
     setUploadingCover(false);
     setUploadProgress(0);
-    setShowAddContentModal(false);
+    setContentExpanded(false);
     setShowAttachExistingModal(false);
     setProjectMedia([]);
     setSelectedPortfolioIds(new Set());
@@ -319,7 +321,6 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
   };
 
   const handleUploadNewMedia = () => {
-    setShowAddContentModal(false);
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*,video/*';
@@ -551,11 +552,10 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
                 transition: 'box-shadow 0s, border 0s',
               }}
             >
-              {/* Title Input - with * and character count inside */}
+              {/* Title Input - textarea for multi-line wrapping, char count at BOTTOM */}
               <div style={{ position: 'relative' }}>
-                <input
-                  ref={titleInputRef}
-                  type="text"
+                <textarea
+                  ref={titleTextareaRef}
                   value={title}
                   onChange={(e) => {
                     if (e.target.value.length <= 44) {
@@ -563,7 +563,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
                     }
                   }}
                   onFocus={(e) => {
-                    handleInputFocus(titleInputRef);
+                    handleInputFocus(titleTextareaRef);
                     const wrapper = e.currentTarget.closest('.project-input-wrapper') as HTMLElement;
                     if (wrapper) {
                       wrapper.style.boxShadow = '0 0 0 1px rgba(0, 194, 255, 0.3)';
@@ -579,24 +579,27 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
                   }}
                   placeholder="Project title*"
                   maxLength={44}
+                  rows={1}
                   style={{ 
                     fontSize: '14px',
                     width: '100%',
                     padding: '12px 14px',
-                    paddingRight: '50px',
+                    paddingBottom: '24px',
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
+                    resize: 'none',
                     color: '#FFFFFF',
-                    caretColor: '#00C2FF'
+                    caretColor: '#00C2FF',
+                    lineHeight: '1.5',
+                    overflow: 'hidden'
                   }}
                   disabled={saving || uploadingCover}
                 />
                 <span 
                   style={{ 
                     position: 'absolute', 
-                    top: '50%',
-                    transform: 'translateY(-50%)',
+                    bottom: '6px', 
                     right: '12px', 
                     fontSize: '11px', 
                     color: title.length > 40 ? '#FF453A' : title.length > 35 ? '#FF9F0A' : 'rgba(255,255,255,0.4)'
@@ -613,7 +616,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
               <div style={{ position: 'relative' }}>
                 <textarea
                   ref={textareaRef}
-                  placeholder="Description (optional)"
+                  placeholder="Add a description..."
                   value={description}
                   onChange={(e) => {
                     if (e.target.value.length <= 280) {
@@ -667,35 +670,114 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
               </div>
             </div>
 
-            {/* Add Content Button */}
-            <button
-              onClick={() => setShowAddContentModal(true)}
-              disabled={saving || uploadingCover}
-              className="w-full flex items-center justify-center gap-2 transition-all"
+            {/* Add Content - Inline expandable like Post menu */}
+            <div
               style={{
-                padding: '14px',
-                border: '1px dashed rgba(255, 255, 255, 0.15)',
-                borderRadius: '12px',
                 background: 'rgba(255, 255, 255, 0.02)',
-                color: 'rgba(255, 255, 255, 0.5)',
-                fontSize: '14px',
-                fontWeight: '500',
-                opacity: (saving || uploadingCover) ? 0.5 : 1
-              }}
-              onMouseEnter={(e) => {
-                if (!saving && !uploadingCover) {
-                  e.currentTarget.style.borderColor = 'rgba(0, 194, 255, 0.4)';
-                  e.currentTarget.style.color = '#00C2FF';
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.5)';
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                borderRadius: '10px',
+                overflow: 'hidden'
               }}
             >
-              <PlusIcon className="w-5 h-5" />
-              <span>Add Content</span>
-            </button>
+              {/* Header - Collapsible */}
+              <button
+                onClick={() => setContentExpanded(!contentExpanded)}
+                disabled={saving || uploadingCover}
+                className="w-full transition-all duration-200 ease-out"
+                style={{ 
+                  padding: contentExpanded ? '8px 12px' : '12px',
+                  background: 'transparent',
+                  opacity: (saving || uploadingCover) ? 0.5 : 1
+                }}
+              >
+                {contentExpanded ? (
+                  // Shrunk header - just title like Post
+                  <div className="flex items-center justify-center">
+                    <span className="text-[15px] font-semibold text-white">Add Content</span>
+                  </div>
+                ) : (
+                  // Full button with icon + text
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="flex items-center justify-center flex-shrink-0"
+                      style={{
+                        width: '44px',
+                        height: '44px',
+                        background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%)',
+                        borderRadius: '10px'
+                      }}
+                    >
+                      <PlusIcon className="w-5 h-5" style={{ color: '#A78BFA' }} />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <h3 className="text-[15px] font-semibold text-white">Add Content</h3>
+                      <p className="text-[13px]" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Attach or upload media</p>
+                    </div>
+                  </div>
+                )}
+              </button>
+
+              {/* Divider - visible when expanded */}
+              {contentExpanded && (
+                <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.06)', margin: '0 12px' }} />
+              )}
+
+              {/* 2 Options - 2x1 grid with gradient blocks */}
+              <div 
+                className="transition-all duration-200 ease-out overflow-hidden"
+                style={{
+                  maxHeight: contentExpanded ? '100px' : '0',
+                  opacity: contentExpanded ? 1 : 0,
+                  padding: contentExpanded ? '8px 12px' : '0 12px'
+                }}
+              >
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Attach Existing - darker gradient */}
+                  <button
+                    onClick={() => {
+                      setContentExpanded(false);
+                      setShowAttachExistingModal(true);
+                    }}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-[10px] transition-all duration-150"
+                    style={{ background: 'transparent' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <div 
+                      className="w-11 h-11 rounded-[10px] flex items-center justify-center"
+                      style={{ background: 'linear-gradient(135deg, rgba(0, 80, 120, 0.8) 0%, rgba(0, 50, 80, 0.9) 100%)' }}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="#00C2FF" strokeWidth={1.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                      </svg>
+                    </div>
+                    <span className="text-[12px] font-medium text-white">Attach existing</span>
+                  </button>
+
+                  {/* Upload New - darker gradient */}
+                  <button
+                    onClick={() => {
+                      setContentExpanded(false);
+                      handleUploadNewMedia();
+                    }}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-[10px] transition-all duration-150"
+                    style={{ background: 'transparent' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <div 
+                      className="w-11 h-11 rounded-[10px] flex items-center justify-center"
+                      style={{ background: 'linear-gradient(135deg, rgba(20, 90, 50, 0.8) 0%, rgba(10, 60, 35, 0.9) 100%)' }}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="#30D158" strokeWidth={1.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                      </svg>
+                    </div>
+                    <span className="text-[12px] font-medium text-white">Upload new</span>
+                  </button>
+                </div>
+              </div>
+            </div>
 
             {/* Gallery Preview */}
             {projectMedia.length > 0 && (
@@ -828,108 +910,6 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
           </div>
         </div>
       </div>
-
-      {/* Add Content Sub-Modal */}
-      {showAddContentModal && (
-        <div 
-          className="fixed inset-0 z-[60] flex items-center justify-center"
-          style={{ 
-            background: 'rgba(0, 0, 0, 0.5)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)'
-          }}
-          onClick={() => setShowAddContentModal(false)}
-        >
-          <div 
-            className="w-full"
-            style={{
-              maxWidth: 'min(340px, calc(100% - 48px))',
-              background: 'rgba(28, 28, 30, 0.95)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '16px',
-              overflow: 'hidden'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div 
-              className="flex items-center justify-center"
-              style={{ 
-                height: '50px',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
-              }}
-            >
-              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF' }}>Add Content</h3>
-            </div>
-
-            {/* Options */}
-            <div style={{ padding: '8px' }}>
-              <button
-                onClick={() => {
-                  setShowAddContentModal(false);
-                  setShowAttachExistingModal(true);
-                }}
-                className="w-full flex items-center gap-3 transition-all"
-                style={{
-                  padding: '14px 16px',
-                  borderRadius: '10px',
-                  background: 'transparent'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-              >
-                <div 
-                  className="flex items-center justify-center"
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    background: 'linear-gradient(135deg, rgba(0, 194, 255, 0.2) 0%, rgba(0, 122, 255, 0.2) 100%)',
-                    borderRadius: '10px'
-                  }}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="#00C2FF" strokeWidth={1.5} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-                  </svg>
-                </div>
-                <div className="text-left">
-                  <div style={{ fontSize: '15px', fontWeight: '500', color: '#FFFFFF' }}>Attach existing post</div>
-                  <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)' }}>Select from your portfolio</div>
-                </div>
-              </button>
-
-              <button
-                onClick={handleUploadNewMedia}
-                className="w-full flex items-center gap-3 transition-all"
-                style={{
-                  padding: '14px 16px',
-                  borderRadius: '10px',
-                  background: 'transparent'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-              >
-                <div 
-                  className="flex items-center justify-center"
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    background: 'linear-gradient(135deg, rgba(48, 209, 88, 0.2) 0%, rgba(48, 209, 88, 0.1) 100%)',
-                    borderRadius: '10px'
-                  }}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="#30D158" strokeWidth={1.5} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                  </svg>
-                </div>
-                <div className="text-left">
-                  <div style={{ fontSize: '15px', fontWeight: '500', color: '#FFFFFF' }}>Upload new media</div>
-                  <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)' }}>Upload photos or videos</div>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Attach Existing Posts Sub-Modal */}
       {showAttachExistingModal && (
