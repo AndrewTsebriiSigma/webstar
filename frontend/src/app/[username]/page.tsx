@@ -227,7 +227,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
       {/* Cover Image Area - webSTAR: 176px height */}
       <div className="relative">
-        <div className="h-44 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 relative overflow-hidden">
+        <div className="h-40 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 relative overflow-hidden">
           {profile.banner_image ? (
             <img
               src={profile.banner_image}
@@ -315,7 +315,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Profile Info - Compact design */}
       <div className="profile-info" style={{ padding: viewerMode ? '0 24px 12px' : '0 24px 12px', textAlign: 'center' }}>
         {/* Name + Badge - Name centered, badge positioned beside */}
-        <div className="flex items-center justify-center pt-2" style={{ marginBottom: '18px' }}>
+        <div className="flex items-center justify-center pt-2" style={{ marginBottom: '14px' }}>
           <div className="relative inline-block">
             <h1 className="text-xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)', letterSpacing: '-0.2px' }}>
               {profile.display_name || username}
@@ -340,8 +340,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
           {profile.bio || 'Make original the only standard.'}
         </p>
 
-        {/* Location & Role - 16px to dashboard */}
-        <div className="flex items-center justify-center gap-2 flex-wrap px-2" style={{ marginBottom: '16px' }}>
+        {/* Location & Role - 14px to dashboard */}
+        <div className="flex items-center justify-center gap-2 flex-wrap px-2" style={{ marginBottom: '14px' }}>
           <div className="flex items-center gap-1" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
             <MapPinIcon className="w-3.5 h-3.5" />
             <span>{profile.location || 'Paris, France'}</span>
