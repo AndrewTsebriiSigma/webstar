@@ -816,7 +816,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
                     style={{
                       background: '#1A1A1C',
                       borderRadius: '8px',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
                       overflow: 'hidden'
                     }}
                   >
