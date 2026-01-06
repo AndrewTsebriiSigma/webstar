@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { useState, useEffect, useRef } from 'react';
+import { XMarkIcon, ChevronLeftIcon, PlayIcon, MusicalNoteIcon } from '@heroicons/react/24/outline';
 import { Project } from '@/lib/types';
 import { projectsAPI } from '@/lib/api';
 
@@ -18,15 +18,32 @@ export default function ProjectDetailModal({
 }: ProjectDetailModalProps) {
   const [projectMedia, setProjectMedia] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!isOpen) return;
-
-    // Prevent body scroll when modal is open
-    document.body.style.overflow = 'hidden';
+    if (isOpen) {
+      // Small delay for entrance animation
+      requestAnimationFrame(() => {
+        setIsVisible(true);
+      });
+      
+      // Lock body scroll - Safari compatible
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.touchAction = 'none';
+    }
     
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.touchAction = '';
+      const scrollY = document.body.style.top;
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
     };
   }, [isOpen]);
 
@@ -50,6 +67,15 @@ export default function ProjectDetailModal({
     loadProjectMedia();
   }, [project, isOpen]);
 
+  const handleClose = () => {
+    setIsClosing(true);
+    setIsVisible(false);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose();
+    }, 200);
+  };
+
   if (!isOpen || !project) return null;
 
   return (
@@ -58,272 +84,409 @@ export default function ProjectDetailModal({
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        background: 'rgba(0, 0, 0, 0.95)',
+        background: 'rgba(0, 0, 0, 0.3)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
         display: 'flex',
         flexDirection: 'column',
-        overflowY: 'auto'
+        alignItems: 'center',
+        paddingTop: '5vh',
+        paddingBottom: '5vh',
+        opacity: isVisible ? 1 : 0,
+        transition: 'opacity 0.2s ease-out'
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
       }}
     >
-      {/* Header */}
+      {/* Main Card */}
       <div 
+        ref={scrollRef}
         style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 100,
-          background: 'rgba(17, 17, 17, 0.95)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          padding: '16px 20px'
+          width: '100%',
+          maxWidth: 'min(500px, calc(100% - 24px))',
+          maxHeight: '90vh',
+          background: 'rgba(20, 20, 20, 0.85)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          borderRadius: '16px',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          transform: isVisible ? 'scale(1) translateY(0)' : 'scale(0.96) translateY(10px)',
+          opacity: isVisible ? 1 : 0,
+          transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h1 
-            style={{
-              fontSize: '20px',
-              fontWeight: 700,
-              color: '#FFFFFF',
-              letterSpacing: '-0.5px'
-            }}
-          >
-            {project.title}
-          </h1>
-          
+        {/* Header - 55px, matching UploadPortfolioModal */}
+        <div 
+          style={{
+            height: '55px',
+            minHeight: '55px',
+            background: '#0D0D0D',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 20px',
+            flexShrink: 0
+          }}
+        >
+          {/* Left: Back Arrow + Title */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+            <button
+              onClick={handleClose}
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                background: 'transparent',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                flexShrink: 0,
+                transition: 'all 150ms'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              <ChevronLeftIcon className="w-5 h-5 text-white" />
+            </button>
+            
+            <h2 
+              style={{
+                fontSize: '16px',
+                fontWeight: 600,
+                color: '#FFFFFF',
+                letterSpacing: '-0.3px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {project.title}
+            </h2>
+          </div>
+
+          {/* Right: Close button */}
           <button
-            onClick={onClose}
+            onClick={handleClose}
             style={{
-              width: '36px',
-              height: '36px',
+              width: '32px',
+              height: '32px',
               borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
+              background: 'transparent',
+              border: 'none',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              transition: 'all 150ms',
-              flexShrink: 0
+              flexShrink: 0,
+              transition: 'all 150ms'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
-              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.background = 'transparent';
             }}
           >
             <XMarkIcon className="w-5 h-5 text-white" />
           </button>
         </div>
-      </div>
 
-      {/* Content */}
-      <div 
-        style={{
-          maxWidth: '800px',
-          margin: '0 auto',
-          width: '100%',
-          padding: '24px 20px'
-        }}
-      >
-        {/* Cover Image with Title Overlay */}
-        {project.cover_image && (
-          <div 
-            style={{
-              width: '100%',
-              aspectRatio: '16 / 9',
-              borderRadius: 'var(--radius-lg)',
-              overflow: 'hidden',
-              marginBottom: '24px',
-              position: 'relative'
-            }}
-          >
-            <img
-              src={project.cover_image}
-              alt={project.title}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover'
-              }}
-            />
-            {/* Title overlay on cover */}
+        {/* Scrollable Content */}
+        <div 
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
+          {/* Cover Image - Full Width */}
+          {project.cover_image && (
             <div 
               style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                padding: '24px',
-                background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 50%, transparent 100%)'
+                width: '100%',
+                aspectRatio: '16 / 9',
+                position: 'relative',
+                overflow: 'hidden'
               }}
             >
-              <h2 
+              <img
+                src={project.cover_image}
+                alt={project.title}
                 style={{
-                  fontSize: '28px',
-                  fontWeight: 700,
-                  color: '#FFFFFF',
-                  letterSpacing: '-0.5px',
-                  marginBottom: '4px'
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+              />
+              {/* Gradient overlay with title */}
+              <div 
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  padding: '32px 20px 20px',
+                  background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)'
                 }}
               >
-                {project.title}
-              </h2>
+                <h1 
+                  style={{
+                    fontSize: '24px',
+                    fontWeight: 700,
+                    color: '#FFFFFF',
+                    letterSpacing: '-0.5px',
+                    lineHeight: 1.2
+                  }}
+                >
+                  {project.title}
+                </h1>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Description */}
-        {project.description && (
-          <div style={{ marginBottom: '32px' }}>
-            <p 
-              style={{
-                fontSize: '15px',
-                lineHeight: '1.6',
-                color: 'rgba(255, 255, 255, 0.8)',
-                whiteSpace: 'pre-wrap'
-              }}
-            >
-              {project.description}
-            </p>
-            
-            {/* Project metadata */}
-            <div style={{ marginTop: '16px', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-              {project.tags && (
+          {/* Content Area */}
+          <div style={{ padding: '20px' }}>
+            {/* Description - Plain text, no bullets */}
+            {project.description && (
+              <div style={{ marginBottom: '20px' }}>
+                <p 
+                  style={{
+                    fontSize: '15px',
+                    lineHeight: 1.6,
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    whiteSpace: 'pre-wrap',
+                    margin: 0
+                  }}
+                >
+                  {project.description}
+                </p>
+              </div>
+            )}
+
+            {/* Tags */}
+            {project.tags && (
+              <div style={{ marginBottom: '24px' }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {project.tags.split(',').map((tag, index) => (
                     <span
                       key={index}
                       style={{
-                        padding: '4px 12px',
-                        background: 'rgba(0, 194, 255, 0.15)',
-                        border: '1px solid rgba(0, 194, 255, 0.3)',
-                        borderRadius: '16px',
-                        fontSize: '12px',
+                        padding: '6px 14px',
+                        background: 'rgba(0, 194, 255, 0.12)',
+                        borderRadius: '20px',
+                        fontSize: '13px',
                         fontWeight: 500,
-                        color: '#00C2FF'
+                        color: '#00C2FF',
+                        letterSpacing: '-0.2px'
                       }}
                     >
                       {tag.trim()}
                     </span>
                   ))}
                 </div>
-              )}
-            </div>
-          </div>
-        )}
+              </div>
+            )}
 
-        {/* Gallery Section */}
-        <div>
-          <h3 
-            style={{
-              fontSize: '18px',
-              fontWeight: 700,
-              color: '#FFFFFF',
-              marginBottom: '16px',
-              letterSpacing: '-0.3px'
-            }}
-          >
-            Gallery
-          </h3>
+            {/* Gallery Section */}
+            <div>
+              <h3 
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  color: '#FFFFFF',
+                  marginBottom: '14px',
+                  letterSpacing: '-0.3px'
+                }}
+              >
+                Gallery
+              </h3>
 
-          {projectMedia.length > 0 ? (
-            <div 
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px'
-              }}
-            >
-              {projectMedia.map((media, index) => (
-                <div
-                  key={media.id || index}
+              {loading ? (
+                <div 
                   style={{
-                    aspectRatio: '4 / 5',
-                    borderRadius: 'var(--radius-lg)',
-                    overflow: 'hidden',
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    position: 'relative'
+                    padding: '40px 24px',
+                    textAlign: 'center',
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    fontSize: '14px'
                   }}
                 >
-                  {media.media_type === 'photo' && media.media_url && (
-                    <img
-                      src={media.media_url}
-                      alt=""
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover'
-                      }}
-                    />
-                  )}
-                  
-                  {media.media_type === 'video' && (
-                    <div 
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: 'rgba(0, 0, 0, 0.5)'
-                      }}
-                    >
-                      <svg width="48" height="48" viewBox="0 0 24 24" fill="white" style={{ opacity: 0.8 }}>
-                        <path d="M8 5v14l11-7z"/>
-                      </svg>
-                    </div>
-                  )}
-                  
-                  {media.media_type === 'document' && (
-                    <div 
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '20px',
-                        textAlign: 'center'
-                      }}
-                    >
-                      <svg 
-                        width="48" 
-                        height="48" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="#00C2FF"
-                        strokeWidth={2}
-                        style={{ marginBottom: '12px' }}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <span style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.7)' }}>
-                        Press Release.pdf
-                      </span>
-                    </div>
-                  )}
+                  Loading...
                 </div>
-              ))}
+              ) : projectMedia.length > 0 ? (
+                <div 
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '10px'
+                  }}
+                >
+                  {projectMedia.map((media, index) => (
+                    <div
+                      key={media.id || index}
+                      style={{
+                        aspectRatio: '1 / 1',
+                        borderRadius: '10px',
+                        overflow: 'hidden',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        position: 'relative',
+                        cursor: 'pointer',
+                        transition: 'transform 150ms ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.02)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }}
+                    >
+                      {media.media_type === 'photo' && media.media_url && (
+                        <img
+                          src={media.media_url}
+                          alt=""
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                        />
+                      )}
+                      
+                      {media.media_type === 'video' && (
+                        <>
+                          {media.media_url && (
+                            <video
+                              src={media.media_url}
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover'
+                              }}
+                            />
+                          )}
+                          <div 
+                            style={{
+                              position: 'absolute',
+                              inset: 0,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              background: 'rgba(0, 0, 0, 0.3)'
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: '44px',
+                                height: '44px',
+                                borderRadius: '50%',
+                                background: 'rgba(255, 255, 255, 0.2)',
+                                backdropFilter: 'blur(8px)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              <PlayIcon className="w-5 h-5 text-white" style={{ marginLeft: '2px' }} />
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {media.media_type === 'audio' && (
+                        <div 
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.15), rgba(0, 194, 255, 0.1))',
+                            padding: '16px'
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: '48px',
+                              height: '48px',
+                              borderRadius: '50%',
+                              background: '#0A84FF',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              marginBottom: '10px'
+                            }}
+                          >
+                            <MusicalNoteIcon className="w-6 h-6 text-white" />
+                          </div>
+                          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>
+                            Audio
+                          </span>
+                        </div>
+                      )}
+                      
+                      {media.media_type === 'document' && (
+                        <div 
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'rgba(255, 255, 255, 0.02)',
+                            padding: '16px'
+                          }}
+                        >
+                          <svg 
+                            width="40" 
+                            height="40" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="#00C2FF"
+                            strokeWidth={1.5}
+                            style={{ marginBottom: '10px' }}
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center' }}>
+                            Document
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div 
+                  style={{
+                    padding: '40px 24px',
+                    textAlign: 'center',
+                    color: 'rgba(255, 255, 255, 0.4)',
+                    fontSize: '14px',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    borderRadius: '12px'
+                  }}
+                >
+                  No media in gallery
+                </div>
+              )}
             </div>
-          ) : (
-            <div 
-              style={{
-                padding: '48px 24px',
-                textAlign: 'center',
-                color: 'rgba(255, 255, 255, 0.5)',
-                fontSize: '14px'
-              }}
-            >
-              No media in gallery
-            </div>
-          )}
+
+            {/* Bottom safe area */}
+            <div style={{ height: '20px' }} />
+          </div>
         </div>
       </div>
     </div>
   );
 }
-
