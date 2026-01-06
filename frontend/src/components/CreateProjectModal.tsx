@@ -820,8 +820,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
           <div 
             className="w-full"
             style={{
-              maxWidth: 'calc(100% - 48px)',
-              maxWidth: '340px',
+              maxWidth: 'min(340px, calc(100% - 48px))',
               background: 'rgba(28, 28, 30, 0.95)',
               border: '1px solid rgba(255, 255, 255, 0.08)',
               borderRadius: '16px',
@@ -925,8 +924,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
           <div 
             className="w-full"
             style={{
-              maxWidth: 'calc(100% - 24px)',
-              maxWidth: '500px',
+              maxWidth: 'min(500px, calc(100% - 24px))',
               maxHeight: '70vh',
               background: 'rgba(20, 20, 20, 0.95)',
               border: '1px solid rgba(255, 255, 255, 0.08)',
