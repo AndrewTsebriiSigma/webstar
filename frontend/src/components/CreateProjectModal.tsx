@@ -15,15 +15,23 @@ interface CreateProjectModalProps {
 export default function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProjectModalProps) {
   const [saving, setSaving] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState('');
   const [showAddContentModal, setShowAddContentModal] = useState(false);
+  const [showAttachExistingModal, setShowAttachExistingModal] = useState(false);
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
   const [selectedPortfolioIds, setSelectedPortfolioIds] = useState<Set<number>>(new Set());
   const [projectMedia, setProjectMedia] = useState<any[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Animation states
+  const [isClosing, setIsClosing] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   // Load user's portfolio items
   useEffect(() => {
@@ -40,7 +48,33 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
     loadPortfolio();
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  // Lock body scroll when modal is open - Safari mobile fix
+  useEffect(() => {
+    if (isOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.touchAction = 'none';
+      // Entrance animation
+      requestAnimationFrame(() => setIsVisible(true));
+    } else {
+      setIsVisible(false);
+      setIsClosing(false);
+    }
+    return () => {
+      const scrollY = document.body.style.top;
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.touchAction = '';
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+    };
+  }, [isOpen]);
+
+  if (!isOpen && !isClosing) return null;
 
   const handleReset = () => {
     setTitle('');
@@ -49,19 +83,33 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
     setCoverPreview('');
     setSaving(false);
     setUploadingCover(false);
+    setUploadProgress(0);
     setShowAddContentModal(false);
+    setShowAttachExistingModal(false);
     setProjectMedia([]);
     setSelectedPortfolioIds(new Set());
   };
 
   const handleClose = () => {
     if (!saving && !uploadingCover) {
-      handleReset();
-      onClose();
+      setIsClosing(true);
+      setIsVisible(false);
+      setTimeout(() => {
+        handleReset();
+        setIsClosing(false);
+        onClose();
+      }, 150);
     }
   };
 
-  // Rich text editing features (from post modal)
+  // Scroll input into view when focusing
+  const handleInputFocus = (ref: React.RefObject<HTMLElement>) => {
+    if (ref.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
+  // Rich text editing features
   const handleTextareaKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Tab') {
       e.preventDefault();
@@ -144,16 +192,21 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
     }
 
     setSaving(true);
+    setUploadProgress(0);
     try {
       let coverUrl = '';
       
       // Upload cover image if selected
       if (coverFile) {
         setUploadingCover(true);
+        setUploadProgress(20);
         const response = await uploadsAPI.uploadProjectCover(coverFile);
         coverUrl = response.data.url;
+        setUploadProgress(50);
         setUploadingCover(false);
       }
+
+      setUploadProgress(60);
 
       // Create project with title
       const projectResponse = await projectsAPI.createProject({
@@ -166,6 +219,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
       });
 
       const projectId = projectResponse.data.id;
+      setUploadProgress(80);
 
       // Add project media
       if (projectMedia.length > 0) {
@@ -182,13 +236,12 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
         }
       }
 
+      setUploadProgress(100);
       toast.success('Project created! 🎉');
       
       handleReset();
-      setProjectMedia([]);
-      setSelectedPortfolioIds(new Set());
       onSuccess();
-      onClose();
+      handleClose();
     } catch (error: any) {
       console.error('Create project error:', error);
       toast.error(error.response?.data?.detail || 'Failed to create project');
@@ -205,18 +258,23 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
     }
 
     setSaving(true);
+    setUploadProgress(0);
     try {
       let coverUrl = '';
       
       // Upload cover image if selected
       if (coverFile) {
         setUploadingCover(true);
+        setUploadProgress(20);
         const response = await uploadsAPI.uploadProjectCover(coverFile);
         coverUrl = response.data.url;
+        setUploadProgress(50);
         setUploadingCover(false);
       }
 
-      // Create project as draft with title
+      setUploadProgress(60);
+
+      // Create project as draft
       const projectResponse = await projectsAPI.createProject({
         title: title.trim(),
         description: description.trim() || null,
@@ -228,6 +286,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
       });
 
       const projectId = projectResponse.data.id;
+      setUploadProgress(80);
 
       // Add project media
       if (projectMedia.length > 0) {
@@ -244,13 +303,12 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
         }
       }
 
+      setUploadProgress(100);
       toast.success('Draft saved! 📝');
       
       handleReset();
-      setProjectMedia([]);
-      setSelectedPortfolioIds(new Set());
       onSuccess();
-      onClose();
+      handleClose();
     } catch (error: any) {
       console.error('Save draft error:', error);
       toast.error(error.response?.data?.detail || 'Failed to save draft');
@@ -260,386 +318,743 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
     }
   };
 
-  return (
-    <div 
-      className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      style={{ background: 'rgba(17, 17, 17, 0.9)' }}
-    >
-      <div className="bg-[#2a2d35] rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-700">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <button
-            onClick={handleClose}
-            disabled={saving || uploadingCover}
-            className="p-1 hover:bg-gray-700 rounded transition"
-          >
-            <ArrowLeftIcon className="w-5 h-5 text-gray-400" />
-          </button>
-          <h2 className="text-lg font-bold text-white">Create Project</h2>
-          <button
-            onClick={handleSubmit}
-            disabled={saving || uploadingCover || !title.trim()}
-            className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {saving || uploadingCover ? 'Creating...' : 'Publish'}
-          </button>
-        </div>
+  const handleUploadNewMedia = () => {
+    setShowAddContentModal(false);
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,video/*';
+    input.multiple = true;
+    input.onchange = async (e: any) => {
+      const files = Array.from(e.target.files || []) as File[];
+      for (const file of files) {
+        try {
+          const contentType = file.type.startsWith('image/') ? 'photo' : 'video';
+          const uploadResponse = await uploadsAPI.uploadMedia(file, contentType);
+          setProjectMedia(prev => [...prev, {
+            content_type: contentType,
+            content_url: uploadResponse.data.url,
+            media_url: uploadResponse.data.url
+          }]);
+          toast.success(`${contentType === 'photo' ? 'Image' : 'Video'} added`);
+        } catch (error) {
+          toast.error('Failed to upload file');
+        }
+      }
+    };
+    input.click();
+  };
 
-        {/* Content */}
-        <div className="p-4 space-y-4">
-          {/* Cover Image Upload Area */}
-          <div>
-            {coverPreview ? (
-              <div className="relative">
-                <img
-                  src={coverPreview}
-                  alt="Cover preview"
-                  className="w-full rounded-xl object-cover max-h-80"
-                />
-                {!saving && !uploadingCover && (
-                  <label
-                    htmlFor="cover-upload-edit"
-                    className="absolute top-2 right-2 px-3 py-1 bg-gray-900/80 hover:bg-gray-800 text-white text-xs rounded-lg cursor-pointer transition"
-                  >
-                    Change
-                  </label>
-                )}
+  const handleAddSelectedItems = () => {
+    const selectedItems = portfolioItems.filter(item => 
+      selectedPortfolioIds.has(item.id)
+    );
+    const newMedia = selectedItems.map(item => ({
+      content_type: item.content_type,
+      content_url: item.content_url,
+      media_url: item.content_url,
+      portfolio_item_id: item.id
+    }));
+    setProjectMedia(prev => [...prev, ...newMedia]);
+    setSelectedPortfolioIds(new Set());
+    setShowAttachExistingModal(false);
+    toast.success(`Added ${selectedItems.length} items`);
+  };
+
+  const removeMediaItem = (index: number) => {
+    setProjectMedia(prev => prev.filter((_, i) => i !== index));
+  };
+
+  return (
+    <>
+      {/* Main Modal */}
+      <div 
+        className="fixed inset-0 z-50 flex items-start justify-center"
+        style={{ 
+          paddingTop: '5vh',
+          paddingBottom: '35vh',
+          background: 'rgba(0, 0, 0, 0.3)',
+          backdropFilter: 'blur(14px)',
+          WebkitBackdropFilter: 'blur(14px)',
+          opacity: isVisible ? 1 : 0,
+          transition: 'opacity 0.15s ease-out'
+        }}
+        onClick={handleClose}
+      >
+        <div 
+          className="w-full max-w-md relative"
+          style={{
+            maxWidth: 'calc(100% - 24px)',
+            height: '75vh',
+            background: 'rgba(20, 20, 20, 0.85)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            borderRadius: '16px',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            // Entrance & exit animation
+            transform: isVisible ? 'scale(1) translateY(0)' : 'scale(0.97) translateY(-10px)',
+            opacity: isVisible ? 1 : 0,
+            transition: 'transform 0.15s ease-out, opacity 0.15s ease-out',
+            transformOrigin: 'top center'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header - Fixed solid dark */}
+          <div 
+            className="flex items-center justify-between flex-shrink-0"
+            style={{ 
+              height: '55px',
+              padding: '0 20px',
+              background: '#0D0D0D',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
+            }}
+          >
+            <div className="flex items-center" style={{ gap: '20px' }}>
+              <button
+                onClick={handleClose}
+                disabled={saving || uploadingCover}
+                className="flex items-center justify-center transition-opacity"
+                style={{ 
+                  width: '32px', 
+                  height: '32px',
+                  opacity: (saving || uploadingCover) ? 0.5 : 1
+                }}
+              >
+                <XMarkIcon className="w-6 h-6" style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
+              </button>
+              <h2 
+                className="font-semibold text-white"
+                style={{ fontSize: '17px' }}
+              >
+                New Project
+              </h2>
+            </div>
+            <button
+              onClick={handleSubmit}
+              disabled={saving || uploadingCover || !title.trim()}
+              className="publish-btn font-semibold transition-all"
+              style={{ 
+                padding: '0 24px',
+                height: '32px',
+                background: (saving || uploadingCover || !title.trim()) ? 'rgba(0, 194, 255, 0.3)' : '#00C2FF',
+                color: (saving || uploadingCover || !title.trim()) ? 'rgba(255, 255, 255, 0.5)' : '#000',
+                borderRadius: '16px',
+                fontSize: '14px',
+                cursor: (saving || uploadingCover || !title.trim()) ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {saving || uploadingCover ? 'Creating...' : 'Publish'}
+            </button>
+          </div>
+
+          {/* Scrollable Content Area */}
+          <div 
+            ref={scrollContainerRef}
+            className="flex-1 overflow-y-auto"
+            style={{ 
+              padding: '16px 10px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px'
+            }}
+          >
+            {/* Cover Image Upload Area */}
+            <div>
+              {coverPreview ? (
+                <div className="relative" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+                  <img
+                    src={coverPreview}
+                    alt="Cover preview"
+                    className="w-full object-cover"
+                    style={{ maxHeight: '200px' }}
+                  />
+                  {!saving && !uploadingCover && (
+                    <label
+                      htmlFor="cover-upload-edit"
+                      className="absolute transition-all"
+                      style={{
+                        top: '8px',
+                        right: '8px',
+                        padding: '6px 12px',
+                        background: 'rgba(0, 0, 0, 0.6)',
+                        backdropFilter: 'blur(10px)',
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                      }}
+                    >
+                      Change
+                    </label>
+                  )}
+                  <input
+                    type="file"
+                    id="cover-upload-edit"
+                    accept="image/*"
+                    onChange={handleCoverSelect}
+                    className="hidden"
+                    disabled={saving || uploadingCover}
+                  />
+                </div>
+              ) : (
+                <label
+                  htmlFor="cover-upload"
+                  className="block w-full transition-all cursor-pointer"
+                  style={{
+                    height: '160px',
+                    border: '1px dashed rgba(255, 255, 255, 0.15)',
+                    borderRadius: '12px',
+                    background: 'rgba(255, 255, 255, 0.02)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(0, 194, 255, 0.4)';
+                    e.currentTarget.style.background = 'rgba(0, 194, 255, 0.05)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
+                  }}
+                >
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <svg 
+                      className="mb-3" 
+                      style={{ width: '40px', height: '40px', color: 'rgba(255, 255, 255, 0.3)' }}
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p style={{ fontSize: '14px', fontWeight: '500', color: 'rgba(255, 255, 255, 0.5)' }}>
+                      Add cover image
+                    </p>
+                  </div>
+                  <input
+                    type="file"
+                    id="cover-upload"
+                    accept="image/*"
+                    onChange={handleCoverSelect}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+
+            {/* Title Input */}
+            <div>
+              <div 
+                className="title-input-wrapper"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid rgba(255, 255, 255, 0.06)',
+                  borderRadius: '12px',
+                  transition: 'box-shadow 0s, border 0s'
+                }}
+              >
                 <input
-                  type="file"
-                  id="cover-upload-edit"
-                  accept="image/*"
-                  onChange={handleCoverSelect}
-                  className="hidden"
+                  ref={titleInputRef}
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onFocus={(e) => {
+                    handleInputFocus(titleInputRef);
+                    e.currentTarget.parentElement!.style.boxShadow = '0 0 0 1px rgba(0, 194, 255, 0.3)';
+                    e.currentTarget.parentElement!.style.border = '1px solid transparent';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.parentElement!.style.boxShadow = 'none';
+                    e.currentTarget.parentElement!.style.border = '1px solid rgba(255, 255, 255, 0.06)';
+                  }}
+                  placeholder="Project title"
+                  maxLength={100}
+                  style={{ 
+                    fontSize: '16px',
+                    width: '100%',
+                    padding: '14px 16px',
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: '#FFFFFF',
+                    caretColor: '#00C2FF'
+                  }}
                   disabled={saving || uploadingCover}
                 />
               </div>
-            ) : (
-              <label
-                htmlFor="cover-upload"
-                className="block w-full h-64 border-2 border-dashed border-gray-700 rounded-xl hover:border-cyan-500 transition cursor-pointer"
+              <div className="flex justify-end mt-1">
+                <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.3)' }}>
+                  {title.length}/100
+                </span>
+              </div>
+            </div>
+
+            {/* Description Input */}
+            <div>
+              <div 
+                className="description-input-wrapper"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid rgba(255, 255, 255, 0.06)',
+                  borderRadius: '12px',
+                  transition: 'box-shadow 0s, border 0s'
+                }}
               >
-                <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                  <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <p className="text-sm font-medium">Click to upload project cover</p>
-                  <p className="text-xs mt-1">Max 5MB</p>
-                </div>
-                <input
-                  type="file"
-                  id="cover-upload"
-                  accept="image/*"
-                  onChange={handleCoverSelect}
-                  className="hidden"
+                <textarea
+                  ref={textareaRef}
+                  placeholder="Add a description..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  onKeyDown={handleTextareaKeyDown}
+                  onFocus={(e) => {
+                    handleInputFocus(textareaRef);
+                    e.currentTarget.parentElement!.style.boxShadow = '0 0 0 1px rgba(0, 194, 255, 0.3)';
+                    e.currentTarget.parentElement!.style.border = '1px solid transparent';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.parentElement!.style.boxShadow = 'none';
+                    e.currentTarget.parentElement!.style.border = '1px solid rgba(255, 255, 255, 0.06)';
+                  }}
+                  rows={4}
+                  maxLength={500}
+                  style={{ 
+                    fontSize: '14px',
+                    width: '100%',
+                    padding: '14px 16px',
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    resize: 'none',
+                    color: '#FFFFFF',
+                    caretColor: '#00C2FF',
+                    lineHeight: '1.5'
+                  }}
+                  disabled={saving || uploadingCover}
                 />
-              </label>
+              </div>
+              <div className="flex justify-between items-center mt-1">
+                <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.3)' }}>
+                  Tip: Type "- " and Tab for bullets
+                </span>
+                <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.3)' }}>
+                  {description.length}/500
+                </span>
+              </div>
+            </div>
+
+            {/* Add Content Button */}
+            <button
+              onClick={() => setShowAddContentModal(true)}
+              disabled={saving || uploadingCover}
+              className="w-full flex items-center justify-center gap-2 transition-all"
+              style={{
+                padding: '14px',
+                border: '1px dashed rgba(255, 255, 255, 0.15)',
+                borderRadius: '12px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                color: 'rgba(255, 255, 255, 0.5)',
+                fontSize: '14px',
+                fontWeight: '500',
+                opacity: (saving || uploadingCover) ? 0.5 : 1
+              }}
+              onMouseEnter={(e) => {
+                if (!saving && !uploadingCover) {
+                  e.currentTarget.style.borderColor = 'rgba(0, 194, 255, 0.4)';
+                  e.currentTarget.style.color = '#00C2FF';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.5)';
+              }}
+            >
+              <PlusIcon className="w-5 h-5" />
+              <span>Add Content</span>
+            </button>
+
+            {/* Gallery Preview */}
+            {projectMedia.length > 0 && (
+              <div>
+                <h4 style={{ fontSize: '13px', fontWeight: '600', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '10px' }}>
+                  Gallery ({projectMedia.length})
+                </h4>
+                <div className="grid grid-cols-3 gap-2">
+                  {projectMedia.map((media, index) => (
+                    <div
+                      key={index}
+                      className="aspect-square relative group"
+                      style={{ borderRadius: '8px', overflow: 'hidden', background: 'rgba(255, 255, 255, 0.05)' }}
+                    >
+                      {media.content_type === 'photo' && media.content_url && (
+                        <img
+                          src={media.content_url}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                      {media.content_type === 'video' && (
+                        <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(0, 0, 0, 0.3)' }}>
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="white" opacity="0.8">
+                            <path d="M8 5v14l11-7z"/>
+                          </svg>
+                        </div>
+                      )}
+                      {/* Remove button on hover */}
+                      <button
+                        onClick={() => removeMediaItem(index)}
+                        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          background: 'rgba(255, 59, 48, 0.9)',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <XMarkIcon className="w-3 h-3 text-white" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
 
-          {/* Title Input */}
-          <div>
-            <label htmlFor="project-title" className="block text-sm font-medium text-gray-300 mb-2">
-              Project Title *
-            </label>
-            <input
-              type="text"
-              id="project-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="My Awesome Project"
-              maxLength={100}
-              style={{ fontSize: '16px' }} // Prevents zoom on mobile
-              className="w-full px-4 py-2.5 bg-[#1a1a1c] border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white placeholder-gray-500"
-              disabled={saving || uploadingCover}
-            />
-            <p className="text-xs text-gray-500 mt-1 text-right">{title.length}/100</p>
-          </div>
-
-          {/* Description Input with Rich Text Editing */}
-          <div>
-            <label htmlFor="project-description" className="block text-sm font-medium text-gray-300 mb-2">
-              Description (optional)
-            </label>
-            <textarea
-              id="project-description"
-              ref={textareaRef}
-              placeholder="Describe your project..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              onKeyDown={handleTextareaKeyDown}
-              rows={5}
-              maxLength={500}
-              style={{ fontSize: '16px' }} // Prevents zoom on mobile
-              className="w-full px-4 py-2.5 bg-[#1a1a1c] border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none text-white placeholder-gray-500"
-              disabled={saving || uploadingCover}
-            />
-            <div className="flex justify-between items-center mt-1">
-              <p className="text-xs text-gray-500">Tip: Type "- " and press Tab for bullet points</p>
-              <p className="text-xs text-gray-500">{description.length}/500</p>
-            </div>
-          </div>
-
-          {/* Add Content Button */}
-          <button
-            onClick={() => setShowAddContentModal(true)}
-            disabled={saving || uploadingCover}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-700 rounded-xl hover:border-cyan-500 transition text-gray-400 hover:text-cyan-500 disabled:opacity-50"
-          >
-            <PlusIcon className="w-5 h-5" />
-            <span className="text-sm font-medium">Add Content</span>
-          </button>
-
-          {/* Selected Content Preview */}
-          {projectMedia.length > 0 && (
-            <div>
-              <h4 className="text-sm font-semibold text-white mb-2">
-                Gallery ({projectMedia.length})
-              </h4>
-              <div className="grid grid-cols-3 gap-2">
-                {projectMedia.slice(0, 6).map((media, index) => (
-                  <div
-                    key={index}
-                    className="aspect-square rounded-lg overflow-hidden bg-gray-800 relative"
-                  >
-                    {media.content_type === 'photo' && media.content_url && (
-                      <img
-                        src={media.content_url}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                    {media.content_type === 'video' && (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-900">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="white" opacity="0.8">
-                          <path d="M8 5v14l11-7z"/>
-                        </svg>
-                      </div>
-                    )}
-                    {index === 5 && projectMedia.length > 6 && (
-                      <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(17, 17, 17, 0.7)' }}>
-                        <span className="text-white text-sm font-bold">
-                          +{projectMedia.length - 6}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Upload Progress */}
+          {/* Upload Progress Overlay */}
           {(saving || uploadingCover) && (
-            <div>
-              <div className="w-full bg-gray-700 rounded-full h-2">
-                <div className="bg-cyan-500 h-2 rounded-full transition-all duration-300 w-2/3" />
+            <div 
+              className="absolute inset-0 flex flex-col items-center justify-center z-20"
+              style={{ 
+                background: 'rgba(13, 13, 13, 0.95)',
+                backdropFilter: 'blur(10px)'
+              }}
+            >
+              {/* Circular progress */}
+              <div 
+                className="relative"
+                style={{ width: '80px', height: '80px' }}
+              >
+                <svg className="w-full h-full transform -rotate-90">
+                  <circle
+                    cx="40"
+                    cy="40"
+                    r="36"
+                    fill="none"
+                    stroke="rgba(255, 255, 255, 0.1)"
+                    strokeWidth="4"
+                  />
+                  <circle
+                    cx="40"
+                    cy="40"
+                    r="36"
+                    fill="none"
+                    stroke="#00C2FF"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 36}`}
+                    strokeDashoffset={`${2 * Math.PI * 36 * (1 - uploadProgress / 100)}`}
+                    style={{ transition: 'stroke-dashoffset 0.3s ease-out' }}
+                  />
+                </svg>
+                <div 
+                  className="absolute inset-0 flex items-center justify-center"
+                  style={{ fontSize: '18px', fontWeight: '600', color: '#FFFFFF' }}
+                >
+                  {uploadProgress}%
+                </div>
               </div>
-              <p className="text-xs text-gray-400 text-center mt-2">
+              <p style={{ marginTop: '16px', fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>
                 {uploadingCover ? 'Uploading cover...' : 'Creating project...'}
               </p>
             </div>
           )}
-        </div>
 
-        {/* Footer with Save as Draft */}
-        <div className="border-t border-gray-700 p-4">
-          <button
-            onClick={handleSaveAsDraft}
-            disabled={saving || uploadingCover || !title.trim()}
-            className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+          {/* Sticky Footer */}
+          <div 
+            className="flex-shrink-0"
+            style={{ 
+              padding: '12px 10px',
+              paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+              background: 'transparent',
+              backdropFilter: 'blur(10px)',
+              borderTop: '1px solid rgba(255, 255, 255, 0.06)'
+            }}
           >
-            {saving || uploadingCover ? 'Saving...' : 'Save as draft'}
-          </button>
+            <button
+              onClick={handleSaveAsDraft}
+              disabled={saving || uploadingCover || !title.trim()}
+              className="flex items-center gap-2 transition-opacity"
+              style={{ 
+                padding: '8px 14px',
+                background: 'rgba(255, 255, 255, 0.06)',
+                borderRadius: '8px',
+                color: 'rgba(255, 255, 255, 0.7)',
+                fontSize: '13px',
+                fontWeight: '500',
+                opacity: (saving || uploadingCover || !title.trim()) ? 0.4 : 1,
+                cursor: (saving || uploadingCover || !title.trim()) ? 'not-allowed' : 'pointer'
+              }}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+              </svg>
+              Save as draft
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Add Content Modal */}
+      {/* Add Content Sub-Modal */}
       {showAddContentModal && (
         <div 
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
-          style={{ background: 'rgba(17, 17, 17, 0.95)' }}
+          className="fixed inset-0 z-[60] flex items-center justify-center"
+          style={{ 
+            background: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)'
+          }}
           onClick={() => setShowAddContentModal(false)}
         >
           <div 
-            className="bg-[#1a1a1c] rounded-2xl shadow-2xl max-w-md w-full border border-gray-700"
+            className="w-full"
+            style={{
+              maxWidth: 'calc(100% - 48px)',
+              maxWidth: '340px',
+              background: 'rgba(28, 28, 30, 0.95)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '16px',
+              overflow: 'hidden'
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="p-4 border-b border-gray-700">
-              <button
-                onClick={() => setShowAddContentModal(false)}
-                className="p-1 hover:bg-gray-700 rounded transition absolute left-4"
-              >
-                <ArrowLeftIcon className="w-5 h-5 text-gray-400" />
-              </button>
-              <h2 className="text-lg font-bold text-white text-center">Add Content</h2>
+            <div 
+              className="flex items-center justify-center"
+              style={{ 
+                height: '50px',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
+              }}
+            >
+              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF' }}>Add Content</h3>
             </div>
 
             {/* Options */}
-            <div className="p-4 space-y-3">
+            <div style={{ padding: '8px' }}>
               <button
                 onClick={() => {
                   setShowAddContentModal(false);
-                  // Show portfolio selection modal
-                  const modal = document.getElementById('attach-existing-modal');
-                  if (modal) modal.style.display = 'flex';
+                  setShowAttachExistingModal(true);
                 }}
-                className="w-full p-4 bg-[#2a2d35] hover:bg-[#343840] rounded-xl transition text-left"
+                className="w-full flex items-center gap-3 transition-all"
+                style={{
+                  padding: '14px 16px',
+                  borderRadius: '10px',
+                  background: 'transparent'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               >
-                <div className="font-semibold text-white mb-1">Attach existing post</div>
-                <div className="text-sm text-gray-400">Select from your portfolio</div>
+                <div 
+                  className="flex items-center justify-center"
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    background: 'linear-gradient(135deg, rgba(0, 194, 255, 0.2) 0%, rgba(0, 122, 255, 0.2) 100%)',
+                    borderRadius: '10px'
+                  }}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="#00C2FF" strokeWidth={1.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <div style={{ fontSize: '15px', fontWeight: '500', color: '#FFFFFF' }}>Attach existing post</div>
+                  <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)' }}>Select from your portfolio</div>
+                </div>
               </button>
 
               <button
-                onClick={() => {
-                  setShowAddContentModal(false);
-                  // Trigger file upload
-                  const input = document.createElement('input');
-                  input.type = 'file';
-                  input.accept = 'image/*,video/*'; // Accept both images and videos
-                  input.multiple = true;
-                  input.onchange = async (e: any) => {
-                    const files = Array.from(e.target.files || []) as File[];
-                    for (const file of files) {
-                      try {
-                        // Auto-detect content type
-                        const contentType = file.type.startsWith('image/') ? 'photo' : 'video';
-                        const uploadResponse = await uploadsAPI.uploadMedia(file, contentType);
-                        setProjectMedia(prev => [...prev, {
-                          content_type: contentType,
-                          content_url: uploadResponse.data.url,
-                          media_url: uploadResponse.data.url
-                        }]);
-                        toast.success(`${contentType === 'photo' ? 'Image' : 'Video'} added`);
-                      } catch (error) {
-                        toast.error('Failed to upload file');
-                      }
-                    }
-                  };
-                  input.click();
+                onClick={handleUploadNewMedia}
+                className="w-full flex items-center gap-3 transition-all"
+                style={{
+                  padding: '14px 16px',
+                  borderRadius: '10px',
+                  background: 'transparent'
                 }}
-                className="w-full p-4 bg-[#2a2d35] hover:bg-[#343840] rounded-xl transition text-left"
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               >
-                <div className="font-semibold text-white mb-1">Upload new media</div>
-                <div className="text-sm text-gray-400">Upload photos or videos</div>
+                <div 
+                  className="flex items-center justify-center"
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    background: 'linear-gradient(135deg, rgba(48, 209, 88, 0.2) 0%, rgba(48, 209, 88, 0.1) 100%)',
+                    borderRadius: '10px'
+                  }}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="#30D158" strokeWidth={1.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <div style={{ fontSize: '15px', fontWeight: '500', color: '#FFFFFF' }}>Upload new media</div>
+                  <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)' }}>Upload photos or videos</div>
+                </div>
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Attach Existing Posts Modal */}
-      <div 
-        id="attach-existing-modal"
-        className="fixed inset-0 z-[70] hidden items-center justify-center p-4"
-        style={{ background: 'rgba(17, 17, 17, 0.95)' }}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            (e.target as HTMLElement).style.display = 'none';
-          }
-        }}
-      >
+      {/* Attach Existing Posts Sub-Modal */}
+      {showAttachExistingModal && (
         <div 
-          className="bg-[#1a1a1c] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto border border-gray-700"
-          onClick={(e) => e.stopPropagation()}
+          className="fixed inset-0 z-[60] flex items-start justify-center"
+          style={{ 
+            paddingTop: '5vh',
+            paddingBottom: '20vh',
+            background: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(14px)',
+            WebkitBackdropFilter: 'blur(14px)'
+          }}
+          onClick={() => setShowAttachExistingModal(false)}
         >
-          {/* Header */}
-          <div className="sticky top-0 bg-[#1a1a1c] p-4 border-b border-gray-700 z-10">
-            <div className="flex items-center justify-between">
+          <div 
+            className="w-full"
+            style={{
+              maxWidth: 'calc(100% - 24px)',
+              maxWidth: '500px',
+              maxHeight: '70vh',
+              background: 'rgba(20, 20, 20, 0.95)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div 
+              className="flex items-center justify-between flex-shrink-0"
+              style={{ 
+                height: '55px',
+                padding: '0 16px',
+                background: '#0D0D0D',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
+              }}
+            >
               <button
-                onClick={() => {
-                  const modal = document.getElementById('attach-existing-modal');
-                  if (modal) modal.style.display = 'none';
-                }}
-                className="p-1 hover:bg-gray-700 rounded transition"
+                onClick={() => setShowAttachExistingModal(false)}
+                className="flex items-center justify-center"
+                style={{ width: '32px', height: '32px' }}
               >
-                <ArrowLeftIcon className="w-5 h-5 text-gray-400" />
+                <ArrowLeftIcon className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
               </button>
-              <h2 className="text-lg font-bold text-white">Select Posts</h2>
+              <h3 style={{ fontSize: '17px', fontWeight: '600', color: '#FFFFFF' }}>Select Posts</h3>
               <button
-                onClick={() => {
-                  // Add selected portfolio items to project media
-                  const selectedItems = portfolioItems.filter(item => 
-                    selectedPortfolioIds.has(item.id)
-                  );
-                  const newMedia = selectedItems.map(item => ({
-                    content_type: item.content_type,
-                    content_url: item.content_url,
-                    media_url: item.content_url,
-                    portfolio_item_id: item.id
-                  }));
-                  setProjectMedia(prev => [...prev, ...newMedia]);
-                  setSelectedPortfolioIds(new Set());
-                  const modal = document.getElementById('attach-existing-modal');
-                  if (modal) modal.style.display = 'none';
-                  toast.success(`Added ${selectedItems.length} items`);
-                }}
-                className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50"
+                onClick={handleAddSelectedItems}
                 disabled={selectedPortfolioIds.size === 0}
+                style={{
+                  padding: '0 16px',
+                  height: '32px',
+                  background: selectedPortfolioIds.size === 0 ? 'rgba(0, 194, 255, 0.3)' : '#00C2FF',
+                  color: selectedPortfolioIds.size === 0 ? 'rgba(255, 255, 255, 0.5)' : '#000',
+                  borderRadius: '16px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: selectedPortfolioIds.size === 0 ? 'not-allowed' : 'pointer'
+                }}
               >
                 Add ({selectedPortfolioIds.size})
               </button>
             </div>
-          </div>
 
-          {/* Portfolio Grid */}
-          <div className="p-4">
-            {portfolioItems.length > 0 ? (
-              <div className="grid grid-cols-3 gap-3">
-                {portfolioItems.map((item) => {
-                  const isSelected = selectedPortfolioIds.has(item.id);
-                  return (
-                    <div
-                      key={item.id}
-                      onClick={() => {
-                        setSelectedPortfolioIds(prev => {
-                          const newSet = new Set(prev);
-                          if (newSet.has(item.id)) {
-                            newSet.delete(item.id);
-                          } else {
-                            newSet.add(item.id);
-                          }
-                          return newSet;
-                        });
-                      }}
-                      className={`aspect-square rounded-lg overflow-hidden cursor-pointer relative ${
-                        isSelected ? 'ring-2 ring-cyan-500' : ''
-                      }`}
-                    >
-                      {item.content_type === 'photo' && item.content_url && (
-                        <img
-                          src={item.content_url}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                      {item.content_type === 'video' && item.content_url && (
-                        <video
-                          src={item.content_url}
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                      {isSelected && (
-                        <div className="absolute inset-0 bg-cyan-500/30 flex items-center justify-center">
-                          <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-                              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                            </svg>
+            {/* Portfolio Grid */}
+            <div className="flex-1 overflow-y-auto" style={{ padding: '12px' }}>
+              {portfolioItems.length > 0 ? (
+                <div className="grid grid-cols-3 gap-2">
+                  {portfolioItems.map((item) => {
+                    const isSelected = selectedPortfolioIds.has(item.id);
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => {
+                          setSelectedPortfolioIds(prev => {
+                            const newSet = new Set(prev);
+                            if (newSet.has(item.id)) {
+                              newSet.delete(item.id);
+                            } else {
+                              newSet.add(item.id);
+                            }
+                            return newSet;
+                          });
+                        }}
+                        className="aspect-square cursor-pointer relative"
+                        style={{
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          border: isSelected ? '2px solid #00C2FF' : '2px solid transparent'
+                        }}
+                      >
+                        {item.content_type === 'photo' && item.content_url && (
+                          <img
+                            src={item.content_url}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                        {item.content_type === 'video' && item.content_url && (
+                          <video
+                            src={item.content_url}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                        {isSelected && (
+                          <div 
+                            className="absolute inset-0 flex items-center justify-center"
+                            style={{ background: 'rgba(0, 194, 255, 0.3)' }}
+                          >
+                            <div 
+                              className="flex items-center justify-center"
+                              style={{
+                                width: '28px',
+                                height: '28px',
+                                background: '#00C2FF',
+                                borderRadius: '50%'
+                              }}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="#000">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                              </svg>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                <p className="text-sm">No portfolio items to attach</p>
-              </div>
-            )}
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full" style={{ minHeight: '200px' }}>
+                  <svg 
+                    className="mb-3" 
+                    style={{ width: '48px', height: '48px', color: 'rgba(255, 255, 255, 0.2)' }}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                  </svg>
+                  <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>No posts to attach</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }
