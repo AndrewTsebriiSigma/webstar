@@ -285,8 +285,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
           )}
         </div>
 
-        {/* Avatar - webSTAR: 144px, -80px overlap */}
-        <div className="relative px-4 -mt-20">
+        {/* Avatar - 166px, 2/3 banner overlap (110px) */}
+        <div className="relative px-4 -mt-[110px]">
           <div className="flex items-center justify-center">
             {profile.profile_picture ? (
               <img
@@ -314,14 +314,17 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
       {/* Profile Info - Compact design */}
       <div className="profile-info" style={{ padding: viewerMode ? '0 24px 12px' : '0 24px 12px', textAlign: 'center' }}>
-        {/* Name + Badge - Inline wrapper keeps badge beside name */}
-        <div className="flex items-center justify-center pt-2" style={{ marginBottom: '10px' }}>
-          <div className="inline-flex items-center gap-1.5">
+        {/* Name + Badge - Name centered, badge positioned beside */}
+        <div className="flex items-center justify-center pt-2" style={{ marginBottom: '18px' }}>
+          <div className="relative inline-block">
             <h1 className="text-xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)', letterSpacing: '-0.2px' }}>
               {profile.display_name || username}
             </h1>
             {profile.expertise_badge && (
-              <CheckBadgeIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+              <CheckBadgeIcon 
+                className="w-5 h-5 text-cyan-400 absolute"
+                style={{ left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: '6px' }}
+              />
             )}
           </div>
         </div>
@@ -337,8 +340,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
           {profile.bio || 'Make original the only standard.'}
         </p>
 
-        {/* Location & Role - 8px to dashboard */}
-        <div className="flex items-center justify-center gap-2 flex-wrap px-2" style={{ marginBottom: '8px' }}>
+        {/* Location & Role - 16px to dashboard */}
+        <div className="flex items-center justify-center gap-2 flex-wrap px-2" style={{ marginBottom: '16px' }}>
           <div className="flex items-center gap-1" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
             <MapPinIcon className="w-3.5 h-3.5" />
             <span>{profile.location || 'Paris, France'}</span>
