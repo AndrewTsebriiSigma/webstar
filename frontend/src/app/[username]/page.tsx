@@ -733,7 +733,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
       </div>
 
       {/* Tab Content */}
-      <div className={`${activeTab === 'portfolio' ? 'pt-[5px]' : 'py-4 px-3'}`}>
+      <div className={`${activeTab === 'portfolio' || activeTab === 'projects' ? 'pt-[5px]' : 'py-4 px-3'}`}>
         {activeTab === 'about' && (
           <AboutSection
             isOwnProfile={isOwnProfile}
@@ -802,7 +802,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: '8px'
+                  gap: '5px'
                 }}
               >
                 {[...projects].reverse().map((project) => (
