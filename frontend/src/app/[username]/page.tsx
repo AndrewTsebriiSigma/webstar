@@ -352,11 +352,12 @@ export default function ProfilePage({ params }: { params: { username: string } }
         </div>
       </div>
 
-      {/* Dashboard Strip - Compact for owner only */}
+      {/* Dashboard Strip - Compact for owner only - Clickable to Analytics */}
       {isOwnProfile && !viewerMode && (
         <div 
           ref={dashboardRef}
           className="dashboard-strip"
+          onClick={() => router.push('/analytics')}
           style={{ 
             display: 'flex',
             alignItems: 'center',
@@ -373,6 +374,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
             margin: '0 16px 8px',
             width: 'calc(100% - 32px)',
             height: '60px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+            e.currentTarget.style.transform = 'scale(1.01)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+            e.currentTarget.style.transform = 'scale(1)';
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>

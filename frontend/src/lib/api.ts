@@ -174,6 +174,7 @@ export const economyAPI = {
 // Analytics API
 export const analyticsAPI = {
   getProfileAnalytics: () => api.get('/api/analytics/profile'),
+  getDailyAnalytics: () => api.get('/api/analytics/daily'),
 };
 
 // Uploads API
