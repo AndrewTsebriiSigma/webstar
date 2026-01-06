@@ -106,15 +106,15 @@ export default function ProjectDetailModal({
           flexShrink: 0
         }}
       >
-        {/* Left: Circle Close Button */}
+        {/* Left: Circle Close Button - More visible */}
         <button
           onClick={handleClose}
           style={{
-            width: '32px',
-            height: '32px',
+            width: '34px',
+            height: '34px',
             borderRadius: '50%',
-            background: 'rgba(255, 255, 255, 0.08)',
-            border: 'none',
+            background: 'rgba(255, 255, 255, 0.12)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -123,10 +123,10 @@ export default function ProjectDetailModal({
             transition: 'all 150ms'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.18)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
           }}
         >
           <XMarkIcon className="w-[18px] h-[18px] text-white" />
@@ -203,8 +203,14 @@ export default function ProjectDetailModal({
           </div>
         )}
 
-        {/* Content Area */}
-        <div style={{ padding: '20px 16px' }}>
+        {/* Content Area - Glassy like UploadPortfolioModal */}
+        <div style={{ 
+          padding: '20px 16px',
+          background: 'rgba(255, 255, 255, 0.02)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          minHeight: '100%'
+        }}>
           {/* Description - Plain text */}
           {project.description && (
             <div style={{ marginBottom: '20px' }}>
@@ -284,7 +290,7 @@ export default function ProjectDetailModal({
                     key={media.id || index}
                     style={{
                       aspectRatio: '1 / 1',
-                      borderRadius: '8px',
+                      borderRadius: '0',
                       overflow: 'hidden',
                       background: 'rgba(255, 255, 255, 0.03)',
                       position: 'relative',
@@ -481,7 +487,7 @@ export default function ProjectDetailModal({
                   color: 'rgba(255, 255, 255, 0.4)',
                   fontSize: '14px',
                   background: 'rgba(255, 255, 255, 0.02)',
-                  borderRadius: '12px'
+                  borderRadius: '0'
                 }}
               >
                 No media in gallery
