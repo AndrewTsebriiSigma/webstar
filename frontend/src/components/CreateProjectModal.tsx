@@ -432,18 +432,16 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
             <button
               onClick={handleSubmit}
               disabled={saving || uploadingCover || !title.trim()}
-              className="publish-btn font-semibold transition-all"
+              className="publish-btn text-[14px] font-semibold rounded-[8px] transition-all"
               style={{ 
-                padding: '0 24px',
+                padding: '0 32px',
                 height: '32px',
-                background: (saving || uploadingCover || !title.trim()) ? 'rgba(0, 194, 255, 0.3)' : '#00C2FF',
-                color: (saving || uploadingCover || !title.trim()) ? 'rgba(255, 255, 255, 0.5)' : '#000',
-                borderRadius: '16px',
-                fontSize: '14px',
+                background: (saving || uploadingCover || !title.trim()) ? 'rgba(255, 255, 255, 0.2)' : '#00C2FF',
+                color: '#fff',
                 cursor: (saving || uploadingCover || !title.trim()) ? 'not-allowed' : 'pointer'
               }}
             >
-              {saving || uploadingCover ? 'Creating...' : 'Publish'}
+              {saving || uploadingCover ? '...' : 'Publish'}
             </button>
           </div>
 
@@ -542,37 +540,50 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
               )}
             </div>
 
-            {/* Title Input */}
-            <div>
-              <div 
-                className="title-input-wrapper"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.02)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)',
-                  borderRadius: '12px',
-                  transition: 'box-shadow 0s, border 0s'
-                }}
-              >
+            {/* Title + Description - Unified block like Post modal */}
+            <div
+              className="project-input-wrapper"
+              style={{
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                borderRadius: '10px',
+                position: 'relative',
+                transition: 'box-shadow 0s, border 0s',
+              }}
+            >
+              {/* Title Input - with * and character count inside */}
+              <div style={{ position: 'relative' }}>
                 <input
                   ref={titleInputRef}
                   type="text"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 44) {
+                      setTitle(e.target.value);
+                    }
+                  }}
                   onFocus={(e) => {
                     handleInputFocus(titleInputRef);
-                    e.currentTarget.parentElement!.style.boxShadow = '0 0 0 1px rgba(0, 194, 255, 0.3)';
-                    e.currentTarget.parentElement!.style.border = '1px solid transparent';
+                    const wrapper = e.currentTarget.closest('.project-input-wrapper') as HTMLElement;
+                    if (wrapper) {
+                      wrapper.style.boxShadow = '0 0 0 1px rgba(0, 194, 255, 0.3)';
+                      wrapper.style.border = '1px solid transparent';
+                    }
                   }}
                   onBlur={(e) => {
-                    e.currentTarget.parentElement!.style.boxShadow = 'none';
-                    e.currentTarget.parentElement!.style.border = '1px solid rgba(255, 255, 255, 0.06)';
+                    const wrapper = e.currentTarget.closest('.project-input-wrapper') as HTMLElement;
+                    if (wrapper) {
+                      wrapper.style.boxShadow = 'none';
+                      wrapper.style.border = '1px solid rgba(255, 255, 255, 0.06)';
+                    }
                   }}
-                  placeholder="Project title"
-                  maxLength={100}
+                  placeholder="Project title*"
+                  maxLength={44}
                   style={{ 
-                    fontSize: '16px',
+                    fontSize: '14px',
                     width: '100%',
-                    padding: '14px 16px',
+                    padding: '12px 14px',
+                    paddingRight: '50px',
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
@@ -581,46 +592,57 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
                   }}
                   disabled={saving || uploadingCover}
                 />
-              </div>
-              <div className="flex justify-end mt-1">
-                <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.3)' }}>
-                  {title.length}/100
+                <span 
+                  style={{ 
+                    position: 'absolute', 
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    right: '12px', 
+                    fontSize: '11px', 
+                    color: title.length > 40 ? '#FF453A' : title.length > 35 ? '#FF9F0A' : 'rgba(255,255,255,0.4)'
+                  }}
+                >
+                  {title.length}/44
                 </span>
               </div>
-            </div>
-
-            {/* Description Input */}
-            <div>
-              <div 
-                className="description-input-wrapper"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.02)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)',
-                  borderRadius: '12px',
-                  transition: 'box-shadow 0s, border 0s'
-                }}
-              >
+              
+              {/* Divider */}
+              <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.06)', margin: '0 14px' }} />
+              
+              {/* Description Input - with character count inside */}
+              <div style={{ position: 'relative' }}>
                 <textarea
                   ref={textareaRef}
-                  placeholder="Add a description..."
+                  placeholder="Description (optional)"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 280) {
+                      setDescription(e.target.value);
+                    }
+                  }}
                   onKeyDown={handleTextareaKeyDown}
                   onFocus={(e) => {
                     handleInputFocus(textareaRef);
-                    e.currentTarget.parentElement!.style.boxShadow = '0 0 0 1px rgba(0, 194, 255, 0.3)';
-                    e.currentTarget.parentElement!.style.border = '1px solid transparent';
+                    const wrapper = e.currentTarget.closest('.project-input-wrapper') as HTMLElement;
+                    if (wrapper) {
+                      wrapper.style.boxShadow = '0 0 0 1px rgba(0, 194, 255, 0.3)';
+                      wrapper.style.border = '1px solid transparent';
+                    }
                   }}
                   onBlur={(e) => {
-                    e.currentTarget.parentElement!.style.boxShadow = 'none';
-                    e.currentTarget.parentElement!.style.border = '1px solid rgba(255, 255, 255, 0.06)';
+                    const wrapper = e.currentTarget.closest('.project-input-wrapper') as HTMLElement;
+                    if (wrapper) {
+                      wrapper.style.boxShadow = 'none';
+                      wrapper.style.border = '1px solid rgba(255, 255, 255, 0.06)';
+                    }
                   }}
-                  rows={4}
-                  maxLength={500}
+                  rows={3}
+                  maxLength={280}
                   style={{ 
                     fontSize: '14px',
                     width: '100%',
-                    padding: '14px 16px',
+                    padding: '12px 14px',
+                    paddingBottom: '24px',
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
@@ -631,13 +653,16 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
                   }}
                   disabled={saving || uploadingCover}
                 />
-              </div>
-              <div className="flex justify-between items-center mt-1">
-                <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.3)' }}>
-                  Tip: Type "- " and Tab for bullets
-                </span>
-                <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.3)' }}>
-                  {description.length}/500
+                <span 
+                  style={{ 
+                    position: 'absolute', 
+                    bottom: '6px', 
+                    right: '12px', 
+                    fontSize: '11px', 
+                    color: description.length > 260 ? '#FF453A' : description.length > 220 ? '#FF9F0A' : 'rgba(255,255,255,0.4)'
+                  }}
+                >
+                  {description.length}/280
                 </span>
               </div>
             </div>
@@ -771,37 +796,35 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
             </div>
           )}
 
-          {/* Sticky Footer */}
+          {/* Sticky Footer - Same as Post modal */}
           <div 
-            className="flex-shrink-0"
-            style={{ 
-              padding: '12px 10px',
-              paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+            className="relative flex-shrink-0"
+            style={{
               background: 'transparent',
-              backdropFilter: 'blur(10px)',
-              borderTop: '1px solid rgba(255, 255, 255, 0.06)'
+              borderBottomLeftRadius: '16px',
+              borderBottomRightRadius: '16px',
+              padding: '12px 16px',
+              paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
             }}
           >
-            <button
-              onClick={handleSaveAsDraft}
-              disabled={saving || uploadingCover || !title.trim()}
-              className="flex items-center gap-2 transition-opacity"
-              style={{ 
-                padding: '8px 14px',
-                background: 'rgba(255, 255, 255, 0.06)',
-                borderRadius: '8px',
-                color: 'rgba(255, 255, 255, 0.7)',
-                fontSize: '13px',
-                fontWeight: '500',
-                opacity: (saving || uploadingCover || !title.trim()) ? 0.4 : 1,
-                cursor: (saving || uploadingCover || !title.trim()) ? 'not-allowed' : 'pointer'
-              }}
+            <div 
+              className="flex items-center justify-between" 
+              style={{ color: 'rgba(255,255,255,0.5)' }}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
-              </svg>
-              Save as draft
-            </button>
+              {/* Left: Save as draft - exact same as Post modal */}
+              <button
+                onClick={handleSaveAsDraft}
+                disabled={saving || uploadingCover || !title.trim()}
+                className="flex items-center gap-2 transition disabled:opacity-40"
+              >
+                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 3h11l5 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 3v5h8V3" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 14h10v7H7z" />
+                </svg>
+                <span className="text-[14px] font-medium">Save as draft</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -956,12 +979,12 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
               <button
                 onClick={handleAddSelectedItems}
                 disabled={selectedPortfolioIds.size === 0}
+                className="rounded-[8px]"
                 style={{
                   padding: '0 16px',
                   height: '32px',
-                  background: selectedPortfolioIds.size === 0 ? 'rgba(0, 194, 255, 0.3)' : '#00C2FF',
-                  color: selectedPortfolioIds.size === 0 ? 'rgba(255, 255, 255, 0.5)' : '#000',
-                  borderRadius: '16px',
+                  background: selectedPortfolioIds.size === 0 ? 'rgba(255, 255, 255, 0.2)' : '#00C2FF',
+                  color: '#fff',
                   fontSize: '14px',
                   fontWeight: '600',
                   cursor: selectedPortfolioIds.size === 0 ? 'not-allowed' : 'pointer'
