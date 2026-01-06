@@ -788,7 +788,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
       </div>
 
       {/* Tab Content */}
-      <div className={`${activeTab === 'portfolio' || activeTab === 'projects' ? 'pt-[5px]' : 'py-4 px-3'}`}>
+      <div className={`${activeTab === 'portfolio' ? 'pt-[5px]' : activeTab === 'projects' ? '' : 'py-4 px-3'}`}>
         {activeTab === 'about' && (
           <AboutSection
             isOwnProfile={isOwnProfile}
@@ -851,7 +851,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
         )}
 
         {activeTab === 'projects' && (
-          <div style={{ padding: '5px' }}>
+          <div style={{ padding: '10px' }}>
             {projects.length > 0 ? (
               <div 
                 style={{
