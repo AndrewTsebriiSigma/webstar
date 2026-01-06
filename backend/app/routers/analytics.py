@@ -25,60 +25,57 @@ async def get_profile_analytics(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
-    """Get profile analytics for current user."""
+    """Get profile analytics for current user - OPTIMIZED with SQL aggregation."""
     now = datetime.utcnow()
     seven_days_ago = now - timedelta(days=7)
     thirty_days_ago = now - timedelta(days=30)
+    
+    from app.db.models import ProfileLike
     
     # Profile views in last 7 days
     views_7d = session.exec(
         select(func.count(ProfileView.id))
         .where(ProfileView.profile_user_id == current_user.id)
         .where(ProfileView.created_at >= seven_days_ago)
-    ).one()
+    ).one() or 0
     
     # Profile views in last 30 days
     views_30d = session.exec(
         select(func.count(ProfileView.id))
         .where(ProfileView.profile_user_id == current_user.id)
         .where(ProfileView.created_at >= thirty_days_ago)
-    ).one()
+    ).one() or 0
     
-    # Get profile from earlier models
-    from app.db.models import Profile, ProfileLike
-    profile = session.exec(
-        select(Profile).where(Profile.user_id == current_user.id)
-    ).first()
-    
+    # Profile likes count
     profile_likes = session.exec(
         select(func.count(ProfileLike.id))
         .where(ProfileLike.liked_profile_user_id == current_user.id)
+    ).one() or 0
+    
+    # Portfolio stats - Use SUM aggregation instead of fetching all items
+    portfolio_stats = session.exec(
+        select(
+            func.coalesce(func.sum(PortfolioItem.views), 0),
+            func.coalesce(func.sum(PortfolioItem.clicks), 0)
+        ).where(PortfolioItem.user_id == current_user.id)
     ).one()
     
-    # Portfolio stats
-    portfolio_items = session.exec(
-        select(PortfolioItem).where(PortfolioItem.user_id == current_user.id)
-    ).all()
-    
-    portfolio_views = sum(item.views for item in portfolio_items)
-    portfolio_clicks = sum(item.clicks for item in portfolio_items)
-    
-    # Project stats
-    projects = session.exec(
-        select(Project).where(Project.user_id == current_user.id)
-    ).all()
-    
-    project_views = sum(proj.views for proj in projects)
-    project_clicks = sum(proj.clicks for proj in projects)
+    # Project stats - Use SUM aggregation instead of fetching all items
+    project_stats = session.exec(
+        select(
+            func.coalesce(func.sum(Project.views), 0),
+            func.coalesce(func.sum(Project.clicks), 0)
+        ).where(Project.user_id == current_user.id)
+    ).one()
     
     return ProfileMetrics(
-        profile_views_7d=views_7d or 0,
-        profile_views_30d=views_30d or 0,
-        profile_likes=profile_likes or 0,
-        portfolio_views=portfolio_views,
-        portfolio_clicks=portfolio_clicks,
-        project_views=project_views,
-        project_clicks=project_clicks
+        profile_views_7d=views_7d,
+        profile_views_30d=views_30d,
+        profile_likes=profile_likes,
+        portfolio_views=int(portfolio_stats[0]),
+        portfolio_clicks=int(portfolio_stats[1]),
+        project_views=int(project_stats[0]),
+        project_clicks=int(project_stats[1])
     )
 
 
@@ -87,26 +84,29 @@ async def get_daily_analytics(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
-    """Get daily analytics for last 30 days."""
+    """Get daily analytics for last 30 days - OPTIMIZED."""
     now = datetime.utcnow()
     thirty_days_ago = now - timedelta(days=30)
     
-    # Get all profile views for last 30 days
+    # Get profile views for last 30 days (only created_at needed, not full records)
     profile_views = session.exec(
-        select(ProfileView)
+        select(ProfileView.created_at)
         .where(ProfileView.profile_user_id == current_user.id)
         .where(ProfileView.created_at >= thirty_days_ago)
-        .order_by(ProfileView.created_at)
     ).all()
     
-    # Get portfolio and project items for link clicks calculation
-    portfolio_items = session.exec(
-        select(PortfolioItem).where(PortfolioItem.user_id == current_user.id)
-    ).all()
+    # Use SQL SUM aggregation for total clicks instead of fetching all records
+    portfolio_clicks = session.exec(
+        select(func.coalesce(func.sum(PortfolioItem.clicks), 0))
+        .where(PortfolioItem.user_id == current_user.id)
+    ).one() or 0
     
-    projects = session.exec(
-        select(Project).where(Project.user_id == current_user.id)
-    ).all()
+    project_clicks = session.exec(
+        select(func.coalesce(func.sum(Project.clicks), 0))
+        .where(Project.user_id == current_user.id)
+    ).one() or 0
+    
+    total_clicks = int(portfolio_clicks) + int(project_clicks)
     
     # Initialize daily data for last 30 days
     daily_data = {}
@@ -120,13 +120,12 @@ async def get_daily_analytics(
         }
     
     # Count profile views per day
-    for view in profile_views:
-        day_str = view.created_at.strftime('%Y-%m-%d')
+    for view_time in profile_views:
+        day_str = view_time.strftime('%Y-%m-%d')
         if day_str in daily_data:
             daily_data[day_str]['profile_views'] += 1
     
-    # Calculate total clicks and distribute across days (simplified)
-    total_clicks = sum(item.clicks for item in portfolio_items) + sum(proj.clicks for proj in projects)
+    # Distribute total clicks across days (simplified visualization)
     if total_clicks > 0:
         clicks_per_day = total_clicks // 30
         remainder = total_clicks % 30

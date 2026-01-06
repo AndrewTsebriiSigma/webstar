@@ -98,35 +98,81 @@ export default function ProfilePage({ params }: { params: { username: string } }
   }, []);
 
   const loadProfile = async () => {
+    // Check cache first (5 minute TTL) for instant page loads
+    const cacheKey = `profile_${username}`;
     try {
-      const profileRes = await profileAPI.getByUsername(username);
-      setProfile(profileRes.data);
-
-      const portfolioRes = await portfolioAPI.getUserItems(username);
-      setPortfolioItems(portfolioRes.data);
-
-      const projectsRes = await projectsAPI.getUserProjects(username);
-      setProjects(projectsRes.data);
-
-      // Non-critical data - don't fail the whole page if these error
-      if (isOwnProfile) {
-        try {
-          const pointsRes = await economyAPI.getPoints();
-          setPoints(pointsRes.data);
-        } catch (e) {
-          console.log('Points not available');
-        }
-
-        try {
-          const metricsRes = await analyticsAPI.getProfileAnalytics();
-          setMetrics(metricsRes.data);
-        } catch (e) {
-          console.log('Metrics not available');
+      const cached = sessionStorage.getItem(cacheKey);
+      
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        const age = Date.now() - timestamp;
+        
+        // Use cache if less than 5 minutes old
+        if (age < 5 * 60 * 1000) {
+          setProfile(data.profile);
+          setPortfolioItems(data.portfolioItems);
+          setProjects(data.projects);
+          if (data.points) setPoints(data.points);
+          if (data.metrics) setMetrics(data.metrics);
+          setLoading(false);
+          return;
         }
       }
+    } catch (e) {
+      // Cache read failed, proceed with API calls
+    }
+
+    try {
+      // 🚀 PARALLEL CALLS - All requests start at the same time!
+      const [profileRes, portfolioRes, projectsRes] = await Promise.all([
+        profileAPI.getByUsername(username),
+        portfolioAPI.getUserItems(username),
+        projectsAPI.getUserProjects(username)
+      ]);
+
+      setProfile(profileRes.data);
+      setPortfolioItems(portfolioRes.data);
+      setProjects(projectsRes.data);
+      setLoading(false); // Show content immediately!
+
+      // Non-critical data - load in background without blocking UI
+      let pointsData = null;
+      let metricsData = null;
+      
+      if (isOwnProfile) {
+        const [pointsRes, metricsRes] = await Promise.allSettled([
+          economyAPI.getPoints(),
+          analyticsAPI.getProfileAnalytics()
+        ]);
+
+        if (pointsRes.status === 'fulfilled') {
+          pointsData = pointsRes.value.data;
+          setPoints(pointsData);
+        }
+        if (metricsRes.status === 'fulfilled') {
+          metricsData = metricsRes.value.data;
+          setMetrics(metricsData);
+        }
+      }
+
+      // Cache the data for 5 minutes
+      try {
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+          data: {
+            profile: profileRes.data,
+            portfolioItems: portfolioRes.data,
+            projects: projectsRes.data,
+            points: pointsData,
+            metrics: metricsData
+          },
+          timestamp: Date.now()
+        }));
+      } catch (e) {
+        // Cache write failed (e.g., storage full), not critical
+      }
     } catch (error) {
+      console.error('Failed to load profile:', error);
       toast.error('Failed to load profile');
-    } finally {
       setLoading(false);
     }
   };

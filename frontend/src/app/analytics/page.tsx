@@ -47,9 +47,39 @@ export default function AnalyticsPage() {
   }, [user]);
 
   const loadAnalytics = async () => {
+    // Check cache first (2 minute TTL for analytics)
+    const cacheKey = 'analytics_daily';
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        const age = Date.now() - timestamp;
+        
+        // Use cache if less than 2 minutes old
+        if (age < 2 * 60 * 1000) {
+          setDailyData(data);
+          setLoading(false);
+          return;
+        }
+      }
+    } catch (e) {
+      // Cache read failed, proceed with API call
+    }
+
     try {
       const response = await analyticsAPI.getDailyAnalytics();
       setDailyData(response.data);
+      
+      // Cache the data
+      try {
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+          data: response.data,
+          timestamp: Date.now()
+        }));
+      } catch (e) {
+        // Cache write failed (storage full), not critical
+      }
     } catch (error) {
       console.error('Failed to load analytics:', error);
       // Generate mock data for demo
