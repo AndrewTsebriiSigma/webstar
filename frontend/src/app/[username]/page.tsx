@@ -314,17 +314,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
       {/* Profile Info - Compact design */}
       <div className="profile-info" style={{ padding: viewerMode ? '0 24px 12px' : '0 24px 12px', textAlign: 'center' }}>
-        {/* Name + Badge - Name centered, badge positioned beside */}
+        {/* Name + Badge - Centered together as unit */}
         <div className="flex items-center justify-center pt-2" style={{ marginBottom: '14px' }}>
-          <div className="relative inline-block">
+          <div className="inline-flex items-center gap-1.5">
             <h1 className="text-xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)', letterSpacing: '-0.2px' }}>
               {profile.display_name || username}
             </h1>
             {profile.expertise_badge && (
-              <CheckBadgeIcon 
-                className="w-5 h-5 text-cyan-400 absolute"
-                style={{ left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: '6px' }}
-              />
+              <CheckBadgeIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" />
             )}
           </div>
         </div>
