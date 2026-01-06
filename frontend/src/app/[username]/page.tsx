@@ -292,14 +292,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
               <img
                 src={profile.profile_picture}
                 alt={profile.display_name || username}
-                className="w-[166px] h-[166px] rounded-full object-cover"
+                className="w-[150px] h-[150px] rounded-full object-cover"
                 style={{
                   border: '6px solid #111111',
                   boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
                 }}
               />
             ) : (
-              <div className="w-[166px] h-[166px] rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-4xl font-bold"
+              <div className="w-[150px] h-[150px] rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-4xl font-bold"
                 style={{
                   border: '6px solid #111111',
                   boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
