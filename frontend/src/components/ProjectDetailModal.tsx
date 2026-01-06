@@ -106,30 +106,30 @@ export default function ProjectDetailModal({
           flexShrink: 0
         }}
       >
-        {/* Left: Circle Close Button - More visible */}
+        {/* Left: Just X Icon - No circle */}
         <button
           onClick={handleClose}
           style={{
-            width: '34px',
-            height: '34px',
-            borderRadius: '50%',
-            background: 'rgba(255, 255, 255, 0.12)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            width: '32px',
+            height: '32px',
+            background: 'transparent',
+            border: 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
             flexShrink: 0,
-            transition: 'all 150ms'
+            transition: 'opacity 150ms',
+            opacity: 0.7
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.18)';
+            e.currentTarget.style.opacity = '1';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
+            e.currentTarget.style.opacity = '0.7';
           }}
         >
-          <XMarkIcon className="w-[18px] h-[18px] text-white" />
+          <XMarkIcon className="w-[22px] h-[22px] text-white" />
         </button>
         
         {/* Title */}
@@ -149,13 +149,16 @@ export default function ProjectDetailModal({
         </h2>
       </div>
 
-      {/* Scrollable Content - Full page */}
+      {/* Scrollable Content - Full page, Glassy */}
       <div 
         style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
-          WebkitOverflowScrolling: 'touch'
+          WebkitOverflowScrolling: 'touch',
+          background: 'rgba(255, 255, 255, 0.02)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)'
         }}
       >
         {/* Cover Image - Full Width, no roundings */}
@@ -203,13 +206,9 @@ export default function ProjectDetailModal({
           </div>
         )}
 
-        {/* Content Area - Glassy like UploadPortfolioModal */}
+        {/* Content Area */}
         <div style={{ 
-          padding: '20px 16px',
-          background: 'rgba(255, 255, 255, 0.02)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          minHeight: '100%'
+          padding: '20px 16px'
         }}>
           {/* Description - Plain text */}
           {project.description && (
