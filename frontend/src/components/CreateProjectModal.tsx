@@ -192,6 +192,10 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
       toast.error('Project title is required');
       return;
     }
+    if (!coverFile) {
+      toast.error('Cover image is required');
+      return;
+    }
 
     setSaving(true);
     setUploadProgress(0);
@@ -432,14 +436,14 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
             </div>
             <button
               onClick={handleSubmit}
-              disabled={saving || uploadingCover || !title.trim()}
+              disabled={saving || uploadingCover || !title.trim() || !coverFile}
               className="publish-btn text-[14px] font-semibold rounded-[8px] transition-all"
               style={{ 
                 padding: '0 32px',
                 height: '32px',
-                background: (saving || uploadingCover || !title.trim()) ? 'rgba(255, 255, 255, 0.2)' : '#00C2FF',
+                background: (saving || uploadingCover || !title.trim() || !coverFile) ? 'rgba(255, 255, 255, 0.2)' : '#00C2FF',
                 color: '#fff',
-                cursor: (saving || uploadingCover || !title.trim()) ? 'not-allowed' : 'pointer'
+                cursor: (saving || uploadingCover || !title.trim() || !coverFile) ? 'not-allowed' : 'pointer'
               }}
             >
               {saving || uploadingCover ? '...' : 'Publish'}
@@ -552,7 +556,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
                 transition: 'box-shadow 0s, border 0s',
               }}
             >
-              {/* Title Input - textarea for multi-line wrapping, char count at BOTTOM */}
+              {/* Title Input - 1 line default, expands to max 2 lines */}
               <div style={{ position: 'relative' }}>
                 <textarea
                   ref={titleTextareaRef}
@@ -560,6 +564,9 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
                   onChange={(e) => {
                     if (e.target.value.length <= 44) {
                       setTitle(e.target.value);
+                      // Auto-resize: reset then measure
+                      e.target.style.height = 'auto';
+                      e.target.style.height = Math.min(e.target.scrollHeight, 56) + 'px'; // Max ~2 lines
                     }
                   }}
                   onFocus={(e) => {
@@ -583,15 +590,17 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
                   style={{ 
                     fontSize: '14px',
                     width: '100%',
-                    padding: '12px 14px',
-                    paddingBottom: '24px',
+                    padding: '10px 14px',
+                    paddingBottom: '18px',
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
                     resize: 'none',
                     color: '#FFFFFF',
                     caretColor: '#00C2FF',
-                    lineHeight: '1.5',
+                    lineHeight: '1.4',
+                    minHeight: '40px',
+                    maxHeight: '56px',
                     overflow: 'hidden'
                   }}
                   disabled={saving || uploadingCover}
@@ -696,23 +705,20 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
                     <span className="text-[15px] font-semibold text-white">Add Content</span>
                   </div>
                 ) : (
-                  // Full button with icon + text
+                  // Full button with icon + text - compact for mobile
                   <div className="flex items-center gap-3">
                     <div 
                       className="flex items-center justify-center flex-shrink-0"
                       style={{
-                        width: '44px',
-                        height: '44px',
+                        width: '36px',
+                        height: '36px',
                         background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%)',
                         borderRadius: '10px'
                       }}
                     >
-                      <PlusIcon className="w-5 h-5" style={{ color: '#A78BFA' }} />
+                      <PlusIcon className="w-4 h-4" style={{ color: '#A78BFA' }} />
                     </div>
-                    <div className="flex-1 text-left">
-                      <h3 className="text-[15px] font-semibold text-white">Add Content</h3>
-                      <p className="text-[13px]" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Attach or upload media</p>
-                    </div>
+                    <h3 className="text-[14px] font-semibold text-white">Add Content</h3>
                   </div>
                 )}
               </button>
