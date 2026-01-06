@@ -802,7 +802,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: '10px'
+                  gap: '8px'
                 }}
               >
                 {[...projects].reverse().map((project) => (
@@ -812,63 +812,60 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       setSelectedProject(project);
                       setShowProjectDetail(true);
                     }}
-                    className="cursor-pointer transition-transform active:scale-[0.98]"
+                    className="cursor-pointer transition-all active:scale-[0.97]"
                     style={{
                       background: '#1A1A1C',
-                      borderRadius: '16px',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
                       overflow: 'hidden'
                     }}
                   >
-                    {/* Image Container with Badge */}
-                    <div style={{ position: 'relative', aspectRatio: '1 / 1' }}>
+                    {/* Image Container with Badge - 4:3 aspect ratio */}
+                    <div style={{ position: 'relative', aspectRatio: '4 / 3' }}>
                       {project.cover_image ? (
                         <img
                           src={project.cover_image}
                           alt={project.title}
                           style={{
-                            width: 'calc(100% - 16px)',
-                            height: 'calc(100% - 16px)',
-                            objectFit: 'cover',
-                            borderRadius: '12px',
-                            margin: '8px'
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
                           }}
                         />
                       ) : (
                         <div 
                           style={{
-                            width: 'calc(100% - 16px)',
-                            height: 'calc(100% - 16px)',
-                            margin: '8px',
-                            borderRadius: '12px',
-                            background: 'rgba(255, 255, 255, 0.05)',
+                            width: '100%',
+                            height: '100%',
+                            background: 'rgba(255, 255, 255, 0.03)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center'
                           }}
                         >
-                          <svg width="40" height="40" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" viewBox="0 0 24 24">
+                          <svg width="32" height="32" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5z" />
                           </svg>
                         </div>
                       )}
                       
-                      {/* Item Count Badge - Top Right */}
+                      {/* Item Count Badge - smaller, better anchored */}
                       {project.media_count > 0 && (
                         <div 
                           style={{
                             position: 'absolute',
-                            top: '16px',
-                            right: '16px',
-                            minWidth: '28px',
-                            height: '28px',
-                            borderRadius: '14px',
-                            background: 'rgba(0, 0, 0, 0.7)',
+                            top: '8px',
+                            right: '8px',
+                            minWidth: '24px',
+                            height: '24px',
+                            borderRadius: '12px',
+                            background: 'rgba(0, 0, 0, 0.6)',
                             backdropFilter: 'blur(8px)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            padding: '0 8px',
-                            fontSize: '13px',
+                            padding: '0 6px',
+                            fontSize: '12px',
                             fontWeight: '600',
                             color: '#FFFFFF'
                           }}
@@ -878,16 +875,17 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       )}
                     </div>
                     
-                    {/* Title Below Image */}
-                    <div style={{ padding: '12px 12px 16px' }}>
+                    {/* Title Below Image - smaller text */}
+                    <div style={{ padding: '10px 10px 12px' }}>
                       <h3 
                         style={{
-                          fontSize: '15px',
+                          fontSize: '14px',
                           fontWeight: '600',
                           color: '#FFFFFF',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
+                          whiteSpace: 'nowrap',
+                          lineHeight: '1.3'
                         }}
                       >
                         {project.title}
