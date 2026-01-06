@@ -285,21 +285,21 @@ export default function ProfilePage({ params }: { params: { username: string } }
           )}
         </div>
 
-        {/* Avatar - webSTAR: 144px, -80px overlap */}
-        <div className="relative px-4 -mt-20">
+        {/* Avatar - Square, 20% bigger (173px), covers 2/3 banner */}
+        <div className="relative px-4 -mt-28">
           <div className="flex items-center justify-center">
             {profile.profile_picture ? (
               <img
                 src={profile.profile_picture}
                 alt={profile.display_name || username}
-                className="w-36 h-36 rounded-full object-cover"
+                className="w-[173px] h-[173px] rounded-[20px] object-cover"
                 style={{
                   border: '6px solid #111111',
                   boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
                 }}
               />
             ) : (
-              <div className="w-36 h-36 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-4xl font-bold"
+              <div className="w-[173px] h-[173px] rounded-[20px] bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-4xl font-bold"
                 style={{
                   border: '6px solid #111111',
                   boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
@@ -313,24 +313,23 @@ export default function ProfilePage({ params }: { params: { username: string } }
       </div>
 
       {/* Profile Info - Compact design */}
-      <div className="profile-info" style={{ padding: viewerMode ? '0 24px 32px' : '0 24px 32px', textAlign: 'center' }}>
-        {/* Name + Badge - Badge absolute so name is truly centered */}
-        <div className="relative flex items-center justify-center pt-2" style={{ marginBottom: '6px' }}>
-          <h1 className="text-xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)', letterSpacing: '-0.2px' }}>
-            {profile.display_name || username}
-          </h1>
-          {profile.expertise_badge && (
-            <CheckBadgeIcon 
-              className="w-5 h-5 text-cyan-400 flex-shrink-0 absolute" 
-              style={{ left: '100%', marginLeft: '6px', top: '50%', transform: 'translateY(-50%)' }}
-            />
-          )}
+      <div className="profile-info" style={{ padding: viewerMode ? '0 24px 12px' : '0 24px 12px', textAlign: 'center' }}>
+        {/* Name + Badge - Inline wrapper keeps badge beside name */}
+        <div className="flex items-center justify-center pt-2" style={{ marginBottom: '6px' }}>
+          <div className="inline-flex items-center gap-1.5">
+            <h1 className="text-xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)', letterSpacing: '-0.2px' }}>
+              {profile.display_name || username}
+            </h1>
+            {profile.expertise_badge && (
+              <CheckBadgeIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+            )}
+          </div>
         </div>
         
-        {/* Bio - Smaller font */}
-        <p className="text-sm px-2" style={{ 
+        {/* Bio - 10px font */}
+        <p className="px-2" style={{ 
           color: 'rgba(255, 255, 255, 0.75)',
-          fontSize: '15px',
+          fontSize: '10px',
           lineHeight: '1.4',
           opacity: 0.9,
           marginBottom: '6px'
@@ -338,8 +337,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
           {profile.bio || 'Make original the only standard.'}
         </p>
 
-        {/* Location & Role - Compact */}
-        <div className="flex items-center justify-center gap-2 flex-wrap px-2" style={{ marginBottom: '14px' }}>
+        {/* Location & Role - 8px to dashboard */}
+        <div className="flex items-center justify-center gap-2 flex-wrap px-2" style={{ marginBottom: '8px' }}>
           <div className="flex items-center gap-1" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
             <MapPinIcon className="w-3.5 h-3.5" />
             <span>{profile.location || 'Paris, France'}</span>
