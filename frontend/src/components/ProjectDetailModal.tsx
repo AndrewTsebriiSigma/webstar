@@ -83,9 +83,9 @@ export default function ProjectDetailModal({
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        background: 'rgba(0, 0, 0, 0.85)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
+        background: 'rgba(0, 0, 0, 0.3)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
         display: 'flex',
         flexDirection: 'column',
         opacity: isVisible ? 1 : 0,
@@ -151,16 +151,14 @@ export default function ProjectDetailModal({
         </h2>
       </div>
 
-      {/* Scrollable Content - Full page, Glassy */}
+      {/* Scrollable Content - Full page, matching UploadPortfolioModal */}
       <div 
         style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          background: 'rgba(255, 255, 255, 0.02)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)'
+          background: 'rgba(20, 20, 20, 0.85)'
         }}
       >
         {/* Cover Image - Full Width, no roundings */}
