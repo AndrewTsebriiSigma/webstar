@@ -857,7 +857,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: '5px'
+                  gap: '10px'
                 }}
               >
                 {[...projects].reverse().map((project) => (
