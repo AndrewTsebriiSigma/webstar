@@ -33,7 +33,7 @@ import {
   RectangleStackIcon,
   PaintBrushIcon
 } from '@heroicons/react/24/outline';
-import { BellIcon as BellSolidIcon, ShieldCheckIcon } from '@heroicons/react/24/solid';
+import { BellIcon as BellSolidIcon, CheckCircleIcon } from '@heroicons/react/24/solid';
 
 export default function ProfilePage({ params }: { params: { username: string } }) {
   const { username } = params;
@@ -320,7 +320,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               {profile.display_name || username}
             </h1>
             {profile.expertise_badge && (
-              <ShieldCheckIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+              <CheckCircleIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" />
             )}
           </div>
         </div>
