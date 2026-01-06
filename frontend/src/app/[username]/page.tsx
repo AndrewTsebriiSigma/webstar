@@ -796,18 +796,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
         )}
 
         {activeTab === 'projects' && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">Projects</h2>
-            </div>
-
+          <div style={{ padding: '5px' }}>
             {projects.length > 0 ? (
               <div 
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: '12px',
-                  padding: '0'
+                  gap: '10px'
                 }}
               >
                 {[...projects].reverse().map((project) => (
@@ -817,34 +812,86 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       setSelectedProject(project);
                       setShowProjectDetail(true);
                     }}
-                    className="bg-gray-900 rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition"
+                    className="cursor-pointer transition-transform active:scale-[0.98]"
                     style={{
-                      aspectRatio: '4 / 5',
-                      position: 'relative'
+                      background: '#1A1A1C',
+                      borderRadius: '16px',
+                      overflow: 'hidden'
                     }}
                   >
-                    {project.cover_image && (
-                      <img
-                        src={project.cover_image}
-                        alt={project.title}
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                    <div 
-                      style={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        padding: '16px',
-                        background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
-                        color: '#FFFFFF'
-                      }}
-                    >
-                      <div className="flex items-start justify-between mb-1">
-                        <h3 className="text-sm font-semibold flex-1">{project.title}</h3>
-                        <span className="px-2 py-0.5 rounded text-xs ml-2" style={{ background: 'rgba(17, 17, 17, 0.5)' }}>24</span>
-                      </div>
+                    {/* Image Container with Badge */}
+                    <div style={{ position: 'relative', aspectRatio: '1 / 1' }}>
+                      {project.cover_image ? (
+                        <img
+                          src={project.cover_image}
+                          alt={project.title}
+                          style={{
+                            width: 'calc(100% - 16px)',
+                            height: 'calc(100% - 16px)',
+                            objectFit: 'cover',
+                            borderRadius: '12px',
+                            margin: '8px'
+                          }}
+                        />
+                      ) : (
+                        <div 
+                          style={{
+                            width: 'calc(100% - 16px)',
+                            height: 'calc(100% - 16px)',
+                            margin: '8px',
+                            borderRadius: '12px',
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          <svg width="40" height="40" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5z" />
+                          </svg>
+                        </div>
+                      )}
+                      
+                      {/* Item Count Badge - Top Right */}
+                      {project.media_count > 0 && (
+                        <div 
+                          style={{
+                            position: 'absolute',
+                            top: '16px',
+                            right: '16px',
+                            minWidth: '28px',
+                            height: '28px',
+                            borderRadius: '14px',
+                            background: 'rgba(0, 0, 0, 0.7)',
+                            backdropFilter: 'blur(8px)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '0 8px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            color: '#FFFFFF'
+                          }}
+                        >
+                          {project.media_count}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Title Below Image */}
+                    <div style={{ padding: '12px 12px 16px' }}>
+                      <h3 
+                        style={{
+                          fontSize: '15px',
+                          fontWeight: '600',
+                          color: '#FFFFFF',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {project.title}
+                      </h3>
                     </div>
                   </div>
                 ))}
