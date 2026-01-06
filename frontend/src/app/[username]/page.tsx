@@ -320,7 +320,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               {profile.display_name || username}
             </h1>
             {profile.expertise_badge && (
-              <CheckBadgeIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+              <CheckBadgeIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" style={{ marginTop: '-1px' }} />
             )}
           </div>
         </div>
