@@ -313,29 +313,33 @@ export default function ProfilePage({ params }: { params: { username: string } }
       </div>
 
       {/* Profile Info - Compact design */}
-      <div className="profile-info" style={{ padding: viewerMode ? '8px 24px 32px' : '12px 24px 32px', textAlign: 'center' }}>
-        {/* Name + Badge */}
-        <div className="flex items-center justify-center gap-1.5 mb-1 pt-3">
+      <div className="profile-info" style={{ padding: viewerMode ? '0 24px 32px' : '0 24px 32px', textAlign: 'center' }}>
+        {/* Name + Badge - Badge absolute so name is truly centered */}
+        <div className="relative flex items-center justify-center pt-2" style={{ marginBottom: '6px' }}>
           <h1 className="text-xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)', letterSpacing: '-0.2px' }}>
             {profile.display_name || username}
           </h1>
           {profile.expertise_badge && (
-            <CheckBadgeIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+            <CheckBadgeIcon 
+              className="w-5 h-5 text-cyan-400 flex-shrink-0 absolute" 
+              style={{ left: '100%', marginLeft: '6px', top: '50%', transform: 'translateY(-50%)' }}
+            />
           )}
         </div>
         
         {/* Bio - Smaller font */}
-        <p className="text-sm mb-3 px-2" style={{ 
+        <p className="text-sm px-2" style={{ 
           color: 'rgba(255, 255, 255, 0.75)',
           fontSize: '15px',
           lineHeight: '1.4',
-          opacity: 0.9
+          opacity: 0.9,
+          marginBottom: '6px'
         }}>
           {profile.bio || 'Make original the only standard.'}
         </p>
 
         {/* Location & Role - Compact */}
-        <div className="flex items-center justify-center gap-2 flex-wrap mb-3 px-2">
+        <div className="flex items-center justify-center gap-2 flex-wrap px-2" style={{ marginBottom: '14px' }}>
           <div className="flex items-center gap-1" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
             <MapPinIcon className="w-3.5 h-3.5" />
             <span>{profile.location || 'Paris, France'}</span>
