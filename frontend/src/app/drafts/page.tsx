@@ -319,7 +319,7 @@ function DraggableGrid({ items, onReorder, onItemClick, formatTime }: DraggableG
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap'
               }}>
-                {draft.title || draft.description || 'Untitled'}
+                {draft.title || draft.description || (draft.content_type === 'audio' ? 'Audio' : draft.content_type === 'pdf' ? 'PDF' : 'Untitled')}
               </div>
               <div style={{
                 fontSize: '9px',
@@ -537,17 +537,19 @@ export default function DraftsPage() {
       >
         <div style={{ padding: '12px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {/* Search Bar - Fully rounded pill */}
             <div style={{
-              flex: 1,
+              flex: '1 1 0%',
               display: 'flex',
               alignItems: 'center',
               gap: '10px',
               background: 'rgba(255, 255, 255, 0.06)',
               border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '12px',
-              padding: '10px 14px'
+              borderRadius: '100px',
+              padding: '10px 14px',
+              height: '40px'
             }}>
-              <MagnifyingGlassIcon className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.4)' }} />
+              <MagnifyingGlassIcon className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.4)', flexShrink: 0 }} />
               <input
                 type="text"
                 placeholder="Search drafts..."
@@ -560,27 +562,29 @@ export default function DraftsPage() {
                   outline: 'none',
                   color: '#F5F5F5',
                   fontSize: '15px',
-                  fontWeight: 500
+                  fontWeight: 500,
+                  minWidth: 0
                 }}
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+                <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0 }}>
                   <XMarkIcon className="w-4 h-4" style={{ color: 'rgba(255, 255, 255, 0.4)' }} />
                 </button>
               )}
             </div>
+            {/* Close Button */}
             <button
               onClick={() => router.back()}
               style={{
                 width: '40px',
                 height: '40px',
-                borderRadius: '50%',
-                background: 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                flexShrink: 0,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                background: 'transparent',
+                border: 'none'
               }}
             >
               <XMarkIcon className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.7)' }} />

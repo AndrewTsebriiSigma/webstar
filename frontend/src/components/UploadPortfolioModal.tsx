@@ -404,13 +404,13 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           });
           toast.success('Draft published! 🎉');
         } else {
-          await portfolioAPI.createItem({
-            content_type: 'text',
-            content_url: null,
-            text_content: textContent.trim(),
-            description: description || null,
-            aspect_ratio: '4:5',
-          });
+        await portfolioAPI.createItem({
+          content_type: 'text',
+          content_url: null,
+          text_content: textContent.trim(),
+          description: description || null,
+          aspect_ratio: '4:5',
+        });
           toast.success('Text post published! 🎉');
         }
         
@@ -428,16 +428,16 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
         // Only upload new file if one was selected
         if (file) {
           // Determine actual content type from file
-          if (selectedContentType === 'media') {
-            // Auto-detect based on file type
+        if (selectedContentType === 'media') {
+          // Auto-detect based on file type
             if (file.type.startsWith('image/')) {
-              actualContentType = 'photo';
+            actualContentType = 'photo';
             } else if (file.type.startsWith('video/')) {
-              actualContentType = 'video';
-            }
+            actualContentType = 'video';
           }
-          
-          // Upload main file
+        }
+        
+        // Upload main file
           const uploadResponse = await uploadsAPI.uploadMedia(file, actualContentType);
           contentUrl = uploadResponse.data.url;
         }
@@ -451,25 +451,32 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           attachmentUrl = attachmentResponse.data.url;
         }
 
+        // Get file name as title for audio/pdf files
+        const fileTitle = (actualContentType === 'audio' || actualContentType === 'pdf') && file 
+          ? file.name.replace(/\.[^/.]+$/, '') // Remove extension
+          : null;
+
         if (editingDraftId) {
           // Update and publish existing draft
           await portfolioAPI.updateItem(editingDraftId, {
             description: description || null,
             is_draft: false,
+            ...(fileTitle && { title: fileTitle }),
             ...(file && { content_url: contentUrl, content_type: actualContentType }),
             ...(attachmentUrl && { attachment_url: attachmentUrl, attachment_type: attachmentType }),
           });
           toast.success('Draft published! 🎉');
         } else {
           // Create new portfolio item
-          await portfolioAPI.createItem({
-            content_type: actualContentType,
-            content_url: contentUrl,
-            description: description || null,
-            aspect_ratio: '1:1',
-            attachment_url: attachmentUrl,
-            attachment_type: attachmentType,
-          });
+        await portfolioAPI.createItem({
+          content_type: actualContentType,
+          content_url: contentUrl,
+          title: fileTitle,
+          description: description || null,
+          aspect_ratio: '1:1',
+          attachment_url: attachmentUrl,
+          attachment_type: attachmentType,
+        });
           toast.success('Post published! 🎉');
         }
 
@@ -518,14 +525,14 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           toast.success('Draft updated! 📝');
         } else {
           // Create new draft
-          await portfolioAPI.createItem({
-            content_type: 'text',
-            content_url: null,
-            text_content: textContent.trim(),
-            description: description || null,
-            aspect_ratio: '4:5',
-            is_draft: true,
-          });
+        await portfolioAPI.createItem({
+          content_type: 'text',
+          content_url: null,
+          text_content: textContent.trim(),
+          description: description || null,
+          aspect_ratio: '4:5',
+          is_draft: true,
+        });
           toast.success('Draft saved! 📝');
         }
         
@@ -543,16 +550,16 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
         // Only upload new file if one was selected
         if (file) {
           // Determine actual content type from file
-          if (selectedContentType === 'media') {
-            // Auto-detect based on file type
+        if (selectedContentType === 'media') {
+          // Auto-detect based on file type
             if (file.type.startsWith('image/')) {
-              actualContentType = 'photo';
+            actualContentType = 'photo';
             } else if (file.type.startsWith('video/')) {
-              actualContentType = 'video';
-            }
+            actualContentType = 'video';
           }
-          
-          // Upload main file
+        }
+        
+        // Upload main file
           const uploadResponse = await uploadsAPI.uploadMedia(file, actualContentType);
           contentUrl = uploadResponse.data.url;
         }
@@ -566,26 +573,33 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           attachmentUrl = attachmentResponse.data.url;
         }
 
+        // Get file name as title for audio/pdf files
+        const fileTitle = (actualContentType === 'audio' || actualContentType === 'pdf') && file 
+          ? file.name.replace(/\.[^/.]+$/, '') // Remove extension
+          : null;
+
         if (editingDraftId) {
           // Update existing draft
           await portfolioAPI.updateItem(editingDraftId, {
             description: description || null,
             is_draft: true,
+            ...(fileTitle && { title: fileTitle }),
             ...(file && { content_url: contentUrl, content_type: actualContentType }),
             ...(attachmentUrl && { attachment_url: attachmentUrl, attachment_type: attachmentType }),
           });
           toast.success('Draft updated! 📝');
         } else {
           // Create new portfolio item as draft
-          await portfolioAPI.createItem({
-            content_type: actualContentType,
-            content_url: contentUrl,
-            description: description || null,
-            aspect_ratio: '1:1',
-            is_draft: true,
-            attachment_url: attachmentUrl,
-            attachment_type: attachmentType,
-          });
+        await portfolioAPI.createItem({
+          content_type: actualContentType,
+          content_url: contentUrl,
+          title: fileTitle,
+          description: description || null,
+          aspect_ratio: '1:1',
+          is_draft: true,
+          attachment_url: attachmentUrl,
+          attachment_type: attachmentType,
+        });
           toast.success('Draft saved! 📝');
         }
 
@@ -1145,12 +1159,12 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     </>
                   ) : (
                     <>
-                      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 3h11l5 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 3v5h8V3" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 14h10v7H7z" />
-                      </svg>
-                      <span className="text-[14px] font-medium">Save as draft</span>
+                  <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 3h11l5 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 3v5h8V3" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 14h10v7H7z" />
+                  </svg>
+                  <span className="text-[14px] font-medium">Save as draft</span>
                     </>
                   )}
                 </button>

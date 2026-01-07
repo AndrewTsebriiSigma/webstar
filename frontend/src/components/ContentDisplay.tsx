@@ -195,9 +195,9 @@ function AudioDisplayCompact({ item, onClick }: { item: PortfolioItem; onClick?:
         <PlayIcon className="w-8 h-8" style={{ color: '#FFFFFF', marginLeft: '3px' }} />
       </div>
 
-      {/* Track Title */}
+      {/* Track Title - Display file name if available */}
       <div style={{
-        fontSize: '15px',
+        fontSize: '14px',
         fontWeight: 600,
         color: '#FFFFFF',
         textAlign: 'center',
@@ -208,9 +208,11 @@ function AudioDisplayCompact({ item, onClick }: { item: PortfolioItem; onClick?:
         WebkitBoxOrient: 'vertical',
         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
         zIndex: 1,
-        lineHeight: '1.4'
+        lineHeight: '1.4',
+        padding: '0 8px',
+        wordBreak: 'break-word'
       }}>
-        {item.title || 'Audio Track'}
+        {item.title || 'Audio'}
       </div>
 
       {/* Audio Icon Badge */}
@@ -385,7 +387,7 @@ function AudioDisplay({ item, isActive }: { item: PortfolioItem; isActive?: bool
             fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
           }}
         >
-          {item.title || 'Audio Track'}
+          {item.title || 'Audio'}
         </div>
         
         {/* Progress Bar */}
@@ -677,21 +679,23 @@ function PDFDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => vo
       style={{
         width: '100%',
         height: '100%',
-        borderRadius: 'var(--radius-lg)',
-        background: 'rgba(255, 255, 255, 0.03)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        padding: '24px',
+        borderRadius: '5px',
+        background: 'linear-gradient(135deg, rgba(0, 194, 255, 0.08), rgba(0, 194, 255, 0.04))',
+        padding: '24px 16px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
+        gap: '12px',
         cursor: onClick ? 'pointer' : 'default',
-        transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)'
+        transition: 'all 180ms cubic-bezier(0.25, 0.8, 0.25, 1)',
+        position: 'relative',
+        overflow: 'hidden'
       }}
       onMouseEnter={(e) => {
         if (onClick) {
           e.currentTarget.style.transform = 'translateY(-4px)';
-          e.currentTarget.style.boxShadow = '0 12px 48px rgba(0, 0, 0, 0.3)';
+          e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 194, 255, 0.2)';
         }
       }}
       onMouseLeave={(e) => {
@@ -701,20 +705,57 @@ function PDFDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => vo
         }
       }}
     >
-      <DocumentIcon 
-        className="w-16 h-16 mb-4"
-        style={{ color: '#00C2FF' }}
-      />
+      {/* PDF Icon */}
+      <div style={{
+        width: '56px',
+        height: '56px',
+        borderRadius: '12px',
+        background: 'rgba(0, 194, 255, 0.15)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <DocumentIcon 
+          className="w-8 h-8"
+          style={{ color: '#00C2FF' }}
+        />
+      </div>
+      
+      {/* PDF Title - File name if available */}
       <div 
         style={{
-          fontSize: '16px',
+          fontSize: '14px',
           fontWeight: 600,
           color: '#FFFFFF',
           textAlign: 'center',
-          marginBottom: '8px'
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          lineHeight: '1.4',
+          padding: '0 4px',
+          wordBreak: 'break-word',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
         }}
       >
-        {item.title || 'Document'}
+        {item.title || 'PDF'}
+      </div>
+
+      {/* PDF Badge */}
+      <div style={{
+        position: 'absolute',
+        bottom: '10px',
+        right: '10px',
+        padding: '3px 8px',
+        borderRadius: '6px',
+        background: 'rgba(0, 194, 255, 0.2)',
+        fontSize: '10px',
+        fontWeight: 700,
+        color: '#00C2FF',
+        letterSpacing: '0.5px'
+      }}>
+        PDF
       </div>
     </div>
   );
