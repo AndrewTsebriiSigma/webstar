@@ -550,41 +550,41 @@ export default function DraftsPage() {
       }}>
         {/* Action Bar - Make Draft LEFT, Filter Icon RIGHT */}
         <div style={{
-          padding: '6px 12px',
+          padding: '8px 12px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
         }}>
-          {/* Make Draft Button - LEFT */}
+          {/* Make Draft Button - LEFT (20% bigger, 25% more padding) */}
           <button
             onClick={() => setShowCreateModal(true)}
             className="make-draft-btn"
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '4px',
+              gap: '5px',
               background: '#00C2FF',
               color: '#FFF',
-              height: '26px',
-              padding: '0 10px',
-              fontSize: '12px',
+              height: '32px',
+              padding: '0 14px',
+              fontSize: '13px',
               fontWeight: 600,
-              borderRadius: '6px',
+              borderRadius: '7px',
               border: 'none',
               cursor: 'pointer'
             }}
           >
-            <PlusIcon className="w-3.5 h-3.5" style={{ strokeWidth: 2.5 }} />
+            <PlusIcon className="w-4 h-4" style={{ strokeWidth: 2.5 }} />
             <span>Make Draft</span>
           </button>
 
-          {/* Filter Icon - RIGHT */}
+          {/* Filter Icon - RIGHT (25% bigger) */}
           <button
             onClick={() => setShowFilterStrip(!showFilterStrip)}
             className="filter-icon-btn"
             style={{
-              width: '26px',
-              height: '26px',
+              width: '32px',
+              height: '32px',
               borderRadius: '50%',
               background: showFilterStrip || filterType !== 'all' || sortType !== 'recent' 
                 ? 'rgba(0, 194, 255, 0.15)' 
@@ -600,7 +600,7 @@ export default function DraftsPage() {
             }}
           >
             <FunnelIcon 
-              className="w-3.5 h-3.5" 
+              className="w-4 h-4" 
               style={{ 
                 color: showFilterStrip || filterType !== 'all' || sortType !== 'recent' 
                   ? '#00C2FF' 
@@ -610,21 +610,21 @@ export default function DraftsPage() {
           </button>
         </div>
 
-        {/* Filter Widget - Modern segmented control */}
+        {/* Filter Widget - Compact segmented control */}
         {showFilterStrip && (
           <div 
             className="filter-widget"
             style={{
-              margin: '0 8px 8px',
+              margin: '0 8px 6px',
               background: 'rgba(28, 28, 30, 0.95)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
               border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '16px',
-              padding: '12px',
+              borderRadius: '12px',
+              padding: '8px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '10px'
+              gap: '6px'
             }}
           >
             {/* Type Segmented Row */}
@@ -633,7 +633,7 @@ export default function DraftsPage() {
               style={{ 
                 display: 'flex', 
                 alignItems: 'center',
-                gap: '6px',
+                gap: '4px',
                 overflowX: 'auto',
                 WebkitOverflowScrolling: 'touch'
               }}
@@ -643,11 +643,11 @@ export default function DraftsPage() {
                   key={type}
                   onClick={() => setFilterType(type)}
                   style={{
-                    padding: '8px 14px',
-                    borderRadius: '8px',
+                    padding: '5px 10px',
+                    borderRadius: '6px',
                     background: filterType === type ? 'rgba(0, 194, 255, 0.12)' : 'rgba(255, 255, 255, 0.06)',
                     border: filterType === type ? '1px solid #00C2FF' : '1px solid rgba(255, 255, 255, 0.08)',
-                    fontSize: '13px',
+                    fontSize: '11px',
                     fontWeight: 500,
                     color: filterType === type ? '#00C2FF' : 'rgba(255, 255, 255, 0.7)',
                     cursor: 'pointer',
@@ -665,17 +665,17 @@ export default function DraftsPage() {
             <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.08)' }} />
 
             {/* Sort Segmented Row */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               {(['recent', 'timeline', 'type'] as SortType[]).map((sort) => (
                 <button
                   key={sort}
                   onClick={() => setSortType(sort)}
                   style={{
-                    padding: '8px 14px',
-                    borderRadius: '8px',
+                    padding: '5px 10px',
+                    borderRadius: '6px',
                     background: sortType === sort ? 'rgba(0, 194, 255, 0.12)' : 'rgba(255, 255, 255, 0.06)',
                     border: sortType === sort ? '1px solid #00C2FF' : '1px solid rgba(255, 255, 255, 0.08)',
-                    fontSize: '13px',
+                    fontSize: '11px',
                     fontWeight: 500,
                     color: sortType === sort ? '#00C2FF' : 'rgba(255, 255, 255, 0.7)',
                     cursor: 'pointer',
