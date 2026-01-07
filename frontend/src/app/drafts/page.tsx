@@ -544,7 +544,7 @@ export default function DraftsPage() {
       {/* Action Bar - Make Draft LEFT, Filter Icon RIGHT */}
       <div style={{
         background: '#0D0D0D',
-        padding: '6px 16px',
+        padding: '8px 16px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between'
@@ -559,8 +559,8 @@ export default function DraftsPage() {
             gap: '6px',
             background: '#00C2FF',
             color: '#FFF',
-            height: '32px',
-            padding: '0 14px',
+            height: '30px',
+            padding: '0 16px',
             fontSize: '13px',
             fontWeight: 600,
             borderRadius: '8px',
@@ -576,8 +576,8 @@ export default function DraftsPage() {
         <button
           onClick={() => setShowFilterStrip(!showFilterStrip)}
           style={{
-            width: '32px',
-            height: '32px',
+            width: '36px',
+            height: '36px',
             borderRadius: '50%',
             background: showFilterStrip || filterType !== 'all' || sortType !== 'recent' 
               ? 'rgba(0, 194, 255, 0.15)' 
@@ -603,42 +603,46 @@ export default function DraftsPage() {
         </button>
       </div>
 
-      {/* Filter Widget - Glassy popup when filter icon clicked */}
+      {/* Filter Widget - Premium floating glassy card */}
       {showFilterStrip && (
         <div 
-          className="floating-filter-bar"
+          className="filter-widget"
           style={{
-            margin: '0 12px',
-            background: 'rgba(255, 255, 255, 0.03)',
+            margin: '8px 12px',
+            background: 'rgba(28, 28, 30, 0.85)',
             backdropFilter: 'blur(40px)',
             WebkitBackdropFilter: 'blur(40px)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            borderRadius: '12px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '14px',
             padding: '10px 12px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
             display: 'flex',
             flexDirection: 'column',
-            gap: '8px',
-            animation: 'slideDown 150ms ease-out'
+            gap: '8px'
           }}
         >
           {/* Type Pills Row */}
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            gap: '0',
-            overflowX: 'auto',
-            WebkitOverflowScrolling: 'touch'
-          }}>
+          <div 
+            className="floating-filter-bar"
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              gap: '0',
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              paddingBottom: '2px'
+            }}
+          >
             {(['all', 'photo', 'video', 'audio', 'pdf', 'text', 'project'] as ContentType[]).map((type, index) => (
-              <div key={type} style={{ display: 'flex', alignItems: 'center' }}>
+              <div key={type} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
                 {index === 1 && (
-                  <div style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.12)', margin: '0 6px' }} />
+                  <div style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.15)', margin: '0 6px' }} />
                 )}
                 <button
                   onClick={() => setFilterType(type)}
                   style={{
                     padding: '6px 10px',
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     background: filterType === type ? '#00C2FF' : 'transparent',
                     border: 'none',
                     fontSize: '12px',
@@ -656,7 +660,7 @@ export default function DraftsPage() {
           </div>
 
           {/* Horizontal Divider */}
-          <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.08)' }} />
+          <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.1)' }} />
 
           {/* Sort Pills Row */}
           <div style={{ 
@@ -667,13 +671,13 @@ export default function DraftsPage() {
             {(['recent', 'timeline', 'type'] as SortType[]).map((sort, index) => (
               <div key={sort} style={{ display: 'flex', alignItems: 'center' }}>
                 {index === 1 && (
-                  <div style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.12)', margin: '0 6px' }} />
+                  <div style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.15)', margin: '0 6px' }} />
                 )}
                 <button
                   onClick={() => setSortType(sort)}
                   style={{
                     padding: '6px 10px',
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     background: sortType === sort ? '#00C2FF' : 'transparent',
                     border: 'none',
                     fontSize: '12px',
@@ -694,14 +698,15 @@ export default function DraftsPage() {
 
       {/* Glassy Content Area */}
       <div style={{ 
-        padding: '12px 16px', 
+        padding: '12px',
         paddingBottom: '40px',
-        maxWidth: '430px', 
-        margin: '0 auto',
-        background: 'rgba(255, 255, 255, 0.02)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        minHeight: 'calc(100vh - 140px)'
+        margin: '8px 12px',
+        background: 'rgba(28, 28, 30, 0.6)',
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        borderRadius: '14px',
+        minHeight: 'calc(100vh - 160px)'
       }}>
 
         {/* Projects - 2 Column */}
