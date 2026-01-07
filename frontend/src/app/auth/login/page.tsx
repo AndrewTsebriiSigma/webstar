@@ -1,12 +1,128 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { authAPI } from '@/lib/api';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+
+// Matrix Rain Effect Component
+function MatrixRain() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    const chars = '01アイウエオカキクケコサシスセソタチツテト10∆∇◊○●□■△▽☆★♦♢⬡⬢';
+    const charArray = chars.split('');
+    
+    const fontSize = 14;
+    const columns = Math.floor(canvas.width / fontSize);
+    
+    const drops: number[] = [];
+    for (let i = 0; i < columns; i++) {
+      drops[i] = Math.random() * -100;
+    }
+
+    const colors = [
+      'rgba(0, 194, 255, 0.9)',
+      'rgba(0, 194, 255, 0.7)',
+      'rgba(0, 126, 167, 0.8)',
+      'rgba(0, 255, 229, 0.6)',
+      'rgba(0, 194, 255, 0.4)',
+    ];
+
+    const draw = () => {
+      ctx.fillStyle = 'rgba(5, 5, 8, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.font = `${fontSize}px monospace`;
+
+      for (let i = 0; i < drops.length; i++) {
+        const char = charArray[Math.floor(Math.random() * charArray.length)];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const x = i * fontSize;
+        const y = drops[i] * fontSize;
+
+        if (Math.random() > 0.95) {
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = '#00C2FF';
+        } else {
+          ctx.shadowBlur = 0;
+        }
+
+        ctx.fillStyle = color;
+        ctx.fillText(char, x, y);
+        ctx.shadowBlur = 0;
+
+        if (y > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        
+        drops[i] += 0.5 + Math.random() * 0.5;
+      }
+    };
+
+    const interval = setInterval(draw, 50);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('resize', resizeCanvas);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 pointer-events-none"
+      style={{ opacity: 0.3 }}
+    />
+  );
+}
+
+// Floating Orb Component
+function FloatingOrb({ 
+  size, 
+  color, 
+  initialX, 
+  initialY, 
+  duration 
+}: { 
+  size: number; 
+  color: string; 
+  initialX: string; 
+  initialY: string; 
+  duration: number;
+}) {
+  return (
+    <div
+      className="absolute rounded-full pointer-events-none floating-orb"
+      style={{
+        width: size,
+        height: size,
+        left: initialX,
+        top: initialY,
+        background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
+        filter: 'blur(40px)',
+        animation: `float ${duration}s ease-in-out infinite`,
+        animationDelay: `${Math.random() * duration}s`
+      }}
+    />
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,13 +143,11 @@ export default function LoginPage() {
       const response = await authAPI.login({ email, password });
       const data = response.data;
 
-      // Check if 2FA is required
       if (data.requires_2fa && data.temp_token) {
         setTempToken(data.temp_token);
         setStep('2fa');
         toast.success(data.message || 'Please enter your 2FA code');
       } else {
-        // No 2FA required, complete login
         if (data.access_token && data.refresh_token && data.user) {
           localStorage.setItem('access_token', data.access_token);
           localStorage.setItem('refresh_token', data.refresh_token);
@@ -41,14 +155,12 @@ export default function LoginPage() {
           
           toast.success('Welcome back!');
           
-          // Redirect based on onboarding status
           if (data.user.onboarding_completed) {
             router.push(`/${data.user.username}`);
           } else {
             router.push('/onboarding');
           }
           
-          // Reload to update auth context
           window.location.href = data.user.onboarding_completed ? `/${data.user.username}` : '/onboarding';
         }
       }
@@ -74,14 +186,12 @@ export default function LoginPage() {
       const response = await authAPI.verify2FALogin(tempToken, totpCode);
       const data = response.data;
 
-      // Store tokens and user
       localStorage.setItem('access_token', data.access_token);
       localStorage.setItem('refresh_token', data.refresh_token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
       toast.success('Welcome back!');
 
-      // Redirect based on onboarding status
       if (data.user.onboarding_completed) {
         window.location.href = `/${data.user.username}`;
       } else {
@@ -90,7 +200,7 @@ export default function LoginPage() {
     } catch (error: any) {
       console.error('2FA verification error:', error);
       toast.error(error.response?.data?.detail || 'Invalid 2FA code');
-      setTotpCode(''); // Clear the code on error
+      setTotpCode('');
     } finally {
       setLoading(false);
     }
@@ -98,51 +208,93 @@ export default function LoginPage() {
 
   return (
     <div 
-      className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden"
-      style={{ background: '#111111' }}
+      className="min-h-screen flex flex-col items-center px-4 relative overflow-hidden"
+      style={{ background: '#111111', paddingTop: '8vh' }}
     >
-      {/* Ambient Background Glow */}
+      {/* Deep Background Layer */}
       <div 
-        className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-20 blur-3xl pointer-events-none"
-        style={{ background: 'radial-gradient(circle, #00C2FF 0%, transparent 70%)' }}
-      />
-      <div 
-        className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full opacity-10 blur-3xl pointer-events-none"
-        style={{ background: 'radial-gradient(circle, #007EA7 0%, transparent 70%)' }}
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse at center, #1a1a1e 0%, #111114 100%)'
+        }}
       />
 
+      {/* Matrix Rain Effect */}
+      <MatrixRain />
+
+      {/* Floating Orbs */}
+      <FloatingOrb size={500} color="rgba(0, 194, 255, 0.08)" initialX="5%" initialY="15%" duration={12} />
+      <FloatingOrb size={400} color="rgba(0, 126, 167, 0.06)" initialX="75%" initialY="55%" duration={15} />
+      <FloatingOrb size={300} color="rgba(0, 255, 229, 0.05)" initialX="85%" initialY="5%" duration={10} />
+
+      {/* Gradient Overlay */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle at 50% 40%, transparent 0%, rgba(10, 10, 12, 0.7) 100%)'
+        }}
+      />
+
+      {/* Subtle Vignette */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          boxShadow: 'inset 0 0 150px 50px rgba(0, 0, 0, 0.5)'
+        }}
+      />
+
+      {/* Main Content */}
       <div className="max-w-md w-full relative z-10 animate-fade-in">
         {/* Logo & Header */}
-        <div className="text-center mb-8">
-          <Link 
-            href="/" 
-            className="inline-block text-4xl font-bold mb-6 transition-transform hover:scale-105"
-            style={{ 
-              background: 'linear-gradient(135deg, #00C2FF 0%, #33D1FF 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
-            }}
-          >
-            CREATOR OS
+        <div className="text-center">
+          {/* Logo + Name as one unit - stays at top */}
+          <Link href="/" className="inline-flex flex-col items-center mb-16 relative group">
+            <div 
+              className="absolute inset-0 rounded-full blur-2xl opacity-60 group-hover:opacity-80 transition-opacity duration-500 logo-glow"
+              style={{ 
+                background: 'radial-gradient(circle, rgba(0, 194, 255, 0.4) 0%, transparent 70%)',
+                transform: 'scale(1.5)',
+                top: '-40px'
+              }}
+            />
+            <img 
+              src="/webstar-logo.png" 
+              alt="WebSTAR" 
+              className="w-20 h-20 relative z-10 transition-transform duration-300 group-hover:scale-105"
+              style={{ filter: 'drop-shadow(0 0 20px rgba(0, 194, 255, 0.3))' }}
+            />
+            {/* WebSTAR name - tight to logo */}
+            <span 
+              className="text-xl font-bold tracking-widest mt-2 relative z-10"
+              style={{ 
+                color: '#00C2FF',
+                textShadow: '0 0 20px rgba(0, 194, 255, 0.4)'
+              }}
+            >
+              WebSTAR
+            </span>
           </Link>
-          
-          <h1 
-            className="text-3xl font-bold mb-2"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            {step === 'credentials' ? 'Welcome back' : 'Two-Factor Authentication'}
-          </h1>
-          
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-            {step === 'credentials' 
-              ? 'Sign in to continue to your creative workspace' 
-              : 'Enter the 6-digit code from your authenticator app'
-            }
-          </p>
         </div>
 
-        {/* Main Card */}
+        {/* Welcome text + Card - pushed down */}
+        <div style={{ marginTop: '4vh' }}>
+          <div className="text-center mb-8">
+            <h1 
+              className="text-3xl font-bold mb-2"
+              style={{ color: '#FFFFFF' }}
+            >
+              {step === 'credentials' ? 'Welcome back, Hero!' : 'Two-Factor Authentication'}
+            </h1>
+            
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+              {step === 'credentials' 
+                ? 'Enter your space to continue building.' 
+                : 'Enter the 6-digit code from your authenticator app'
+              }
+            </p>
+          </div>
+
+          {/* Main Card */}
         <div 
           className="glass rounded-2xl p-8 animate-slide-up"
           style={{ 
@@ -150,12 +302,11 @@ export default function LoginPage() {
             backdropFilter: 'blur(20px) saturate(180%)',
             WebkitBackdropFilter: 'blur(20px) saturate(180%)',
             border: '1px solid rgba(255, 255, 255, 0.05)',
-            boxShadow: 'var(--shadow-md)'
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
           }}
         >
           {step === 'credentials' ? (
             <form onSubmit={handleCredentialsSubmit} className="space-y-5">
-              {/* Email or Username Input */}
               <div>
                 <input
                   id="email"
@@ -170,7 +321,6 @@ export default function LoginPage() {
                 />
               </div>
 
-              {/* Password Input */}
               <div className="relative">
                 <input
                   id="password"
@@ -197,7 +347,6 @@ export default function LoginPage() {
                 </button>
               </div>
 
-              {/* Sign In Button */}
               <button
                 type="submit"
                 disabled={loading}
@@ -230,7 +379,6 @@ export default function LoginPage() {
             </form>
           ) : (
             <form onSubmit={handle2FASubmit} className="space-y-6">
-              {/* 2FA Code Input */}
               <div>
                 <input
                   id="totp-code"
@@ -258,7 +406,6 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex gap-3">
                 <button
                   type="button"
@@ -277,63 +424,44 @@ export default function LoginPage() {
                   disabled={loading || totpCode.length !== 6}
                   className="btn-primary flex-1"
                 >
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                        <circle 
-                          className="opacity-25" 
-                          cx="12" 
-                          cy="12" 
-                          r="10" 
-                          stroke="currentColor" 
-                          strokeWidth="4"
-                          fill="none"
-                        />
-                        <path 
-                          className="opacity-75" 
-                          fill="currentColor" 
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
-                      Verifying...
-                    </span>
-                  ) : (
-                    'Verify & Continue'
-                  )}
+                  {loading ? 'Verifying...' : 'Verify & Continue'}
                 </button>
               </div>
             </form>
           )}
 
-          {/* Divider & Additional Options (Only on credentials step) */}
           {step === 'credentials' && (
             <>
-              <div className="my-8 relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div 
-                    className="w-full border-t"
-                    style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                  />
-                </div>
-                <div className="relative flex justify-center text-xs">
-                  <span 
-                    className="px-3 py-1 rounded-full"
-                    style={{ 
-                      background: '#111111',
-                      color: 'var(--text-tertiary)',
-                      letterSpacing: '0.5px'
-                    }}
-                  >
-                    OR CONTINUE WITH
-                  </span>
-                </div>
+              {/* OR Divider - Pill style */}
+              <div className="my-5 flex items-center gap-3">
+                <div 
+                  className="flex-1 h-px"
+                  style={{ 
+                    background: 'linear-gradient(90deg, transparent, rgba(0, 194, 255, 0.3))'
+                  }}
+                />
+                <span 
+                  className="px-4 py-1 rounded-full text-xs tracking-widest"
+                  style={{ 
+                    background: 'rgba(20, 20, 24, 0.9)',
+                    color: 'rgba(255, 255, 255, 0.4)',
+                    border: '1px solid rgba(255, 255, 255, 0.06)'
+                  }}
+                >
+                  OR
+                </span>
+                <div 
+                  className="flex-1 h-px"
+                  style={{ 
+                    background: 'linear-gradient(90deg, rgba(0, 194, 255, 0.3), transparent)'
+                  }}
+                />
               </div>
 
-              {/* Google Sign In Button */}
+              {/* Google Sign In */}
               <button
                 type="button"
                 onClick={() => {
-                  // Redirect to backend OAuth endpoint
                   window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/auth/google`;
                 }}
                 className="btn-secondary w-full flex items-center justify-center gap-3"
@@ -361,50 +489,67 @@ export default function LoginPage() {
 
               {/* Sign Up Link */}
               <p 
-                className="mt-8 text-center text-sm"
+                className="mt-5 text-center text-sm"
                 style={{ color: 'var(--text-secondary)' }}
               >
-                Don't have an account?{' '}
+                New here?{' '}
                 <Link 
                   href="/auth/register" 
                   className="font-semibold transition-colors hover:brightness-110"
                   style={{ color: 'var(--blue)' }}
                 >
-                  Create account
+                  Create your space
                 </Link>
               </p>
             </>
           )}
         </div>
 
-        {/* Security Notice */}
-        {step === '2fa' && (
-          <div 
-            className="mt-6 text-center text-xs p-4 rounded-lg"
-            style={{ 
-              color: 'var(--text-tertiary)',
-              background: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid rgba(255, 255, 255, 0.05)'
-            }}
-          >
-            <svg 
-              className="w-4 h-4 inline-block mr-2 mb-1" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
+          {step === '2fa' && (
+            <div 
+              className="mt-6 text-center text-xs p-4 rounded-lg"
+              style={{ 
+                color: 'var(--text-tertiary)',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.05)'
+              }}
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
-              />
-            </svg>
-            Protected by two-factor authentication
-          </div>
-        )}
+              <svg 
+                className="w-4 h-4 inline-block mr-2 mb-1" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
+                />
+              </svg>
+              Protected by two-factor authentication
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0) translateX(0);
+          }
+          25% {
+            transform: translateY(-15px) translateX(8px);
+          }
+          50% {
+            transform: translateY(-8px) translateX(-8px);
+          }
+          75% {
+            transform: translateY(-20px) translateX(4px);
+          }
+        }
+      `}</style>
     </div>
   );
 }
-

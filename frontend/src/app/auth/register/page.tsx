@@ -103,36 +103,36 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: '#111111' }}>
+    <div className="min-h-screen flex items-center justify-center px-4 py-6 sm:py-10" style={{ background: '#111111' }}>
       <div className="max-w-4xl w-full">
         {/* Header */}
-        <div className="text-center mb-8">
-          <Link href="/" className="text-3xl font-bold text-gradient">
+        <div className="text-center mb-5 sm:mb-8">
+          <Link href="/" className="text-2xl sm:text-3xl font-bold text-gradient">
             WebStar
           </Link>
-          <h2 className="mt-6 text-3xl font-bold" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Create your account</h2>
+          <h2 className="mt-4 sm:mt-6 text-2xl sm:text-3xl font-bold" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Create your account</h2>
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-12">
+        <div className="mb-6 sm:mb-10">
           <div className="flex items-center justify-center gap-2">
             {[1, 2, 3, 4].map((s) => (
               <div
                 key={s}
-                className="h-2 flex-1 max-w-xs rounded-full transition"
+                className="h-1.5 sm:h-2 flex-1 max-w-xs rounded-full transition"
                 style={{ background: s <= step ? '#00C2FF' : 'rgba(255, 255, 255, 0.1)' }}
               />
             ))}
           </div>
-          <p className="text-center mt-4" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
+          <p className="text-center mt-3 text-sm" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
             Step {step} of 4
           </p>
         </div>
 
         {/* Step 1: Basic Info */}
         {step === 1 && (
-          <div className="glass rounded-2xl shadow-xl p-8 animate-fade-in max-w-md mx-auto">
-            <h3 className="text-2xl font-bold text-center mb-6" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Basic Information</h3>
+          <div className="glass rounded-2xl shadow-xl p-5 sm:p-8 animate-fade-in max-w-md mx-auto">
+            <h3 className="text-xl sm:text-2xl font-bold text-center mb-5 sm:mb-6" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Basic Information</h3>
             <form onSubmit={handleBasicInfoSubmit} className="space-y-5">
               <div>
                 <input
@@ -271,18 +271,18 @@ export default function RegisterPage() {
 
         {/* Step 2: Archetype */}
         {step === 2 && (
-          <div className="glass rounded-2xl shadow-xl p-8 animate-fade-in">
+          <div className="glass rounded-2xl shadow-xl p-5 sm:p-8 animate-fade-in">
             <button
               onClick={() => setStep(1)}
-              className="mb-6 flex items-center gap-2"
+              className="mb-4 sm:mb-6 flex items-center gap-2 text-sm"
               style={{ color: '#00C2FF' }}
             >
               ← Back
             </button>
 
-            <h2 className="text-3xl font-bold text-center mb-12" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Choose Your Archetype</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-10" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Choose Your Archetype</h2>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-3 sm:gap-6">
               {ARCHETYPES.map((archetype) => (
                 <button
                   key={archetype.id}
@@ -290,15 +290,15 @@ export default function RegisterPage() {
                     setFormData((prev) => ({ ...prev, archetype: archetype.id }));
                     setTimeout(() => setStep(3), 300);
                   }}
-                  className="p-8 border-2 rounded-xl transition transform hover:scale-105 hover:shadow-lg"
+                  className="p-4 sm:p-6 border-2 rounded-xl transition transform hover:scale-105 hover:shadow-lg text-left"
                   style={{
                     borderColor: formData.archetype === archetype.id ? '#00C2FF' : 'rgba(255, 255, 255, 0.1)',
                     background: formData.archetype === archetype.id ? 'rgba(0, 194, 255, 0.1)' : 'rgba(255, 255, 255, 0.02)'
                   }}
                 >
-                  <div className="text-6xl mb-4">{archetype.icon}</div>
-                  <h3 className="text-xl font-semibold mb-2" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>{archetype.name}</h3>
-                  <p style={{ color: 'rgba(255, 255, 255, 0.75)' }}>{archetype.description}</p>
+                  <div className="text-3xl sm:text-5xl mb-2 sm:mb-3">{archetype.icon}</div>
+                  <h3 className="text-sm sm:text-lg font-semibold mb-1" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>{archetype.name}</h3>
+                  <p className="text-xs sm:text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>{archetype.description}</p>
                 </button>
               ))}
             </div>
@@ -307,24 +307,24 @@ export default function RegisterPage() {
 
         {/* Step 3: Role */}
         {step === 3 && (
-          <div className="glass rounded-2xl shadow-xl p-8 animate-fade-in">
+          <div className="glass rounded-2xl shadow-xl p-5 sm:p-8 animate-fade-in">
             <button
               onClick={() => setStep(2)}
-              className="mb-6 flex items-center gap-2"
+              className="mb-4 sm:mb-6 flex items-center gap-2 text-sm"
               style={{ color: '#00C2FF' }}
             >
               ← Back
             </button>
 
-            <h2 className="text-3xl font-bold text-center mb-8" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>What's Your Role?</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>What's Your Role?</h2>
 
             <div className="max-w-md mx-auto">
               <input
                 type="text"
-                placeholder="e.g., Product Designer, Music Producer, Software Engineer..."
+                placeholder="e.g., Product Designer, Music Producer..."
                 value={formData.role}
                 onChange={(e) => setFormData((prev) => ({ ...prev, role: e.target.value }))}
-                className="w-full px-6 py-4 text-lg border-2 rounded-xl"
+                className="w-full px-4 sm:px-6 py-3 sm:py-4 text-base sm:text-lg border-2 rounded-xl"
                 style={{ 
                   background: 'rgba(255, 255, 255, 0.05)', 
                   borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -333,15 +333,15 @@ export default function RegisterPage() {
                 autoFocus
               />
 
-              <div className="mt-8">
-                <p className="text-sm mb-4" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Popular roles:</p>
+              <div className="mt-5 sm:mt-8">
+                <p className="text-xs sm:text-sm mb-3" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Popular roles:</p>
                 <div className="flex flex-wrap gap-2">
                   {['Product Designer', 'Software Engineer', 'Music Producer', 'Content Creator', 'Photographer', 'Video Editor'].map(
                     (role) => (
                       <button
                         key={role}
                         onClick={() => setFormData((prev) => ({ ...prev, role }))}
-                        className="px-4 py-2 rounded-lg transition text-sm"
+                        className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition text-xs sm:text-sm"
                         style={{ 
                           background: 'rgba(255, 255, 255, 0.05)',
                           color: 'rgba(255, 255, 255, 0.95)'
@@ -357,7 +357,7 @@ export default function RegisterPage() {
               <button
                 onClick={() => formData.role && setStep(4)}
                 disabled={!formData.role}
-                className="mt-12 w-full py-4 bg-gradient-primary text-white font-semibold rounded-xl hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="mt-8 sm:mt-12 w-full py-3 sm:py-4 bg-gradient-primary text-white font-semibold rounded-xl hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Continue
               </button>
@@ -367,10 +367,10 @@ export default function RegisterPage() {
 
         {/* Step 4: Expertise Level */}
         {step === 4 && (
-          <div className="glass rounded-2xl shadow-xl p-8 animate-fade-in">
+          <div className="glass rounded-2xl shadow-xl p-5 sm:p-8 animate-fade-in">
             <button
               onClick={() => setStep(3)}
-              className="mb-6 flex items-center gap-2"
+              className="mb-4 sm:mb-6 flex items-center gap-2 text-sm"
               style={{ color: '#00C2FF' }}
             >
               ← Back
@@ -378,11 +378,11 @@ export default function RegisterPage() {
 
             <div className="max-w-2xl mx-auto">
               {/* Current Level Display */}
-              <div className="mb-12 text-center">
-                <p className="text-lg mb-3" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
+              <div className="mb-8 sm:mb-12 text-center">
+                <p className="text-sm sm:text-lg mb-2 sm:mb-3" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
                   Your expertise level is:
                 </p>
-                <h3 className="text-3xl font-bold" style={{ color: '#00C2FF' }}>
+                <h3 className="text-2xl sm:text-3xl font-bold" style={{ color: '#00C2FF' }}>
                   {EXPERTISE_LEVELS[
                     formData.expertiseLevel 
                       ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel)
@@ -392,7 +392,7 @@ export default function RegisterPage() {
               </div>
 
               {/* Slider */}
-              <div className="px-4">
+              <div className="px-2 sm:px-4">
                 <input
                   type="range"
                   min="0"
@@ -404,16 +404,15 @@ export default function RegisterPage() {
                   }
                   onChange={(e) => {
                     const sliderValue = parseInt(e.target.value);
-                    // Map 100 positions (0-99) to 4 categories
                     let index;
                     if (sliderValue < 25) {
-                      index = 0; // emerging
+                      index = 0;
                     } else if (sliderValue < 50) {
-                      index = 1; // developing
+                      index = 1;
                     } else if (sliderValue < 75) {
-                      index = 2; // established
+                      index = 2;
                     } else {
-                      index = 3; // leading
+                      index = 3;
                     }
                     setFormData((prev) => ({ 
                       ...prev, 
@@ -421,7 +420,6 @@ export default function RegisterPage() {
                     }));
                   }}
                   onMouseUp={() => {
-                    // Set default value on first interaction if not set
                     if (!formData.expertiseLevel) {
                       setFormData((prev) => ({ 
                         ...prev, 
@@ -429,7 +427,7 @@ export default function RegisterPage() {
                       }));
                     }
                   }}
-                  className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
+                  className="w-full h-2 sm:h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
                   style={{
                     background: `linear-gradient(to right, #0ea5e9 0%, #0ea5e9 ${
                       ((formData.expertiseLevel 
@@ -444,14 +442,14 @@ export default function RegisterPage() {
                 />
                 
                 {/* Level Labels */}
-                <div className="flex justify-between mt-4 px-1">
+                <div className="flex justify-between mt-3 sm:mt-4">
                   {EXPERTISE_LEVELS.map((level, index) => (
                     <button
                       key={level.id}
                       onClick={() => setFormData((prev) => ({ ...prev, expertiseLevel: level.id }))}
-                      className="text-xs font-medium transition cursor-pointer"
+                      className="text-[10px] sm:text-xs font-medium transition cursor-pointer"
                       style={{ 
-                        width: '22%', 
+                        width: '24%', 
                         textAlign: 'center',
                         color: formData.expertiseLevel === level.id ? '#00C2FF' : 'rgba(255, 255, 255, 0.5)',
                         fontWeight: formData.expertiseLevel === level.id ? 'bold' : 'normal'
@@ -464,11 +462,11 @@ export default function RegisterPage() {
               </div>
 
               {/* Complete Button */}
-              <div className="mt-12">
+              <div className="mt-8 sm:mt-12">
                 <button
                   onClick={handleFinalSubmit}
                   disabled={!formData.expertiseLevel || loading}
-                  className="w-full py-4 bg-gradient-to-r from-primary-600 to-accent-600 text-white text-lg font-semibold rounded-xl hover:shadow-2xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3 sm:py-4 bg-gradient-to-r from-primary-600 to-accent-600 text-white text-base sm:text-lg font-semibold rounded-xl hover:shadow-2xl transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Creating your account...' : '🚀 Create My Account'}
                 </button>
