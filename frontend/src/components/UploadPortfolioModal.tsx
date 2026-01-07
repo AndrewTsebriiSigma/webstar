@@ -715,21 +715,31 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 </h2>
               </div>
               {/* Right: Primary action button - Publish or Save as Draft depending on context */}
-              <button
-                onClick={defaultSaveAsDraft ? handleSaveAsDraft : handleSubmit}
-                disabled={uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file)}
-                className="text-[14px] font-semibold rounded-[8px] transition disabled:opacity-50 disabled:cursor-not-allowed publish-btn"
-                style={{
-                  background: uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file) 
-                    ? 'rgba(255, 255, 255, 0.2)' 
-                    : '#00C2FF',
-                  color: '#fff',
-                  height: '32px',
-                  padding: '0 32px',
-                }}
-              >
-                {uploading ? '...' : (defaultSaveAsDraft ? 'Save Draft' : 'Publish')}
-              </button>
+              {(() => {
+                // Determine if button should be enabled
+                // When editing an existing draft (editingDraftId), enable if there's a preview (existing content)
+                // When creating new, enable if there's a file (for media) or text content (for text posts)
+                const isEditing = !!editingDraftId;
+                const hasExistingContent = !!preview || !!textContent.trim();
+                const hasNewContent = selectedContentType === 'text' ? !!textContent.trim() : !!file;
+                const isButtonEnabled = !uploading && (isEditing ? hasExistingContent : hasNewContent);
+                
+                return (
+                  <button
+                    onClick={defaultSaveAsDraft ? handleSaveAsDraft : handleSubmit}
+                    disabled={!isButtonEnabled}
+                    className="text-[14px] font-semibold rounded-[8px] transition disabled:opacity-50 disabled:cursor-not-allowed publish-btn"
+                    style={{
+                      background: !isButtonEnabled ? 'rgba(255, 255, 255, 0.2)' : '#00C2FF',
+                      color: '#fff',
+                      height: '32px',
+                      padding: '0 32px',
+                    }}
+                  >
+                    {uploading ? '...' : (defaultSaveAsDraft ? 'Save Draft' : 'Publish')}
+                  </button>
+                );
+              })()}
             </div>
 
             {/* Content area - scrollable, tap to close delete mode */}

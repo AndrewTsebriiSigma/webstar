@@ -12,7 +12,6 @@ import CreateProjectModal from '@/components/CreateProjectModal';
 import CreateContentModal from '@/components/CreateContentModal';
 import { 
   XMarkIcon, 
-  MagnifyingGlassIcon,
   PlusIcon,
   FolderIcon,
   CheckIcon
@@ -345,7 +344,6 @@ export default function DraftsPage() {
   const [drafts, setDrafts] = useState<PortfolioItem[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<ContentType>('all');
   const [sortType, setSortType] = useState<SortType>('recent');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
@@ -409,15 +407,6 @@ export default function DraftsPage() {
   const getFilteredDrafts = useCallback(() => {
     let filtered = [...drafts];
     
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(draft => {
-        const matchesTitle = draft.title?.toLowerCase().includes(query);
-        const matchesDesc = draft.description?.toLowerCase().includes(query);
-        return matchesTitle || matchesDesc;
-      });
-    }
-    
     if (filterType !== 'all' && filterType !== 'project') {
       filtered = filtered.filter(draft => {
         if (filterType === 'text') return draft.content_type === 'text';
@@ -426,7 +415,7 @@ export default function DraftsPage() {
     }
     
     return filtered;
-  }, [drafts, searchQuery, filterType]);
+  }, [drafts, filterType]);
 
   // Sort drafts
   const getSortedDrafts = useCallback(() => {
@@ -535,61 +524,24 @@ export default function DraftsPage() {
           zIndex: 40
         }}
       >
-        <div style={{ padding: '12px 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {/* Search Bar - Fully rounded pill */}
-            <div style={{
-              flex: '1 1 0%',
+        {/* Header with close button */}
+        <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+          <button
+            onClick={() => router.back()}
+            style={{
+              width: '40px',
+              height: '40px',
+              flexShrink: 0,
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
-              background: 'rgba(255, 255, 255, 0.06)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '100px',
-              padding: '10px 14px',
-              height: '40px'
-            }}>
-              <MagnifyingGlassIcon className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.4)', flexShrink: 0 }} />
-              <input
-                type="text"
-                placeholder="Search drafts..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  flex: 1,
-                  background: 'transparent',
-                  border: 'none',
-                  outline: 'none',
-                  color: '#F5F5F5',
-                  fontSize: '15px',
-                  fontWeight: 500,
-                  minWidth: 0
-                }}
-              />
-              {searchQuery && (
-                <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0 }}>
-                  <XMarkIcon className="w-4 h-4" style={{ color: 'rgba(255, 255, 255, 0.4)' }} />
-                </button>
-              )}
-            </div>
-            {/* Close Button */}
-            <button
-              onClick={() => router.back()}
-              style={{
-                width: '40px',
-                height: '40px',
-                flexShrink: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                background: 'transparent',
-                border: 'none'
-              }}
-            >
-              <XMarkIcon className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
-            </button>
-          </div>
+              justifyContent: 'center',
+              cursor: 'pointer',
+              background: 'transparent',
+              border: 'none'
+            }}
+          >
+            <XMarkIcon className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+          </button>
         </div>
 
         {/* Navigation Bar */}
