@@ -35,6 +35,7 @@ export default function DraftsPage() {
   // Modal states
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showProjectModal, setShowProjectModal] = useState(false);
+  const [showProjectEditModal, setShowProjectEditModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedPostType, setSelectedPostType] = useState<'media' | 'audio' | 'pdf' | 'text' | null>(null);
   
@@ -43,13 +44,15 @@ export default function DraftsPage() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   
   // Drag and drop state
-  const [draggedItem, setDraggedItem] = useState<PortfolioItem | null>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [localDraftsOrder, setLocalDraftsOrder] = useState<PortfolioItem[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const dragNodeRef = useRef<HTMLDivElement | null>(null);
+  const dragGhostRef = useRef<HTMLDivElement | null>(null);
 
   // Refs for dropdown
   const filterMenuRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) {
@@ -80,13 +83,16 @@ export default function DraftsPage() {
     if (isDragging) {
       document.body.style.touchAction = 'none';
       document.body.style.overflow = 'hidden';
+      document.body.style.userSelect = 'none';
     } else {
       document.body.style.touchAction = '';
       document.body.style.overflow = '';
+      document.body.style.userSelect = '';
     }
     return () => {
       document.body.style.touchAction = '';
       document.body.style.overflow = '';
+      document.body.style.userSelect = '';
     };
   }, [isDragging]);
 
@@ -97,9 +103,7 @@ export default function DraftsPage() {
         portfolioAPI.getDrafts(),
         projectsAPI.getProjects()
       ]);
-      const loadedDrafts = draftsResponse.data || [];
-      setDrafts(loadedDrafts);
-      setLocalDraftsOrder(loadedDrafts);
+      setDrafts(draftsResponse.data || []);
       setProjects(projectsResponse.data || []);
     } catch (error) {
       console.error('Failed to load drafts:', error);
@@ -111,7 +115,7 @@ export default function DraftsPage() {
 
   // Filter drafts based on selected type
   const getFilteredDrafts = useCallback(() => {
-    let filtered = localDraftsOrder.length > 0 ? localDraftsOrder : drafts;
+    let filtered = [...drafts];
     
     // Search filter
     if (searchQuery) {
@@ -134,7 +138,7 @@ export default function DraftsPage() {
     }
     
     return filtered;
-  }, [drafts, localDraftsOrder, searchQuery, filterType]);
+  }, [drafts, searchQuery, filterType]);
 
   // Sort drafts
   const getSortedDrafts = useCallback(() => {
@@ -203,7 +207,7 @@ export default function DraftsPage() {
 
   // Open draft for editing
   const handleDraftClick = (draft: PortfolioItem) => {
-    if (isDragging) return; // Don't open modal while dragging
+    if (isDragging) return;
     
     setEditingDraft(draft);
     
@@ -221,122 +225,193 @@ export default function DraftsPage() {
     setShowUploadModal(true);
   };
 
-  // Open project for editing
+  // Open project for editing - convert project to draft-like format
   const handleProjectClick = (project: Project) => {
-    // Navigate to project detail or open modal
-    // For now, we'll show a toast and could navigate to project page
-    toast.success(`Opening project: ${project.title}`);
-    // Could navigate to project detail page if exists:
-    // router.push(`/projects/${project.id}`);
+    if (isDragging) return;
+    
+    // Set the project for editing and open the project modal
+    setEditingProject(project);
+    setShowProjectEditModal(true);
   };
 
-  // Drag and drop handlers
-  const handleDragStart = (e: React.DragEvent, draft: PortfolioItem, index: number) => {
-    setDraggedItem(draft);
+  // Swap drafts at two indices
+  const swapDrafts = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+    
+    const newDrafts = [...drafts];
+    // Find the actual indices in the full drafts array
+    const fromDraft = sortedDrafts[fromIndex];
+    const toDraft = sortedDrafts[toIndex];
+    
+    const fromActualIndex = newDrafts.findIndex(d => d.id === fromDraft.id);
+    const toActualIndex = newDrafts.findIndex(d => d.id === toDraft.id);
+    
+    if (fromActualIndex !== -1 && toActualIndex !== -1) {
+      // Swap the items
+      [newDrafts[fromActualIndex], newDrafts[toActualIndex]] = [newDrafts[toActualIndex], newDrafts[fromActualIndex]];
+      setDrafts(newDrafts);
+    }
+  };
+
+  // Desktop drag handlers
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
     setIsDragging(true);
+    
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', index.toString());
-    // Add visual feedback
+    
+    // Create drag image
     const target = e.currentTarget as HTMLElement;
-    if (target) {
-      setTimeout(() => {
-        target.style.opacity = '0.4';
+    dragNodeRef.current = target as HTMLDivElement;
+    
+    // Apply dragging style
+    setTimeout(() => {
+      if (target) {
+        target.style.opacity = '0.5';
         target.style.transform = 'scale(0.95)';
-      }, 0);
-    }
+      }
+    }, 0);
   };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    if (dragOverIndex !== index) {
+    
+    if (draggedIndex !== null && draggedIndex !== index && dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragEnter = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex !== null && draggedIndex !== index) {
       setDragOverIndex(index);
     }
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
+    // Check if we're leaving to outside the grid
     const relatedTarget = e.relatedTarget as HTMLElement;
-    if (!relatedTarget || !e.currentTarget.contains(relatedTarget)) {
+    if (!relatedTarget || !gridRef.current?.contains(relatedTarget)) {
       setDragOverIndex(null);
     }
   };
 
   const handleDragEnd = (e: React.DragEvent) => {
-    if (e.currentTarget instanceof HTMLElement) {
-      e.currentTarget.style.opacity = '1';
-      e.currentTarget.style.transform = 'scale(1)';
+    const target = e.currentTarget as HTMLElement;
+    if (target) {
+      target.style.opacity = '1';
+      target.style.transform = 'scale(1)';
     }
-    setDraggedItem(null);
+    
+    // Perform swap if we have valid indices
+    if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
+      swapDrafts(draggedIndex, dragOverIndex);
+      toast.success('Draft position swapped');
+    }
+    
+    setDraggedIndex(null);
     setDragOverIndex(null);
     setIsDragging(false);
+    dragNodeRef.current = null;
   };
 
-  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+  const handleDrop = (e: React.DragEvent, index: number) => {
     e.preventDefault();
-    const dragIndex = parseInt(e.dataTransfer.getData('text/plain'));
     
-    if (dragIndex !== dropIndex && draggedItem) {
-      const newDrafts = [...sortedDrafts];
-      const [removed] = newDrafts.splice(dragIndex, 1);
-      newDrafts.splice(dropIndex, 0, removed);
-      
-      setLocalDraftsOrder(newDrafts);
-      setDrafts(newDrafts);
-      
-      toast.success('Draft order updated');
+    if (draggedIndex !== null && draggedIndex !== index) {
+      swapDrafts(draggedIndex, index);
+      toast.success('Draft position swapped');
     }
     
-    setDraggedItem(null);
+    setDraggedIndex(null);
     setDragOverIndex(null);
     setIsDragging(false);
   };
 
-  // Touch drag handlers for mobile - improved
-  const touchStartRef = useRef<{ x: number; y: number; index: number; draft: PortfolioItem } | null>(null);
+  // Touch drag handlers for mobile
+  const touchStartRef = useRef<{ x: number; y: number; index: number; startTime: number } | null>(null);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const touchMoveRef = useRef<{ x: number; y: number } | null>(null);
 
-  const handleTouchStart = (e: React.TouchEvent, draft: PortfolioItem, index: number) => {
+  const handleTouchStart = (e: React.TouchEvent, index: number) => {
     const touch = e.touches[0];
     touchStartRef.current = {
       x: touch.clientX,
       y: touch.clientY,
       index,
-      draft
+      startTime: Date.now()
     };
+    touchMoveRef.current = { x: touch.clientX, y: touch.clientY };
 
-    // Long press to initiate drag
+    // Long press to initiate drag (400ms)
     longPressTimerRef.current = setTimeout(() => {
       if (touchStartRef.current) {
-        setDraggedItem(draft);
+        setDraggedIndex(index);
         setIsDragging(true);
-        // Haptic feedback if available
+        
+        // Haptic feedback
         if (navigator.vibrate) {
           navigator.vibrate(50);
         }
+
+        // Create ghost element
+        const target = e.currentTarget as HTMLElement;
+        if (target && !dragGhostRef.current) {
+          const ghost = target.cloneNode(true) as HTMLDivElement;
+          ghost.style.position = 'fixed';
+          ghost.style.zIndex = '9999';
+          ghost.style.pointerEvents = 'none';
+          ghost.style.opacity = '0.8';
+          ghost.style.transform = 'scale(1.05)';
+          ghost.style.boxShadow = '0 10px 40px rgba(0, 194, 255, 0.4)';
+          ghost.style.width = target.offsetWidth + 'px';
+          ghost.style.height = target.offsetHeight + 'px';
+          ghost.style.left = (touch.clientX - target.offsetWidth / 2) + 'px';
+          ghost.style.top = (touch.clientY - target.offsetHeight / 2) + 'px';
+          document.body.appendChild(ghost);
+          dragGhostRef.current = ghost;
+        }
       }
-    }, 300);
+    }, 400);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || !touchStartRef.current) {
-      // Cancel long press if moved before it triggered
-      if (longPressTimerRef.current) {
+    const touch = e.touches[0];
+    touchMoveRef.current = { x: touch.clientX, y: touch.clientY };
+
+    // Check if we moved significantly before long press triggered
+    if (!isDragging && touchStartRef.current && longPressTimerRef.current) {
+      const dx = touch.clientX - touchStartRef.current.x;
+      const dy = touch.clientY - touchStartRef.current.y;
+      if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+        // Cancel long press - user is scrolling
         clearTimeout(longPressTimerRef.current);
         longPressTimerRef.current = null;
+        return;
       }
-      return;
     }
 
-    e.preventDefault(); // Prevent scrolling while dragging
+    if (!isDragging || !touchStartRef.current) return;
+
+    e.preventDefault();
     
-    const touch = e.touches[0];
-    const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
+    // Move ghost element
+    if (dragGhostRef.current) {
+      const target = e.currentTarget as HTMLElement;
+      dragGhostRef.current.style.left = (touch.clientX - target.offsetWidth / 2) + 'px';
+      dragGhostRef.current.style.top = (touch.clientY - target.offsetHeight / 2) + 'px';
+    }
     
-    for (const el of elements) {
+    // Find element under touch
+    const elementsUnder = document.elementsFromPoint(touch.clientX, touch.clientY);
+    
+    for (const el of elementsUnder) {
       const draftCard = el.closest('[data-draft-index]');
       if (draftCard) {
         const index = parseInt(draftCard.getAttribute('data-draft-index') || '-1');
-        if (index !== -1 && index !== touchStartRef.current.index) {
+        if (index !== -1 && index !== touchStartRef.current.index && index !== dragOverIndex) {
           setDragOverIndex(index);
         }
         break;
@@ -345,23 +420,30 @@ export default function DraftsPage() {
   };
 
   const handleTouchEnd = () => {
+    // Clear long press timer
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
     }
 
-    if (isDragging && touchStartRef.current && dragOverIndex !== null && touchStartRef.current.index !== dragOverIndex) {
-      const newDrafts = [...sortedDrafts];
-      const [removed] = newDrafts.splice(touchStartRef.current.index, 1);
-      newDrafts.splice(dragOverIndex, 0, removed);
-      
-      setLocalDraftsOrder(newDrafts);
-      setDrafts(newDrafts);
-      toast.success('Draft order updated');
+    // Remove ghost element
+    if (dragGhostRef.current) {
+      document.body.removeChild(dragGhostRef.current);
+      dragGhostRef.current = null;
+    }
+
+    // Perform swap
+    if (isDragging && touchStartRef.current !== null && dragOverIndex !== null) {
+      const fromIndex = touchStartRef.current.index;
+      if (fromIndex !== dragOverIndex) {
+        swapDrafts(fromIndex, dragOverIndex);
+        toast.success('Draft position swapped');
+      }
     }
     
     touchStartRef.current = null;
-    setDraggedItem(null);
+    touchMoveRef.current = null;
+    setDraggedIndex(null);
     setDragOverIndex(null);
     setIsDragging(false);
   };
@@ -798,6 +880,7 @@ export default function DraftsPage() {
         {/* Drafts Grid - 3 Column */}
         {sortedDrafts.length > 0 ? (
           <div 
+            ref={gridRef}
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
@@ -809,32 +892,43 @@ export default function DraftsPage() {
                 key={draft.id}
                 data-draft-index={index}
                 draggable
-                onDragStart={(e) => handleDragStart(e, draft, index)}
+                onDragStart={(e) => handleDragStart(e, index)}
                 onDragOver={(e) => handleDragOver(e, index)}
+                onDragEnter={(e) => handleDragEnter(e, index)}
                 onDragLeave={handleDragLeave}
                 onDragEnd={handleDragEnd}
                 onDrop={(e) => handleDrop(e, index)}
-                onTouchStart={(e) => handleTouchStart(e, draft, index)}
+                onTouchStart={(e) => handleTouchStart(e, index)}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
                 onClick={() => handleDraftClick(draft)}
                 style={{ 
                   position: 'relative',
                   cursor: isDragging ? 'grabbing' : 'grab',
-                  transition: 'all 150ms ease-out',
-                  transform: dragOverIndex === index ? 'scale(1.05)' : 'scale(1)',
+                  transition: draggedIndex === index ? 'none' : 'all 200ms cubic-bezier(0.2, 0, 0, 1)',
+                  transform: dragOverIndex === index 
+                    ? 'scale(1.08)' 
+                    : draggedIndex === index 
+                      ? 'scale(0.95)' 
+                      : 'scale(1)',
                   borderRadius: '8px',
                   overflow: 'hidden',
-                  background: 'rgba(255, 255, 255, 0.02)',
+                  background: dragOverIndex === index 
+                    ? 'rgba(0, 194, 255, 0.15)' 
+                    : 'rgba(255, 255, 255, 0.02)',
                   border: dragOverIndex === index 
                     ? '2px solid #00C2FF' 
-                    : draggedItem?.id === draft.id 
+                    : draggedIndex === index 
                       ? '2px dashed rgba(0, 194, 255, 0.5)' 
                       : '1px solid rgba(255, 255, 255, 0.04)',
-                  opacity: draggedItem?.id === draft.id ? 0.5 : 1,
-                  boxShadow: dragOverIndex === index ? '0 8px 24px rgba(0, 194, 255, 0.2)' : 'none',
-                  touchAction: 'none', // Prevent zoom while touching draft cards
-                  userSelect: 'none'
+                  opacity: draggedIndex === index ? 0.5 : 1,
+                  boxShadow: dragOverIndex === index 
+                    ? '0 8px 32px rgba(0, 194, 255, 0.3)' 
+                    : 'none',
+                  zIndex: dragOverIndex === index ? 10 : draggedIndex === index ? 5 : 1,
+                  touchAction: 'none',
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none'
                 }}
               >
                 {/* Content Display Container */}
@@ -888,6 +982,35 @@ export default function DraftsPage() {
                         <circle cx="15" cy="12" r="1" fill="white"/>
                         <circle cx="15" cy="19" r="1" fill="white"/>
                       </svg>
+                    </div>
+                  )}
+
+                  {/* Drop indicator overlay */}
+                  {dragOverIndex === index && draggedIndex !== index && (
+                    <div 
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: 'rgba(0, 194, 255, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 20
+                      }}
+                    >
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        background: '#00C2FF',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5">
+                          <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" />
+                        </svg>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1009,12 +1132,231 @@ export default function DraftsPage() {
         editingDraft={editingDraft}
       />
 
-      {/* Project Modal */}
+      {/* Project Create Modal */}
       <CreateProjectModal
         isOpen={showProjectModal}
         onClose={() => setShowProjectModal(false)}
         onSuccess={loadDrafts}
       />
+
+      {/* Project Edit Modal - using CreateProjectModal with editing state */}
+      {editingProject && (
+        <ProjectEditModal
+          isOpen={showProjectEditModal}
+          project={editingProject}
+          onClose={() => {
+            setShowProjectEditModal(false);
+            setEditingProject(null);
+          }}
+          onSuccess={loadDrafts}
+        />
+      )}
+    </div>
+  );
+}
+
+// Project Edit Modal Component
+function ProjectEditModal({ 
+  isOpen, 
+  project, 
+  onClose, 
+  onSuccess 
+}: { 
+  isOpen: boolean; 
+  project: Project; 
+  onClose: () => void; 
+  onSuccess: () => void;
+}) {
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      requestAnimationFrame(() => setIsVisible(true));
+      document.body.style.overflow = 'hidden';
+    } else {
+      setIsVisible(false);
+      setIsClosing(false);
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setIsVisible(false);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose();
+    }, 150);
+  };
+
+  if (!isOpen && !isClosing) return null;
+
+  const formatRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-start justify-center"
+      style={{ 
+        paddingTop: '5vh',
+        paddingBottom: '35vh',
+        background: 'rgba(0, 0, 0, 0.3)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        opacity: isVisible ? 1 : 0,
+        transition: 'opacity 0.15s ease-out'
+      }}
+      onClick={handleClose}
+    >
+      <div 
+        className="w-full max-w-md relative"
+        style={{
+          maxWidth: 'calc(100% - 24px)',
+          maxHeight: '75vh',
+          background: 'rgba(20, 20, 20, 0.85)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          borderRadius: '16px',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          transform: isVisible ? 'scale(1) translateY(0)' : 'scale(0.97) translateY(-10px)',
+          opacity: isVisible ? 1 : 0,
+          transition: 'transform 0.15s ease-out, opacity 0.15s ease-out',
+          transformOrigin: 'top center'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div 
+          className="flex items-center justify-between flex-shrink-0"
+          style={{ 
+            height: '55px',
+            padding: '0 20px',
+            background: '#0D0D0D',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
+          }}
+        >
+          <div className="flex items-center" style={{ gap: '20px' }}>
+            <button
+              onClick={handleClose}
+              className="flex items-center justify-center transition-opacity"
+              style={{ width: '32px', height: '32px' }}
+            >
+              <XMarkIcon className="w-6 h-6" style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
+            </button>
+            <h2 className="font-semibold text-white" style={{ fontSize: '17px' }}>
+              Project Details
+            </h2>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto" style={{ padding: '16px' }}>
+          {/* Cover Image */}
+          {project.cover_image && (
+            <div style={{ borderRadius: '12px', overflow: 'hidden', marginBottom: '16px' }}>
+              <img
+                src={project.cover_image}
+                alt={project.title}
+                style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }}
+              />
+            </div>
+          )}
+
+          {/* Project Info */}
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ 
+              display: 'inline-block',
+              background: 'rgba(139, 92, 246, 0.2)',
+              padding: '4px 10px',
+              borderRadius: '8px',
+              fontSize: '11px',
+              fontWeight: 700,
+              color: '#A78BFA',
+              letterSpacing: '0.5px',
+              marginBottom: '12px'
+            }}>
+              PROJECT
+            </div>
+            <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#FFF', marginBottom: '8px' }}>
+              {project.title}
+            </h3>
+            {project.description && (
+              <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.5 }}>
+                {project.description}
+              </p>
+            )}
+          </div>
+
+          {/* Meta Info */}
+          <div style={{ 
+            display: 'flex', 
+            gap: '16px',
+            padding: '12px',
+            background: 'rgba(255, 255, 255, 0.03)',
+            borderRadius: '10px',
+            marginBottom: '16px'
+          }}>
+            <div>
+              <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', marginBottom: '4px' }}>
+                Created
+              </div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#FFF' }}>
+                {project.created_at ? formatRelativeTime(project.created_at) : 'Unknown'}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', marginBottom: '4px' }}>
+                Items
+              </div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#FFF' }}>
+                {project.media_count || 0}
+              </div>
+            </div>
+          </div>
+
+          {/* Tags */}
+          {project.tags && (
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', marginBottom: '8px' }}>
+                Tags
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {project.tags.split(',').map((tag: string, idx: number) => (
+                  <span
+                    key={idx}
+                    style={{
+                      padding: '4px 10px',
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      borderRadius: '100px',
+                      fontSize: '12px',
+                      color: 'rgba(255, 255, 255, 0.7)'
+                    }}
+                  >
+                    {tag.trim()}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
