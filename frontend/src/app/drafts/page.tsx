@@ -40,11 +40,13 @@ export default function DraftsPage() {
   
   // Editing draft state
   const [editingDraft, setEditingDraft] = useState<PortfolioItem | null>(null);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   
   // Drag and drop state
   const [draggedItem, setDraggedItem] = useState<PortfolioItem | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [localDraftsOrder, setLocalDraftsOrder] = useState<PortfolioItem[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Refs for dropdown
   const filterMenuRef = useRef<HTMLDivElement>(null);
@@ -72,6 +74,21 @@ export default function DraftsPage() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showFilterMenu]);
+
+  // Prevent zoom during drag on mobile
+  useEffect(() => {
+    if (isDragging) {
+      document.body.style.touchAction = 'none';
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.touchAction = '';
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.touchAction = '';
+      document.body.style.overflow = '';
+    };
+  }, [isDragging]);
 
   const loadDrafts = async () => {
     try {
@@ -150,18 +167,19 @@ export default function DraftsPage() {
 
   const handleSelectProject = () => {
     setShowCreateModal(false);
+    setEditingProject(null);
     setShowProjectModal(true);
   };
 
   // Handle filter type change
   const handleFilterTypeChange = (type: ContentType) => {
-    console.log('Filter changed to:', type); // Debug log
+    console.log('Filter changed to:', type);
     setFilterType(type);
   };
 
   // Handle sort type change
   const handleSortTypeChange = (sort: SortType) => {
-    console.log('Sort changed to:', sort); // Debug log
+    console.log('Sort changed to:', sort);
     setSortType(sort);
     setShowFilterMenu(false);
   };
@@ -185,6 +203,8 @@ export default function DraftsPage() {
 
   // Open draft for editing
   const handleDraftClick = (draft: PortfolioItem) => {
+    if (isDragging) return; // Don't open modal while dragging
+    
     setEditingDraft(draft);
     
     // Determine content type for the modal
@@ -201,9 +221,19 @@ export default function DraftsPage() {
     setShowUploadModal(true);
   };
 
+  // Open project for editing
+  const handleProjectClick = (project: Project) => {
+    // Navigate to project detail or open modal
+    // For now, we'll show a toast and could navigate to project page
+    toast.success(`Opening project: ${project.title}`);
+    // Could navigate to project detail page if exists:
+    // router.push(`/projects/${project.id}`);
+  };
+
   // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent, draft: PortfolioItem, index: number) => {
     setDraggedItem(draft);
+    setIsDragging(true);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', index.toString());
     // Add visual feedback
@@ -225,7 +255,6 @@ export default function DraftsPage() {
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    // Only clear if leaving the drop zone entirely
     const relatedTarget = e.relatedTarget as HTMLElement;
     if (!relatedTarget || !e.currentTarget.contains(relatedTarget)) {
       setDragOverIndex(null);
@@ -239,6 +268,7 @@ export default function DraftsPage() {
     }
     setDraggedItem(null);
     setDragOverIndex(null);
+    setIsDragging(false);
   };
 
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
@@ -246,15 +276,11 @@ export default function DraftsPage() {
     const dragIndex = parseInt(e.dataTransfer.getData('text/plain'));
     
     if (dragIndex !== dropIndex && draggedItem) {
-      // Reorder locally using the sortedDrafts array
       const newDrafts = [...sortedDrafts];
       const [removed] = newDrafts.splice(dragIndex, 1);
       newDrafts.splice(dropIndex, 0, removed);
       
-      // Update local order
       setLocalDraftsOrder(newDrafts);
-      
-      // Also update the main drafts array
       setDrafts(newDrafts);
       
       toast.success('Draft order updated');
@@ -262,30 +288,55 @@ export default function DraftsPage() {
     
     setDraggedItem(null);
     setDragOverIndex(null);
+    setIsDragging(false);
   };
 
-  // Touch drag handlers for mobile
-  const [touchStartY, setTouchStartY] = useState<number | null>(null);
-  const [touchDragIndex, setTouchDragIndex] = useState<number | null>(null);
+  // Touch drag handlers for mobile - improved
+  const touchStartRef = useRef<{ x: number; y: number; index: number; draft: PortfolioItem } | null>(null);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent, draft: PortfolioItem, index: number) => {
-    setTouchStartY(e.touches[0].clientY);
-    setTouchDragIndex(index);
-    setDraggedItem(draft);
+    const touch = e.touches[0];
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      index,
+      draft
+    };
+
+    // Long press to initiate drag
+    longPressTimerRef.current = setTimeout(() => {
+      if (touchStartRef.current) {
+        setDraggedItem(draft);
+        setIsDragging(true);
+        // Haptic feedback if available
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
+      }
+    }, 300);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStartY === null || touchDragIndex === null) return;
+    if (!isDragging || !touchStartRef.current) {
+      // Cancel long press if moved before it triggered
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+      return;
+    }
+
+    e.preventDefault(); // Prevent scrolling while dragging
     
     const touch = e.touches[0];
     const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
     
-    // Find the draft card under the touch point
     for (const el of elements) {
       const draftCard = el.closest('[data-draft-index]');
       if (draftCard) {
         const index = parseInt(draftCard.getAttribute('data-draft-index') || '-1');
-        if (index !== -1 && index !== touchDragIndex) {
+        if (index !== -1 && index !== touchStartRef.current.index) {
           setDragOverIndex(index);
         }
         break;
@@ -294,10 +345,14 @@ export default function DraftsPage() {
   };
 
   const handleTouchEnd = () => {
-    if (touchDragIndex !== null && dragOverIndex !== null && touchDragIndex !== dragOverIndex) {
-      // Perform the reorder
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+
+    if (isDragging && touchStartRef.current && dragOverIndex !== null && touchStartRef.current.index !== dragOverIndex) {
       const newDrafts = [...sortedDrafts];
-      const [removed] = newDrafts.splice(touchDragIndex, 1);
+      const [removed] = newDrafts.splice(touchStartRef.current.index, 1);
       newDrafts.splice(dragOverIndex, 0, removed);
       
       setLocalDraftsOrder(newDrafts);
@@ -305,10 +360,10 @@ export default function DraftsPage() {
       toast.success('Draft order updated');
     }
     
-    setTouchStartY(null);
-    setTouchDragIndex(null);
+    touchStartRef.current = null;
     setDraggedItem(null);
     setDragOverIndex(null);
+    setIsDragging(false);
   };
 
   if (loading) {
@@ -322,7 +377,14 @@ export default function DraftsPage() {
   const totalItems = sortedDrafts.length + filteredProjects.length;
 
   return (
-    <div className="min-h-screen" style={{ background: '#111111', color: '#F5F5F5' }}>
+    <div 
+      className="min-h-screen" 
+      style={{ 
+        background: '#111111', 
+        color: '#F5F5F5',
+        touchAction: isDragging ? 'none' : 'auto'
+      }}
+    >
       {/* Header with Search */}
       <header 
         className="sticky top-0"
@@ -658,6 +720,7 @@ export default function DraftsPage() {
               {filteredProjects.map((project) => (
                 <div
                   key={`project-${project.id}`}
+                  onClick={() => handleProjectClick(project)}
                   style={{
                     background: 'rgba(255, 255, 255, 0.03)',
                     border: '1px solid rgba(255, 255, 255, 0.06)',
@@ -697,11 +760,34 @@ export default function DraftsPage() {
                         {project.media_count}
                       </div>
                     )}
+                    {/* Project Badge */}
+                    <div 
+                      style={{
+                        position: 'absolute',
+                        top: '6px',
+                        left: '6px',
+                        background: 'rgba(139, 92, 246, 0.9)',
+                        backdropFilter: 'blur(8px)',
+                        borderRadius: '6px',
+                        padding: '2px 6px',
+                        fontSize: '9px',
+                        fontWeight: 700,
+                        color: '#FFF',
+                        letterSpacing: '0.3px'
+                      }}
+                    >
+                      PROJECT
+                    </div>
                   </div>
                   <div style={{ padding: '8px 10px' }}>
                     <div style={{ fontSize: '13px', fontWeight: 600, color: '#FFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {project.title}
                     </div>
+                    {project.created_at && (
+                      <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', marginTop: '2px' }}>
+                        {formatRelativeTime(project.created_at)}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -734,7 +820,7 @@ export default function DraftsPage() {
                 onClick={() => handleDraftClick(draft)}
                 style={{ 
                   position: 'relative',
-                  cursor: 'grab',
+                  cursor: isDragging ? 'grabbing' : 'grab',
                   transition: 'all 150ms ease-out',
                   transform: dragOverIndex === index ? 'scale(1.05)' : 'scale(1)',
                   borderRadius: '8px',
@@ -746,89 +832,87 @@ export default function DraftsPage() {
                       ? '2px dashed rgba(0, 194, 255, 0.5)' 
                       : '1px solid rgba(255, 255, 255, 0.04)',
                   opacity: draggedItem?.id === draft.id ? 0.5 : 1,
-                  boxShadow: dragOverIndex === index ? '0 8px 24px rgba(0, 194, 255, 0.2)' : 'none'
+                  boxShadow: dragOverIndex === index ? '0 8px 24px rgba(0, 194, 255, 0.2)' : 'none',
+                  touchAction: 'none', // Prevent zoom while touching draft cards
+                  userSelect: 'none'
                 }}
               >
-                {/* Content Display */}
-                <ContentDisplay 
-                  item={draft} 
-                  isActive={false}
-                  showAttachments={false}
-                />
-                
-                {/* Draft Badge */}
-                <div 
-                  style={{
-                    position: 'absolute',
-                    top: '6px',
-                    left: '6px',
-                    background: 'rgba(255, 193, 7, 0.9)',
-                    backdropFilter: 'blur(8px)',
-                    borderRadius: '6px',
-                    padding: '2px 6px',
-                    fontSize: '9px',
-                    fontWeight: 700,
-                    color: '#000',
-                    letterSpacing: '0.3px',
-                    zIndex: 10
-                  }}
-                >
-                  DRAFT
-                </div>
-
-                {/* Drag Handle Indicator */}
-                {draggedItem === null && (
+                {/* Content Display Container */}
+                <div style={{ aspectRatio: '1 / 1', position: 'relative' }}>
+                  <ContentDisplay 
+                    item={draft} 
+                    isActive={false}
+                    showAttachments={false}
+                  />
+                  
+                  {/* Draft Badge */}
                   <div 
                     style={{
                       position: 'absolute',
                       top: '6px',
-                      right: '6px',
-                      background: 'rgba(0, 0, 0, 0.5)',
+                      left: '6px',
+                      background: 'rgba(255, 193, 7, 0.9)',
                       backdropFilter: 'blur(8px)',
-                      borderRadius: '4px',
-                      padding: '4px',
-                      opacity: 0.6,
+                      borderRadius: '6px',
+                      padding: '2px 6px',
+                      fontSize: '9px',
+                      fontWeight: 700,
+                      color: '#000',
+                      letterSpacing: '0.3px',
                       zIndex: 10
                     }}
                   >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                      <circle cx="9" cy="5" r="1" fill="white"/>
-                      <circle cx="9" cy="12" r="1" fill="white"/>
-                      <circle cx="9" cy="19" r="1" fill="white"/>
-                      <circle cx="15" cy="5" r="1" fill="white"/>
-                      <circle cx="15" cy="12" r="1" fill="white"/>
-                      <circle cx="15" cy="19" r="1" fill="white"/>
-                    </svg>
+                    DRAFT
                   </div>
-                )}
 
-                {/* Footer with title and time */}
+                  {/* Drag Handle Indicator */}
+                  {!isDragging && (
+                    <div 
+                      style={{
+                        position: 'absolute',
+                        top: '6px',
+                        right: '6px',
+                        background: 'rgba(0, 0, 0, 0.5)',
+                        backdropFilter: 'blur(8px)',
+                        borderRadius: '4px',
+                        padding: '4px',
+                        opacity: 0.6,
+                        zIndex: 10
+                      }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                        <circle cx="9" cy="5" r="1" fill="white"/>
+                        <circle cx="9" cy="12" r="1" fill="white"/>
+                        <circle cx="9" cy="19" r="1" fill="white"/>
+                        <circle cx="15" cy="5" r="1" fill="white"/>
+                        <circle cx="15" cy="12" r="1" fill="white"/>
+                        <circle cx="15" cy="19" r="1" fill="white"/>
+                      </svg>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer with title and time - BELOW the image */}
                 <div 
                   className="draft-card-desc"
                   style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    background: 'linear-gradient(transparent, rgba(0, 0, 0, 0.85))',
-                    padding: '24px 8px 6px',
+                    padding: '6px 8px',
+                    background: 'rgba(0, 0, 0, 0.4)',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '2px'
+                    gap: '1px'
                   }}
                 >
-                  {draft.title && (
-                    <div style={{
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      color: '#FFF',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {draft.title}
-                    </div>
-                  )}
+                  <div style={{
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    color: '#FFF',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {draft.title || draft.description || 'Untitled'}
+                  </div>
                   <div style={{
                     fontSize: '10px',
                     fontWeight: 500,
