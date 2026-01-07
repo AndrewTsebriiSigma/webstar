@@ -787,11 +787,19 @@ html {
   display: none;
 }
 
-/* Touch target sizes for mobile */
+/* Touch target sizes for mobile - only for nav/action buttons */
 @media (max-width: 640px) {
-  button, a, input[type="button"], input[type="submit"] {
-    min-height: 44px;
-    min-width: 44px;
+  /* Specific button classes that need 30px height */
+  .make-draft-btn {
+    height: 30px !important;
+    min-height: 30px !important;
+  }
+  
+  .filter-icon-btn {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
   }
   
   /* Banner action buttons (View/Settings) - 15% smaller */

@@ -581,6 +581,7 @@ export default function DraftsPage() {
           {/* Filter Icon - RIGHT */}
           <button
             onClick={() => setShowFilterStrip(!showFilterStrip)}
+            className="filter-icon-btn"
             style={{
               width: '30px',
               height: '30px',
