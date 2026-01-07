@@ -13,7 +13,8 @@ import CreateContentModal from '@/components/CreateContentModal';
 import { 
   XMarkIcon, 
   PlusIcon,
-  FolderIcon
+  FolderIcon,
+  FunnelIcon
 } from '@heroicons/react/24/outline';
 
 type ContentType = 'all' | 'photo' | 'video' | 'audio' | 'pdf' | 'text' | 'project';
@@ -345,6 +346,7 @@ export default function DraftsPage() {
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<ContentType>('all');
   const [sortType, setSortType] = useState<SortType>('recent');
+  const [showFilterStrip, setShowFilterStrip] = useState(false);
   
   // Modal states
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -492,7 +494,7 @@ export default function DraftsPage() {
 
   return (
     <div className="min-h-screen" style={{ background: '#111111', color: '#F5F5F5' }}>
-      {/* Studio Header */}
+      {/* Studio Header - with counter beside title */}
       <header 
         className="sticky top-0"
         style={{
@@ -508,8 +510,20 @@ export default function DraftsPage() {
           alignItems: 'center', 
           justifyContent: 'space-between'
         }}>
-          <span style={{ fontSize: '15px', fontWeight: 600, color: '#FFF' }}>Studio</span>
-          {/* Plain X close button - darker by default */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '15px', fontWeight: 600, color: '#FFF' }}>Studio</span>
+            <span style={{
+              fontSize: '12px',
+              fontWeight: 600,
+              color: 'rgba(255, 255, 255, 0.5)',
+              background: 'rgba(255, 255, 255, 0.08)',
+              padding: '2px 7px',
+              borderRadius: '8px'
+            }}>
+              {totalItems}
+            </span>
+          </div>
+          {/* Plain X close button */}
           <button
             onClick={() => router.back()}
             style={{
@@ -519,8 +533,7 @@ export default function DraftsPage() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'opacity 150ms ease'
+              cursor: 'pointer'
             }}
           >
             <XMarkIcon className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.3)' }} />
@@ -528,66 +541,164 @@ export default function DraftsPage() {
         </div>
       </header>
 
-      {/* Action Bar */}
+      {/* Action Bar - Make Draft LEFT, Filter Icon RIGHT */}
       <div style={{
-        background: 'rgba(17, 17, 17, 0.95)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-        padding: '10px 16px',
+        background: '#0D0D0D',
+        padding: '8px 16px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '15px', fontWeight: 700, color: '#FFF' }}>Drafts</span>
-          <span style={{
-            fontSize: '13px',
-            fontWeight: 600,
-            color: 'rgba(255, 255, 255, 0.5)',
-            background: 'rgba(255, 255, 255, 0.06)',
-            padding: '2px 8px',
-            borderRadius: '10px'
-          }}>
-            {totalItems}
-          </span>
-        </div>
-
+        {/* Make Draft Button - LEFT */}
         <button
           onClick={() => setShowCreateModal(true)}
           className="make-draft-btn"
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '4px',
+            gap: '6px',
             background: '#00C2FF',
-            color: '#000',
+            color: '#FFF',
             height: '30px',
-            padding: '0 20px',
+            padding: '0 16px',
             fontSize: '13px',
             fontWeight: 600,
-            borderRadius: '6px',
+            borderRadius: '8px',
             border: 'none',
-            cursor: 'pointer',
-            justifyContent: 'center'
+            cursor: 'pointer'
           }}
         >
-          <PlusIcon className="w-3.5 h-3.5" style={{ strokeWidth: 2.5 }} />
+          <PlusIcon className="w-4 h-4" style={{ strokeWidth: 2.5 }} />
           <span>Make Draft</span>
+        </button>
+
+        {/* Filter Icon - RIGHT */}
+        <button
+          onClick={() => setShowFilterStrip(!showFilterStrip)}
+          style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            background: showFilterStrip || filterType !== 'all' || sortType !== 'recent' 
+              ? 'rgba(0, 194, 255, 0.15)' 
+              : 'rgba(255, 255, 255, 0.06)',
+            border: showFilterStrip || filterType !== 'all' || sortType !== 'recent'
+              ? '1px solid rgba(0, 194, 255, 0.3)'
+              : '1px solid rgba(255, 255, 255, 0.08)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            transition: 'all 150ms ease'
+          }}
+        >
+          <FunnelIcon 
+            className="w-4 h-4" 
+            style={{ 
+              color: showFilterStrip || filterType !== 'all' || sortType !== 'recent' 
+                ? '#00C2FF' 
+                : 'rgba(255, 255, 255, 0.5)' 
+            }} 
+          />
         </button>
       </div>
 
+      {/* Filter Strip - Only visible when filter icon clicked */}
+      {showFilterStrip && (
+        <div 
+          className="floating-filter-bar"
+          style={{
+            background: 'rgba(255, 255, 255, 0.02)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+            padding: '8px 16px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px'
+          }}
+        >
+          {/* Type Pills Row */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            gap: '0',
+            overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch'
+          }}>
+            {(['all', 'photo', 'video', 'audio', 'pdf', 'text', 'project'] as ContentType[]).map((type, index) => (
+              <div key={type} style={{ display: 'flex', alignItems: 'center' }}>
+                {index > 0 && (
+                  <div style={{ width: '1px', height: '14px', background: 'rgba(255, 255, 255, 0.1)', margin: '0 2px' }} />
+                )}
+                <button
+                  onClick={() => setFilterType(type)}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: '6px',
+                    background: filterType === type ? '#00C2FF' : 'transparent',
+                    border: 'none',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    color: filterType === type ? '#000' : 'rgba(255, 255, 255, 0.6)',
+                    cursor: 'pointer',
+                    transition: 'all 150ms ease',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {type === 'all' ? 'All' : type === 'text' ? 'Memo' : type.charAt(0).toUpperCase() + type.slice(1)}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Horizontal Divider */}
+          <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.06)' }} />
+
+          {/* Sort Pills Row */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            gap: '0'
+          }}>
+            {(['recent', 'timeline', 'type'] as SortType[]).map((sort, index) => (
+              <div key={sort} style={{ display: 'flex', alignItems: 'center' }}>
+                {index > 0 && (
+                  <div style={{ width: '1px', height: '14px', background: 'rgba(255, 255, 255, 0.1)', margin: '0 2px' }} />
+                )}
+                <button
+                  onClick={() => setSortType(sort)}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: '6px',
+                    background: sortType === sort ? '#00C2FF' : 'transparent',
+                    border: 'none',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    color: sortType === sort ? '#000' : 'rgba(255, 255, 255, 0.6)',
+                    cursor: 'pointer',
+                    transition: 'all 150ms ease',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {sort === 'recent' ? '↓ Recent' : sort === 'timeline' ? '↑ Timeline' : '⬡ Type'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Glassy Content Area */}
       <div style={{ 
-        padding: '12px 24px', 
-        paddingBottom: '100px',
+        padding: '12px 16px', 
+        paddingBottom: '40px',
         maxWidth: '430px', 
         margin: '0 auto',
         background: 'rgba(255, 255, 255, 0.02)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.06)',
-        borderTop: 'none',
-        borderRadius: '0 0 20px 20px',
-        minHeight: 'calc(100vh - 100px)'
+        minHeight: 'calc(100vh - 140px)'
       }}>
 
         {/* Projects - 2 Column */}
@@ -677,7 +788,7 @@ export default function DraftsPage() {
             flexDirection: 'column', 
             alignItems: 'center', 
             justifyContent: 'center',
-            minHeight: 'calc(100vh - 200px)',
+            minHeight: 'calc(100vh - 180px)',
             padding: '24px',
             textAlign: 'center'
           }}>
@@ -712,91 +823,6 @@ export default function DraftsPage() {
             </p>
           </div>
         ) : null}
-      </div>
-
-      {/* Floating Bottom Filter Bar */}
-      <div 
-        className="floating-filter-bar"
-        style={{
-          position: 'fixed',
-          bottom: '20px',
-          left: '12px',
-          right: '12px',
-          background: 'rgba(20, 20, 22, 0.92)',
-          backdropFilter: 'blur(40px)',
-          WebkitBackdropFilter: 'blur(40px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: '16px',
-          padding: '6px 8px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-          zIndex: 50,
-          overflowX: 'auto',
-          WebkitOverflowScrolling: 'touch'
-        }}>
-        {/* Type Pills - scrollable */}
-        <div style={{ 
-          display: 'flex', 
-          gap: '2px',
-          flexShrink: 0
-        }}>
-          {(['all', 'photo', 'video', 'audio', 'pdf', 'text', 'project'] as ContentType[]).map((type) => (
-            <button
-              key={type}
-              onClick={() => setFilterType(type)}
-              style={{
-                padding: '5px 10px',
-                borderRadius: '100px',
-                background: filterType === type ? '#00C2FF' : 'transparent',
-                border: 'none',
-                fontSize: '11px',
-                fontWeight: 600,
-                color: filterType === type ? '#000' : 'rgba(255, 255, 255, 0.6)',
-                cursor: 'pointer',
-                transition: 'all 150ms ease',
-                whiteSpace: 'nowrap',
-                flexShrink: 0
-              }}
-            >
-              {type === 'all' ? 'All' : type === 'text' ? 'Memo' : type.charAt(0).toUpperCase() + type.slice(1)}
-            </button>
-          ))}
-        </div>
-
-        {/* Divider */}
-        <div style={{ width: '1px', height: '18px', background: 'rgba(255, 255, 255, 0.1)', flexShrink: 0 }} />
-
-        {/* Sort Segmented Control */}
-        <div style={{ 
-          display: 'flex', 
-          background: 'rgba(255, 255, 255, 0.06)', 
-          borderRadius: '6px',
-          padding: '2px',
-          flexShrink: 0
-        }}>
-          {(['recent', 'timeline', 'type'] as SortType[]).map((sort) => (
-            <button
-              key={sort}
-              onClick={() => setSortType(sort)}
-              style={{
-                padding: '4px 8px',
-                borderRadius: '5px',
-                background: sortType === sort ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
-                border: 'none',
-                fontSize: '10px',
-                fontWeight: 600,
-                color: sortType === sort ? '#FFF' : 'rgba(255, 255, 255, 0.5)',
-                cursor: 'pointer',
-                transition: 'all 150ms ease',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {sort === 'recent' ? '↓New' : sort === 'timeline' ? '↑Old' : '⬡Type'}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Modals */}
