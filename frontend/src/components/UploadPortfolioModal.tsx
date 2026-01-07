@@ -10,9 +10,10 @@ interface UploadPortfolioModalProps {
   onClose: () => void;
   onSuccess: () => void;
   initialContentType?: 'media' | 'audio' | 'pdf' | 'text' | null;
+  defaultSaveAsDraft?: boolean; // When true, primary action is "Save as Draft" instead of "Publish"
 }
 
-export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initialContentType }: UploadPortfolioModalProps) {
+export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initialContentType, defaultSaveAsDraft = false }: UploadPortfolioModalProps) {
   // Type is always pre-selected from CreateContentModal
   const [selectedContentType, setSelectedContentType] = useState<'media' | 'audio' | 'pdf' | 'text' | null>(initialContentType || null);
   
@@ -597,9 +598,9 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                    selectedContentType === 'text' ? 'Text Post' : 'Post'}
                 </h2>
               </div>
-              {/* Right: Publish - closer to right */}
+              {/* Right: Primary action button - Publish or Save as Draft depending on context */}
               <button
-                onClick={handleSubmit}
+                onClick={defaultSaveAsDraft ? handleSaveAsDraft : handleSubmit}
                 disabled={uploading || (selectedContentType === 'text' && !textContent.trim()) || (selectedContentType !== 'text' && !file)}
                 className="text-[14px] font-semibold rounded-[8px] transition disabled:opacity-50 disabled:cursor-not-allowed publish-btn"
                 style={{
@@ -611,7 +612,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                   padding: '0 32px',
                 }}
               >
-                {uploading ? '...' : 'Publish'}
+                {uploading ? '...' : (defaultSaveAsDraft ? 'Save Draft' : 'Publish')}
               </button>
             </div>
 
@@ -1027,18 +1028,29 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 className="flex items-center justify-between" 
                 style={{ color: 'rgba(255,255,255,0.5)' }}
               >
-                {/* Left: Save as draft */}
+                {/* Left: Secondary action - Publish when in draft mode, Save as draft otherwise */}
                 <button
-                  onClick={handleSaveAsDraft}
+                  onClick={defaultSaveAsDraft ? handleSubmit : handleSaveAsDraft}
                   disabled={uploading || (selectedContentType === 'text' ? !textContent.trim() : !file)}
                   className="flex items-center gap-2 transition disabled:opacity-40"
                 >
-                  <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 3h11l5 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 3v5h8V3" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 14h10v7H7z" />
-                  </svg>
-                  <span className="text-[14px] font-medium">Save as draft</span>
+                  {defaultSaveAsDraft ? (
+                    <>
+                      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 19V6M5 12l7-7 7 7" />
+                      </svg>
+                      <span className="text-[14px] font-medium">Publish instead</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 3h11l5 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 3v5h8V3" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 14h10v7H7z" />
+                      </svg>
+                      <span className="text-[14px] font-medium">Save as draft</span>
+                    </>
+                  )}
                 </button>
                 
                 {/* Right: Attachment icons (only for media posts) */}

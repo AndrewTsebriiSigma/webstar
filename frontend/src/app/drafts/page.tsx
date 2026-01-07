@@ -299,6 +299,7 @@ export default function DraftsPage() {
               {/* Filter Dropdown - iOS style compact design */}
               {showFilterMenu && (
                 <div
+                  onClick={(e) => e.stopPropagation()}
                   style={{
                     position: 'absolute',
                     top: '100%',
@@ -568,7 +569,7 @@ export default function DraftsPage() {
         onSelectProject={handleSelectProject}
       />
 
-      {/* Upload Modal */}
+      {/* Upload Modal - default to save as draft when opened from /drafts */}
       <UploadPortfolioModal
         isOpen={showUploadModal}
         onClose={() => {
@@ -577,6 +578,7 @@ export default function DraftsPage() {
         }}
         onSuccess={loadDrafts}
         initialContentType={selectedPostType}
+        defaultSaveAsDraft={true}
       />
 
       {/* Project Modal */}
