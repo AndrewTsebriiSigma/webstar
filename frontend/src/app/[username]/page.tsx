@@ -478,13 +478,16 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   filter: 'drop-shadow(0 0 8px rgba(0, 194, 255, 0.15))'
                 }}
               >
-                {profile.total_points?.toLocaleString() || '12.5K'}
+                {metrics?.profile_views_30d?.toLocaleString() || '0'}
               </div>
             </div>
           </div>
           <div className="dashboard-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             <button 
-              onClick={() => router.push('/drafts')}
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push('/drafts');
+              }}
               className="action-button"
               style={{
                 width: '55px',
