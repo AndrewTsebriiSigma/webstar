@@ -509,20 +509,24 @@ export default function DraftsPage() {
           justifyContent: 'space-between'
         }}>
           <span style={{ fontSize: '15px', fontWeight: 600, color: '#FFF' }}>Studio</span>
+          {/* Plain X close button - no circle, with hover opacity */}
           <button
             onClick={() => router.back()}
             style={{
-              width: '32px',
-              height: '32px',
+              padding: '6px',
+              background: 'transparent',
+              border: 'none',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              background: 'transparent',
-              border: 'none'
+              opacity: 0.6,
+              transition: 'opacity 150ms ease'
             }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.6')}
           >
-            <XMarkIcon className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.3)' }} />
+            <XMarkIcon className="w-5 h-5" style={{ color: '#FFF' }} />
           </button>
         </div>
       </header>
@@ -670,24 +674,45 @@ export default function DraftsPage() {
             formatTime={formatRelativeTime}
           />
         ) : filteredProjects.length === 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📝</div>
-            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#FFF', marginBottom: '8px' }}>
-              {filterType !== 'all' ? `No ${filterType === 'text' ? 'memo' : filterType} drafts` : 'No Drafts Yet'}
+          /* Empty State - centered for mobile */
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            minHeight: 'calc(100vh - 200px)',
+            padding: '24px',
+            textAlign: 'center'
+          }}>
+            {/* Layers icon */}
+            <img 
+              src="/layers.svg" 
+              alt="" 
+              style={{ 
+                width: '48px', 
+                height: '48px', 
+                marginBottom: '16px',
+                opacity: 0.3,
+                filter: 'brightness(0) invert(1)'
+              }} 
+            />
+            <h2 style={{ 
+              fontSize: '20px', 
+              fontWeight: 600, 
+              color: '#FFF', 
+              marginBottom: '6px',
+              letterSpacing: '-0.3px'
+            }}>
+              Work Private
             </h2>
-            <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '24px' }}>
-              {filterType !== 'all' ? `You don't have any ${filterType === 'text' ? 'memo' : filterType} drafts saved` : 'Drafts you save will appear here'}
+            <p style={{ 
+              fontSize: '14px', 
+              color: 'rgba(255, 255, 255, 0.45)', 
+              fontWeight: 400,
+              lineHeight: 1.4
+            }}>
+              Upload everything, publish when ready
             </p>
-            {filterType !== 'all' ? (
-              <button onClick={() => setFilterType('all')} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '12px 24px', fontSize: '15px', fontWeight: 600, color: '#FFF', border: 'none', cursor: 'pointer' }}>
-                Show All Drafts
-              </button>
-            ) : (
-              <button onClick={() => setShowCreateModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#00C2FF', borderRadius: '12px', padding: '12px 24px', fontSize: '15px', fontWeight: 600, color: '#000', border: 'none', cursor: 'pointer' }}>
-                <PlusIcon className="w-5 h-5" />
-                Create Draft
-              </button>
-            )}
           </div>
         ) : null}
       </div>
