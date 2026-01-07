@@ -277,7 +277,7 @@ export default function LoginPage() {
         </div>
 
         {/* Welcome text + Card - pushed down */}
-        <div style={{ marginTop: '4vh' }}>
+        <div style={{ marginTop: '1vh' }}>
           <div className="text-center mb-8">
             <h1 
               className="text-3xl font-bold mb-2"

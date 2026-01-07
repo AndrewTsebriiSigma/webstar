@@ -468,6 +468,24 @@ select:disabled {
   cursor: not-allowed;
 }
 
+/* Autofill styling - Override browser default light background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px var(--bg-surface-1) inset !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+  background-color: var(--bg-surface-1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  caret-color: var(--text-primary) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+input:-webkit-autofill:focus {
+  border: 2px solid var(--blue) !important;
+  box-shadow: 0 0 0 30px var(--bg-surface-1) inset, 0 0 0 4px var(--blue-10) !important;
+}
+
 /* Progress Bars */
 .progress-bar {
   width: 100%;
