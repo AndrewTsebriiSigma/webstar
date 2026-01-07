@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { portfolioAPI, projectsAPI } from '@/lib/api';
@@ -44,6 +44,10 @@ export default function DraftsPage() {
   // Drag and drop state
   const [draggedItem, setDraggedItem] = useState<PortfolioItem | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [localDraftsOrder, setLocalDraftsOrder] = useState<PortfolioItem[]>([]);
+
+  // Refs for dropdown
+  const filterMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) {
@@ -53,6 +57,22 @@ export default function DraftsPage() {
     loadDrafts();
   }, [user]);
 
+  // Close filter menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterMenuRef.current && !filterMenuRef.current.contains(event.target as Node)) {
+        setShowFilterMenu(false);
+      }
+    };
+
+    if (showFilterMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showFilterMenu]);
+
   const loadDrafts = async () => {
     try {
       setLoading(true);
@@ -60,7 +80,9 @@ export default function DraftsPage() {
         portfolioAPI.getDrafts(),
         projectsAPI.getProjects()
       ]);
-      setDrafts(draftsResponse.data || []);
+      const loadedDrafts = draftsResponse.data || [];
+      setDrafts(loadedDrafts);
+      setLocalDraftsOrder(loadedDrafts);
       setProjects(projectsResponse.data || []);
     } catch (error) {
       console.error('Failed to load drafts:', error);
@@ -70,40 +92,51 @@ export default function DraftsPage() {
     }
   };
 
-  // Filter drafts
-  const filteredDrafts = drafts.filter(draft => {
+  // Filter drafts based on selected type
+  const getFilteredDrafts = useCallback(() => {
+    let filtered = localDraftsOrder.length > 0 ? localDraftsOrder : drafts;
+    
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      const matchesTitle = draft.title?.toLowerCase().includes(query);
-      const matchesDesc = draft.description?.toLowerCase().includes(query);
-      if (!matchesTitle && !matchesDesc) return false;
+      filtered = filtered.filter(draft => {
+        const matchesTitle = draft.title?.toLowerCase().includes(query);
+        const matchesDesc = draft.description?.toLowerCase().includes(query);
+        return matchesTitle || matchesDesc;
+      });
     }
     
     // Type filter
     if (filterType !== 'all' && filterType !== 'project') {
-      if (filterType === 'text') {
-        return draft.content_type === 'text';
-      }
-      return draft.content_type === filterType;
+      filtered = filtered.filter(draft => {
+        if (filterType === 'text') {
+          return draft.content_type === 'text';
+        }
+        return draft.content_type === filterType;
+      });
     }
     
-    return true;
-  });
+    return filtered;
+  }, [drafts, localDraftsOrder, searchQuery, filterType]);
 
   // Sort drafts
-  const sortedDrafts = [...filteredDrafts].sort((a, b) => {
-    switch (sortType) {
-      case 'recent':
-        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
-      case 'timeline':
-        return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
-      case 'type':
-        return (a.content_type || '').localeCompare(b.content_type || '');
-      default:
-        return 0;
-    }
-  });
+  const getSortedDrafts = useCallback(() => {
+    const filtered = getFilteredDrafts();
+    return [...filtered].sort((a, b) => {
+      switch (sortType) {
+        case 'recent':
+          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+        case 'timeline':
+          return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+        case 'type':
+          return (a.content_type || '').localeCompare(b.content_type || '');
+        default:
+          return 0;
+      }
+    });
+  }, [getFilteredDrafts, sortType]);
+
+  const sortedDrafts = getSortedDrafts();
 
   // Show projects when filter is 'all' or 'project'
   const filteredProjects = filterType === 'all' || filterType === 'project' ? projects : [];
@@ -118,6 +151,19 @@ export default function DraftsPage() {
   const handleSelectProject = () => {
     setShowCreateModal(false);
     setShowProjectModal(true);
+  };
+
+  // Handle filter type change
+  const handleFilterTypeChange = (type: ContentType) => {
+    console.log('Filter changed to:', type); // Debug log
+    setFilterType(type);
+  };
+
+  // Handle sort type change
+  const handleSortTypeChange = (sort: SortType) => {
+    console.log('Sort changed to:', sort); // Debug log
+    setSortType(sort);
+    setShowFilterMenu(false);
   };
 
   // Format relative time
@@ -161,51 +207,106 @@ export default function DraftsPage() {
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', index.toString());
     // Add visual feedback
-    if (e.currentTarget instanceof HTMLElement) {
-      e.currentTarget.style.opacity = '0.5';
+    const target = e.currentTarget as HTMLElement;
+    if (target) {
+      setTimeout(() => {
+        target.style.opacity = '0.4';
+        target.style.transform = 'scale(0.95)';
+      }, 0);
     }
   };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    setDragOverIndex(index);
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
   };
 
-  const handleDragLeave = () => {
-    setDragOverIndex(null);
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear if leaving the drop zone entirely
+    const relatedTarget = e.relatedTarget as HTMLElement;
+    if (!relatedTarget || !e.currentTarget.contains(relatedTarget)) {
+      setDragOverIndex(null);
+    }
   };
 
   const handleDragEnd = (e: React.DragEvent) => {
     if (e.currentTarget instanceof HTMLElement) {
       e.currentTarget.style.opacity = '1';
+      e.currentTarget.style.transform = 'scale(1)';
     }
     setDraggedItem(null);
     setDragOverIndex(null);
   };
 
-  const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
     const dragIndex = parseInt(e.dataTransfer.getData('text/plain'));
     
     if (dragIndex !== dropIndex && draggedItem) {
-      // Reorder locally
+      // Reorder locally using the sortedDrafts array
       const newDrafts = [...sortedDrafts];
       const [removed] = newDrafts.splice(dragIndex, 1);
       newDrafts.splice(dropIndex, 0, removed);
       
-      // Update the main drafts array maintaining the new order
-      const reorderedDrafts = newDrafts.map((draft, idx) => ({
-        ...draft,
-        order: idx
-      }));
+      // Update local order
+      setLocalDraftsOrder(newDrafts);
       
-      setDrafts(reorderedDrafts);
+      // Also update the main drafts array
+      setDrafts(newDrafts);
       
-      // TODO: Persist order to backend if API supports it
-      // await portfolioAPI.reorderDrafts(reorderedDrafts.map(d => d.id));
+      toast.success('Draft order updated');
     }
     
+    setDraggedItem(null);
+    setDragOverIndex(null);
+  };
+
+  // Touch drag handlers for mobile
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [touchDragIndex, setTouchDragIndex] = useState<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent, draft: PortfolioItem, index: number) => {
+    setTouchStartY(e.touches[0].clientY);
+    setTouchDragIndex(index);
+    setDraggedItem(draft);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY === null || touchDragIndex === null) return;
+    
+    const touch = e.touches[0];
+    const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
+    
+    // Find the draft card under the touch point
+    for (const el of elements) {
+      const draftCard = el.closest('[data-draft-index]');
+      if (draftCard) {
+        const index = parseInt(draftCard.getAttribute('data-draft-index') || '-1');
+        if (index !== -1 && index !== touchDragIndex) {
+          setDragOverIndex(index);
+        }
+        break;
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (touchDragIndex !== null && dragOverIndex !== null && touchDragIndex !== dragOverIndex) {
+      // Perform the reorder
+      const newDrafts = [...sortedDrafts];
+      const [removed] = newDrafts.splice(touchDragIndex, 1);
+      newDrafts.splice(dragOverIndex, 0, removed);
+      
+      setLocalDraftsOrder(newDrafts);
+      setDrafts(newDrafts);
+      toast.success('Draft order updated');
+    }
+    
+    setTouchStartY(null);
+    setTouchDragIndex(null);
     setDraggedItem(null);
     setDragOverIndex(null);
   };
@@ -224,12 +325,13 @@ export default function DraftsPage() {
     <div className="min-h-screen" style={{ background: '#111111', color: '#F5F5F5' }}>
       {/* Header with Search */}
       <header 
-        className="sticky top-0 z-50"
+        className="sticky top-0"
         style={{
           background: 'rgba(17, 17, 17, 0.95)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
+          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+          zIndex: 40
         }}
       >
         <div style={{ padding: '12px 16px' }}>
@@ -336,8 +438,8 @@ export default function DraftsPage() {
               <span>Make a Draft</span>
             </button>
 
-            {/* Filter Button */}
-            <div style={{ position: 'relative' }}>
+            {/* Filter Button Container */}
+            <div ref={filterMenuRef} style={{ position: 'relative' }}>
               <button
                 onClick={() => setShowFilterMenu(!showFilterMenu)}
                 style={{
@@ -389,10 +491,9 @@ export default function DraftsPage() {
                 </svg>
               </button>
 
-              {/* Filter Dropdown - iOS style compact design */}
+              {/* Filter Dropdown */}
               {showFilterMenu && (
                 <div
-                  onClick={(e) => e.stopPropagation()}
                   style={{
                     position: 'absolute',
                     top: '100%',
@@ -403,9 +504,9 @@ export default function DraftsPage() {
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                     borderRadius: '14px',
                     padding: '8px',
-                    minWidth: '160px',
+                    minWidth: '180px',
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
-                    zIndex: 100
+                    zIndex: 1000
                   }}
                 >
                   {/* Type Section Label */}
@@ -430,13 +531,17 @@ export default function DraftsPage() {
                     {(['all', 'photo', 'video', 'audio', 'pdf', 'text', 'project'] as ContentType[]).map((type) => (
                       <button
                         key={type}
-                        onClick={() => setFilterType(type)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleFilterTypeChange(type);
+                        }}
                         style={{
-                          padding: '5px 10px',
+                          padding: '6px 12px',
                           borderRadius: '100px',
-                          background: filterType === type ? '#00C2FF' : 'rgba(255, 255, 255, 0.06)',
+                          background: filterType === type ? '#00C2FF' : 'rgba(255, 255, 255, 0.08)',
                           border: 'none',
-                          fontSize: '11px',
+                          fontSize: '12px',
                           fontWeight: 600,
                           color: filterType === type ? '#000' : 'rgba(255, 255, 255, 0.7)',
                           cursor: 'pointer',
@@ -444,7 +549,7 @@ export default function DraftsPage() {
                           textTransform: 'capitalize'
                         }}
                       >
-                        {type === 'text' ? 'memo' : type}
+                        {type === 'text' ? 'Memo' : type.charAt(0).toUpperCase() + type.slice(1)}
                       </button>
                     ))}
                   </div>
@@ -468,16 +573,17 @@ export default function DraftsPage() {
                   {(['recent', 'timeline', 'type'] as SortType[]).map((sort) => (
                     <button
                       key={sort}
-                      onClick={() => {
-                        setSortType(sort);
-                        setShowFilterMenu(false);
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleSortTypeChange(sort);
                       }}
                       style={{
                         width: '100%',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        padding: '8px',
+                        padding: '10px 8px',
                         background: sortType === sort ? 'rgba(0, 194, 255, 0.12)' : 'transparent',
                         border: 'none',
                         borderRadius: '8px',
@@ -486,10 +592,9 @@ export default function DraftsPage() {
                       }}
                     >
                       <span style={{ 
-                        fontSize: '13px', 
+                        fontSize: '14px', 
                         fontWeight: 500, 
-                        color: sortType === sort ? '#00C2FF' : 'rgba(255, 255, 255, 0.7)', 
-                        textTransform: 'capitalize' 
+                        color: sortType === sort ? '#00C2FF' : 'rgba(255, 255, 255, 0.7)'
                       }}>
                         {sort === 'recent' ? 'Recent' : sort === 'timeline' ? 'Timeline' : 'Type'}
                       </span>
@@ -505,6 +610,41 @@ export default function DraftsPage() {
 
       {/* Content Area */}
       <div style={{ padding: '12px', maxWidth: '430px', margin: '0 auto' }}>
+        {/* Active Filter Indicator */}
+        {filterType !== 'all' && (
+          <div style={{ 
+            marginBottom: '12px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px',
+            padding: '8px 12px',
+            background: 'rgba(0, 194, 255, 0.08)',
+            borderRadius: '10px',
+            border: '1px solid rgba(0, 194, 255, 0.15)'
+          }}>
+            <span style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)' }}>
+              Showing:
+            </span>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#00C2FF', textTransform: 'capitalize' }}>
+              {filterType === 'text' ? 'Memos' : `${filterType}s`}
+            </span>
+            <button
+              onClick={() => setFilterType('all')}
+              style={{
+                marginLeft: 'auto',
+                background: 'none',
+                border: 'none',
+                padding: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <XMarkIcon className="w-4 h-4" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+            </button>
+          </div>
+        )}
+
         {/* Projects Section - 2 Column Grid */}
         {filteredProjects.length > 0 && (
           <div style={{ marginBottom: '12px' }}>
@@ -569,7 +709,7 @@ export default function DraftsPage() {
           </div>
         )}
 
-        {/* Drafts Grid - 3 Column (same as Portfolio) */}
+        {/* Drafts Grid - 3 Column */}
         {sortedDrafts.length > 0 ? (
           <div 
             style={{
@@ -581,22 +721,32 @@ export default function DraftsPage() {
             {sortedDrafts.map((draft, index) => (
               <div 
                 key={draft.id}
+                data-draft-index={index}
                 draggable
                 onDragStart={(e) => handleDragStart(e, draft, index)}
                 onDragOver={(e) => handleDragOver(e, index)}
                 onDragLeave={handleDragLeave}
                 onDragEnd={handleDragEnd}
                 onDrop={(e) => handleDrop(e, index)}
+                onTouchStart={(e) => handleTouchStart(e, draft, index)}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
                 onClick={() => handleDraftClick(draft)}
                 style={{ 
                   position: 'relative',
                   cursor: 'grab',
-                  transition: 'transform 150ms, opacity 150ms',
-                  transform: dragOverIndex === index ? 'scale(1.02)' : 'scale(1)',
+                  transition: 'all 150ms ease-out',
+                  transform: dragOverIndex === index ? 'scale(1.05)' : 'scale(1)',
                   borderRadius: '8px',
                   overflow: 'hidden',
                   background: 'rgba(255, 255, 255, 0.02)',
-                  border: dragOverIndex === index ? '2px solid #00C2FF' : '1px solid rgba(255, 255, 255, 0.04)'
+                  border: dragOverIndex === index 
+                    ? '2px solid #00C2FF' 
+                    : draggedItem?.id === draft.id 
+                      ? '2px dashed rgba(0, 194, 255, 0.5)' 
+                      : '1px solid rgba(255, 255, 255, 0.04)',
+                  opacity: draggedItem?.id === draft.id ? 0.5 : 1,
+                  boxShadow: dragOverIndex === index ? '0 8px 24px rgba(0, 194, 255, 0.2)' : 'none'
                 }}
               >
                 {/* Content Display */}
@@ -626,6 +776,32 @@ export default function DraftsPage() {
                   DRAFT
                 </div>
 
+                {/* Drag Handle Indicator */}
+                {draggedItem === null && (
+                  <div 
+                    style={{
+                      position: 'absolute',
+                      top: '6px',
+                      right: '6px',
+                      background: 'rgba(0, 0, 0, 0.5)',
+                      backdropFilter: 'blur(8px)',
+                      borderRadius: '4px',
+                      padding: '4px',
+                      opacity: 0.6,
+                      zIndex: 10
+                    }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                      <circle cx="9" cy="5" r="1" fill="white"/>
+                      <circle cx="9" cy="12" r="1" fill="white"/>
+                      <circle cx="9" cy="19" r="1" fill="white"/>
+                      <circle cx="15" cy="5" r="1" fill="white"/>
+                      <circle cx="15" cy="12" r="1" fill="white"/>
+                      <circle cx="15" cy="19" r="1" fill="white"/>
+                    </svg>
+                  </div>
+                )}
+
                 {/* Footer with title and time */}
                 <div 
                   className="draft-card-desc"
@@ -634,8 +810,8 @@ export default function DraftsPage() {
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    background: 'linear-gradient(transparent, rgba(0, 0, 0, 0.8))',
-                    padding: '20px 8px 6px',
+                    background: 'linear-gradient(transparent, rgba(0, 0, 0, 0.85))',
+                    padding: '24px 8px 6px',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '2px'
@@ -676,30 +852,53 @@ export default function DraftsPage() {
           }}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>📝</div>
             <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#FFF', marginBottom: '8px' }}>
-              No Drafts Yet
+              {filterType !== 'all' ? `No ${filterType === 'text' ? 'memo' : filterType} drafts` : 'No Drafts Yet'}
             </h2>
             <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '24px' }}>
-              Drafts you save will appear here
+              {filterType !== 'all' 
+                ? `You don't have any ${filterType === 'text' ? 'memo' : filterType} drafts saved`
+                : 'Drafts you save will appear here'}
             </p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: '#00C2FF',
-                borderRadius: '12px',
-                padding: '12px 24px',
-                fontSize: '15px',
-                fontWeight: 600,
-                color: '#000',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              <PlusIcon className="w-5 h-5" />
-              Create Draft
-            </button>
+            {filterType !== 'all' ? (
+              <button
+                onClick={() => setFilterType('all')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  padding: '12px 24px',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  color: '#FFF',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                Show All Drafts
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: '#00C2FF',
+                  borderRadius: '12px',
+                  padding: '12px 24px',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  color: '#000',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                <PlusIcon className="w-5 h-5" />
+                Create Draft
+              </button>
+            )}
           </div>
         ) : null}
       </div>
@@ -732,14 +931,6 @@ export default function DraftsPage() {
         onClose={() => setShowProjectModal(false)}
         onSuccess={loadDrafts}
       />
-
-      {/* Click outside to close filter menu */}
-      {showFilterMenu && (
-        <div 
-          style={{ position: 'fixed', inset: 0, zIndex: 50 }}
-          onClick={() => setShowFilterMenu(false)}
-        />
-      )}
     </div>
   );
 }
