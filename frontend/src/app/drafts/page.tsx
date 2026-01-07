@@ -550,7 +550,7 @@ export default function DraftsPage() {
       }}>
         {/* Action Bar - Make Draft LEFT, Filter Icon RIGHT */}
         <div style={{
-          padding: '8px 12px',
+          padding: '6px 12px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
@@ -562,19 +562,19 @@ export default function DraftsPage() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '4px',
               background: '#00C2FF',
               color: '#FFF',
-              height: '30px',
-              padding: '0 14px',
-              fontSize: '13px',
+              height: '26px',
+              padding: '0 10px',
+              fontSize: '12px',
               fontWeight: 600,
-              borderRadius: '8px',
+              borderRadius: '6px',
               border: 'none',
               cursor: 'pointer'
             }}
           >
-            <PlusIcon className="w-4 h-4" style={{ strokeWidth: 2.5 }} />
+            <PlusIcon className="w-3.5 h-3.5" style={{ strokeWidth: 2.5 }} />
             <span>Make Draft</span>
           </button>
 
@@ -583,8 +583,8 @@ export default function DraftsPage() {
             onClick={() => setShowFilterStrip(!showFilterStrip)}
             className="filter-icon-btn"
             style={{
-              width: '30px',
-              height: '30px',
+              width: '26px',
+              height: '26px',
               borderRadius: '50%',
               background: showFilterStrip || filterType !== 'all' || sortType !== 'recent' 
                 ? 'rgba(0, 194, 255, 0.15)' 
@@ -600,7 +600,7 @@ export default function DraftsPage() {
             }}
           >
             <FunnelIcon 
-              className="w-4 h-4" 
+              className="w-3.5 h-3.5" 
               style={{ 
                 color: showFilterStrip || filterType !== 'all' || sortType !== 'recent' 
                   ? '#00C2FF' 

@@ -787,19 +787,18 @@ html {
   display: none;
 }
 
-/* Touch target sizes for mobile - only for nav/action buttons */
+/* Touch target sizes for mobile - compact buttons */
 @media (max-width: 640px) {
-  /* Specific button classes that need 30px height */
   .make-draft-btn {
-    height: 30px !important;
-    min-height: 30px !important;
+    height: 26px !important;
+    min-height: 26px !important;
   }
   
   .filter-icon-btn {
-    width: 30px !important;
-    height: 30px !important;
-    min-width: 30px !important;
-    min-height: 30px !important;
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    min-height: 26px !important;
   }
   
   /* Banner action buttons (View/Settings) - 15% smaller */
