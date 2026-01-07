@@ -609,87 +609,81 @@ export default function DraftsPage() {
           </button>
         </div>
 
-        {/* Filter Widget - Compact floating card */}
+        {/* Filter Widget - Modern segmented control */}
         {showFilterStrip && (
           <div 
             className="filter-widget"
             style={{
               margin: '0 8px 8px',
-              background: 'rgba(60, 60, 67, 0.6)',
+              background: 'rgba(28, 28, 30, 0.95)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '12px',
-              padding: '8px 10px',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '16px',
+              padding: '12px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '6px'
+              gap: '10px'
             }}
           >
-            {/* Type Pills Row */}
+            {/* Type Segmented Row */}
             <div 
               className="floating-filter-bar"
               style={{ 
                 display: 'flex', 
                 alignItems: 'center',
+                gap: '6px',
                 overflowX: 'auto',
                 WebkitOverflowScrolling: 'touch'
               }}
             >
-              {(['all', 'photo', 'video', 'audio', 'pdf', 'text', 'project'] as ContentType[]).map((type, index) => (
-                <div key={type} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                  {index === 1 && (
-                    <div style={{ width: '1px', height: '14px', background: 'rgba(255, 255, 255, 0.15)', margin: '0 6px' }} />
-                  )}
-                  <button
-                    onClick={() => setFilterType(type)}
-                    style={{
-                      padding: '5px 9px',
-                      borderRadius: '6px',
-                      background: filterType === type ? '#00C2FF' : 'transparent',
-                      border: 'none',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      color: '#FFF',
-                      cursor: 'pointer',
-                      transition: 'all 150ms ease',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {type === 'all' ? 'All' : type === 'text' ? 'Memo' : type.charAt(0).toUpperCase() + type.slice(1)}
-                  </button>
-                </div>
+              {(['all', 'photo', 'video', 'audio', 'pdf', 'text', 'project'] as ContentType[]).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setFilterType(type)}
+                  style={{
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    background: filterType === type ? 'rgba(0, 194, 255, 0.12)' : 'rgba(255, 255, 255, 0.06)',
+                    border: filterType === type ? '1px solid #00C2FF' : '1px solid rgba(255, 255, 255, 0.08)',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    color: filterType === type ? '#00C2FF' : 'rgba(255, 255, 255, 0.7)',
+                    cursor: 'pointer',
+                    transition: 'all 150ms ease',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0
+                  }}
+                >
+                  {type === 'all' ? 'All' : type === 'text' ? 'Memo' : type.charAt(0).toUpperCase() + type.slice(1)}
+                </button>
               ))}
             </div>
 
             {/* Horizontal Divider */}
-            <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.1)' }} />
+            <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.08)' }} />
 
-            {/* Sort Pills Row */}
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              {(['recent', 'timeline', 'type'] as SortType[]).map((sort, index) => (
-                <div key={sort} style={{ display: 'flex', alignItems: 'center' }}>
-                  {index === 1 && (
-                    <div style={{ width: '1px', height: '14px', background: 'rgba(255, 255, 255, 0.15)', margin: '0 6px' }} />
-                  )}
-                  <button
-                    onClick={() => setSortType(sort)}
-                    style={{
-                      padding: '5px 9px',
-                      borderRadius: '6px',
-                      background: sortType === sort ? '#00C2FF' : 'transparent',
-                      border: 'none',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      color: '#FFF',
-                      cursor: 'pointer',
-                      transition: 'all 150ms ease',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {sort === 'recent' ? 'Recent' : sort === 'timeline' ? 'Timeline' : 'Type'}
-                  </button>
-                </div>
+            {/* Sort Segmented Row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {(['recent', 'timeline', 'type'] as SortType[]).map((sort) => (
+                <button
+                  key={sort}
+                  onClick={() => setSortType(sort)}
+                  style={{
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    background: sortType === sort ? 'rgba(0, 194, 255, 0.12)' : 'rgba(255, 255, 255, 0.06)',
+                    border: sortType === sort ? '1px solid #00C2FF' : '1px solid rgba(255, 255, 255, 0.08)',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    color: sortType === sort ? '#00C2FF' : 'rgba(255, 255, 255, 0.7)',
+                    cursor: 'pointer',
+                    transition: 'all 150ms ease',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {sort === 'recent' ? 'Recent' : sort === 'timeline' ? 'Timeline' : 'Type'}
+                </button>
               ))}
             </div>
           </div>
