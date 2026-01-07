@@ -13,8 +13,7 @@ import CreateContentModal from '@/components/CreateContentModal';
 import { 
   XMarkIcon, 
   PlusIcon,
-  FolderIcon,
-  CheckIcon
+  FolderIcon
 } from '@heroicons/react/24/outline';
 
 type ContentType = 'all' | 'photo' | 'video' | 'audio' | 'pdf' | 'text' | 'project';
@@ -346,7 +345,6 @@ export default function DraftsPage() {
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<ContentType>('all');
   const [sortType, setSortType] = useState<SortType>('recent');
-  const [showFilterMenu, setShowFilterMenu] = useState(false);
   
   // Modal states
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -358,9 +356,6 @@ export default function DraftsPage() {
   const [editingDraft, setEditingDraft] = useState<PortfolioItem | null>(null);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
-  // Refs
-  const filterMenuRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (!user) {
       router.push('/auth/login');
@@ -369,21 +364,6 @@ export default function DraftsPage() {
     loadDrafts();
   }, [user]);
 
-  // Close filter menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (filterMenuRef.current && !filterMenuRef.current.contains(event.target as Node)) {
-        setShowFilterMenu(false);
-      }
-    };
-
-    if (showFilterMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showFilterMenu]);
 
   const loadDrafts = async () => {
     try {
@@ -512,25 +492,28 @@ export default function DraftsPage() {
 
   return (
     <div className="min-h-screen" style={{ background: '#111111', color: '#F5F5F5' }}>
-      {/* Header */}
+      {/* Studio Header */}
       <header 
         className="sticky top-0"
         style={{
-          background: 'rgba(17, 17, 17, 0.95)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          background: '#0D0D0D',
           borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+          padding: '0 16px',
           zIndex: 40
         }}
       >
-        {/* Header with close button */}
-        <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+        <div style={{ 
+          height: '44px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between'
+        }}>
+          <span style={{ fontSize: '15px', fontWeight: 600, color: '#FFF' }}>Studio</span>
           <button
             onClick={() => router.back()}
             style={{
-              width: '40px',
-              height: '40px',
-              flexShrink: 0,
+              width: '32px',
+              height: '32px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -539,167 +522,72 @@ export default function DraftsPage() {
               border: 'none'
             }}
           >
-            <XMarkIcon className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+            <XMarkIcon className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.3)' }} />
           </button>
-        </div>
-
-        {/* Navigation Bar */}
-        <div style={{ padding: '8px 16px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '15px', fontWeight: 700, color: '#FFF' }}>Drafts</span>
-            <span style={{
-              fontSize: '13px',
-              fontWeight: 600,
-              color: 'rgba(255, 255, 255, 0.5)',
-              background: 'rgba(255, 255, 255, 0.06)',
-              padding: '2px 8px',
-              borderRadius: '10px'
-            }}>
-              {totalItems}
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                background: '#00C2FF',
-                borderRadius: '20px',
-                padding: '8px 14px',
-                fontSize: '13px',
-                fontWeight: 600,
-                color: '#000',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              <PlusIcon className="w-4 h-4" style={{ strokeWidth: 2.5 }} />
-              <span>Make a Draft</span>
-            </button>
-
-            {/* Filter */}
-            <div ref={filterMenuRef} style={{ position: 'relative' }}>
-              <button
-                onClick={() => setShowFilterMenu(!showFilterMenu)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  height: '32px',
-                  padding: '0 12px',
-                  borderRadius: '16px',
-                  background: showFilterMenu || filterType !== 'all' ? 'rgba(0, 194, 255, 0.12)' : 'rgba(255, 255, 255, 0.06)',
-                  border: `1px solid ${showFilterMenu || filterType !== 'all' ? 'rgba(0, 194, 255, 0.25)' : 'rgba(255, 255, 255, 0.08)'}`,
-                  cursor: 'pointer'
-                }}
-              >
-                <span style={{ 
-                  fontSize: '13px', 
-                  fontWeight: 600, 
-                  color: showFilterMenu || filterType !== 'all' ? '#00C2FF' : 'rgba(255, 255, 255, 0.6)',
-                  textTransform: 'capitalize'
-                }}>
-                  {filterType === 'all' ? 'Filter' : filterType}
-                </span>
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: showFilterMenu ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 150ms' }}>
-                  <path d="M3 4.5L6 7.5L9 4.5" stroke={showFilterMenu || filterType !== 'all' ? '#00C2FF' : 'rgba(255, 255, 255, 0.5)'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-
-              {showFilterMenu && (
-                <div style={{
-                  position: 'absolute',
-                  top: '100%',
-                  right: 0,
-                  marginTop: '6px',
-                  background: 'rgba(28, 28, 30, 0.98)',
-                  backdropFilter: 'blur(40px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '14px',
-                  padding: '8px',
-                  minWidth: '180px',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
-                  zIndex: 1000
-                }}>
-                  <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', letterSpacing: '0.5px', padding: '4px 8px 6px' }}>Type</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', padding: '0 4px 8px' }}>
-                    {(['all', 'photo', 'video', 'audio', 'pdf', 'text', 'project'] as ContentType[]).map((type) => (
-                      <button
-                        key={type}
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setFilterType(type); }}
-                        style={{
-                          padding: '6px 12px',
-                          borderRadius: '100px',
-                          background: filterType === type ? '#00C2FF' : 'rgba(255, 255, 255, 0.08)',
-                          border: 'none',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          color: filterType === type ? '#000' : 'rgba(255, 255, 255, 0.7)',
-                          cursor: 'pointer',
-                          textTransform: 'capitalize'
-                        }}
-                      >
-                        {type === 'text' ? 'Memo' : type.charAt(0).toUpperCase() + type.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                  <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.08)', margin: '4px 0' }} />
-                  <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', letterSpacing: '0.5px', padding: '6px 8px 4px' }}>Sort</div>
-                  {(['recent', 'timeline', 'type'] as SortType[]).map((sort) => (
-                    <button
-                      key={sort}
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSortType(sort); setShowFilterMenu(false); }}
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '10px 8px',
-                        background: sortType === sort ? 'rgba(0, 194, 255, 0.12)' : 'transparent',
-                        border: 'none',
-                        borderRadius: '8px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <span style={{ fontSize: '14px', fontWeight: 500, color: sortType === sort ? '#00C2FF' : 'rgba(255, 255, 255, 0.7)' }}>
-                        {sort === 'recent' ? 'Recent' : sort === 'timeline' ? 'Timeline' : 'Type'}
-                      </span>
-                      {sortType === sort && <CheckIcon className="w-4 h-4" style={{ color: '#00C2FF' }} />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </header>
 
-      {/* Content */}
-      <div style={{ padding: '12px', maxWidth: '430px', margin: '0 auto' }}>
-        {/* Filter Indicator */}
-        {filterType !== 'all' && (
-          <div style={{ 
-            marginBottom: '12px', 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '8px',
-            padding: '8px 12px',
-            background: 'rgba(0, 194, 255, 0.08)',
-            borderRadius: '10px',
-            border: '1px solid rgba(0, 194, 255, 0.15)'
+      {/* Action Bar */}
+      <div style={{
+        background: 'rgba(17, 17, 17, 0.95)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+        padding: '10px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '15px', fontWeight: 700, color: '#FFF' }}>Drafts</span>
+          <span style={{
+            fontSize: '13px',
+            fontWeight: 600,
+            color: 'rgba(255, 255, 255, 0.5)',
+            background: 'rgba(255, 255, 255, 0.06)',
+            padding: '2px 8px',
+            borderRadius: '10px'
           }}>
-            <span style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)' }}>Showing:</span>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: '#00C2FF', textTransform: 'capitalize' }}>
-              {filterType === 'text' ? 'Memos' : `${filterType}s`}
-            </span>
-            <button onClick={() => setFilterType('all')} style={{ marginLeft: 'auto', background: 'none', border: 'none', padding: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-              <XMarkIcon className="w-4 h-4" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
-            </button>
-          </div>
-        )}
+            {totalItems}
+          </span>
+        </div>
+
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="make-draft-btn"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            background: '#00C2FF',
+            color: '#000',
+            height: '30px',
+            padding: '0 20px',
+            fontSize: '13px',
+            fontWeight: 600,
+            borderRadius: '6px',
+            border: 'none',
+            cursor: 'pointer',
+            justifyContent: 'center'
+          }}
+        >
+          <PlusIcon className="w-3.5 h-3.5" style={{ strokeWidth: 2.5 }} />
+          <span>Make Draft</span>
+        </button>
+      </div>
+
+      {/* Glassy Content Area */}
+      <div style={{ 
+        padding: '12px 24px', 
+        paddingBottom: '100px',
+        maxWidth: '430px', 
+        margin: '0 auto',
+        background: 'rgba(255, 255, 255, 0.02)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.06)',
+        borderTop: 'none',
+        borderRadius: '0 0 20px 20px',
+        minHeight: 'calc(100vh - 100px)'
+      }}>
 
         {/* Projects - 2 Column */}
         {filteredProjects.length > 0 && (
@@ -802,6 +690,79 @@ export default function DraftsPage() {
             )}
           </div>
         ) : null}
+      </div>
+
+      {/* Floating Bottom Filter Bar */}
+      <div style={{
+        position: 'fixed',
+        bottom: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        background: 'rgba(20, 20, 22, 0.92)',
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '20px',
+        padding: '8px 12px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+        zIndex: 50
+      }}>
+        {/* Type Pills */}
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {(['all', 'photo', 'video', 'audio', 'pdf', 'text', 'project'] as ContentType[]).map((type) => (
+            <button
+              key={type}
+              onClick={() => setFilterType(type)}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '100px',
+                background: filterType === type ? '#00C2FF' : 'transparent',
+                border: 'none',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: filterType === type ? '#000' : 'rgba(255, 255, 255, 0.6)',
+                cursor: 'pointer',
+                transition: 'all 150ms ease'
+              }}
+            >
+              {type === 'all' ? 'All' : type === 'text' ? 'Memo' : type.charAt(0).toUpperCase() + type.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        {/* Divider */}
+        <div style={{ width: '1px', height: '20px', background: 'rgba(255, 255, 255, 0.1)' }} />
+
+        {/* Sort Segmented Control */}
+        <div style={{ 
+          display: 'flex', 
+          background: 'rgba(255, 255, 255, 0.06)', 
+          borderRadius: '8px',
+          padding: '2px'
+        }}>
+          {(['recent', 'timeline', 'type'] as SortType[]).map((sort) => (
+            <button
+              key={sort}
+              onClick={() => setSortType(sort)}
+              style={{
+                padding: '4px 10px',
+                borderRadius: '6px',
+                background: sortType === sort ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
+                border: 'none',
+                fontSize: '11px',
+                fontWeight: 600,
+                color: sortType === sort ? '#FFF' : 'rgba(255, 255, 255, 0.5)',
+                cursor: 'pointer',
+                transition: 'all 150ms ease'
+              }}
+            >
+              {sort === 'recent' ? '↓ Recent' : sort === 'timeline' ? '↑ Old' : '⬡ Type'}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Modals */}
