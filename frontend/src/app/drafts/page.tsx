@@ -562,19 +562,19 @@ export default function DraftsPage() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '5px',
+              gap: '6px',
               background: '#00C2FF',
               color: '#FFF',
-              height: '28px',
-              padding: '0 12px',
-              fontSize: '12px',
+              height: '30px',
+              padding: '0 14px',
+              fontSize: '13px',
               fontWeight: 600,
-              borderRadius: '6px',
+              borderRadius: '8px',
               border: 'none',
               cursor: 'pointer'
             }}
           >
-            <PlusIcon className="w-3.5 h-3.5" style={{ strokeWidth: 2.5 }} />
+            <PlusIcon className="w-4 h-4" style={{ strokeWidth: 2.5 }} />
             <span>Make Draft</span>
           </button>
 
@@ -582,8 +582,8 @@ export default function DraftsPage() {
           <button
             onClick={() => setShowFilterStrip(!showFilterStrip)}
             style={{
-              width: '28px',
-              height: '28px',
+              width: '30px',
+              height: '30px',
               borderRadius: '50%',
               background: showFilterStrip || filterType !== 'all' || sortType !== 'recent' 
                 ? 'rgba(0, 194, 255, 0.15)' 
@@ -599,7 +599,7 @@ export default function DraftsPage() {
             }}
           >
             <FunnelIcon 
-              className="w-3.5 h-3.5" 
+              className="w-4 h-4" 
               style={{ 
                 color: showFilterStrip || filterType !== 'all' || sortType !== 'recent' 
                   ? '#00C2FF' 
@@ -615,15 +615,15 @@ export default function DraftsPage() {
             className="filter-widget"
             style={{
               margin: '0 8px 8px',
-              background: 'rgba(0, 0, 0, 0.4)',
+              background: 'rgba(60, 60, 67, 0.6)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '10px',
-              padding: '6px 8px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '12px',
+              padding: '8px 10px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '5px'
+              gap: '6px'
             }}
           >
             {/* Type Pills Row */}
@@ -639,16 +639,16 @@ export default function DraftsPage() {
               {(['all', 'photo', 'video', 'audio', 'pdf', 'text', 'project'] as ContentType[]).map((type, index) => (
                 <div key={type} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
                   {index === 1 && (
-                    <div style={{ width: '1px', height: '12px', background: 'rgba(255, 255, 255, 0.12)', margin: '0 4px' }} />
+                    <div style={{ width: '1px', height: '14px', background: 'rgba(255, 255, 255, 0.15)', margin: '0 6px' }} />
                   )}
                   <button
                     onClick={() => setFilterType(type)}
                     style={{
-                      padding: '4px 7px',
-                      borderRadius: '5px',
+                      padding: '5px 9px',
+                      borderRadius: '6px',
                       background: filterType === type ? '#00C2FF' : 'transparent',
                       border: 'none',
-                      fontSize: '11px',
+                      fontSize: '12px',
                       fontWeight: 600,
                       color: '#FFF',
                       cursor: 'pointer',
@@ -663,23 +663,23 @@ export default function DraftsPage() {
             </div>
 
             {/* Horizontal Divider */}
-            <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.08)' }} />
+            <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.1)' }} />
 
             {/* Sort Pills Row */}
             <div style={{ display: 'flex', alignItems: 'center' }}>
               {(['recent', 'timeline', 'type'] as SortType[]).map((sort, index) => (
                 <div key={sort} style={{ display: 'flex', alignItems: 'center' }}>
                   {index === 1 && (
-                    <div style={{ width: '1px', height: '12px', background: 'rgba(255, 255, 255, 0.12)', margin: '0 4px' }} />
+                    <div style={{ width: '1px', height: '14px', background: 'rgba(255, 255, 255, 0.15)', margin: '0 6px' }} />
                   )}
                   <button
                     onClick={() => setSortType(sort)}
                     style={{
-                      padding: '4px 7px',
-                      borderRadius: '5px',
+                      padding: '5px 9px',
+                      borderRadius: '6px',
                       background: sortType === sort ? '#00C2FF' : 'transparent',
                       border: 'none',
-                      fontSize: '11px',
+                      fontSize: '12px',
                       fontWeight: 600,
                       color: '#FFF',
                       cursor: 'pointer',
