@@ -883,4 +883,12 @@ html {
   }
 }
 
+/* Hide scrollbar on floating filter bar */
+.floating-filter-bar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
 
+.floating-filter-bar::-webkit-scrollbar {
+  display: none;
+}

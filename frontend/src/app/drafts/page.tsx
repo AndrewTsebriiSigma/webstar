@@ -509,7 +509,7 @@ export default function DraftsPage() {
           justifyContent: 'space-between'
         }}>
           <span style={{ fontSize: '15px', fontWeight: 600, color: '#FFF' }}>Studio</span>
-          {/* Plain X close button - no circle, with hover opacity */}
+          {/* Plain X close button - darker by default */}
           <button
             onClick={() => router.back()}
             style={{
@@ -520,13 +520,10 @@ export default function DraftsPage() {
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              opacity: 0.6,
               transition: 'opacity 150ms ease'
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.6')}
           >
-            <XMarkIcon className="w-5 h-5" style={{ color: '#FFF' }} />
+            <XMarkIcon className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.3)' }} />
           </button>
         </div>
       </header>
@@ -703,7 +700,7 @@ export default function DraftsPage() {
               marginBottom: '6px',
               letterSpacing: '-0.3px'
             }}>
-              Work Private
+              Safe Space
             </h2>
             <p style={{ 
               fontSize: '14px', 
@@ -718,39 +715,49 @@ export default function DraftsPage() {
       </div>
 
       {/* Floating Bottom Filter Bar */}
-      <div style={{
-        position: 'fixed',
-        bottom: '20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        background: 'rgba(20, 20, 22, 0.92)',
-        backdropFilter: 'blur(40px)',
-        WebkitBackdropFilter: 'blur(40px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        borderRadius: '20px',
-        padding: '8px 12px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-        zIndex: 50
-      }}>
-        {/* Type Pills */}
-        <div style={{ display: 'flex', gap: '4px' }}>
+      <div 
+        className="floating-filter-bar"
+        style={{
+          position: 'fixed',
+          bottom: '20px',
+          left: '12px',
+          right: '12px',
+          background: 'rgba(20, 20, 22, 0.92)',
+          backdropFilter: 'blur(40px)',
+          WebkitBackdropFilter: 'blur(40px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '16px',
+          padding: '6px 8px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+          zIndex: 50,
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch'
+        }}>
+        {/* Type Pills - scrollable */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '2px',
+          flexShrink: 0
+        }}>
           {(['all', 'photo', 'video', 'audio', 'pdf', 'text', 'project'] as ContentType[]).map((type) => (
             <button
               key={type}
               onClick={() => setFilterType(type)}
               style={{
-                padding: '6px 12px',
+                padding: '5px 10px',
                 borderRadius: '100px',
                 background: filterType === type ? '#00C2FF' : 'transparent',
                 border: 'none',
-                fontSize: '12px',
+                fontSize: '11px',
                 fontWeight: 600,
                 color: filterType === type ? '#000' : 'rgba(255, 255, 255, 0.6)',
                 cursor: 'pointer',
-                transition: 'all 150ms ease'
+                transition: 'all 150ms ease',
+                whiteSpace: 'nowrap',
+                flexShrink: 0
               }}
             >
               {type === 'all' ? 'All' : type === 'text' ? 'Memo' : type.charAt(0).toUpperCase() + type.slice(1)}
@@ -759,32 +766,34 @@ export default function DraftsPage() {
         </div>
 
         {/* Divider */}
-        <div style={{ width: '1px', height: '20px', background: 'rgba(255, 255, 255, 0.1)' }} />
+        <div style={{ width: '1px', height: '18px', background: 'rgba(255, 255, 255, 0.1)', flexShrink: 0 }} />
 
         {/* Sort Segmented Control */}
         <div style={{ 
           display: 'flex', 
           background: 'rgba(255, 255, 255, 0.06)', 
-          borderRadius: '8px',
-          padding: '2px'
+          borderRadius: '6px',
+          padding: '2px',
+          flexShrink: 0
         }}>
           {(['recent', 'timeline', 'type'] as SortType[]).map((sort) => (
             <button
               key={sort}
               onClick={() => setSortType(sort)}
               style={{
-                padding: '4px 10px',
-                borderRadius: '6px',
+                padding: '4px 8px',
+                borderRadius: '5px',
                 background: sortType === sort ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
                 border: 'none',
-                fontSize: '11px',
+                fontSize: '10px',
                 fontWeight: 600,
                 color: sortType === sort ? '#FFF' : 'rgba(255, 255, 255, 0.5)',
                 cursor: 'pointer',
-                transition: 'all 150ms ease'
+                transition: 'all 150ms ease',
+                whiteSpace: 'nowrap'
               }}
             >
-              {sort === 'recent' ? '↓ Recent' : sort === 'timeline' ? '↑ Old' : '⬡ Type'}
+              {sort === 'recent' ? '↓New' : sort === 'timeline' ? '↑Old' : '⬡Type'}
             </button>
           ))}
         </div>
