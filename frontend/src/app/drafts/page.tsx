@@ -10,7 +10,6 @@ import ContentDisplay from '@/components/ContentDisplay';
 import UploadPortfolioModal from '@/components/UploadPortfolioModal';
 import CreateProjectModal from '@/components/CreateProjectModal';
 import CreateContentModal from '@/components/CreateContentModal';
-import FeedModal from '@/components/FeedModal';
 import { 
   XMarkIcon, 
   MagnifyingGlassIcon,
@@ -39,9 +38,12 @@ export default function DraftsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedPostType, setSelectedPostType] = useState<'media' | 'audio' | 'pdf' | 'text' | null>(null);
   
-  // Feed modal state
-  const [showFeedModal, setShowFeedModal] = useState(false);
-  const [feedInitialPostId, setFeedInitialPostId] = useState<number | undefined>(undefined);
+  // Editing draft state
+  const [editingDraft, setEditingDraft] = useState<PortfolioItem | null>(null);
+  
+  // Drag and drop state
+  const [draggedItem, setDraggedItem] = useState<PortfolioItem | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -108,6 +110,7 @@ export default function DraftsPage() {
 
   const handleSelectPost = (type?: 'media' | 'audio' | 'pdf' | 'text') => {
     setSelectedPostType(type || null);
+    setEditingDraft(null);
     setShowCreateModal(false);
     setShowUploadModal(true);
   };
@@ -115,6 +118,96 @@ export default function DraftsPage() {
   const handleSelectProject = () => {
     setShowCreateModal(false);
     setShowProjectModal(true);
+  };
+
+  // Format relative time
+  const formatRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  // Open draft for editing
+  const handleDraftClick = (draft: PortfolioItem) => {
+    setEditingDraft(draft);
+    
+    // Determine content type for the modal
+    if (draft.content_type === 'photo' || draft.content_type === 'video') {
+      setSelectedPostType('media');
+    } else if (draft.content_type === 'audio') {
+      setSelectedPostType('audio');
+    } else if (draft.content_type === 'pdf') {
+      setSelectedPostType('pdf');
+    } else if (draft.content_type === 'text') {
+      setSelectedPostType('text');
+    }
+    
+    setShowUploadModal(true);
+  };
+
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, draft: PortfolioItem, index: number) => {
+    setDraggedItem(draft);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
+    // Add visual feedback
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.5';
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '1';
+    }
+    setDraggedItem(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    const dragIndex = parseInt(e.dataTransfer.getData('text/plain'));
+    
+    if (dragIndex !== dropIndex && draggedItem) {
+      // Reorder locally
+      const newDrafts = [...sortedDrafts];
+      const [removed] = newDrafts.splice(dragIndex, 1);
+      newDrafts.splice(dropIndex, 0, removed);
+      
+      // Update the main drafts array maintaining the new order
+      const reorderedDrafts = newDrafts.map((draft, idx) => ({
+        ...draft,
+        order: idx
+      }));
+      
+      setDrafts(reorderedDrafts);
+      
+      // TODO: Persist order to backend if API supports it
+      // await portfolioAPI.reorderDrafts(reorderedDrafts.map(d => d.id));
+    }
+    
+    setDraggedItem(null);
+    setDragOverIndex(null);
   };
 
   if (loading) {
@@ -485,20 +578,34 @@ export default function DraftsPage() {
               gap: '5px'
             }}
           >
-            {sortedDrafts.map((draft) => (
+            {sortedDrafts.map((draft, index) => (
               <div 
                 key={draft.id}
-                onClick={() => {
-                  setFeedInitialPostId(draft.id);
-                  setShowFeedModal(true);
+                draggable
+                onDragStart={(e) => handleDragStart(e, draft, index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragLeave={handleDragLeave}
+                onDragEnd={handleDragEnd}
+                onDrop={(e) => handleDrop(e, index)}
+                onClick={() => handleDraftClick(draft)}
+                style={{ 
+                  position: 'relative',
+                  cursor: 'grab',
+                  transition: 'transform 150ms, opacity 150ms',
+                  transform: dragOverIndex === index ? 'scale(1.02)' : 'scale(1)',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: dragOverIndex === index ? '2px solid #00C2FF' : '1px solid rgba(255, 255, 255, 0.04)'
                 }}
-                style={{ position: 'relative' }}
               >
+                {/* Content Display */}
                 <ContentDisplay 
                   item={draft} 
                   isActive={false}
                   showAttachments={false}
                 />
+                
                 {/* Draft Badge */}
                 <div 
                   style={{
@@ -517,6 +624,42 @@ export default function DraftsPage() {
                   }}
                 >
                   DRAFT
+                </div>
+
+                {/* Footer with title and time */}
+                <div 
+                  className="draft-card-desc"
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    background: 'linear-gradient(transparent, rgba(0, 0, 0, 0.8))',
+                    padding: '20px 8px 6px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px'
+                  }}
+                >
+                  {draft.title && (
+                    <div style={{
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      color: '#FFF',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {draft.title}
+                    </div>
+                  )}
+                  <div style={{
+                    fontSize: '10px',
+                    fontWeight: 500,
+                    color: 'rgba(255, 255, 255, 0.5)'
+                  }}>
+                    {formatRelativeTime(draft.created_at)}
+                  </div>
                 </div>
               </div>
             ))}
@@ -575,10 +718,12 @@ export default function DraftsPage() {
         onClose={() => {
           setShowUploadModal(false);
           setSelectedPostType(null);
+          setEditingDraft(null);
         }}
         onSuccess={loadDrafts}
         initialContentType={selectedPostType}
         defaultSaveAsDraft={true}
+        editingDraft={editingDraft}
       />
 
       {/* Project Modal */}
@@ -586,14 +731,6 @@ export default function DraftsPage() {
         isOpen={showProjectModal}
         onClose={() => setShowProjectModal(false)}
         onSuccess={loadDrafts}
-      />
-
-      {/* Feed Modal for viewing draft details */}
-      <FeedModal
-        isOpen={showFeedModal}
-        onClose={() => setShowFeedModal(false)}
-        posts={sortedDrafts}
-        initialPostId={feedInitialPostId}
       />
 
       {/* Click outside to close filter menu */}

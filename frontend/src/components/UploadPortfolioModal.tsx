@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, KeyboardEvent } from 'react';
 import { uploadsAPI, portfolioAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { PortfolioItem } from '@/lib/types';
 
 interface UploadPortfolioModalProps {
   isOpen: boolean;
@@ -11,11 +12,13 @@ interface UploadPortfolioModalProps {
   onSuccess: () => void;
   initialContentType?: 'media' | 'audio' | 'pdf' | 'text' | null;
   defaultSaveAsDraft?: boolean; // When true, primary action is "Save as Draft" instead of "Publish"
+  editingDraft?: PortfolioItem | null; // When provided, pre-fill modal with existing draft data
 }
 
-export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initialContentType, defaultSaveAsDraft = false }: UploadPortfolioModalProps) {
-  // Type is always pre-selected from CreateContentModal
+export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initialContentType, defaultSaveAsDraft = false, editingDraft = null }: UploadPortfolioModalProps) {
+  // Type is always pre-selected from CreateContentModal or from editingDraft
   const [selectedContentType, setSelectedContentType] = useState<'media' | 'audio' | 'pdf' | 'text' | null>(initialContentType || null);
+  const [editingDraftId, setEditingDraftId] = useState<number | null>(null);
   
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>('');
@@ -102,6 +105,49 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     }
   }, [initialContentType, isOpen]);
 
+  // Pre-fill form when editing an existing draft
+  useEffect(() => {
+    if (editingDraft && isOpen) {
+      setEditingDraftId(editingDraft.id);
+      
+      // Set content type based on draft's actual content type
+      const draftContentType = editingDraft.content_type;
+      if (draftContentType === 'photo' || draftContentType === 'video') {
+        setSelectedContentType('media');
+      } else if (draftContentType === 'audio') {
+        setSelectedContentType('audio');
+      } else if (draftContentType === 'pdf') {
+        setSelectedContentType('pdf');
+      } else if (draftContentType === 'text') {
+        setSelectedContentType('text');
+      }
+      
+      // Set description
+      setDescription(editingDraft.description || '');
+      
+      // Set text content for text posts
+      if (editingDraft.content_type === 'text') {
+        setTextContent(editingDraft.text_content || '');
+      }
+      
+      // Set preview for media
+      if (editingDraft.content_url) {
+        const mediaUrl = editingDraft.content_url.startsWith('http') 
+          ? editingDraft.content_url 
+          : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${editingDraft.content_url}`;
+        setPreview(mediaUrl);
+      }
+      
+      // Set attachment info if present
+      if (editingDraft.attachment_url && editingDraft.attachment_type) {
+        setAttachmentType(editingDraft.attachment_type as 'audio' | 'pdf');
+        setAttachmentFileName(editingDraft.attachment_url.split('/').pop()?.replace(/\.[^/.]+$/, '') || 'attachment');
+      }
+    } else if (!editingDraft) {
+      setEditingDraftId(null);
+    }
+  }, [editingDraft, isOpen]);
+
   // Animation states
   const [isClosing, setIsClosing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -136,6 +182,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
   const handleReset = () => {
     setSelectedContentType(null);
+    setEditingDraftId(null);
     setFile(null);
     setPreview('');
     setTextContent('');
@@ -329,13 +376,14 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   };
 
   const handleSubmit = async () => {
-    // Validation
+    // Validation - when editing, we might not have a new file
     if (selectedContentType === 'text' && !textContent.trim()) {
       toast.error('Please enter some text');
       return;
     }
     
-    if (selectedContentType !== 'text' && !file) {
+    // Only require file if not editing an existing draft with media
+    if (selectedContentType !== 'text' && !file && !editingDraftId) {
       toast.error('Please select a file');
       return;
     }
@@ -347,16 +395,26 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
       if (selectedContentType === 'text') {
         // Text post flow
-        await portfolioAPI.createItem({
-          content_type: 'text',
-          content_url: null,
-          text_content: textContent.trim(),
-          description: description || null,
-          aspect_ratio: '4:5',
-        });
+        if (editingDraftId) {
+          // Update and publish existing draft
+          await portfolioAPI.updateItem(editingDraftId, {
+            text_content: textContent.trim(),
+            description: description || null,
+            is_draft: false,
+          });
+          toast.success('Draft published! 🎉');
+        } else {
+          await portfolioAPI.createItem({
+            content_type: 'text',
+            content_url: null,
+            text_content: textContent.trim(),
+            description: description || null,
+            aspect_ratio: '4:5',
+          });
+          toast.success('Text post published! 🎉');
+        }
         
         setUploadProgress(100);
-        toast.success('Text post published! 🎉');
       } else {
         // Media post flow
         if (!selectedContentType) {
@@ -364,42 +422,58 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           return;
         }
         
-        // Determine actual content type from file
+        let contentUrl = preview; // Use existing preview URL if editing
         let actualContentType: string = selectedContentType;
-        if (selectedContentType === 'media') {
-          // Auto-detect based on file type
-          if (file!.type.startsWith('image/')) {
-            actualContentType = 'photo';
-          } else if (file!.type.startsWith('video/')) {
-            actualContentType = 'video';
-          }
-        }
         
-        // Upload main file
-        const uploadResponse = await uploadsAPI.uploadMedia(file!, actualContentType);
-        const contentUrl = uploadResponse.data.url;
+        // Only upload new file if one was selected
+        if (file) {
+          // Determine actual content type from file
+          if (selectedContentType === 'media') {
+            // Auto-detect based on file type
+            if (file.type.startsWith('image/')) {
+              actualContentType = 'photo';
+            } else if (file.type.startsWith('video/')) {
+              actualContentType = 'video';
+            }
+          }
+          
+          // Upload main file
+          const uploadResponse = await uploadsAPI.uploadMedia(file, actualContentType);
+          contentUrl = uploadResponse.data.url;
+        }
         
         setUploadProgress(70);
 
         // Handle attachment upload if present
-        let attachmentUrl = null;
+        let attachmentUrl = editingDraft?.attachment_url || null;
         if (attachmentFile && attachmentType) {
           const attachmentResponse = await uploadsAPI.uploadMedia(attachmentFile, attachmentType);
           attachmentUrl = attachmentResponse.data.url;
         }
 
-        // Create portfolio item
-        await portfolioAPI.createItem({
-          content_type: actualContentType,
-          content_url: contentUrl,
-          description: description || null,
-          aspect_ratio: '1:1',
-          attachment_url: attachmentUrl,
-          attachment_type: attachmentType,
-        });
+        if (editingDraftId) {
+          // Update and publish existing draft
+          await portfolioAPI.updateItem(editingDraftId, {
+            description: description || null,
+            is_draft: false,
+            ...(file && { content_url: contentUrl, content_type: actualContentType }),
+            ...(attachmentUrl && { attachment_url: attachmentUrl, attachment_type: attachmentType }),
+          });
+          toast.success('Draft published! 🎉');
+        } else {
+          // Create new portfolio item
+          await portfolioAPI.createItem({
+            content_type: actualContentType,
+            content_url: contentUrl,
+            description: description || null,
+            aspect_ratio: '1:1',
+            attachment_url: attachmentUrl,
+            attachment_type: attachmentType,
+          });
+          toast.success('Post published! 🎉');
+        }
 
         setUploadProgress(100);
-        toast.success('Post published! 🎉');
       }
       
       handleReset();
@@ -415,13 +489,14 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   };
 
   const handleSaveAsDraft = async () => {
-    // Validation
+    // Validation - when editing, we might not have a new file
     if (selectedContentType === 'text' && !textContent.trim()) {
       toast.error('Please enter some text');
       return;
     }
     
-    if (selectedContentType !== 'text' && !file) {
+    // Only require file if not editing an existing draft with media
+    if (selectedContentType !== 'text' && !file && !editingDraftId) {
       toast.error('Please select a file');
       return;
     }
@@ -433,17 +508,28 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
       if (selectedContentType === 'text') {
         // Text draft flow
-        await portfolioAPI.createItem({
-          content_type: 'text',
-          content_url: null,
-          text_content: textContent.trim(),
-          description: description || null,
-          aspect_ratio: '4:5',
-          is_draft: true,
-        });
+        if (editingDraftId) {
+          // Update existing draft
+          await portfolioAPI.updateItem(editingDraftId, {
+            text_content: textContent.trim(),
+            description: description || null,
+            is_draft: true,
+          });
+          toast.success('Draft updated! 📝');
+        } else {
+          // Create new draft
+          await portfolioAPI.createItem({
+            content_type: 'text',
+            content_url: null,
+            text_content: textContent.trim(),
+            description: description || null,
+            aspect_ratio: '4:5',
+            is_draft: true,
+          });
+          toast.success('Draft saved! 📝');
+        }
         
         setUploadProgress(100);
-        toast.success('Draft saved! 📝');
       } else {
         // Media draft flow
         if (!selectedContentType) {
@@ -451,43 +537,59 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           return;
         }
         
-        // Determine actual content type from file
+        let contentUrl = preview; // Use existing preview URL if editing
         let actualContentType: string = selectedContentType;
-        if (selectedContentType === 'media') {
-          // Auto-detect based on file type
-          if (file!.type.startsWith('image/')) {
-            actualContentType = 'photo';
-          } else if (file!.type.startsWith('video/')) {
-            actualContentType = 'video';
-          }
-        }
         
-        // Upload main file
-        const uploadResponse = await uploadsAPI.uploadMedia(file!, actualContentType);
-        const contentUrl = uploadResponse.data.url;
+        // Only upload new file if one was selected
+        if (file) {
+          // Determine actual content type from file
+          if (selectedContentType === 'media') {
+            // Auto-detect based on file type
+            if (file.type.startsWith('image/')) {
+              actualContentType = 'photo';
+            } else if (file.type.startsWith('video/')) {
+              actualContentType = 'video';
+            }
+          }
+          
+          // Upload main file
+          const uploadResponse = await uploadsAPI.uploadMedia(file, actualContentType);
+          contentUrl = uploadResponse.data.url;
+        }
         
         setUploadProgress(70);
 
-        // Handle attachment upload if present
-        let attachmentUrl = null;
+        // Handle attachment upload if present (only if new attachment file)
+        let attachmentUrl = editingDraft?.attachment_url || null;
         if (attachmentFile && attachmentType) {
           const attachmentResponse = await uploadsAPI.uploadMedia(attachmentFile, attachmentType);
           attachmentUrl = attachmentResponse.data.url;
         }
 
-        // Create portfolio item as draft
-        await portfolioAPI.createItem({
-          content_type: actualContentType,
-          content_url: contentUrl,
-          description: description || null,
-          aspect_ratio: '1:1',
-          is_draft: true,
-          attachment_url: attachmentUrl,
-          attachment_type: attachmentType,
-        });
+        if (editingDraftId) {
+          // Update existing draft
+          await portfolioAPI.updateItem(editingDraftId, {
+            description: description || null,
+            is_draft: true,
+            ...(file && { content_url: contentUrl, content_type: actualContentType }),
+            ...(attachmentUrl && { attachment_url: attachmentUrl, attachment_type: attachmentType }),
+          });
+          toast.success('Draft updated! 📝');
+        } else {
+          // Create new portfolio item as draft
+          await portfolioAPI.createItem({
+            content_type: actualContentType,
+            content_url: contentUrl,
+            description: description || null,
+            aspect_ratio: '1:1',
+            is_draft: true,
+            attachment_url: attachmentUrl,
+            attachment_type: attachmentType,
+          });
+          toast.success('Draft saved! 📝');
+        }
 
         setUploadProgress(100);
-        toast.success('Draft saved! 📝');
       }
       
       handleReset();
