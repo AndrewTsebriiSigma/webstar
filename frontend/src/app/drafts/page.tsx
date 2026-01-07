@@ -351,7 +351,6 @@ export default function DraftsPage() {
   // Modal states
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showProjectModal, setShowProjectModal] = useState(false);
-  const [showProjectEditModal, setShowProjectEditModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedPostType, setSelectedPostType] = useState<'media' | 'audio' | 'pdf' | 'text' | null>(null);
   
@@ -484,7 +483,7 @@ export default function DraftsPage() {
 
   const handleProjectClick = (project: Project) => {
     setEditingProject(project);
-    setShowProjectEditModal(true);
+    setShowProjectModal(true); // Use CreateProjectModal for editing
   };
 
   const handleReorder = (newItems: PortfolioItem[]) => {
@@ -824,122 +823,10 @@ export default function DraftsPage() {
 
       <CreateProjectModal
         isOpen={showProjectModal}
-        onClose={() => setShowProjectModal(false)}
+        onClose={() => { setShowProjectModal(false); setEditingProject(null); }}
         onSuccess={loadDrafts}
+        editingProject={editingProject}
       />
-
-      {editingProject && (
-        <ProjectDetailModal
-          isOpen={showProjectEditModal}
-          project={editingProject}
-          onClose={() => { setShowProjectEditModal(false); setEditingProject(null); }}
-        />
-      )}
-    </div>
-  );
-}
-
-// ============================================================================
-// PROJECT DETAIL MODAL
-// ============================================================================
-function ProjectDetailModal({ isOpen, project, onClose }: { isOpen: boolean; project: Project; onClose: () => void; }) {
-  const [isVisible, setIsVisible] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      requestAnimationFrame(() => setIsVisible(true));
-      document.body.style.overflow = 'hidden';
-    } else {
-      setIsVisible(false);
-      setIsClosing(false);
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [isOpen]);
-
-  const handleClose = () => {
-    setIsClosing(true);
-    setIsVisible(false);
-    setTimeout(() => { setIsClosing(false); onClose(); }, 150);
-  };
-
-  if (!isOpen && !isClosing) return null;
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
-
-  return (
-    <div 
-      className="fixed inset-0 z-50 flex items-start justify-center"
-      style={{ paddingTop: '5vh', background: 'rgba(0, 0, 0, 0.3)', backdropFilter: 'blur(14px)', opacity: isVisible ? 1 : 0, transition: 'opacity 0.15s ease-out' }}
-      onClick={handleClose}
-    >
-      <div 
-        style={{
-          width: '100%',
-          maxWidth: 'calc(100% - 24px)',
-          maxHeight: '75vh',
-          background: 'rgba(20, 20, 20, 0.85)',
-          border: '1px solid rgba(255, 255, 255, 0.05)',
-          borderRadius: '16px',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          transform: isVisible ? 'scale(1) translateY(0)' : 'scale(0.97) translateY(-10px)',
-          opacity: isVisible ? 1 : 0,
-          transition: 'transform 0.15s ease-out, opacity 0.15s ease-out'
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div style={{ height: '55px', padding: '0 20px', background: '#0D0D0D', borderBottom: '1px solid rgba(255, 255, 255, 0.06)', display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <button onClick={handleClose} style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer' }}>
-            <XMarkIcon className="w-6 h-6" style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
-          </button>
-          <h2 style={{ fontSize: '17px', fontWeight: 600, color: '#FFF' }}>Project Details</h2>
-        </div>
-
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
-          {project.cover_image && (
-            <div style={{ borderRadius: '12px', overflow: 'hidden', marginBottom: '16px' }}>
-              <img src={project.cover_image} alt={project.title} style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }} />
-            </div>
-          )}
-
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ display: 'inline-block', background: 'rgba(139, 92, 246, 0.2)', padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, color: '#A78BFA', letterSpacing: '0.5px', marginBottom: '12px' }}>PROJECT</div>
-            <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#FFF', marginBottom: '8px' }}>{project.title}</h3>
-            {project.description && <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.5 }}>{project.description}</p>}
-          </div>
-
-          <div style={{ display: 'flex', gap: '16px', padding: '12px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '10px', marginBottom: '16px' }}>
-            <div>
-              <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', marginBottom: '4px' }}>Created</div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#FFF' }}>{project.created_at ? formatTime(project.created_at) : 'Unknown'}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', marginBottom: '4px' }}>Items</div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#FFF' }}>{project.media_count || 0}</div>
-            </div>
-          </div>
-
-          {project.tags && (
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', marginBottom: '8px' }}>Tags</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {project.tags.split(',').map((tag: string, idx: number) => (
-                  <span key={idx} style={{ padding: '4px 10px', background: 'rgba(255, 255, 255, 0.06)', borderRadius: '100px', fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)' }}>{tag.trim()}</span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, KeyboardEvent } from 'react';
 import { uploadsAPI, projectsAPI, portfolioAPI } from '@/lib/api';
-import { PortfolioItem } from '@/lib/types';
+import { PortfolioItem, Project } from '@/lib/types';
 import toast from 'react-hot-toast';
 import { XMarkIcon, ArrowLeftIcon, PlusIcon } from '@heroicons/react/24/outline';
 
@@ -10,9 +10,10 @@ interface CreateProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  editingProject?: Project | null; // When provided, pre-fill modal with existing project data
 }
 
-export default function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProjectModalProps) {
+export default function CreateProjectModal({ isOpen, onClose, onSuccess, editingProject = null }: CreateProjectModalProps) {
   const [saving, setSaving] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -24,6 +25,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
   const [projectMedia, setProjectMedia] = useState<any[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [editingProjectId, setEditingProjectId] = useState<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const titleTextareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -34,6 +36,20 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
   
   // Add Content expandable state (like Post menu)
   const [contentExpanded, setContentExpanded] = useState(false);
+
+  // Pre-fill form when editing an existing project
+  useEffect(() => {
+    if (editingProject && isOpen) {
+      setEditingProjectId(editingProject.id);
+      setTitle(editingProject.title || '');
+      setDescription(editingProject.description || '');
+      if (editingProject.cover_image) {
+        setCoverPreview(editingProject.cover_image);
+      }
+    } else if (!editingProject) {
+      setEditingProjectId(null);
+    }
+  }, [editingProject, isOpen]);
 
   // Load user's portfolio items
   useEffect(() => {
@@ -90,6 +106,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
     setShowAttachExistingModal(false);
     setProjectMedia([]);
     setSelectedPortfolioIds(new Set());
+    setEditingProjectId(null);
   };
 
   const handleClose = () => {
@@ -192,7 +209,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
       toast.error('Project title is required');
       return;
     }
-    if (!coverFile) {
+    // When editing, cover is optional (already has one)
+    if (!coverFile && !editingProjectId && !coverPreview) {
       toast.error('Cover image is required');
       return;
     }
@@ -200,9 +218,9 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
     setSaving(true);
     setUploadProgress(0);
     try {
-      let coverUrl = '';
+      let coverUrl = coverPreview; // Use existing cover if no new one
       
-      // Upload cover image if selected
+      // Upload new cover image if selected
       if (coverFile) {
         setUploadingCover(true);
         setUploadProgress(20);
@@ -214,43 +232,54 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
 
       setUploadProgress(60);
 
-      // Create project with title
-      const projectResponse = await projectsAPI.createProject({
-        title: title.trim(),
-        description: description.trim() || null,
-        cover_image: coverUrl || null,
-        tags: null,
-        tools: null,
-        project_url: null,
-      });
+      if (editingProjectId) {
+        // Update existing project
+        await projectsAPI.updateProject(editingProjectId, {
+          title: title.trim(),
+          description: description.trim() || null,
+          cover_image: coverUrl || null,
+        });
+        setUploadProgress(100);
+        toast.success('Project updated! 🎉');
+      } else {
+        // Create new project with title
+        const projectResponse = await projectsAPI.createProject({
+          title: title.trim(),
+          description: description.trim() || null,
+          cover_image: coverUrl || null,
+          tags: null,
+          tools: null,
+          project_url: null,
+        });
 
-      const projectId = projectResponse.data.id;
-      setUploadProgress(80);
+        const projectId = projectResponse.data.id;
+        setUploadProgress(80);
 
-      // Add project media
-      if (projectMedia.length > 0) {
-        for (const media of projectMedia) {
-          try {
-            await projectsAPI.addProjectMedia(projectId, {
-              media_url: media.media_url || media.content_url,
-              media_type: media.content_type,
-              thumbnail_url: media.thumbnail_url || null
-            });
-          } catch (error) {
-            console.error('Failed to add media:', error);
+        // Add project media
+        if (projectMedia.length > 0) {
+          for (const media of projectMedia) {
+            try {
+              await projectsAPI.addProjectMedia(projectId, {
+                media_url: media.media_url || media.content_url,
+                media_type: media.content_type,
+                thumbnail_url: media.thumbnail_url || null
+              });
+            } catch (error) {
+              console.error('Failed to add media:', error);
+            }
           }
         }
-      }
 
-      setUploadProgress(100);
-      toast.success('Project created! 🎉');
+        setUploadProgress(100);
+        toast.success('Project created! 🎉');
+      }
       
       handleReset();
       onSuccess();
       handleClose();
     } catch (error: any) {
-      console.error('Create project error:', error);
-      toast.error(error.response?.data?.detail || 'Failed to create project');
+      console.error('Save project error:', error);
+      toast.error(error.response?.data?.detail || 'Failed to save project');
     } finally {
       setSaving(false);
       setUploadingCover(false);
@@ -431,23 +460,28 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }: Creat
                 className="font-semibold text-white"
                 style={{ fontSize: '17px' }}
               >
-                New Project
+                {editingProjectId ? 'Edit Project' : 'New Project'}
               </h2>
             </div>
-            <button
-              onClick={handleSubmit}
-              disabled={saving || uploadingCover || !title.trim() || !coverFile}
-              className="publish-btn text-[14px] font-semibold rounded-[8px] transition-all"
-              style={{ 
-                padding: '0 32px',
-                height: '32px',
-                background: (saving || uploadingCover || !title.trim() || !coverFile) ? 'rgba(255, 255, 255, 0.2)' : '#00C2FF',
-                color: '#fff',
-                cursor: (saving || uploadingCover || !title.trim() || !coverFile) ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {saving || uploadingCover ? '...' : 'Publish'}
-            </button>
+            {(() => {
+              const isDisabled = saving || uploadingCover || !title.trim() || (!coverFile && !coverPreview);
+              return (
+                <button
+                  onClick={handleSubmit}
+                  disabled={isDisabled}
+                  className="publish-btn text-[14px] font-semibold rounded-[8px] transition-all"
+                  style={{ 
+                    padding: '0 32px',
+                    height: '32px',
+                    background: isDisabled ? 'rgba(255, 255, 255, 0.2)' : '#00C2FF',
+                    color: '#fff',
+                    cursor: isDisabled ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {saving || uploadingCover ? '...' : (editingProjectId ? 'Save' : 'Publish')}
+                </button>
+              );
+            })()}
           </div>
 
           {/* Scrollable Content Area */}
