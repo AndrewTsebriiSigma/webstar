@@ -867,43 +867,36 @@ export default function ProfilePage({ params }: { params: { username: string } }
                         filter: 'brightness(0) invert(1)'
                       }} 
                     />
-                    <h2 style={{ 
-                      fontSize: '18px', 
-                      fontWeight: 600, 
-                      color: '#FFF', 
-                      marginBottom: '6px',
-                      letterSpacing: '-0.3px'
-                    }}>
-                      Show what you do here
-                    </h2>
                     <p style={{ 
-                      fontSize: '13px', 
-                      color: 'rgba(255, 255, 255, 0.4)', 
+                      fontSize: '15px', 
+                      color: 'rgba(255, 255, 255, 0.5)', 
                       fontWeight: 400,
-                      marginBottom: '20px'
+                      marginBottom: '20px',
+                      lineHeight: 1.4
                     }}>
-                      Photos, videos, audio, and more
+                      Show what you do here.
                     </p>
                     <button
                       onClick={() => setShowCreateContentModal(true)}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '6px',
-                        background: '#00C2FF',
-                        color: '#FFF',
-                        height: '36px',
-                        padding: '0 18px',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        borderRadius: '10px',
-                        border: 'none',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        height: '44px',
+                        padding: '0 24px',
+                        fontSize: '15px',
+                        fontWeight: 500,
+                        borderRadius: '14px',
+                        border: '1px solid rgba(255, 255, 255, 0.06)',
                         cursor: 'pointer',
                         transition: 'all 150ms ease'
                       }}
                     >
-                      <span style={{ fontSize: '16px' }}>+</span>
-                      ADD POST
+                      <span style={{ fontSize: '18px', fontWeight: 300 }}>+</span>
+                      Add Post
                     </button>
                   </>
                 ) : (
@@ -1037,43 +1030,36 @@ export default function ProfilePage({ params }: { params: { username: string } }
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
                     </svg>
-                    <h2 style={{ 
-                      fontSize: '18px', 
-                      fontWeight: 600, 
-                      color: '#FFF', 
-                      marginBottom: '6px',
-                      letterSpacing: '-0.3px'
-                    }}>
-                      Tell bigger stories
-                    </h2>
                     <p style={{ 
-                      fontSize: '13px', 
-                      color: 'rgba(255, 255, 255, 0.4)', 
+                      fontSize: '15px', 
+                      color: 'rgba(255, 255, 255, 0.5)', 
                       fontWeight: 400,
-                      marginBottom: '20px'
+                      marginBottom: '20px',
+                      lineHeight: 1.4
                     }}>
-                      Group posts into projects
+                      Tell bigger stories with projects.
                     </p>
                     <button
                       onClick={() => setShowProjectModal(true)}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '6px',
-                        background: '#00C2FF',
-                        color: '#FFF',
-                        height: '36px',
-                        padding: '0 18px',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        borderRadius: '10px',
-                        border: 'none',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        height: '44px',
+                        padding: '0 24px',
+                        fontSize: '15px',
+                        fontWeight: 500,
+                        borderRadius: '14px',
+                        border: '1px solid rgba(255, 255, 255, 0.06)',
                         cursor: 'pointer',
                         transition: 'all 150ms ease'
                       }}
                     >
-                      <span style={{ fontSize: '16px' }}>+</span>
-                      ADD PROJECT
+                      <span style={{ fontSize: '18px', fontWeight: 300 }}>+</span>
+                      Add Project
                     </button>
                   </>
                 ) : (
