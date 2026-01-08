@@ -8,6 +8,7 @@ interface CreateContentModalProps {
   onSelectPost: (type?: 'media' | 'audio' | 'pdf' | 'text') => void;
   onSelectProject: () => void;
   navHeightReduction?: number;
+  defaultPostExpanded?: boolean; // Skip Post/Project selection, go directly to post types
 }
 
 export default function CreateContentModal({
@@ -16,21 +17,23 @@ export default function CreateContentModal({
   onSelectPost,
   onSelectProject,
   navHeightReduction = 0,
+  defaultPostExpanded = false,
 }: CreateContentModalProps) {
-  const [postExpanded, setPostExpanded] = useState(false);
+  const [postExpanded, setPostExpanded] = useState(defaultPostExpanded);
   const [isClosing, setIsClosing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Entrance animation
+  // Entrance animation + reset postExpanded based on prop
   useEffect(() => {
     if (isOpen) {
+      setPostExpanded(defaultPostExpanded);
       // Small delay for entrance animation
       requestAnimationFrame(() => setIsVisible(true));
     } else {
       setIsVisible(false);
       setIsClosing(false);
     }
-  }, [isOpen]);
+  }, [isOpen, defaultPostExpanded]);
 
   if (!isOpen && !isClosing) return null;
 

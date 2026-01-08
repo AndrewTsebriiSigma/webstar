@@ -58,6 +58,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<PortfolioItem | null>(null);
   const [showPortfolioDetail, setShowPortfolioDetail] = useState(false);
   const [showCreateContentModal, setShowCreateContentModal] = useState(false);
+  const [skipToPostTypes, setSkipToPostTypes] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [viewerMode, setViewerMode] = useState(false);
   const [showFeedModal, setShowFeedModal] = useState(false);
@@ -894,7 +895,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       Show what you do here
                     </p>
                     <button
-                      onClick={() => setShowCreateContentModal(true)}
+                      onClick={() => {
+                        setSkipToPostTypes(true);
+                        setShowCreateContentModal(true);
+                      }}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -1114,13 +1118,17 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Modals */}
       <CreateContentModal
         isOpen={showCreateContentModal}
-        onClose={() => setShowCreateContentModal(false)}
+        onClose={() => {
+          setShowCreateContentModal(false);
+          setSkipToPostTypes(false);
+        }}
         onSelectPost={(type) => {
           setSelectedPostType(type || null);
           setShowUploadModal(true);
         }}
         onSelectProject={() => setShowProjectModal(true)}
         navHeightReduction={heightReduction}
+        defaultPostExpanded={skipToPostTypes}
       />
 
       <UploadPortfolioModal
