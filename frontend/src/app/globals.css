@@ -915,3 +915,35 @@ html {
 .filter-widget {
   animation: filterWidgetSlideDown 180ms cubic-bezier(0.25, 0.8, 0.25, 1);
 }
+
+/* Shimmer hover effect - running shine line on hover */
+/* Auto-applies to dashboard-strip and all action-btn buttons (future-proof) */
+.dashboard-strip,
+.action-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-strip::after,
+.action-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 1;
+}
+
+.dashboard-strip:hover::after,
+.action-btn:hover::after {
+  animation: shimmerSweep 0.5s ease-out;
+}
+
+@keyframes shimmerSweep {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
