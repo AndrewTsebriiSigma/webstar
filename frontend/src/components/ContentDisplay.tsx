@@ -15,6 +15,7 @@ interface ContentDisplayProps {
   showAttachments?: boolean;
   onClick?: () => void;
   variant?: 'compact' | 'full'; // Add variant prop
+  customRadius?: number; // Custom border radius from grid customization
 }
 
 export default function ContentDisplay({ 
@@ -22,7 +23,8 @@ export default function ContentDisplay({
   isActive = false, 
   showAttachments = true,
   onClick,
-  variant = 'compact' // Default to compact for grid
+  variant = 'compact', // Default to compact for grid
+  customRadius
 }: ContentDisplayProps) {
   // All items use same aspect ratio in grid (4:5) for compact
   // Full variant can have dynamic sizing
@@ -63,7 +65,8 @@ export default function ContentDisplay({
         minWidth: 0, // Prevent overflow
         overflow: 'hidden',
         boxSizing: 'border-box',
-        position: 'relative'
+        position: 'relative',
+        borderRadius: customRadius !== undefined ? `${customRadius}px` : undefined
       }}
     >
       {renderContent()}

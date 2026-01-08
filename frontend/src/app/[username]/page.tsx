@@ -69,6 +69,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [scrollY, setScrollY] = useState(0);
   const [navPushUp, setNavPushUp] = useState(0);
   
+  // Customization panel state
+  const [showCustomizePanel, setShowCustomizePanel] = useState(false);
+  const [gridColumns, setGridColumns] = useState<2 | 3 | 4>(3);
+  const [gridGap, setGridGap] = useState(5); // 0-20px
+  const [gridRadius, setGridRadius] = useState(0); // 0-24px
+  const [layoutMode, setLayoutMode] = useState<'uniform' | 'masonry'>('uniform');
+  
   const dashboardRef = useRef<HTMLDivElement>(null);
   
   const isOwnProfile = user?.username === username;
@@ -570,16 +577,20 @@ export default function ProfilePage({ params }: { params: { username: string } }
               <img src="/layers.svg" alt="Drafts" style={{ width: '20px', height: '20px', filter: 'invert(1) opacity(0.44)' }} />
             </button>
             <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowCustomizePanel(!showCustomizePanel);
+              }}
               className="action-button"
               style={{
                 width: '55px',
                 height: '40px',
                 borderRadius: '20px',
-                background: '#2A2A2A',
+                background: showCustomizePanel ? '#57BFF9' : '#2A2A2A',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid #414141',
-                color: '#707070',
+                border: showCustomizePanel ? '1px solid #57BFF9' : '1px solid #414141',
+                color: showCustomizePanel ? '#FFFFFF' : '#707070',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -589,18 +600,22 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 padding: 0
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.color = '#f5f5f5';
-                const img = e.currentTarget.querySelector('img');
-                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
+                if (!showCustomizePanel) {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.color = '#f5f5f5';
+                  const img = e.currentTarget.querySelector('img');
+                  if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#2A2A2A';
-                e.currentTarget.style.borderColor = '#414141';
-                e.currentTarget.style.color = '#707070';
-                const img = e.currentTarget.querySelector('img');
-                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
+                if (!showCustomizePanel) {
+                  e.currentTarget.style.background = '#2A2A2A';
+                  e.currentTarget.style.borderColor = '#414141';
+                  e.currentTarget.style.color = '#707070';
+                  const img = e.currentTarget.querySelector('img');
+                  if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
+                }
               }}
               onMouseDown={(e) => {
                 e.currentTarget.style.transform = 'scale(0.94)';
@@ -610,7 +625,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
               title="Customize"
             >
-              <img src="/palette.svg" alt="Customize" style={{ width: '20px', height: '20px', filter: 'invert(1) opacity(0.44)' }} />
+              <img src="/palette.svg" alt="Customize" style={{ width: '20px', height: '20px', filter: showCustomizePanel ? 'invert(1) opacity(1)' : 'invert(1) opacity(0.44)' }} />
             </button>
           </div>
         </div>
@@ -845,32 +860,221 @@ export default function ProfilePage({ params }: { params: { username: string } }
             width: '100%',
             padding: '10px'
           }}>
+            {/* Grid Customization Controls - Figma Template */}
+            {isOwnProfile && !viewerMode && showCustomizePanel && (
+              <div 
+                className="portfolio-customizer-inline"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.06)',
+                  borderRadius: '16px',
+                  padding: '12px 14px',
+                  marginBottom: '8px',
+                  boxSizing: 'border-box'
+                }}
+              >
+                {/* Row 1: Column Count & Layout Mode */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '34px' }}>
+                  {/* Column Buttons (2x, 3x, 4x) */}
+                  {[2, 3, 4].map((cols) => (
+                    <button
+                      key={cols}
+                      onClick={() => setGridColumns(cols as 2 | 3 | 4)}
+                      style={{
+                        flex: 1,
+                        minWidth: '42px',
+                        height: '32px',
+                        background: gridColumns === cols ? 'rgba(0, 194, 255, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+                        border: gridColumns === cols ? '1px solid #00C2FF' : '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '8px',
+                        color: gridColumns === cols ? '#00C2FF' : 'rgba(255, 255, 255, 0.65)',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: 0,
+                        flexShrink: 0
+                      }}
+                    >
+                      {cols}x
+                    </button>
+                  ))}
+                  
+                  {/* Divider */}
+                  <div style={{ width: '1px', height: '22px', background: 'rgba(255, 255, 255, 0.08)', flexShrink: 0 }} />
+                  
+                  {/* Layout Mode Buttons */}
+                  {/* Uniform Grid */}
+                  <button
+                    onClick={() => setLayoutMode('uniform')}
+                    style={{
+                      width: '42px',
+                      height: '32px',
+                      background: layoutMode === 'uniform' ? 'rgba(0, 194, 255, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+                      border: layoutMode === 'uniform' ? '1px solid #00C2FF' : '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      padding: 0,
+                      flexShrink: 0
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={layoutMode === 'uniform' ? '#00C2FF' : 'rgba(255,255,255,0.65)'} strokeWidth="2.5">
+                      <rect x="3" y="3" width="7" height="7" rx="1" />
+                      <rect x="14" y="3" width="7" height="7" rx="1" />
+                      <rect x="3" y="14" width="7" height="7" rx="1" />
+                      <rect x="14" y="14" width="7" height="7" rx="1" />
+                    </svg>
+                  </button>
+                  
+                  {/* Masonry Grid */}
+                  <button
+                    onClick={() => setLayoutMode('masonry')}
+                    style={{
+                      width: '42px',
+                      height: '32px',
+                      background: layoutMode === 'masonry' ? 'rgba(0, 194, 255, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+                      border: layoutMode === 'masonry' ? '1px solid #00C2FF' : '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      padding: 0,
+                      flexShrink: 0
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill={layoutMode === 'masonry' ? '#00C2FF' : 'rgba(255,255,255,0.65)'} stroke="none">
+                      <rect x="3" y="3" width="7" height="10" rx="1" />
+                      <rect x="14" y="3" width="7" height="7" rx="1" />
+                      <rect x="3" y="15" width="7" height="6" rx="1" />
+                      <rect x="14" y="12" width="7" height="9" rx="1" />
+                    </svg>
+                  </button>
+                </div>
+                
+                {/* Row 2: Gap & Radius Sliders */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '34px' }}>
+                  {/* Gap Slider Group */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+                    <span style={{ 
+                      fontSize: '11px', 
+                      fontWeight: 600, 
+                      color: 'rgba(255, 255, 255, 0.4)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.3px',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0
+                    }}>Gap</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="16"
+                      value={gridGap}
+                      onChange={(e) => setGridGap(parseInt(e.target.value))}
+                      style={{
+                        flex: 1,
+                        height: '4px',
+                        WebkitAppearance: 'none',
+                        appearance: 'none',
+                        background: `linear-gradient(to right, #00C2FF 0%, #00C2FF ${(gridGap / 16) * 100}%, rgba(255,255,255,0.08) ${(gridGap / 16) * 100}%, rgba(255,255,255,0.08) 100%)`,
+                        borderRadius: '2px',
+                        cursor: 'pointer',
+                        minWidth: '50px',
+                        outline: 'none'
+                      }}
+                      className="compact-slider"
+                    />
+                  </div>
+                  
+                  {/* Divider */}
+                  <div style={{ width: '1px', height: '22px', background: 'rgba(255, 255, 255, 0.08)', flexShrink: 0 }} />
+                  
+                  {/* Radius Slider Group */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+                    <span style={{ 
+                      fontSize: '11px', 
+                      fontWeight: 600, 
+                      color: 'rgba(255, 255, 255, 0.4)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.3px',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0
+                    }}>Radius</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="24"
+                      value={gridRadius}
+                      onChange={(e) => setGridRadius(parseInt(e.target.value))}
+                      style={{
+                        flex: 1,
+                        height: '4px',
+                        WebkitAppearance: 'none',
+                        appearance: 'none',
+                        background: `linear-gradient(to right, #00C2FF 0%, #00C2FF ${(gridRadius / 24) * 100}%, rgba(255,255,255,0.08) ${(gridRadius / 24) * 100}%, rgba(255,255,255,0.08) 100%)`,
+                        borderRadius: '2px',
+                        cursor: 'pointer',
+                        minWidth: '50px',
+                        outline: 'none'
+                      }}
+                      className="compact-slider"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             {portfolioItems.length > 0 ? (
               <div 
                 className="portfolio-grid"
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '5px',
+                  gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
+                  gap: `${gridGap}px`,
                   width: '100%'
                 }}
               >
-                {[...portfolioItems].reverse().map((item) => (
-                  <div 
-                    key={item.id} 
-                    onClick={() => {
-                      // Open feed modal for all content types
-                      setFeedInitialPostId(item.id);
-                      setShowFeedModal(true);
-                    }}
-                  >
-                    <ContentDisplay 
-                      item={item} 
-                      isActive={false}
-                      showAttachments={false}
-                    />
-                  </div>
-                ))}
+                {[...portfolioItems].reverse().map((item, index) => {
+                  // Masonry layout: every 5th item (0-indexed: 0, 5, 10...) spans 2 columns and 2 rows
+                  const isFeatured = layoutMode === 'masonry' && index % 5 === 0 && gridColumns >= 2;
+                  
+                  return (
+                    <div 
+                      key={item.id} 
+                      onClick={() => {
+                        // Open feed modal for all content types
+                        setFeedInitialPostId(item.id);
+                        setShowFeedModal(true);
+                      }}
+                      style={{
+                        gridColumn: isFeatured ? 'span 2' : 'span 1',
+                        gridRow: isFeatured ? 'span 2' : 'span 1',
+                        borderRadius: `${gridRadius}px`,
+                        overflow: 'hidden'
+                      }}
+                    >
+                      <ContentDisplay 
+                        item={item} 
+                        isActive={false}
+                        showAttachments={false}
+                        customRadius={gridRadius}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <div style={{ 
