@@ -889,7 +889,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       fontWeight: 400,
                       marginBottom: '16px'
                     }}>
-                      Show what you do here.
+                      Show what you do here
                     </p>
                     <button
                       onClick={() => setShowCreateContentModal(true)}
@@ -900,8 +900,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
                         gap: '6px',
                         background: 'transparent',
                         color: 'rgba(255, 255, 255, 0.4)',
+                        width: '130px',
                         height: '48px',
-                        padding: '0 20px',
                         fontSize: '13px',
                         fontWeight: 500,
                         borderRadius: '12px',
@@ -1038,7 +1038,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       fontWeight: 400,
                       marginBottom: '16px'
                     }}>
-                      Tell bigger stories with projects.
+                      Tell bigger stories with projects
                     </p>
                     <button
                       onClick={() => setShowProjectModal(true)}
@@ -1049,8 +1049,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
                         gap: '6px',
                         background: 'transparent',
                         color: 'rgba(255, 255, 255, 0.4)',
+                        width: '130px',
                         height: '48px',
-                        padding: '0 20px',
                         fontSize: '13px',
                         fontWeight: 500,
                         borderRadius: '12px',
