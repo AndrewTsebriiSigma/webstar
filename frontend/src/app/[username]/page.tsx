@@ -877,30 +877,17 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 flexDirection: 'column', 
                 alignItems: 'center', 
                 justifyContent: 'center',
-                minHeight: '300px',
+                minHeight: '280px',
                 padding: '48px 24px',
                 textAlign: 'center'
               }}>
                 {isOwnProfile ? (
                   <>
-                    {/* Palette/Gallery icon */}
-                    <img 
-                      src="/palette.svg" 
-                      alt="" 
-                      style={{ 
-                        width: '48px', 
-                        height: '48px', 
-                        marginBottom: '16px',
-                        opacity: 0.25,
-                        filter: 'brightness(0) invert(1)'
-                      }} 
-                    />
                     <p style={{ 
-                      fontSize: '15px', 
-                      color: 'rgba(255, 255, 255, 0.5)', 
+                      fontSize: '14px', 
+                      color: 'rgba(255, 255, 255, 0.35)', 
                       fontWeight: 400,
-                      marginBottom: '20px',
-                      lineHeight: 1.4
+                      marginBottom: '16px'
                     }}>
                       Show what you do here.
                     </p>
@@ -910,25 +897,24 @@ export default function ProfilePage({ params }: { params: { username: string } }
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: '8px',
-                        background: 'rgba(255, 255, 255, 0.08)',
-                        color: 'rgba(255, 255, 255, 0.7)',
-                        height: '44px',
-                        padding: '0 24px',
-                        fontSize: '15px',
+                        gap: '6px',
+                        background: 'transparent',
+                        color: 'rgba(255, 255, 255, 0.4)',
+                        height: '32px',
+                        padding: '0 14px',
+                        fontSize: '12px',
                         fontWeight: 500,
-                        borderRadius: '14px',
-                        border: '1px solid rgba(255, 255, 255, 0.06)',
+                        borderRadius: '8px',
+                        border: '1px dashed rgba(255, 255, 255, 0.15)',
                         cursor: 'pointer',
                         transition: 'all 150ms ease'
                       }}
                     >
-                      <span style={{ fontSize: '18px', fontWeight: 300 }}>+</span>
-                      Add Post
+                      + Add Post
                     </button>
                   </>
                 ) : (
-                  <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>No portfolio items yet</p>
+                  <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.35)' }}>No portfolio items yet</p>
                 )}
               </div>
             )}
@@ -1040,30 +1026,17 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 flexDirection: 'column', 
                 alignItems: 'center', 
                 justifyContent: 'center',
-                minHeight: '300px',
+                minHeight: '280px',
                 padding: '48px 24px',
                 textAlign: 'center'
               }}>
                 {isOwnProfile ? (
                   <>
-                    {/* Folder/Project icon */}
-                    <svg 
-                      width="48" 
-                      height="48" 
-                      fill="none" 
-                      stroke="rgba(255, 255, 255, 0.25)" 
-                      strokeWidth="1.5" 
-                      viewBox="0 0 24 24"
-                      style={{ marginBottom: '16px' }}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
-                    </svg>
                     <p style={{ 
-                      fontSize: '15px', 
-                      color: 'rgba(255, 255, 255, 0.5)', 
+                      fontSize: '14px', 
+                      color: 'rgba(255, 255, 255, 0.35)', 
                       fontWeight: 400,
-                      marginBottom: '20px',
-                      lineHeight: 1.4
+                      marginBottom: '16px'
                     }}>
                       Tell bigger stories with projects.
                     </p>
@@ -1073,25 +1046,24 @@ export default function ProfilePage({ params }: { params: { username: string } }
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: '8px',
-                        background: 'rgba(255, 255, 255, 0.08)',
-                        color: 'rgba(255, 255, 255, 0.7)',
-                        height: '44px',
-                        padding: '0 24px',
-                        fontSize: '15px',
+                        gap: '6px',
+                        background: 'transparent',
+                        color: 'rgba(255, 255, 255, 0.4)',
+                        height: '32px',
+                        padding: '0 14px',
+                        fontSize: '12px',
                         fontWeight: 500,
-                        borderRadius: '14px',
-                        border: '1px solid rgba(255, 255, 255, 0.06)',
+                        borderRadius: '8px',
+                        border: '1px dashed rgba(255, 255, 255, 0.15)',
                         cursor: 'pointer',
                         transition: 'all 150ms ease'
                       }}
                     >
-                      <span style={{ fontSize: '18px', fontWeight: 300 }}>+</span>
-                      Add Project
+                      + Add Project
                     </button>
                   </>
                 ) : (
-                  <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>No projects yet</p>
+                  <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.35)' }}>No projects yet</p>
                 )}
               </div>
             )}
