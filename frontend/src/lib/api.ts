@@ -98,7 +98,7 @@ export const onboardingAPI = {
   setExpertise: (expertise_level: string) =>
     api.post('/api/onboarding/expertise', { expertise_level }),
   
-  complete: (data: { archetype: string; role: string; expertise_level: string }) =>
+  complete: (data: { archetype: string; role: string; expertise_level: string; location?: string; bio?: string }) =>
     api.post('/api/onboarding/complete', data),
 };
 

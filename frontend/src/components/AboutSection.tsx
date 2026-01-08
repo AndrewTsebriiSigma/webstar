@@ -396,18 +396,46 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
     }
   };
 
+  // Map expertise badge to percentage level
+  const getExpertiseLevel = (badge: string | null | undefined): number => {
+    const expertiseMap: Record<string, number> = {
+      'emerging': 25,
+      'developing': 50,
+      'established': 75,
+      'leading': 100,
+    };
+    return badge ? (expertiseMap[badge.toLowerCase()] || 50) : 50;
+  };
+
   // Parse skills for display (backward compatible)
+  // Adds role + expertise as the first skill if available
   const getDisplaySkills = (): Skill[] => {
-    if (!profile?.skills) return [];
-    try {
-      const parsed = JSON.parse(profile.skills);
-      if (Array.isArray(parsed)) {
-        return parsed;
-      }
-      return profile.skills.split(',').map((s: string) => ({ name: s.trim(), level: 85 }));
-    } catch {
-      return profile.skills.split(',').map((s: string) => ({ name: s.trim(), level: 85 }));
+    const userSkills: Skill[] = [];
+    
+    // Add role + expertise as first skill if available
+    if (profile?.role && profile?.expertise_badge) {
+      const expertiseLevel = getExpertiseLevel(profile.expertise_badge);
+      userSkills.push({ 
+        name: profile.role, 
+        level: expertiseLevel 
+      });
     }
+    
+    // Parse user-added skills
+    if (profile?.skills) {
+      try {
+        const parsed = JSON.parse(profile.skills);
+        if (Array.isArray(parsed)) {
+          userSkills.push(...parsed);
+        } else {
+          userSkills.push(...profile.skills.split(',').map((s: string) => ({ name: s.trim(), level: 85 })));
+        }
+      } catch {
+        userSkills.push(...profile.skills.split(',').map((s: string) => ({ name: s.trim(), level: 85 })));
+      }
+    }
+    
+    return userSkills;
   };
 
   // Parse experiences for display (backward compatible)

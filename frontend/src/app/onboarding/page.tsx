@@ -26,10 +26,15 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   
+  // Raw slider value (0-99) for smooth dragging
+  const [sliderValue, setSliderValue] = useState(33);
+  
   const [formData, setFormData] = useState({
     archetype: '',
     role: '',
     expertiseLevel: '',
+    location: '',
+    bio: '',
   });
 
   useEffect(() => {
@@ -46,8 +51,20 @@ export default function OnboardingPage() {
     // If user exists but hasn't completed onboarding, show the page
   }, [user, router]);
 
+  // Map slider value to expertise level
+  const getExpertiseLevelFromSlider = (value: number): string => {
+    if (value < 25) return 'emerging';
+    if (value < 50) return 'developing';
+    if (value < 75) return 'established';
+    return 'leading';
+  };
+
+  // Get the current expertise level based on slider
+  const currentExpertiseLevel = formData.expertiseLevel || getExpertiseLevelFromSlider(sliderValue);
+  const currentExpertiseIndex = EXPERTISE_LEVELS.findIndex(l => l.id === currentExpertiseLevel);
+
   const handleComplete = async () => {
-    if (!formData.archetype || !formData.role || !formData.expertiseLevel) {
+    if (!formData.archetype || !formData.role || !currentExpertiseLevel) {
       toast.error('Please complete all steps');
       return;
     }
@@ -57,7 +74,9 @@ export default function OnboardingPage() {
       const response = await onboardingAPI.complete({
         archetype: formData.archetype,
         role: formData.role,
-        expertise_level: formData.expertiseLevel,
+        expertise_level: currentExpertiseLevel,
+        location: formData.location || undefined,
+        bio: formData.bio || undefined,
       });
       
       toast.success(`🎉 Welcome! You earned ${response.data.points_earned} points!`);
@@ -82,7 +101,7 @@ export default function OnboardingPage() {
         {/* Progress Bar */}
         <div className="mb-12">
           <div className="flex items-center justify-center gap-2">
-            {[1, 2, 3].map((s) => (
+            {[1, 2, 3, 4].map((s) => (
               <div
                 key={s}
                 className="h-2 flex-1 rounded-full transition"
@@ -91,7 +110,7 @@ export default function OnboardingPage() {
             ))}
           </div>
           <p className="text-center mt-4" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
-            Step {step} of 3
+            Step {step} of 4
           </p>
         </div>
 
@@ -201,52 +220,29 @@ export default function OnboardingPage() {
                   Your expertise level is:
                 </p>
                 <h3 className="text-3xl font-bold" style={{ color: '#00C2FF' }}>
-                  {EXPERTISE_LEVELS[
-                    formData.expertiseLevel 
-                      ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel)
-                      : 1
-                  ]?.name || EXPERTISE_LEVELS[1].name}
+                  {EXPERTISE_LEVELS[currentExpertiseIndex]?.name || EXPERTISE_LEVELS[1].name}
                 </h3>
               </div>
 
-              {/* Slider */}
+              {/* Slider - 100 parts for fine-grained control, fully flexible */}
               <div className="px-4">
                 <input
                   type="range"
                   min="0"
-                  max="3"
-                  value={
-                    formData.expertiseLevel 
-                      ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel)
-                      : 1
-                  }
+                  max="99"
+                  value={sliderValue}
                   onChange={(e) => {
-                    const index = parseInt(e.target.value);
+                    const value = parseInt(e.target.value);
+                    setSliderValue(value);
+                    // Also update the expertise level based on the value
                     setFormData((prev) => ({ 
                       ...prev, 
-                      expertiseLevel: EXPERTISE_LEVELS[index].id 
+                      expertiseLevel: getExpertiseLevelFromSlider(value)
                     }));
-                  }}
-                  onMouseUp={() => {
-                    // Set default value on first interaction if not set
-                    if (!formData.expertiseLevel) {
-                      setFormData((prev) => ({ 
-                        ...prev, 
-                        expertiseLevel: EXPERTISE_LEVELS[1].id 
-                      }));
-                    }
                   }}
                   className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
                   style={{
-                    background: `linear-gradient(to right, #0ea5e9 0%, #0ea5e9 ${
-                      ((formData.expertiseLevel 
-                        ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel)
-                        : 0) / 3) * 100
-                    }%, #e5e7eb ${
-                      ((formData.expertiseLevel 
-                        ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel)
-                        : 0) / 3) * 100
-                    }%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #0ea5e9 0%, #0ea5e9 ${sliderValue + 1}%, #e5e7eb ${sliderValue + 1}%, #e5e7eb 100%)`
                   }}
                 />
                 
@@ -255,13 +251,18 @@ export default function OnboardingPage() {
                   {EXPERTISE_LEVELS.map((level, index) => (
                     <button
                       key={level.id}
-                      onClick={() => setFormData((prev) => ({ ...prev, expertiseLevel: level.id }))}
+                      onClick={() => {
+                        // Set slider to middle of the level's range
+                        const newValue = index * 25 + 12;
+                        setSliderValue(Math.min(newValue, 99));
+                        setFormData((prev) => ({ ...prev, expertiseLevel: level.id }));
+                      }}
                       className="text-xs font-medium transition cursor-pointer"
                       style={{ 
                         width: '22%', 
                         textAlign: 'center',
-                        color: formData.expertiseLevel === level.id ? '#00C2FF' : 'rgba(255, 255, 255, 0.5)',
-                        fontWeight: formData.expertiseLevel === level.id ? 'bold' : 'normal'
+                        color: currentExpertiseLevel === level.id ? '#00C2FF' : 'rgba(255, 255, 255, 0.5)',
+                        fontWeight: currentExpertiseLevel === level.id ? 'bold' : 'normal'
                       }}
                     >
                       {level.name.split(' ')[0]}
@@ -270,16 +271,149 @@ export default function OnboardingPage() {
                 </div>
               </div>
 
-              {/* Complete Button */}
+              {/* Continue Button */}
               <div className="mt-12">
                 <button
-                  onClick={handleComplete}
-                  disabled={!formData.expertiseLevel || loading}
-                  className="w-full py-4 bg-gradient-to-r from-primary-600 to-accent-600 text-white text-lg font-semibold rounded-xl hover:shadow-2xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => {
+                    if (!formData.expertiseLevel) {
+                      setFormData((prev) => ({ ...prev, expertiseLevel: getExpertiseLevelFromSlider(sliderValue) }));
+                    }
+                    setStep(4);
+                  }}
+                  className="w-full py-4 bg-gradient-to-r from-primary-600 to-accent-600 text-white text-lg font-semibold rounded-xl hover:shadow-2xl transition"
                 >
-                  {loading ? 'Creating your profile...' : '🚀 Complete & Build My Profile'}
+                  Continue
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: Location & Profile Preview */}
+        {step === 4 && (
+          <div className="glass rounded-2xl shadow-xl p-8 animate-fade-in">
+            <button
+              onClick={() => setStep(3)}
+              className="mb-6 flex items-center gap-2"
+              style={{ color: '#00C2FF' }}
+            >
+              ← Back
+            </button>
+
+            <div className="max-w-2xl mx-auto">
+              {/* Profile Preview Card */}
+              <div 
+                className="mb-8 p-6 rounded-2xl text-center"
+                style={{ 
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)'
+                }}
+              >
+                {/* Profile Picture */}
+                <div 
+                  className="w-24 h-24 mx-auto rounded-full mb-4 flex items-center justify-center"
+                  style={{ 
+                    background: 'linear-gradient(145deg, #2D2D2D, #1A1A1A)',
+                    border: '2px solid rgba(255, 255, 255, 0.1)'
+                  }}
+                >
+                  <span className="text-4xl">
+                    {ARCHETYPES.find(a => a.id === formData.archetype)?.icon || '👤'}
+                  </span>
+                </div>
+                
+                {/* Username */}
+                <h3 className="text-xl font-bold mb-1" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+                  @{user?.username || 'username'}
+                </h3>
+                
+                {/* Role */}
+                <p className="text-sm mb-2" style={{ color: '#00C2FF' }}>
+                  {formData.role || 'Your Role'}
+                </p>
+                
+                {/* Location */}
+                {formData.location && (
+                  <p className="text-sm flex items-center justify-center gap-1" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {formData.location}
+                  </p>
+                )}
+                
+                {/* Bio Preview */}
+                {formData.bio && (
+                  <p className="mt-3 text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                    {formData.bio}
+                  </p>
+                )}
+              </div>
+
+              {/* Location Input */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
+                  Where are you based?
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., Paris, France"
+                  value={formData.location}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value }))}
+                  className="w-full px-5 py-3.5 border-2 rounded-xl"
+                  style={{ 
+                    background: 'rgba(255, 255, 255, 0.05)', 
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    color: 'rgba(255, 255, 255, 0.95)'
+                  }}
+                />
+              </div>
+
+              {/* Bio Input */}
+              <div className="mb-8">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
+                  Tell about yourself
+                </label>
+                <div className="relative">
+                  <textarea
+                    placeholder="A brief description of who you are..."
+                    value={formData.bio}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 90) {
+                        setFormData((prev) => ({ ...prev, bio: e.target.value }));
+                      }
+                    }}
+                    maxLength={90}
+                    rows={2}
+                    className="w-full px-5 py-3.5 border-2 rounded-xl resize-none"
+                    style={{ 
+                      background: 'rgba(255, 255, 255, 0.05)', 
+                      borderColor: 'rgba(255, 255, 255, 0.1)',
+                      color: 'rgba(255, 255, 255, 0.95)'
+                    }}
+                  />
+                  <span 
+                    className="absolute bottom-2 right-3 text-xs"
+                    style={{ color: formData.bio.length > 80 ? '#FF9F0A' : 'rgba(255, 255, 255, 0.4)' }}
+                  >
+                    {formData.bio.length}/90
+                  </span>
+                </div>
+              </div>
+
+              {/* Complete Button */}
+              <button
+                onClick={handleComplete}
+                disabled={loading}
+                className="w-full py-4 text-white text-lg font-bold rounded-xl hover:shadow-2xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  background: 'linear-gradient(135deg, #00C2FF 0%, #0A84FF 100%)',
+                  boxShadow: '0 4px 20px rgba(0, 194, 255, 0.3)'
+                }}
+              >
+                {loading ? 'Creating your profile...' : '🚀 LEVEL UP'}
+              </button>
             </div>
           </div>
         )}
@@ -287,4 +421,3 @@ export default function OnboardingPage() {
     </div>
   );
 }
-

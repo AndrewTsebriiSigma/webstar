@@ -37,6 +37,8 @@ export default function RegisterPage() {
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  // Raw slider value (0-99) for smooth dragging
+  const [sliderValue, setSliderValue] = useState(33);
 
   const handleFinalSubmit = async () => {
     if (!formData.archetype || !formData.role || !formData.expertiseLevel) {
@@ -386,86 +388,82 @@ export default function RegisterPage() {
                   {EXPERTISE_LEVELS[
                     formData.expertiseLevel 
                       ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel)
-                      : 1
+                      : (sliderValue < 25 ? 0 : sliderValue < 50 ? 1 : sliderValue < 75 ? 2 : 3)
                   ]?.name || EXPERTISE_LEVELS[1].name}
                 </h3>
               </div>
 
-              {/* Slider */}
+              {/* Slider - 100 parts for fine-grained control, fully flexible */}
               <div className="px-2 sm:px-4">
                 <input
                   type="range"
                   min="0"
                   max="99"
-                  value={
-                    formData.expertiseLevel 
-                      ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel) * 33
-                      : 33
-                  }
+                  value={sliderValue}
                   onChange={(e) => {
-                    const sliderValue = parseInt(e.target.value);
+                    const value = parseInt(e.target.value);
+                    setSliderValue(value);
+                    // Map 0-99 to 4 levels
                     let index;
-                    if (sliderValue < 25) {
-                      index = 0;
-                    } else if (sliderValue < 50) {
-                      index = 1;
-                    } else if (sliderValue < 75) {
-                      index = 2;
-                    } else {
-                      index = 3;
-                    }
+                    if (value < 25) index = 0;
+                    else if (value < 50) index = 1;
+                    else if (value < 75) index = 2;
+                    else index = 3;
+                    
                     setFormData((prev) => ({ 
                       ...prev, 
                       expertiseLevel: EXPERTISE_LEVELS[index].id 
                     }));
                   }}
-                  onMouseUp={() => {
-                    if (!formData.expertiseLevel) {
-                      setFormData((prev) => ({ 
-                        ...prev, 
-                        expertiseLevel: EXPERTISE_LEVELS[1].id 
-                      }));
-                    }
-                  }}
                   className="w-full h-2 sm:h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
                   style={{
-                    background: `linear-gradient(to right, #0ea5e9 0%, #0ea5e9 ${
-                      ((formData.expertiseLevel 
-                        ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel)
-                        : 1) / 3) * 100
-                    }%, #e5e7eb ${
-                      ((formData.expertiseLevel 
-                        ? EXPERTISE_LEVELS.findIndex(l => l.id === formData.expertiseLevel)
-                        : 1) / 3) * 100
-                    }%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #0ea5e9 0%, #0ea5e9 ${sliderValue + 1}%, #e5e7eb ${sliderValue + 1}%, #e5e7eb 100%)`
                   }}
                 />
                 
                 {/* Level Labels */}
                 <div className="flex justify-between mt-3 sm:mt-4">
-                  {EXPERTISE_LEVELS.map((level, index) => (
-                    <button
-                      key={level.id}
-                      onClick={() => setFormData((prev) => ({ ...prev, expertiseLevel: level.id }))}
-                      className="text-[10px] sm:text-xs font-medium transition cursor-pointer"
-                      style={{ 
-                        width: '24%', 
-                        textAlign: 'center',
-                        color: formData.expertiseLevel === level.id ? '#00C2FF' : 'rgba(255, 255, 255, 0.5)',
-                        fontWeight: formData.expertiseLevel === level.id ? 'bold' : 'normal'
-                      }}
-                    >
-                      {level.name.split(' ')[0]}
-                    </button>
-                  ))}
+                  {EXPERTISE_LEVELS.map((level, index) => {
+                    // Determine if this level is currently selected based on slider
+                    const currentLevel = sliderValue < 25 ? 'emerging' : sliderValue < 50 ? 'developing' : sliderValue < 75 ? 'established' : 'leading';
+                    const isActive = level.id === currentLevel;
+                    
+                    return (
+                      <button
+                        key={level.id}
+                        onClick={() => {
+                          // Set slider to middle of the level's range
+                          const newValue = index * 25 + 12;
+                          setSliderValue(Math.min(newValue, 99));
+                          setFormData((prev) => ({ ...prev, expertiseLevel: level.id }));
+                        }}
+                        className="text-[10px] sm:text-xs font-medium transition cursor-pointer"
+                        style={{ 
+                          width: '24%', 
+                          textAlign: 'center',
+                          color: isActive ? '#00C2FF' : 'rgba(255, 255, 255, 0.5)',
+                          fontWeight: isActive ? 'bold' : 'normal'
+                        }}
+                      >
+                        {level.name.split(' ')[0]}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* Complete Button */}
               <div className="mt-8 sm:mt-12">
                 <button
-                  onClick={handleFinalSubmit}
-                  disabled={!formData.expertiseLevel || loading}
+                  onClick={() => {
+                    // Ensure expertiseLevel is set before submitting
+                    if (!formData.expertiseLevel) {
+                      const level = sliderValue < 25 ? 'emerging' : sliderValue < 50 ? 'developing' : sliderValue < 75 ? 'established' : 'leading';
+                      setFormData((prev) => ({ ...prev, expertiseLevel: level }));
+                    }
+                    handleFinalSubmit();
+                  }}
+                  disabled={loading}
                   className="w-full py-3 sm:py-4 bg-gradient-to-r from-primary-600 to-accent-600 text-white text-base sm:text-lg font-semibold rounded-xl hover:shadow-2xl transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Creating your account...' : '🚀 Create My Account'}

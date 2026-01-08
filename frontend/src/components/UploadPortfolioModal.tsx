@@ -269,6 +269,9 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
       setPreview('');
       setIsVideoPreview(false);
     }
+    
+    // Reset input value to allow re-selecting the same file
+    e.target.value = '';
   };
 
   const handleAudioAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -277,11 +280,13 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
     if (!selectedFile.type.startsWith('audio/')) {
       toast.error('Please select an audio file');
+      e.target.value = ''; // Reset input
       return;
     }
 
     if (selectedFile.size > 50 * 1024 * 1024) {
       toast.error('Audio file must be less than 50MB');
+      e.target.value = ''; // Reset input
       return;
     }
 
@@ -289,6 +294,9 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     setAttachmentType('audio');
     setAttachmentFileName(selectedFile.name.replace(/\.[^/.]+$/, ''));
     toast.success('Audio attachment added');
+    
+    // Reset input value to allow re-selecting the same file
+    e.target.value = '';
   };
 
   const handlePdfAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -297,11 +305,13 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
     if (selectedFile.type !== 'application/pdf') {
       toast.error('Please select a PDF file');
+      e.target.value = ''; // Reset input
       return;
     }
 
     if (selectedFile.size > 50 * 1024 * 1024) {
       toast.error('PDF file must be less than 50MB');
+      e.target.value = ''; // Reset input
       return;
     }
 
@@ -309,6 +319,9 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     setAttachmentType('pdf');
     setAttachmentFileName(selectedFile.name.replace(/\.[^/.]+$/, ''));
     toast.success('PDF attachment added');
+    
+    // Reset input value to allow re-selecting the same file
+    e.target.value = '';
   };
 
   const removeAttachment = () => {
@@ -1223,53 +1236,64 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                   )}
                 </button>
                 
-                {/* Right: Attachment icons (only for media posts) */}
-                {selectedContentType === 'media' && (
-                  <div className="flex items-center" style={{ gap: '25px' }}>
-                    {/* Image icon - disabled */}
-                    <svg className="w-[18px] h-[18px] opacity-30" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                {/* Right: Attachment icons (always visible, disabled when not applicable) */}
+                <div className="flex items-center" style={{ gap: '25px' }}>
+                  {/* Image icon - always disabled (just decorative) */}
+                  <svg 
+                    className="w-[18px] h-[18px]" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth={2} 
+                    viewBox="0 0 24 24"
+                    style={{ opacity: 0.3 }}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                  </svg>
+
+                  {/* Audio attachment - only enabled for media posts */}
+                  <input
+                    type="file"
+                    id="audio-attachment-sticky"
+                    accept="audio/*"
+                    onChange={handleAudioAttachment}
+                    className="hidden"
+                    disabled={uploading || !canAddAudioAttachment || attachmentType === 'pdf'}
+                  />
+                  <label
+                    htmlFor={canAddAudioAttachment && !attachmentType ? "audio-attachment-sticky" : undefined}
+                    className="transition"
+                    style={{ 
+                      opacity: (!canAddAudioAttachment || attachmentType === 'pdf') ? 0.3 : 1,
+                      cursor: (canAddAudioAttachment && attachmentType !== 'pdf') ? 'pointer' : 'default'
+                    }}
+                  >
+                    <svg className="w-[18px] h-[18px]" fill="none" stroke={attachmentType === 'audio' ? '#00C2FF' : 'currentColor'} strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                     </svg>
+                  </label>
 
-                    {/* Audio attachment */}
-                    <input
-                      type="file"
-                      id="audio-attachment-sticky"
-                      accept="audio/*"
-                      onChange={handleAudioAttachment}
-                      className="hidden"
-                      disabled={uploading || !canAddAudioAttachment || attachmentType === 'pdf'}
-                    />
-                    <label
-                      htmlFor="audio-attachment-sticky"
-                      className="cursor-pointer transition"
-                      style={{ opacity: (!canAddAudioAttachment || attachmentType === 'pdf') ? 0.3 : 1 }}
-                    >
-                      <svg className="w-[18px] h-[18px]" fill="none" stroke={attachmentType === 'audio' ? '#00C2FF' : 'currentColor'} strokeWidth={2} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                      </svg>
-                    </label>
-
-                    {/* PDF attachment */}
-                    <input
-                      type="file"
-                      id="pdf-attachment-sticky"
-                      accept="application/pdf"
-                      onChange={handlePdfAttachment}
-                      className="hidden"
-                      disabled={uploading || !canAddPdfAttachment || attachmentType === 'audio'}
-                    />
-                    <label
-                      htmlFor="pdf-attachment-sticky"
-                      className="cursor-pointer transition"
-                      style={{ opacity: (!canAddPdfAttachment || attachmentType === 'audio') ? 0.3 : 1 }}
-                    >
-                      <svg className="w-[18px] h-[18px]" fill="none" stroke={attachmentType === 'pdf' ? '#00C2FF' : 'currentColor'} strokeWidth={2} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                      </svg>
-                    </label>
-                  </div>
-                )}
+                  {/* PDF attachment - only enabled for media posts */}
+                  <input
+                    type="file"
+                    id="pdf-attachment-sticky"
+                    accept="application/pdf"
+                    onChange={handlePdfAttachment}
+                    className="hidden"
+                    disabled={uploading || !canAddPdfAttachment || attachmentType === 'audio'}
+                  />
+                  <label
+                    htmlFor={canAddPdfAttachment && !attachmentType ? "pdf-attachment-sticky" : undefined}
+                    className="transition"
+                    style={{ 
+                      opacity: (!canAddPdfAttachment || attachmentType === 'audio') ? 0.3 : 1,
+                      cursor: (canAddPdfAttachment && attachmentType !== 'audio') ? 'pointer' : 'default'
+                    }}
+                  >
+                    <svg className="w-[18px] h-[18px]" fill="none" stroke={attachmentType === 'pdf' ? '#00C2FF' : 'currentColor'} strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                  </label>
+                </div>
               </div>
             </div>
       </div>

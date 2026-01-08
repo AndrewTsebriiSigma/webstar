@@ -224,6 +224,11 @@ async def complete_onboarding(
     if profile:
         profile.role = data.role
         profile.expertise_badge = data.expertise_level
+        # Save location and bio if provided
+        if data.location:
+            profile.location = data.location
+        if data.bio:
+            profile.bio = data.bio
         session.add(profile)
     
     session.commit()

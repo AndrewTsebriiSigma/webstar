@@ -97,29 +97,36 @@ export default function ProfilePage({ params }: { params: { username: string } }
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const loadProfile = async () => {
+  const loadProfile = async (forceRefresh = false) => {
     // Check cache first (5 minute TTL) for instant page loads
     const cacheKey = `profile_${username}`;
-    try {
-      const cached = sessionStorage.getItem(cacheKey);
-      
-      if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        const age = Date.now() - timestamp;
+    
+    // Skip cache if forceRefresh is true (e.g., after creating new content)
+    if (!forceRefresh) {
+      try {
+        const cached = sessionStorage.getItem(cacheKey);
         
-        // Use cache if less than 5 minutes old
-        if (age < 5 * 60 * 1000) {
-          setProfile(data.profile);
-          setPortfolioItems(data.portfolioItems);
-          setProjects(data.projects);
-          if (data.points) setPoints(data.points);
-          if (data.metrics) setMetrics(data.metrics);
-          setLoading(false);
-          return;
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached);
+          const age = Date.now() - timestamp;
+          
+          // Use cache if less than 5 minutes old
+          if (age < 5 * 60 * 1000) {
+            setProfile(data.profile);
+            setPortfolioItems(data.portfolioItems);
+            setProjects(data.projects);
+            if (data.points) setPoints(data.points);
+            if (data.metrics) setMetrics(data.metrics);
+            setLoading(false);
+            return;
+          }
         }
+      } catch (e) {
+        // Cache read failed, proceed with API calls
       }
-    } catch (e) {
-      // Cache read failed, proceed with API calls
+    } else {
+      // Clear cache when force refreshing
+      sessionStorage.removeItem(cacheKey);
     }
 
     try {
@@ -306,26 +313,29 @@ export default function ProfilePage({ params }: { params: { username: string } }
               >
                 <EyeIcon className="w-[20px] h-[20px]" />
               </button>
-              <button 
-                onClick={() => setShowSettingsModal(true)}
-                className="banner-action-btn flex items-center justify-center"
-                style={{ 
-                  width: '37px',
-                  height: '37px',
-                  borderRadius: '50%',
-                  background: 'rgba(0, 0, 0, 0.35)',
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  color: 'rgba(255, 255, 255, 0.85)',
-                  transition: 'all 150ms cubic-bezier(0.22, 0.61, 0.36, 1)'
-                }}
-                onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
-                onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                title="Settings"
-              >
-                <Cog6ToothIcon className="w-[20px] h-[20px]" />
-              </button>
+              {/* Hide settings gear icon in viewer mode */}
+              {!viewerMode && (
+                <button 
+                  onClick={() => setShowSettingsModal(true)}
+                  className="banner-action-btn flex items-center justify-center"
+                  style={{ 
+                    width: '37px',
+                    height: '37px',
+                    borderRadius: '50%',
+                    background: 'rgba(0, 0, 0, 0.35)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    color: 'rgba(255, 255, 255, 0.85)',
+                    transition: 'all 150ms cubic-bezier(0.22, 0.61, 0.36, 1)'
+                  }}
+                  onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
+                  onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  title="Settings"
+                >
+                  <Cog6ToothIcon className="w-[20px] h-[20px]" />
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -796,7 +806,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
           <AboutSection
             isOwnProfile={isOwnProfile}
             profile={profile}
-            onUpdate={loadProfile}
+            onUpdate={() => loadProfile(true)}
           />
         )}
 
@@ -1023,14 +1033,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
           setShowUploadModal(false);
           setSelectedPostType(null);
         }}
-        onSuccess={loadProfile}
+        onSuccess={() => loadProfile(true)}
         initialContentType={selectedPostType}
       />
 
       <CreateProjectModal
         isOpen={showProjectModal}
         onClose={() => setShowProjectModal(false)}
-        onSuccess={loadProfile}
+        onSuccess={() => loadProfile(true)}
       />
 
       <SettingsModal
@@ -1041,7 +1051,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
       <EditAboutModal
         isOpen={showEditAboutModal}
         onClose={() => setShowEditAboutModal(false)}
-        onSuccess={loadProfile}
+        onSuccess={() => loadProfile(true)}
         currentData={{
           about: profile?.about ?? undefined,
           skills: profile?.skills ?? undefined,
