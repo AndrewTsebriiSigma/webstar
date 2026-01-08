@@ -35,6 +35,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   const [isPlaying, setIsPlaying] = useState(false);
   const [attachmentFileName, setAttachmentFileName] = useState('');
   const [isRemovingAttachment, setIsRemovingAttachment] = useState(false);
+  const [existingAttachmentUrl, setExistingAttachmentUrl] = useState<string>('');
+  const [showPdfPopup, setShowPdfPopup] = useState(false);
   
   // Progress display - using uploadProgress directly (animation disabled for debugging)
   const displayProgress = uploadProgress;
@@ -145,6 +147,11 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
       if (editingDraft.attachment_url && editingDraft.attachment_type) {
         setAttachmentType(editingDraft.attachment_type as 'audio' | 'pdf');
         setAttachmentFileName(editingDraft.attachment_url.split('/').pop()?.replace(/\.[^/.]+$/, '') || 'attachment');
+        // Store the full attachment URL for preview
+        const attachUrl = editingDraft.attachment_url.startsWith('http') 
+          ? editingDraft.attachment_url 
+          : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${editingDraft.attachment_url}`;
+        setExistingAttachmentUrl(attachUrl);
       }
     } else if (!editingDraft) {
       setEditingDraftId(null);
@@ -197,6 +204,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     setAttachmentFile(null);
     setAttachmentType(null);
     setAttachmentFileName('');
+    setExistingAttachmentUrl('');
+    setShowPdfPopup(false);
     setDescription('');
     setUploading(false);
     setUploadProgress(0);
@@ -331,6 +340,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
       setAttachmentFile(null);
       setAttachmentType(null);
       setAttachmentFileName('');
+      setExistingAttachmentUrl('');
       setIsRemovingAttachment(false);
       setAttachmentSwipeX(0);
     }, 250);
@@ -991,7 +1001,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                   </div>
 
                   {/* Attachment Display - Apple-like 8px spacing, 44px height, swipe to delete */}
-                  {attachmentFile && attachmentType && (
+                  {(attachmentFile || existingAttachmentUrl) && attachmentType && (
                     <div 
                       className="relative overflow-hidden" 
                       style={{ 
@@ -1102,7 +1112,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           <>
                             <audio 
                               ref={audioRef} 
-                              src={URL.createObjectURL(attachmentFile)}
+                              src={attachmentFile ? URL.createObjectURL(attachmentFile) : existingAttachmentUrl}
                               onEnded={() => setIsPlaying(false)}
                               className="hidden"
                             />
@@ -1133,6 +1143,33 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                               )}
                             </button>
                           </>
+                        )}
+
+                        {/* View button for PDF - opens in popup */}
+                        {attachmentType === 'pdf' && (
+                          <button
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              setShowPdfPopup(true);
+                            }}
+                            className="flex items-center justify-center"
+                            style={{
+                              width: '35px',
+                              height: '35px',
+                              minWidth: '35px',
+                              minHeight: '35px',
+                              maxWidth: '35px',
+                              maxHeight: '35px',
+                              background: 'rgba(255, 255, 255, 0.12)',
+                              borderRadius: '50%',
+                              flexShrink: 0,
+                            }}
+                          >
+                            <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="white" strokeWidth={2} viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          </button>
                         )}
                       </div>
                     </div>
@@ -1297,6 +1334,85 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               </div>
             </div>
       </div>
+
+      {/* PDF Preview Popup */}
+      {showPdfPopup && attachmentType === 'pdf' && (attachmentFile || existingAttachmentUrl) && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            zIndex: 60,
+            display: 'flex',
+            flexDirection: 'column',
+            animation: 'fadeIn 0.2s ease-out',
+          }}
+        >
+          {/* Header */}
+          <div 
+            style={{
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            }}
+          >
+            <h3 style={{ 
+              color: '#fff', 
+              fontSize: '17px', 
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+            }}>
+              <svg className="w-5 h-5" fill="none" stroke="#FF453A" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>
+              {attachmentFileName || 'Document'}.pdf
+            </h3>
+            <button
+              onClick={() => setShowPdfPopup(false)}
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                background: 'rgba(255, 255, 255, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background 0.2s',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="#fff" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* PDF Viewer */}
+          <div style={{ flex: 1, overflow: 'hidden', padding: '20px' }}>
+            <iframe
+              src={attachmentFile ? URL.createObjectURL(attachmentFile) : existingAttachmentUrl}
+              style={{
+                width: '100%',
+                height: '100%',
+                border: 'none',
+                borderRadius: '12px',
+                background: '#fff',
+              }}
+              title="PDF Preview"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

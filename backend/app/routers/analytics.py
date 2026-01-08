@@ -108,9 +108,9 @@ async def get_daily_analytics(
     
     total_clicks = int(portfolio_clicks) + int(project_clicks)
     
-    # Initialize daily data for last 30 days
+    # Initialize daily data for last 30 days INCLUDING today (31 entries)
     daily_data = {}
-    for i in range(30):
+    for i in range(31):
         day = thirty_days_ago + timedelta(days=i)
         day_str = day.strftime('%Y-%m-%d')
         daily_data[day_str] = {
@@ -127,8 +127,8 @@ async def get_daily_analytics(
     
     # Distribute total clicks across days (simplified visualization)
     if total_clicks > 0:
-        clicks_per_day = total_clicks // 30
-        remainder = total_clicks % 30
+        clicks_per_day = total_clicks // 31
+        remainder = total_clicks % 31
         for i, day_str in enumerate(daily_data):
             daily_data[day_str]['link_clicks'] = clicks_per_day + (1 if i < remainder else 0)
     

@@ -46,6 +46,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [projects, setProjects] = useState<Project[]>([]);
   const [points, setPoints] = useState<PointsBalance | null>(null);
   const [metrics, setMetrics] = useState<ProfileMetrics | null>(null);
+  const [totalViews, setTotalViews] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -78,6 +79,23 @@ export default function ProfilePage({ params }: { params: { username: string } }
   useEffect(() => {
     loadProfile();
   }, [username]);
+
+  // Fetch analytics when user loads (isOwnProfile might be false initially)
+  useEffect(() => {
+    if (isOwnProfile && totalViews === 0) {
+      // User just loaded, fetch analytics
+      const fetchAnalytics = async () => {
+        try {
+          const dailyRes = await analyticsAPI.getDailyAnalytics();
+          const total = dailyRes.data.reduce((sum: number, d: { profile_views: number }) => sum + d.profile_views, 0);
+          setTotalViews(total);
+        } catch (e) {
+          console.error('Failed to fetch analytics:', e);
+        }
+      };
+      fetchAnalytics();
+    }
+  }, [isOwnProfile]);
 
   // Scroll listener - dashboard acts as ceiling for nav
   useEffect(() => {
@@ -117,6 +135,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             setProjects(data.projects);
             if (data.points) setPoints(data.points);
             if (data.metrics) setMetrics(data.metrics);
+            if (data.totalViews !== undefined) setTotalViews(data.totalViews);
             setLoading(false);
             return;
           }
@@ -145,11 +164,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
       // Non-critical data - load in background without blocking UI
       let pointsData = null;
       let metricsData = null;
+      let totalViewsData = 0;
       
       if (isOwnProfile) {
-        const [pointsRes, metricsRes] = await Promise.allSettled([
+        const [pointsRes, metricsRes, dailyRes] = await Promise.allSettled([
           economyAPI.getPoints(),
-          analyticsAPI.getProfileAnalytics()
+          analyticsAPI.getProfileAnalytics(),
+          analyticsAPI.getDailyAnalytics()
         ]);
 
         if (pointsRes.status === 'fulfilled') {
@@ -159,6 +180,12 @@ export default function ProfilePage({ params }: { params: { username: string } }
         if (metricsRes.status === 'fulfilled') {
           metricsData = metricsRes.value.data;
           setMetrics(metricsData);
+        }
+        // Calculate total views from daily analytics (same as analytics page)
+        if (dailyRes.status === 'fulfilled') {
+          const dailyData = dailyRes.value.data;
+          totalViewsData = dailyData.reduce((sum: number, d: { profile_views: number }) => sum + d.profile_views, 0);
+          setTotalViews(totalViewsData);
         }
       }
 
@@ -170,7 +197,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
             portfolioItems: portfolioRes.data,
             projects: projectsRes.data,
             points: pointsData,
-            metrics: metricsData
+            metrics: metricsData,
+            totalViews: totalViewsData
           },
           timestamp: Date.now()
         }));
@@ -488,7 +516,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   filter: 'drop-shadow(0 0 8px rgba(0, 194, 255, 0.15))'
                 }}
               >
-                {metrics?.profile_views_30d?.toLocaleString() || '0'}
+                {totalViews.toLocaleString()}
               </div>
             </div>
           </div>
