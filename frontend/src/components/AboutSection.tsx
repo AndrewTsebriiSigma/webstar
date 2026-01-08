@@ -121,37 +121,57 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
     };
   }, [editingAbout]);
 
-  // Platform categories configuration
+  // Platform categories configuration with image icons
   const PLATFORM_CATEGORIES = {
     social: {
       label: 'SOCIAL',
       platforms: [
-        { id: 'instagram', name: 'Instagram', icon: '📷', color: '#E4405F', domain: 'instagram.com' },
-        { id: 'facebook', name: 'Facebook', icon: '👤', color: '#1877F2', domain: 'facebook.com' },
-        { id: 'x', name: 'X', icon: '𝕏', color: '#000000', domain: 'x.com' },
+        { id: 'instagram', name: 'Instagram', icon: '/icons/social (1).png', color: '#E4405F', domain: 'instagram.com' },
+        { id: 'facebook', name: 'Facebook', icon: '/icons/facebook.png', color: '#1877F2', domain: 'facebook.com' },
+        { id: 'x', name: 'X', icon: '/icons/social.png', color: '#000000', domain: 'x.com' },
         { id: 'snapchat', name: 'Snapchat', icon: '👻', color: '#FFFC00', domain: 'snapchat.com' },
-        { id: 'pinterest', name: 'Pinterest', icon: '📌', color: '#E60023', domain: 'pinterest.com' },
-        { id: 'tiktok', name: 'TikTok', icon: '🎵', color: '#000000', domain: 'tiktok.com' },
-        { id: 'reddit', name: 'Reddit', icon: '🤖', color: '#FF4500', domain: 'reddit.com' },
+        { id: 'pinterest', name: 'Pinterest', icon: '/icons/pinterest.png', color: '#E60023', domain: 'pinterest.com' },
+        { id: 'tiktok', name: 'TikTok', icon: '/icons/tik-tok.png', color: '#000000', domain: 'tiktok.com' },
+        { id: 'reddit', name: 'Reddit', icon: '/icons/reddit.png', color: '#FF4500', domain: 'reddit.com' },
       ]
     },
     professional: {
       label: 'PROFESSIONAL',
       platforms: [
-        { id: 'linkedin', name: 'LinkedIn', icon: 'in', color: '#0A66C2', domain: 'linkedin.com' },
-        { id: 'github', name: 'GitHub', icon: '⚡', color: '#181717', domain: 'github.com' },
-        { id: 'behance', name: 'Behance', icon: 'Be', color: '#1769FF', domain: 'behance.net' },
-        { id: 'dribbble', name: 'Dribbble', icon: '🏀', color: '#EA4C89', domain: 'dribbble.com' },
+        { id: 'linkedin', name: 'LinkedIn', icon: '/icons/linkedin.png', color: '#0A66C2', domain: 'linkedin.com' },
+        { id: 'github', name: 'GitHub', icon: '/icons/github.png', color: '#181717', domain: 'github.com' },
+        { id: 'behance', name: 'Behance', icon: '/icons/behance.png', color: '#1769FF', domain: 'behance.net' },
+        { id: 'dribbble', name: 'Dribbble', icon: '/icons/dribbble.png', color: '#EA4C89', domain: 'dribbble.com' },
       ]
     },
     creative: {
       label: 'CREATIVE',
       platforms: [
-        { id: 'youtube', name: 'YouTube', icon: '▶️', color: '#FF0000', domain: 'youtube.com' },
-        { id: 'spotify', name: 'Spotify', icon: '🎧', color: '#1DB954', domain: 'spotify.com' },
-        { id: 'soundcloud', name: 'SoundCloud', icon: '☁️', color: '#FF3300', domain: 'soundcloud.com' },
+        { id: 'youtube', name: 'YouTube', icon: '/icons/youtube.png', color: '#FF0000', domain: 'youtube.com' },
+        { id: 'spotify', name: 'Spotify', icon: '/icons/spotify.png', color: '#1DB954', domain: 'spotify.com' },
+        { id: 'soundcloud', name: 'SoundCloud', icon: '/icons/soundcloud.png', color: '#FF3300', domain: 'soundcloud.com' },
       ]
     }
+  };
+
+  // Helper function to render platform icon (image or emoji fallback)
+  const renderPlatformIcon = (icon: string, size: number = 24) => {
+    if (icon.startsWith('/icons/')) {
+      return (
+        <img 
+          src={icon} 
+          alt="" 
+          style={{ 
+            width: `${size}px`, 
+            height: `${size}px`, 
+            objectFit: 'contain',
+            filter: 'none'
+          }} 
+        />
+      );
+    }
+    // Emoji fallback
+    return <span style={{ fontSize: `${size}px` }}>{icon}</span>;
   };
 
   const toggleCategory = (category: string) => {
@@ -1202,14 +1222,16 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                               }
                             }}
                           >
-                            <span
+                            <div
                               style={{
-                                fontSize: '24px',
                                 marginBottom: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
                               }}
                             >
-                              {platform.icon}
-                            </span>
+                              {renderPlatformIcon(platform.icon, 28)}
+                            </div>
                             {isConnected && (
                               <div
                                 style={{
@@ -1292,10 +1314,9 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '24px',
                       }}
                     >
-                      {getPlatformDetails(selectedPlatformForLink)!.icon}
+                      {renderPlatformIcon(getPlatformDetails(selectedPlatformForLink)!.icon, 32)}
                     </div>
                     <div>
                       <div style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '2px' }}>
@@ -1419,7 +1440,7 @@ export default function AboutSection({ isOwnProfile, profile, onUpdate }: AboutS
                           e.currentTarget.style.boxShadow = '0 0 0 4px var(--blue-10)';
                         }}
                       >
-                        {platformDetails.icon}
+                        {renderPlatformIcon(platformDetails.icon, 28)}
                         {/* Checkmark badge */}
                         <div
                           style={{

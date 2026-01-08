@@ -194,40 +194,50 @@ async def get_profile_by_username(
     user_points = session.exec(select(UserPoints).where(UserPoints.user_id == user.id)).first()
     total_points = user_points.total_points if user_points else 0
     
-    # Track view (if not own profile) - use separate session to avoid deadlocks
-    # This is done asynchronously and won't block the response
-    if current_user and current_user.id != user.id:
+    # Track view (if not own profile) - also track anonymous/external visitors
+    # Use separate session to avoid deadlocks
+    is_own_profile = current_user and current_user.id == user.id
+    
+    if not is_own_profile:  # Track for both logged-in and anonymous users
         try:
             from app.db.models import ProfileView
             from app.db.base import engine
-            # Use a separate session for view tracking to avoid blocking the main response
+            
             with Session(engine) as view_session:
-                # Check if view already exists today (prevent duplicates per day)
                 today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-                existing_view = view_session.exec(
-                    select(ProfileView).where(
-                        ProfileView.profile_user_id == user.id,
-                        ProfileView.viewer_id == current_user.id,
-                        ProfileView.created_at >= today_start
-                    )
-                ).first()
                 
-                if not existing_view:
-                    view = ProfileView(profile_user_id=user.id, viewer_id=current_user.id)
+                if current_user:
+                    # Logged-in user - check by user ID to prevent duplicates per day
+                    existing_view = view_session.exec(
+                        select(ProfileView).where(
+                            ProfileView.profile_user_id == user.id,
+                            ProfileView.viewer_id == current_user.id,
+                            ProfileView.created_at >= today_start
+                        )
+                    ).first()
+                    
+                    if not existing_view:
+                        view = ProfileView(profile_user_id=user.id, viewer_id=current_user.id)
+                        view_session.add(view)
+                        profile_for_update = view_session.get(Profile, profile.id)
+                        if profile_for_update:
+                            profile_for_update.profile_views_count += 1
+                            view_session.add(profile_for_update)
+                        view_session.commit()
+                        session.refresh(profile)
+                else:
+                    # Anonymous/external visitor - count each visit (no duplicate check)
+                    view = ProfileView(profile_user_id=user.id, viewer_id=None)
                     view_session.add(view)
-                    # Update profile views count in separate session
                     profile_for_update = view_session.get(Profile, profile.id)
                     if profile_for_update:
                         profile_for_update.profile_views_count += 1
                         view_session.add(profile_for_update)
                     view_session.commit()
-                    # Refresh main session's profile to get updated count
                     session.refresh(profile)
         except (OperationalError, IntegrityError) as e:
-            # Database lock or constraint error - log but don't fail the request
             logger.warning(f"Failed to track profile view for user {user.id}: {str(e)}")
         except Exception as e:
-            # Any other error - log but don't fail the request
             logger.error(f"Unexpected error tracking profile view: {str(e)}")
     
     return ProfileResponse(

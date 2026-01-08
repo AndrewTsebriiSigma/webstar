@@ -350,15 +350,20 @@ export default function EditAboutModal({ isOpen, onClose, onSuccess, currentData
               
               {[
                 { key: 'email', label: 'Email', icon: '📧', placeholder: 'your@email.com' },
-                { key: 'linkedin', label: 'LinkedIn', icon: '💼', placeholder: 'https://linkedin.com/in/username' },
-                { key: 'instagram', label: 'Instagram', icon: '📸', placeholder: 'https://instagram.com/username' },
-                { key: 'tiktok', label: 'TikTok', icon: '🎵', placeholder: 'https://tiktok.com/@username' },
-                { key: 'youtube', label: 'YouTube', icon: '📺', placeholder: 'https://youtube.com/@username' },
-                { key: 'twitter', label: 'X (Twitter)', icon: '𝕏', placeholder: 'https://x.com/username' },
+                { key: 'linkedin', label: 'LinkedIn', icon: '/icons/linkedin.png', placeholder: 'https://linkedin.com/in/username' },
+                { key: 'instagram', label: 'Instagram', icon: '/icons/social (1).png', placeholder: 'https://instagram.com/username' },
+                { key: 'tiktok', label: 'TikTok', icon: '/icons/tik-tok.png', placeholder: 'https://tiktok.com/@username' },
+                { key: 'youtube', label: 'YouTube', icon: '/icons/youtube.png', placeholder: 'https://youtube.com/@username' },
+                { key: 'twitter', label: 'X (Twitter)', icon: '/icons/social.png', placeholder: 'https://x.com/username' },
               ].map((link) => (
                 <div key={link.key}>
-                  <label className="block text-sm font-semibold mb-2 text-gray-300">
-                    {link.icon} {link.label}
+                  <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-300">
+                    {link.icon.startsWith('/icons/') ? (
+                      <img src={link.icon} alt="" style={{ width: '18px', height: '18px', objectFit: 'contain' }} />
+                    ) : (
+                      <span>{link.icon}</span>
+                    )}
+                    {link.label}
                   </label>
                   <input
                     type={link.key === 'email' ? 'email' : 'url'}

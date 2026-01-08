@@ -761,20 +761,27 @@ function PDFDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => vo
   );
 }
 
-// Video Display Component
+// Video Display Component - Auto-play muted preview
 function VideoDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => void }) {
-  const [isHovering, setIsHovering] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const videoUrl = item.content_url && item.content_url.startsWith('http') 
     ? item.content_url 
     : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`;
 
+  // Auto-play muted on mount for preview
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(() => {
+        // Autoplay was prevented - this is expected on some browsers without user interaction
+      });
+    }
+  }, []);
+
   return (
     <div 
       className="video-display"
       onClick={onClick}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
       style={{
         width: '100%',
         height: '100%',
@@ -788,6 +795,7 @@ function VideoDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => 
       }}
     >
       <video
+        ref={videoRef}
         src={videoUrl}
         style={{
           width: '100%',
@@ -797,8 +805,29 @@ function VideoDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => 
         loop
         muted
         playsInline
-        autoPlay={isHovering}
+        autoPlay
       />
+      {/* Video Play Icon Overlay - indicates this is a video */}
+      <div 
+        style={{
+          position: 'absolute',
+          bottom: '8px',
+          right: '8px',
+          width: '28px',
+          height: '28px',
+          borderRadius: '50%',
+          background: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          pointerEvents: 'none'
+        }}
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
+          <path d="M8 5v14l11-7z"/>
+        </svg>
+      </div>
     </div>
   );
 }
