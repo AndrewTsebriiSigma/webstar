@@ -213,8 +213,23 @@ export default function ProfilePage({ params }: { params: { username: string } }
       } catch (e) {
         // Cache write failed (e.g., storage full), not critical
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load profile:', error);
+      
+      // Check if this is a 404 for the user's OWN profile (corrupted OAuth session)
+      // This happens when OAuth creates a user with temp username but profile doesn't exist
+      const is404 = error?.response?.status === 404;
+      const isOwnBrokenProfile = user?.username === username;
+      
+      if (is404 && isOwnBrokenProfile) {
+        // Corrupted session - user's profile doesn't exist in database
+        // Clear localStorage and redirect to login to break the redirect loop
+        toast.error('Your session was corrupted. Please sign in again.');
+        logout();
+        router.push('/auth/login');
+        return;
+      }
+      
       toast.error('Failed to load profile');
       setLoading(false);
     }
