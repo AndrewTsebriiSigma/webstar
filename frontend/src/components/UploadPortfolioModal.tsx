@@ -22,6 +22,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>('');
+  const [isVideoPreview, setIsVideoPreview] = useState(false); // Track if preview is video
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [textContent, setTextContent] = useState(''); // For text posts
@@ -136,6 +137,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           ? editingDraft.content_url 
           : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${editingDraft.content_url}`;
         setPreview(mediaUrl);
+        // Check if it's a video based on content_type
+        setIsVideoPreview(editingDraft.content_type === 'video');
       }
       
       // Set attachment info if present
@@ -181,10 +184,15 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   if (!isOpen && !isClosing) return null;
 
   const handleReset = () => {
+    // Cleanup object URL if any
+    if (preview && preview.startsWith('blob:')) {
+      URL.revokeObjectURL(preview);
+    }
     setSelectedContentType(null);
     setEditingDraftId(null);
     setFile(null);
     setPreview('');
+    setIsVideoPreview(false);
     setTextContent('');
     setAttachmentFile(null);
     setAttachmentType(null);
@@ -248,15 +256,18 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
     setFile(selectedFile);
     
-    // Create preview for images only
-    if (selectedFile.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-      };
-      reader.readAsDataURL(selectedFile);
+    // Create preview for images and videos
+    if (selectedFile.type.startsWith('image/') || selectedFile.type.startsWith('video/')) {
+      // Cleanup previous object URL if any
+      if (preview && preview.startsWith('blob:')) {
+        URL.revokeObjectURL(preview);
+      }
+      const objectUrl = URL.createObjectURL(selectedFile);
+      setPreview(objectUrl);
+      setIsVideoPreview(selectedFile.type.startsWith('video/'));
     } else {
       setPreview('');
+      setIsVideoPreview(false);
     }
   };
 
@@ -390,8 +401,19 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
     setUploading(true);
     
+    // Smooth progress animation
+    let progressInterval: NodeJS.Timeout | null = null;
+    const startProgress = () => {
+      let progress = 0;
+      progressInterval = setInterval(() => {
+        progress += Math.random() * 8 + 2; // Random increment between 2-10
+        if (progress > 85) progress = 85; // Cap at 85% until complete
+        setUploadProgress(Math.floor(progress));
+      }, 150);
+    };
+    
     try {
-      setUploadProgress(30);
+      startProgress();
 
       if (selectedContentType === 'text') {
         // Text post flow
@@ -414,11 +436,13 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           toast.success('Text post published! 🎉');
         }
         
+        if (progressInterval) clearInterval(progressInterval);
         setUploadProgress(100);
       } else {
         // Media post flow
         if (!selectedContentType) {
           toast.error('Please select a content type');
+          if (progressInterval) clearInterval(progressInterval);
           return;
         }
         
@@ -441,8 +465,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           const uploadResponse = await uploadsAPI.uploadMedia(file, actualContentType);
           contentUrl = uploadResponse.data.url;
         }
-        
-        setUploadProgress(70);
 
         // Handle attachment upload if present
         let attachmentUrl = editingDraft?.attachment_url || null;
@@ -480,6 +502,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           toast.success('Post published! 🎉');
         }
 
+        if (progressInterval) clearInterval(progressInterval);
         setUploadProgress(100);
       }
       
@@ -489,6 +512,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     } catch (error: any) {
       console.error('Upload error:', error);
       toast.error(error.response?.data?.detail || 'Failed to publish');
+      if (progressInterval) clearInterval(progressInterval);
     } finally {
       setUploading(false);
       setUploadProgress(0);
@@ -510,8 +534,19 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
     setUploading(true);
     
+    // Smooth progress animation
+    let progressInterval: NodeJS.Timeout | null = null;
+    const startProgress = () => {
+      let progress = 0;
+      progressInterval = setInterval(() => {
+        progress += Math.random() * 8 + 2; // Random increment between 2-10
+        if (progress > 85) progress = 85; // Cap at 85% until complete
+        setUploadProgress(Math.floor(progress));
+      }, 150);
+    };
+    
     try {
-      setUploadProgress(30);
+      startProgress();
 
       if (selectedContentType === 'text') {
         // Text draft flow
@@ -536,11 +571,13 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           toast.success('Draft saved! 📝');
         }
         
+        if (progressInterval) clearInterval(progressInterval);
         setUploadProgress(100);
       } else {
         // Media draft flow
         if (!selectedContentType) {
           toast.error('Please select a content type');
+          if (progressInterval) clearInterval(progressInterval);
           return;
         }
         
@@ -563,8 +600,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           const uploadResponse = await uploadsAPI.uploadMedia(file, actualContentType);
           contentUrl = uploadResponse.data.url;
         }
-        
-        setUploadProgress(70);
 
         // Handle attachment upload if present (only if new attachment file)
         let attachmentUrl = editingDraft?.attachment_url || null;
@@ -603,6 +638,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           toast.success('Draft saved! 📝');
         }
 
+        if (progressInterval) clearInterval(progressInterval);
         setUploadProgress(100);
       }
       
@@ -612,6 +648,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     } catch (error: any) {
       console.error('Save draft error:', error);
       toast.error(error.response?.data?.detail || 'Failed to save draft');
+      if (progressInterval) clearInterval(progressInterval);
     } finally {
       setUploading(false);
       setUploadProgress(0);
@@ -772,7 +809,19 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                   >
                     {preview || file ? (
                       <div className="relative">
-                        {preview ? (
+                        {preview && isVideoPreview ? (
+                          /* Video Preview */
+                          <video
+                            src={preview}
+                            className="w-full object-cover"
+                            style={{ maxHeight: '300px', borderRadius: '16px' }}
+                            muted
+                            loop
+                            playsInline
+                            autoPlay
+                          />
+                        ) : preview ? (
+                          /* Image Preview */
                           <img
                             src={preview}
                             alt="Preview"
@@ -788,13 +837,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                                   </svg>
                                   <p className="text-[13px]">Audio File</p>
-                                </>
-                              ) : selectedContentType === 'media' && file?.type.startsWith('video/') ? (
-                                <>
-                                  <svg className="w-16 h-16 mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                  </svg>
-                                  <p className="text-[13px]">Video File</p>
                                 </>
                               ) : selectedContentType === 'pdf' ? (
                                 <>

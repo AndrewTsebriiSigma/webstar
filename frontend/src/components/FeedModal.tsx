@@ -373,7 +373,7 @@ function FeedPostContent({
                     : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${post.content_url}`}
                   loop
                   playsInline
-                  muted={false}
+                  muted
                   onClick={handleVideoClick}
                   style={{
                     width: '100%',
