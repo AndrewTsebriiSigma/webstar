@@ -45,10 +45,18 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str = ""
     GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/auth/google/callback"
     
-    # S3 / Storage
+    # Cloudflare R2 Storage (S3-compatible)
+    # Get credentials from: https://dash.cloudflare.com -> R2 -> Manage R2 API Tokens
+    R2_ACCOUNT_ID: str = ""  # Your Cloudflare Account ID
+    R2_ACCESS_KEY_ID: str = ""  # R2 API Token Access Key
+    R2_SECRET_ACCESS_KEY: str = ""  # R2 API Token Secret Key
+    R2_BUCKET_NAME: str = "webstar-uploads"
+    R2_PUBLIC_URL: str = ""  # e.g., "https://pub-xxx.r2.dev" or custom domain
+    
+    # Legacy S3 settings (deprecated, kept for backwards compatibility)
     AWS_ACCESS_KEY_ID: str = ""
     AWS_SECRET_ACCESS_KEY: str = ""
-    AWS_REGION: str = "us-east-1"
+    AWS_REGION: str = "auto"
     S3_BUCKET_NAME: str = "webstar-uploads"
     S3_PRESIGNED_URL_EXPIRATION: int = 3600
     

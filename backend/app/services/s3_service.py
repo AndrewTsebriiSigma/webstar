@@ -1,6 +1,7 @@
-"""S3 service for persistent file storage."""
+"""Cloudflare R2 / S3-compatible service for persistent file storage."""
 import boto3
 from botocore.exceptions import ClientError
+from botocore.config import Config
 import logging
 from typing import Optional
 from app.core.config import settings
@@ -8,33 +9,55 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 
-class S3Service:
-    """Service for uploading files to AWS S3."""
+class R2Service:
+    """Service for uploading files to Cloudflare R2 (S3-compatible).
+    
+    Cloudflare R2 is fully S3-compatible, so we use boto3 with a custom endpoint.
+    This service maintains the same interface as the previous S3Service for
+    seamless integration with existing upload handlers.
+    """
     
     def __init__(self):
-        """Initialize S3 client."""
+        """Initialize R2/S3 client."""
         self.s3_client = None
-        self.bucket_name = settings.S3_BUCKET_NAME
+        self.bucket_name = settings.R2_BUCKET_NAME or settings.S3_BUCKET_NAME
+        self.public_url = (settings.R2_PUBLIC_URL or "").rstrip('/')
         
-        # Only initialize if credentials are provided
-        if settings.AWS_ACCESS_KEY_ID and settings.AWS_SECRET_ACCESS_KEY:
+        # Determine which credentials to use (prefer R2, fallback to legacy AWS)
+        account_id = settings.R2_ACCOUNT_ID
+        access_key = settings.R2_ACCESS_KEY_ID or settings.AWS_ACCESS_KEY_ID
+        secret_key = settings.R2_SECRET_ACCESS_KEY or settings.AWS_SECRET_ACCESS_KEY
+        
+        # Only initialize if R2 credentials are provided
+        if account_id and access_key and secret_key:
             try:
+                # Cloudflare R2 endpoint format
+                endpoint_url = f"https://{account_id}.r2.cloudflarestorage.com"
+                
                 self.s3_client = boto3.client(
                     's3',
-                    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                    region_name=settings.AWS_REGION
+                    endpoint_url=endpoint_url,
+                    aws_access_key_id=access_key,
+                    aws_secret_access_key=secret_key,
+                    region_name='auto',  # R2 uses 'auto' for region
+                    config=Config(
+                        signature_version='s3v4',
+                        s3={'addressing_style': 'path'}  # R2 prefers path-style addressing
+                    )
                 )
-                logger.info(f"S3 client initialized for bucket: {self.bucket_name}")
+                logger.info(f"R2 client initialized for bucket: {self.bucket_name}")
             except Exception as e:
-                logger.error(f"Failed to initialize S3 client: {str(e)}")
+                logger.error(f"Failed to initialize R2 client: {str(e)}")
                 self.s3_client = None
         else:
-            logger.warning("S3 credentials not provided. File uploads will use local storage (NOT recommended for production).")
+            logger.warning(
+                "R2 credentials not provided. File uploads will use local storage. "
+                "Set R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, and R2_PUBLIC_URL for production."
+            )
     
     def is_available(self) -> bool:
-        """Check if S3 service is available."""
-        return self.s3_client is not None and self.bucket_name
+        """Check if R2 service is available."""
+        return self.s3_client is not None and bool(self.bucket_name) and bool(self.public_url)
     
     def upload_file(
         self, 
@@ -43,23 +66,22 @@ class S3Service:
         content_type: str = 'application/octet-stream'
     ) -> Optional[str]:
         """
-        Upload file to S3.
+        Upload file to R2.
         
         Args:
             file_content: File content as bytes
-            file_key: S3 key (path) for the file
+            file_key: R2 key (path) for the file
             content_type: MIME type of the file
             
         Returns:
             Public URL of uploaded file, or None if upload failed
         """
         if not self.is_available():
-            logger.error("S3 service not available")
+            logger.error("R2 service not available - check credentials and R2_PUBLIC_URL")
             return None
         
         try:
-            # Upload to S3
-            # Note: Public access is handled by bucket policy, not ACLs
+            # Upload to R2
             self.s3_client.put_object(
                 Bucket=self.bucket_name,
                 Key=file_key,
@@ -67,30 +89,30 @@ class S3Service:
                 ContentType=content_type
             )
             
-            # Generate public URL
-            url = f"https://{self.bucket_name}.s3.{settings.AWS_REGION}.amazonaws.com/{file_key}"
-            logger.info(f"File uploaded successfully: {url}")
+            # Generate public URL using the configured public URL
+            url = f"{self.public_url}/{file_key}"
+            logger.info(f"File uploaded successfully to R2: {url}")
             return url
             
         except ClientError as e:
-            logger.error(f"S3 upload failed: {str(e)}")
+            logger.error(f"R2 upload failed: {str(e)}")
             return None
         except Exception as e:
-            logger.error(f"Unexpected error during S3 upload: {str(e)}")
+            logger.error(f"Unexpected error during R2 upload: {str(e)}")
             return None
     
     def delete_file(self, file_key: str) -> bool:
         """
-        Delete file from S3.
+        Delete file from R2.
         
         Args:
-            file_key: S3 key (path) of the file
+            file_key: R2 key (path) of the file
             
         Returns:
             True if deleted successfully, False otherwise
         """
         if not self.is_available():
-            logger.error("S3 service not available")
+            logger.error("R2 service not available")
             return False
         
         try:
@@ -98,29 +120,32 @@ class S3Service:
                 Bucket=self.bucket_name,
                 Key=file_key
             )
-            logger.info(f"File deleted successfully: {file_key}")
+            logger.info(f"File deleted successfully from R2: {file_key}")
             return True
             
         except ClientError as e:
-            logger.error(f"S3 delete failed: {str(e)}")
+            logger.error(f"R2 delete failed: {str(e)}")
             return False
         except Exception as e:
-            logger.error(f"Unexpected error during S3 delete: {str(e)}")
+            logger.error(f"Unexpected error during R2 delete: {str(e)}")
             return False
     
     def get_presigned_url(self, file_key: str, expiration: int = 3600) -> Optional[str]:
         """
         Generate a presigned URL for temporary access to a private file.
         
+        Note: For R2 with public buckets, you typically don't need presigned URLs.
+        This is mainly useful for private buckets or temporary access tokens.
+        
         Args:
-            file_key: S3 key (path) of the file
+            file_key: R2 key (path) of the file
             expiration: URL expiration time in seconds
             
         Returns:
             Presigned URL or None if generation failed
         """
         if not self.is_available():
-            logger.error("S3 service not available")
+            logger.error("R2 service not available")
             return None
         
         try:
@@ -134,8 +159,29 @@ class S3Service:
         except ClientError as e:
             logger.error(f"Failed to generate presigned URL: {str(e)}")
             return None
+    
+    def file_exists(self, file_key: str) -> bool:
+        """
+        Check if a file exists in R2.
+        
+        Args:
+            file_key: R2 key (path) of the file
+            
+        Returns:
+            True if file exists, False otherwise
+        """
+        if not self.is_available():
+            return False
+        
+        try:
+            self.s3_client.head_object(Bucket=self.bucket_name, Key=file_key)
+            return True
+        except ClientError as e:
+            if e.response['Error']['Code'] == '404':
+                return False
+            logger.error(f"Error checking file existence: {str(e)}")
+            return False
 
 
-# Singleton instance
-s3_service = S3Service()
-
+# Singleton instance - named s3_service for backwards compatibility with uploads.py
+s3_service = R2Service()

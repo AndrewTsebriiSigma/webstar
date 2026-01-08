@@ -35,12 +35,39 @@ GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 GOOGLE_REDIRECT_URI=http://localhost:3000/auth/callback/google
 
-# AWS S3 Storage (Optional - for production media storage)
-# If not set, files will be stored locally in /uploads directory
-AWS_ACCESS_KEY_ID=your-aws-access-key
-AWS_SECRET_ACCESS_KEY=your-aws-secret-key
-AWS_REGION=us-east-1
-S3_BUCKET_NAME=webstar-uploads
+# =============================================================================
+# CLOUDFLARE R2 STORAGE (Recommended for Production)
+# =============================================================================
+# Cloudflare R2 is an S3-compatible object storage with FREE egress (bandwidth).
+# If not configured, files will be stored locally in /uploads directory.
+#
+# Setup Steps:
+# 1. Go to https://dash.cloudflare.com -> R2
+# 2. Create a bucket (e.g., "webstar-uploads")
+# 3. Enable public access on the bucket OR set up a custom domain
+# 4. Go to "Manage R2 API Tokens" -> "Create API token"
+# 5. Select "Object Read & Write" permission
+# 6. Copy the Access Key ID and Secret Access Key
+#
+# Your Account ID is visible in the Cloudflare dashboard URL or sidebar
+
+R2_ACCOUNT_ID=your-cloudflare-account-id
+R2_ACCESS_KEY_ID=your-r2-access-key-id
+R2_SECRET_ACCESS_KEY=your-r2-secret-access-key
+R2_BUCKET_NAME=webstar-uploads
+R2_PUBLIC_URL=https://pub-xxxxxxxxxx.r2.dev
+
+# For custom domain (optional, recommended for production):
+# R2_PUBLIC_URL=https://cdn.yourdomain.com
+
+# =============================================================================
+# LEGACY AWS S3 (Deprecated - Use R2 instead)
+# =============================================================================
+# These settings are kept for backwards compatibility but R2 is preferred.
+# AWS_ACCESS_KEY_ID=your-aws-access-key
+# AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+# AWS_REGION=us-east-1
+# S3_BUCKET_NAME=webstar-uploads
 S3_PRESIGNED_URL_EXPIRATION=3600  # 1 hour
 
 # Pagination
@@ -57,4 +84,3 @@ MAX_PAGE_SIZE=100
 
 # Logging (Optional)
 # LOG_LEVEL=INFO  # DEBUG | INFO | WARNING | ERROR | CRITICAL
-
