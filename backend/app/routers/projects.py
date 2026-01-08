@@ -38,11 +38,51 @@ async def get_projects(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
-    """Get user's projects."""
+    """Get user's projects (excluding drafts)."""
     projects = session.exec(
         select(Project)
         .where(Project.user_id == current_user.id)
+        .where(Project.is_draft == False)
         .order_by(Project.order)
+    ).all()
+    
+    result = []
+    for project in projects:
+        media_count = len(session.exec(
+            select(ProjectMedia).where(ProjectMedia.project_id == project.id)
+        ).all())
+        
+        result.append(ProjectResponse(
+            id=project.id,
+            user_id=project.user_id,
+            title=project.title,
+            description=project.description,
+            cover_image=project.cover_image,
+            tags=project.tags,
+            tools=project.tools,
+            project_url=project.project_url,
+            is_draft=project.is_draft,
+            views=project.views,
+            clicks=project.clicks,
+            order=project.order,
+            media_count=media_count,
+            created_at=project.created_at.isoformat()
+        ))
+    
+    return result
+
+
+@router.get("/drafts", response_model=List[ProjectResponse])
+async def get_draft_projects(
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    """Get user's draft projects."""
+    projects = session.exec(
+        select(Project)
+        .where(Project.user_id == current_user.id)
+        .where(Project.is_draft == True)
+        .order_by(Project.created_at.desc())
     ).all()
     
     result = []
@@ -76,7 +116,7 @@ async def get_user_projects(
     username: str,
     session: Session = Depends(get_session)
 ):
-    """Get another user's projects (public)."""
+    """Get another user's projects (public, excluding drafts)."""
     user = session.exec(select(User).where(User.username == username)).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -84,6 +124,7 @@ async def get_user_projects(
     projects = session.exec(
         select(Project)
         .where(Project.user_id == user.id)
+        .where(Project.is_draft == False)
         .order_by(Project.order)
     ).all()
     
@@ -135,18 +176,20 @@ async def create_project(
         tags=project_data.tags,
         tools=project_data.tools,
         project_url=project_data.project_url,
+        is_draft=project_data.is_draft,
         order=order
     )
     session.add(project)
     session.commit()
     session.refresh(project)
     
-    # Update profile projects count
-    profile = session.exec(select(Profile).where(Profile.user_id == current_user.id)).first()
-    if profile:
-        profile.projects_count += 1
-        session.add(profile)
-        session.commit()
+    # Only update profile projects count if not a draft
+    if not project_data.is_draft:
+        profile = session.exec(select(Profile).where(Profile.user_id == current_user.id)).first()
+        if profile:
+            profile.projects_count += 1
+            session.add(profile)
+            session.commit()
     
     # Award points for first project
     if len(existing) == 0:
@@ -179,6 +222,55 @@ async def get_project(
     project = session.get(Project, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    
+    media_count = len(session.exec(
+        select(ProjectMedia).where(ProjectMedia.project_id == project.id)
+    ).all())
+    
+    return ProjectResponse(
+        id=project.id,
+        user_id=project.user_id,
+        title=project.title,
+        description=project.description,
+        cover_image=project.cover_image,
+        tags=project.tags,
+        tools=project.tools,
+        project_url=project.project_url,
+        is_draft=project.is_draft,
+        views=project.views,
+        clicks=project.clicks,
+        order=project.order,
+        media_count=media_count,
+        created_at=project.created_at.isoformat()
+    )
+
+
+@router.post("/{project_id}/publish", response_model=ProjectResponse)
+async def publish_project(
+    project_id: int,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    """Publish a draft project."""
+    project = session.get(Project, project_id)
+    if not project or project.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    if not project.is_draft:
+        raise HTTPException(status_code=400, detail="Project is already published")
+    
+    # Mark as published
+    project.is_draft = False
+    session.add(project)
+    
+    # Update profile projects count
+    profile = session.exec(select(Profile).where(Profile.user_id == current_user.id)).first()
+    if profile:
+        profile.projects_count += 1
+        session.add(profile)
+    
+    session.commit()
+    session.refresh(project)
     
     media_count = len(session.exec(
         select(ProjectMedia).where(ProjectMedia.project_id == project.id)

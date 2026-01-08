@@ -11,9 +11,10 @@ interface CreateProjectModalProps {
   onClose: () => void;
   onSuccess: () => void;
   editingProject?: Project | null; // When provided, pre-fill modal with existing project data
+  defaultSaveAsDraft?: boolean; // When true, primary button is "Save as Draft" instead of "Publish"
 }
 
-export default function CreateProjectModal({ isOpen, onClose, onSuccess, editingProject = null }: CreateProjectModalProps) {
+export default function CreateProjectModal({ isOpen, onClose, onSuccess, editingProject = null, defaultSaveAsDraft = false }: CreateProjectModalProps) {
   const [saving, setSaving] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -128,7 +129,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
     }
   };
 
-  // Rich text editing features
+  // Rich text editing features - Convert "-" to bullet point on Tab
   const handleTextareaKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Tab') {
       e.preventDefault();
@@ -139,17 +140,27 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
       
       const lineStart = value.lastIndexOf('\n', start - 1) + 1;
       const linePrefix = value.substring(lineStart, start);
+      const trimmedPrefix = linePrefix.trim();
       
-      if (linePrefix.trim() === '-' || linePrefix.endsWith('- ')) {
-        const newValue = value.substring(0, lineStart) + '• ' + value.substring(start);
+      // Check if line starts with "-" (with optional whitespace)
+      // Matches: "-", "- ", " -", " - ", etc.
+      if (trimmedPrefix === '-' || trimmedPrefix === '- ' || linePrefix.endsWith('-') || linePrefix.endsWith('- ')) {
+        // Replace the dash with a bullet point
+        const dashIndex = linePrefix.lastIndexOf('-');
+        const beforeDash = value.substring(0, lineStart + dashIndex);
+        const afterCursor = value.substring(start);
+        const newValue = beforeDash + '• ' + afterCursor;
         setDescription(newValue);
         setTimeout(() => {
-          textarea.selectionStart = textarea.selectionEnd = lineStart + 2;
+          textarea.selectionStart = textarea.selectionEnd = beforeDash.length + 2;
         }, 0);
       } else {
+        // Regular tab - insert spaces
         const newValue = value.substring(0, start) + '  ' + value.substring(end);
         setDescription(newValue);
-        textarea.selectionStart = textarea.selectionEnd = start + 2;
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = start + 2;
+        }, 0);
       }
     } else if (e.key === 'Enter') {
       const textarea = e.currentTarget;
@@ -159,12 +170,14 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
       const lineStart = value.lastIndexOf('\n', start - 1) + 1;
       const currentLine = value.substring(lineStart, start);
       
-      const bulletMatch = currentLine.match(/^(\s*)(•|-)\s+(.*)$/);
+      // Match bullet points (• or -) at the start of the line
+      const bulletMatch = currentLine.match(/^(\s*)(•|-)\s*(.*)$/);
       
       if (bulletMatch) {
         e.preventDefault();
         const [, indent, bullet, content] = bulletMatch;
         
+        // If the line only has bullet with no content, remove it
         if (content.trim() === '') {
           const newValue = value.substring(0, lineStart) + value.substring(start);
           setDescription(newValue);
@@ -172,10 +185,12 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
             textarea.selectionStart = textarea.selectionEnd = lineStart;
           }, 0);
         } else {
-          const newValue = value.substring(0, start) + '\n' + indent + bullet + ' ' + value.substring(start);
+          // Continue the bullet list on new line
+          const newBullet = bullet === '-' ? '-' : '•';
+          const newValue = value.substring(0, start) + '\n' + indent + newBullet + ' ' + value.substring(start);
           setDescription(newValue);
           setTimeout(() => {
-            textarea.selectionStart = textarea.selectionEnd = start + indent.length + bullet.length + 3;
+            textarea.selectionStart = textarea.selectionEnd = start + indent.length + 3;
           }, 0);
         }
       }
@@ -242,7 +257,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
         setUploadProgress(100);
         toast.success('Project updated! 🎉');
       } else {
-        // Create new project with title
+        // Create new project (published, not draft)
         const projectResponse = await projectsAPI.createProject({
           title: title.trim(),
           description: description.trim() || null,
@@ -250,6 +265,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
           tags: null,
           tools: null,
           project_url: null,
+          is_draft: false,
         });
 
         const projectId = projectResponse.data.id;
@@ -465,9 +481,19 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
             </div>
             {(() => {
               const isDisabled = saving || uploadingCover || !title.trim() || (!coverFile && !coverPreview);
+              // Determine primary action based on context
+              const isEditing = !!editingProjectId;
+              const isDraftMode = defaultSaveAsDraft && !isEditing;
+              const primaryAction = isDraftMode ? handleSaveAsDraft : handleSubmit;
+              const buttonLabel = saving || uploadingCover 
+                ? '...' 
+                : isEditing 
+                  ? 'Save' 
+                  : (isDraftMode ? 'Save Draft' : 'Publish');
+              
               return (
                 <button
-                  onClick={handleSubmit}
+                  onClick={primaryAction}
                   disabled={isDisabled}
                   className="publish-btn text-[14px] font-semibold rounded-[8px] transition-all"
                   style={{ 
@@ -478,7 +504,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                     cursor: isDisabled ? 'not-allowed' : 'pointer'
                   }}
                 >
-                  {saving || uploadingCover ? '...' : (editingProjectId ? 'Save' : 'Publish')}
+                  {buttonLabel}
                 </button>
               );
             })()}
@@ -929,24 +955,39 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
               paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
             }}
           >
-            <div 
-              className="flex items-center justify-between" 
-              style={{ color: 'rgba(255,255,255,0.5)' }}
-            >
-              {/* Left: Save as draft - exact same as Post modal */}
-              <button
-                onClick={handleSaveAsDraft}
-                disabled={saving || uploadingCover || !title.trim()}
-                className="flex items-center gap-2 transition disabled:opacity-40"
-              >
-                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 3h11l5 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 3v5h8V3" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 14h10v7H7z" />
-                </svg>
-                <span className="text-[14px] font-medium">Save as draft</span>
-              </button>
-            </div>
+            {(() => {
+              const isEditing = !!editingProjectId;
+              const isDraftMode = defaultSaveAsDraft && !isEditing;
+              const secondaryAction = isDraftMode ? handleSubmit : handleSaveAsDraft;
+              const secondaryLabel = isDraftMode ? 'Publish instead' : 'Save as draft';
+              
+              return (
+                <div 
+                  className="flex items-center justify-between" 
+                  style={{ color: 'rgba(255,255,255,0.5)' }}
+                >
+                  {/* Secondary action button */}
+                  <button
+                    onClick={secondaryAction}
+                    disabled={saving || uploadingCover || !title.trim() || (isDraftMode && (!coverFile && !coverPreview))}
+                    className="flex items-center gap-2 transition disabled:opacity-40"
+                  >
+                    {isDraftMode ? (
+                      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                    ) : (
+                      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 3h11l5 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 3v5h8V3" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 14h10v7H7z" />
+                      </svg>
+                    )}
+                    <span className="text-[14px] font-medium">{secondaryLabel}</span>
+                  </button>
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>

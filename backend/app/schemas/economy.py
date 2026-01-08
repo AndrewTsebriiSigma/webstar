@@ -1,6 +1,6 @@
 """Economy/Gamification schemas."""
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 
 class PointsBalance(BaseModel):
@@ -14,7 +14,7 @@ class PointsTransaction(BaseModel):
     id: int
     points: int
     action: str
-    description: str | None
+    description: Optional[str]
     created_at: str
 
 

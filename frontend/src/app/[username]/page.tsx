@@ -867,8 +867,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   <div 
                     key={project.id} 
                     onClick={() => {
-                      setSelectedProject(project);
-                      setShowProjectDetail(true);
+                      // Navigate to project page with slug URL
+                      const projectSlug = project.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+                      router.push(`/projects/${projectSlug}`);
                     }}
                     className="cursor-pointer transition-all active:scale-[0.97]"
                     style={{

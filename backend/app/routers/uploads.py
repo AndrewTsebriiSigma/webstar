@@ -172,12 +172,12 @@ async def upload_media(
         # Read file content
         content = await file.read()
         
-        # Validate file size (200MB max for videos, 10MB for audio/pdf, 5MB for photos)
+        # Validate file size (500MB max for videos, 50MB for audio/pdf, 10MB for photos)
         max_sizes = {
-            "photo": 5 * 1024 * 1024,      # 5MB
-            "video": 200 * 1024 * 1024,    # 200MB
-            "audio": 10 * 1024 * 1024,     # 10MB
-            "pdf": 10 * 1024 * 1024        # 10MB
+            "photo": 10 * 1024 * 1024,     # 10MB (increased from 5MB)
+            "video": 500 * 1024 * 1024,    # 500MB (increased from 200MB)
+            "audio": 50 * 1024 * 1024,     # 50MB (increased from 10MB)
+            "pdf": 50 * 1024 * 1024        # 50MB (increased from 10MB)
         }
         
         if len(content) > max_sizes[media_type]:

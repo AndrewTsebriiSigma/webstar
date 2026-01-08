@@ -235,21 +235,21 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
       return;
     }
 
-    // Check file size
+    // Check file size (increased limits)
     const isVideo = selectedFile.type.startsWith('video/');
     const isAudio = selectedFile.type.startsWith('audio/');
     const isPdf = selectedFile.type === 'application/pdf';
     
-    const maxSize = isVideo ? 200 * 1024 * 1024 
-                  : isAudio ? 10 * 1024 * 1024 
-                  : isPdf ? 10 * 1024 * 1024
-                  : 5 * 1024 * 1024; // photo
+    const maxSize = isVideo ? 500 * 1024 * 1024 
+                  : isAudio ? 50 * 1024 * 1024 
+                  : isPdf ? 50 * 1024 * 1024
+                  : 10 * 1024 * 1024; // photo
     
     if (selectedFile.size > maxSize) {
-      const sizeMB = isVideo ? '200MB' 
-                   : isAudio ? '10MB'
-                   : isPdf ? '10MB'
-                   : '5MB';
+      const sizeMB = isVideo ? '500MB' 
+                   : isAudio ? '50MB'
+                   : isPdf ? '50MB'
+                   : '10MB';
       toast.error(`File must be less than ${sizeMB}`);
       return;
     }
@@ -280,8 +280,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
       return;
     }
 
-    if (selectedFile.size > 10 * 1024 * 1024) {
-      toast.error('Audio file must be less than 10MB');
+    if (selectedFile.size > 50 * 1024 * 1024) {
+      toast.error('Audio file must be less than 50MB');
       return;
     }
 
@@ -300,8 +300,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
       return;
     }
 
-    if (selectedFile.size > 10 * 1024 * 1024) {
-      toast.error('PDF file must be less than 10MB');
+    if (selectedFile.size > 50 * 1024 * 1024) {
+      toast.error('PDF file must be less than 50MB');
       return;
     }
 
@@ -426,13 +426,14 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           });
           toast.success('Draft published! 🎉');
         } else {
-        await portfolioAPI.createItem({
-          content_type: 'text',
-          content_url: null,
-          text_content: textContent.trim(),
-          description: description || null,
-          aspect_ratio: '4:5',
-        });
+          await portfolioAPI.createItem({
+            content_type: 'text',
+            content_url: null,
+            text_content: textContent.trim(),
+            description: description || null,
+            aspect_ratio: '4:5',
+            is_draft: false,
+          });
           toast.success('Text post published! 🎉');
         }
         
@@ -489,16 +490,17 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           });
           toast.success('Draft published! 🎉');
         } else {
-          // Create new portfolio item
-        await portfolioAPI.createItem({
-          content_type: actualContentType,
-          content_url: contentUrl,
-          title: fileTitle,
-          description: description || null,
-          aspect_ratio: '1:1',
-          attachment_url: attachmentUrl,
-          attachment_type: attachmentType,
-        });
+          // Create new portfolio item (published, not draft)
+          await portfolioAPI.createItem({
+            content_type: actualContentType,
+            content_url: contentUrl,
+            title: fileTitle,
+            description: description || null,
+            aspect_ratio: '1:1',
+            is_draft: false,
+            attachment_url: attachmentUrl,
+            attachment_type: attachmentType,
+          });
           toast.success('Post published! 🎉');
         }
 

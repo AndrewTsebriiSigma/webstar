@@ -372,7 +372,7 @@ export default function DraftsPage() {
       setLoading(true);
       const [draftsResponse, projectsResponse] = await Promise.all([
         portfolioAPI.getDrafts(),
-        projectsAPI.getProjects()
+        projectsAPI.getDraftProjects()
       ]);
       setDrafts(draftsResponse.data || []);
       setProjects(projectsResponse.data || []);
@@ -843,6 +843,7 @@ export default function DraftsPage() {
         onClose={() => { setShowProjectModal(false); setEditingProject(null); }}
         onSuccess={loadDrafts}
         editingProject={editingProject}
+        defaultSaveAsDraft={true}
       />
     </div>
   );

@@ -134,6 +134,21 @@ export default function LoginPage() {
   const [totpCode, setTotpCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => {
+    // Check if user previously opted for remember me
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('remember_me') === 'true';
+    }
+    return false;
+  });
+
+  // Pre-fill email if user chose "Remember Me" previously
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem('remembered_email');
+    if (rememberedEmail && rememberMe) {
+      setEmail(rememberedEmail);
+    }
+  }, []);
 
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,6 +167,16 @@ export default function LoginPage() {
           localStorage.setItem('access_token', data.access_token);
           localStorage.setItem('refresh_token', data.refresh_token);
           localStorage.setItem('user', JSON.stringify(data.user));
+          
+          // Save remember me preference
+          if (rememberMe) {
+            localStorage.setItem('remember_me', 'true');
+            // Store credentials hint for auto-fill (encrypted email only)
+            localStorage.setItem('remembered_email', email);
+          } else {
+            localStorage.removeItem('remember_me');
+            localStorage.removeItem('remembered_email');
+          }
           
           toast.success('Welcome back!');
           
@@ -189,6 +214,15 @@ export default function LoginPage() {
       localStorage.setItem('access_token', data.access_token);
       localStorage.setItem('refresh_token', data.refresh_token);
       localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Save remember me preference for 2FA flow too
+      if (rememberMe) {
+        localStorage.setItem('remember_me', 'true');
+        localStorage.setItem('remembered_email', email);
+      } else {
+        localStorage.removeItem('remember_me');
+        localStorage.removeItem('remembered_email');
+      }
 
       toast.success('Welcome back!');
 
@@ -345,6 +379,48 @@ export default function LoginPage() {
                     <EyeIcon className="w-5 h-5" />
                   )}
                 </button>
+              </div>
+
+              {/* Remember Me Checkbox */}
+              <div className="flex items-center justify-between">
+                <label 
+                  className="flex items-center gap-2 cursor-pointer select-none"
+                  style={{ color: 'rgba(255, 255, 255, 0.6)' }}
+                >
+                  <div
+                    onClick={() => setRememberMe(!rememberMe)}
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '5px',
+                      border: rememberMe ? '1px solid #00C2FF' : '1px solid rgba(255, 255, 255, 0.2)',
+                      background: rememberMe ? 'rgba(0, 194, 255, 0.15)' : 'transparent',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 150ms ease',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {rememberMe && (
+                      <svg 
+                        width="12" 
+                        height="12" 
+                        viewBox="0 0 12 12" 
+                        fill="none"
+                      >
+                        <path 
+                          d="M2.5 6L5 8.5L9.5 4" 
+                          stroke="#00C2FF" 
+                          strokeWidth="1.5" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                  <span style={{ fontSize: '13px' }}>Remember me</span>
+                </label>
               </div>
 
               <button

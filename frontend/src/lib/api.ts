@@ -142,6 +142,8 @@ export const projectsAPI = {
   
   getUserProjects: (username: string) => api.get(`/api/projects/user/${username}`),
   
+  getDraftProjects: () => api.get('/api/projects/drafts'),
+  
   getProject: (id: number) => api.get(`/api/projects/${id}`),
   
   createProject: (data: any) => api.post('/api/projects', data),
@@ -149,6 +151,8 @@ export const projectsAPI = {
   updateProject: (id: number, data: any) => api.put(`/api/projects/${id}`, data),
   
   deleteProject: (id: number) => api.delete(`/api/projects/${id}`),
+  
+  publishProject: (id: number) => api.post(`/api/projects/${id}/publish`),
   
   getProjectMedia: (id: number) => api.get(`/api/projects/${id}/media`),
   

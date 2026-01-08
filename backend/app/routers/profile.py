@@ -1,6 +1,7 @@
 """Profile router."""
 import logging
 from datetime import datetime
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from sqlalchemy.exc import OperationalError, IntegrityError
@@ -176,7 +177,7 @@ async def update_my_profile(
 async def get_profile_by_username(
     username: str,
     session: Session = Depends(get_session),
-    current_user: User | None = Depends(get_current_user_optional)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """Get public profile by username."""
     # Find user
