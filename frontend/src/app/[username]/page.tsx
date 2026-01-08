@@ -844,19 +844,70 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 text-gray-500">
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                minHeight: '300px',
+                padding: '48px 24px',
+                textAlign: 'center'
+              }}>
                 {isOwnProfile ? (
                   <>
-                    <p className="mb-3 text-sm">Start showcasing your work</p>
+                    {/* Palette/Gallery icon */}
+                    <img 
+                      src="/palette.svg" 
+                      alt="" 
+                      style={{ 
+                        width: '48px', 
+                        height: '48px', 
+                        marginBottom: '16px',
+                        opacity: 0.25,
+                        filter: 'brightness(0) invert(1)'
+                      }} 
+                    />
+                    <h2 style={{ 
+                      fontSize: '18px', 
+                      fontWeight: 600, 
+                      color: '#FFF', 
+                      marginBottom: '6px',
+                      letterSpacing: '-0.3px'
+                    }}>
+                      Show what you do here
+                    </h2>
+                    <p style={{ 
+                      fontSize: '13px', 
+                      color: 'rgba(255, 255, 255, 0.4)', 
+                      fontWeight: 400,
+                      marginBottom: '20px'
+                    }}>
+                      Photos, videos, audio, and more
+                    </p>
                     <button
                       onClick={() => setShowCreateContentModal(true)}
-                      className="px-5 py-2 text-sm bg-cyan-500 hover:bg-cyan-600 rounded-lg font-semibold transition"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        background: '#00C2FF',
+                        color: '#FFF',
+                        height: '36px',
+                        padding: '0 18px',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        borderRadius: '10px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        transition: 'all 150ms ease'
+                      }}
                     >
-                      Add First Item
+                      <span style={{ fontSize: '16px' }}>+</span>
+                      ADD POST
                     </button>
                   </>
                 ) : (
-                  <p className="text-sm">No portfolio items yet</p>
+                  <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>No portfolio items yet</p>
                 )}
               </div>
             )}
@@ -963,19 +1014,70 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 text-gray-500">
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                minHeight: '300px',
+                padding: '48px 24px',
+                textAlign: 'center'
+              }}>
                 {isOwnProfile ? (
                   <>
-                    <p className="mb-3 text-sm">Create your first project</p>
+                    {/* Folder/Project icon */}
+                    <svg 
+                      width="48" 
+                      height="48" 
+                      fill="none" 
+                      stroke="rgba(255, 255, 255, 0.25)" 
+                      strokeWidth="1.5" 
+                      viewBox="0 0 24 24"
+                      style={{ marginBottom: '16px' }}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+                    </svg>
+                    <h2 style={{ 
+                      fontSize: '18px', 
+                      fontWeight: 600, 
+                      color: '#FFF', 
+                      marginBottom: '6px',
+                      letterSpacing: '-0.3px'
+                    }}>
+                      Tell bigger stories
+                    </h2>
+                    <p style={{ 
+                      fontSize: '13px', 
+                      color: 'rgba(255, 255, 255, 0.4)', 
+                      fontWeight: 400,
+                      marginBottom: '20px'
+                    }}>
+                      Group posts into projects
+                    </p>
                     <button
                       onClick={() => setShowProjectModal(true)}
-                      className="px-5 py-2 text-sm bg-cyan-500 hover:bg-cyan-600 rounded-lg font-semibold transition"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        background: '#00C2FF',
+                        color: '#FFF',
+                        height: '36px',
+                        padding: '0 18px',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        borderRadius: '10px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        transition: 'all 150ms ease'
+                      }}
                     >
-                      Create Project
+                      <span style={{ fontSize: '16px' }}>+</span>
+                      ADD PROJECT
                     </button>
                   </>
                 ) : (
-                  <p className="text-sm">No projects yet</p>
+                  <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>No projects yet</p>
                 )}
               </div>
             )}
