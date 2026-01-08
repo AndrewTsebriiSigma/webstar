@@ -38,6 +38,11 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   const [existingAttachmentUrl, setExistingAttachmentUrl] = useState<string>('');
   const [showPdfPopup, setShowPdfPopup] = useState(false);
   
+  // Memoized blob URLs to prevent recreation on re-render
+  const [attachmentBlobUrl, setAttachmentBlobUrl] = useState<string>('');
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string>(''); // For PDF file preview
+  const [isPdfPreview, setIsPdfPreview] = useState(false); // Track if preview is PDF
+  
   // Progress display - using uploadProgress directly (animation disabled for debugging)
   const displayProgress = uploadProgress;
   const attachmentNameRef = useRef<HTMLInputElement>(null);
@@ -86,14 +91,25 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   };
 
   // Play/pause audio preview
-  const toggleAudioPlay = () => {
+  const toggleAudioPlay = async () => {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
+        setIsPlaying(false);
       } else {
-        audioRef.current.play();
+        try {
+          // Ensure audio is loaded before playing
+          if (audioRef.current.readyState < 2) {
+            audioRef.current.load();
+          }
+          await audioRef.current.play();
+          setIsPlaying(true);
+        } catch (error) {
+          console.error('Audio playback failed:', error);
+          toast.error('Failed to play audio');
+          setIsPlaying(false);
+        }
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
@@ -158,6 +174,20 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     }
   }, [editingDraft, isOpen]);
 
+  // Memoize attachment blob URL to prevent audio issues on re-render
+  useEffect(() => {
+    if (attachmentFile) {
+      const url = URL.createObjectURL(attachmentFile);
+      setAttachmentBlobUrl(url);
+      return () => {
+        URL.revokeObjectURL(url);
+        setAttachmentBlobUrl('');
+      };
+    } else {
+      setAttachmentBlobUrl('');
+    }
+  }, [attachmentFile]);
+
   // Animation states
   const [isClosing, setIsClosing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -191,24 +221,32 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   if (!isOpen && !isClosing) return null;
 
   const handleReset = () => {
-    // Cleanup object URL if any
+    // Cleanup object URLs if any
     if (preview && preview.startsWith('blob:')) {
       URL.revokeObjectURL(preview);
     }
+    if (pdfPreviewUrl && pdfPreviewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(pdfPreviewUrl);
+    }
+    // Note: attachmentBlobUrl is cleaned up by its useEffect
     setSelectedContentType(null);
     setEditingDraftId(null);
     setFile(null);
     setPreview('');
     setIsVideoPreview(false);
+    setIsPdfPreview(false);
+    setPdfPreviewUrl('');
     setTextContent('');
     setAttachmentFile(null);
     setAttachmentType(null);
     setAttachmentFileName('');
     setExistingAttachmentUrl('');
+    setAttachmentBlobUrl('');
     setShowPdfPopup(false);
     setDescription('');
     setUploading(false);
     setUploadProgress(0);
+    setIsPlaying(false);
   };
 
   const handleClose = () => {
@@ -265,18 +303,33 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
 
     setFile(selectedFile);
     
-    // Create preview for images and videos
+    // Cleanup previous object URLs if any
+    if (preview && preview.startsWith('blob:')) {
+      URL.revokeObjectURL(preview);
+    }
+    if (pdfPreviewUrl && pdfPreviewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(pdfPreviewUrl);
+    }
+    
+    // Create preview for images, videos, and PDFs
     if (selectedFile.type.startsWith('image/') || selectedFile.type.startsWith('video/')) {
-      // Cleanup previous object URL if any
-      if (preview && preview.startsWith('blob:')) {
-        URL.revokeObjectURL(preview);
-      }
       const objectUrl = URL.createObjectURL(selectedFile);
       setPreview(objectUrl);
       setIsVideoPreview(selectedFile.type.startsWith('video/'));
+      setIsPdfPreview(false);
+      setPdfPreviewUrl('');
+    } else if (selectedFile.type === 'application/pdf') {
+      // Create PDF preview URL
+      const objectUrl = URL.createObjectURL(selectedFile);
+      setPdfPreviewUrl(objectUrl);
+      setIsPdfPreview(true);
+      setPreview(''); // Clear image/video preview
+      setIsVideoPreview(false);
     } else {
       setPreview('');
       setIsVideoPreview(false);
+      setIsPdfPreview(false);
+      setPdfPreviewUrl('');
     }
     
     // Reset input value to allow re-selecting the same file
@@ -832,7 +885,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     }}
                     onClick={() => attachmentSwipeX > 0 && setAttachmentSwipeX(0)}
                   >
-                    {preview || file ? (
+                    {preview || pdfPreviewUrl || file ? (
                       <div className="relative">
                         {preview && isVideoPreview ? (
                           /* Video Preview */
@@ -853,6 +906,39 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                             className="w-full object-cover"
                             style={{ maxHeight: '300px', borderRadius: '16px' }}
                           />
+                        ) : isPdfPreview && pdfPreviewUrl ? (
+                          /* PDF Preview - Show first page */
+                          <div 
+                            className="w-full flex items-center justify-center relative"
+                            style={{ height: '300px', background: 'rgba(0,0,0,0.2)' }}
+                          >
+                            <embed
+                              src={`${pdfPreviewUrl}#page=1&view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
+                              type="application/pdf"
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                borderRadius: '16px',
+                                pointerEvents: 'none', // Prevent interaction, just preview
+                              }}
+                            />
+                            {/* PDF overlay with file name */}
+                            <div 
+                              className="absolute bottom-0 left-0 right-0 px-3 py-2"
+                              style={{
+                                background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+                                borderBottomLeftRadius: '16px',
+                                borderBottomRightRadius: '16px',
+                              }}
+                            >
+                              <p className="text-white text-[12px] font-medium truncate flex items-center gap-2">
+                                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                </svg>
+                                {file?.name}
+                              </p>
+                            </div>
+                          </div>
                         ) : (
                           <div className="w-full flex items-center justify-center" style={{ height: '250px', background: 'rgba(0,0,0,0.3)' }}>
                             <div className="text-center" style={{ color: 'rgba(255,255,255,0.5)' }}>
@@ -1112,8 +1198,10 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           <>
                             <audio 
                               ref={audioRef} 
-                              src={attachmentFile ? URL.createObjectURL(attachmentFile) : existingAttachmentUrl}
+                              src={attachmentBlobUrl || existingAttachmentUrl}
+                              preload="auto"
                               onEnded={() => setIsPlaying(false)}
+                              onError={() => setIsPlaying(false)}
                               className="hidden"
                             />
                             <button
