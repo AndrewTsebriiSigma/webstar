@@ -887,7 +887,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       fontSize: '14px', 
                       color: 'rgba(255, 255, 255, 0.35)', 
                       fontWeight: 400,
-                      marginBottom: '16px'
+                      margin: 0,
+                      marginBottom: '16px',
+                      lineHeight: 1.4
                     }}>
                       Show what you do here
                     </p>
@@ -1040,7 +1042,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       fontSize: '14px', 
                       color: 'rgba(255, 255, 255, 0.35)', 
                       fontWeight: 400,
-                      marginBottom: '16px'
+                      margin: 0,
+                      marginBottom: '16px',
+                      lineHeight: 1.4
                     }}>
                       Tell bigger stories with projects
                     </p>
