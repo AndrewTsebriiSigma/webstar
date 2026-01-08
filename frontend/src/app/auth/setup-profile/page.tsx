@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 export default function SetupProfilePage() {
   const router = useRouter();
+  const { updateUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState('');
@@ -83,16 +85,19 @@ export default function SetupProfilePage() {
 
       const userData = await response.json();
 
-      // Update localStorage with new user data
-      localStorage.setItem('user', JSON.stringify({
+      // Update BOTH localStorage AND React state via AuthContext
+      // This ensures the username is synced across all components
+      const updatedUserData = {
         ...userData,
         profile_setup_completed: true
-      }));
+      };
+      updateUser(updatedUserData);
 
       toast.success('Profile set up successfully!');
       
-      // Redirect to onboarding
-      router.push('/onboarding');
+      // Use window.location.href to force a full page load
+      // This ensures AuthContext re-reads from localStorage with the correct username
+      window.location.href = '/onboarding';
     } catch (error: any) {
       console.error('Profile setup error:', error);
       toast.error(error.message || 'Failed to set up profile');

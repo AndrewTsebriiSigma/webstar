@@ -81,13 +81,20 @@ export default function OnboardingPage() {
       
       toast.success(`🎉 Welcome! You earned ${response.data.points_earned} points!`);
       
-      // Update user's onboarding status
-      if (user) {
-        const updatedUser = { ...user, onboarding_completed: true };
+      // Get the LATEST user data from localStorage (setup-profile may have updated username)
+      // This is critical because the React state might have stale temp username
+      const freshUserData = localStorage.getItem('user');
+      const freshUser = freshUserData ? JSON.parse(freshUserData) : null;
+      const currentUsername = freshUser?.username || user?.username;
+      
+      // Update user's onboarding status with FRESH data (not stale React state)
+      if (freshUser) {
+        const updatedUser = { ...freshUser, onboarding_completed: true };
         localStorage.setItem('user', JSON.stringify(updatedUser));
       }
       
-      router.push(`/${user?.username}`);
+      // Use the correct (updated) username for redirect
+      window.location.href = `/${currentUsername}`;
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Failed to complete onboarding');
     } finally {
