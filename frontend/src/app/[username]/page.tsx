@@ -922,7 +922,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
         )}
 
         {activeTab === 'projects' && (
-          <div style={{ padding: '10px' }}>
+          <div style={{ 
+            margin: '0 auto',
+            width: '100%',
+            padding: '10px'
+          }}>
             {projects.length > 0 ? (
               <div 
                 style={{
