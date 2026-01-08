@@ -34,6 +34,8 @@ export default function RegisterPage() {
     archetype: '',
     role: '',
     expertiseLevel: '',
+    location: '',
+    bio: '',
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -53,6 +55,8 @@ export default function RegisterPage() {
         archetype: formData.archetype,
         role: formData.role,
         expertise_level: formData.expertiseLevel,
+        location: formData.location || undefined,
+        bio: formData.bio || undefined,
       });
       
       toast.success(`🎉 Welcome! You earned ${response.data.points_earned} points!`);
@@ -118,7 +122,7 @@ export default function RegisterPage() {
         {/* Progress Bar */}
         <div className="mb-6 sm:mb-10">
           <div className="flex items-center justify-center gap-2">
-            {[1, 2, 3, 4].map((s) => (
+            {[1, 2, 3, 4, 5].map((s) => (
               <div
                 key={s}
                 className="h-1.5 sm:h-2 flex-1 max-w-xs rounded-full transition"
@@ -127,7 +131,7 @@ export default function RegisterPage() {
             ))}
           </div>
           <p className="text-center mt-3 text-sm" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
-            Step {step} of 4
+            Step {step} of 5
           </p>
         </div>
 
@@ -452,23 +456,151 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* Complete Button */}
+              {/* Continue Button */}
               <div className="mt-8 sm:mt-12">
                 <button
                   onClick={() => {
-                    // Ensure expertiseLevel is set before submitting
+                    // Ensure expertiseLevel is set before continuing
                     if (!formData.expertiseLevel) {
                       const level = sliderValue < 25 ? 'emerging' : sliderValue < 50 ? 'developing' : sliderValue < 75 ? 'established' : 'leading';
                       setFormData((prev) => ({ ...prev, expertiseLevel: level }));
                     }
-                    handleFinalSubmit();
+                    setStep(5);
                   }}
-                  disabled={loading}
-                  className="w-full py-3 sm:py-4 bg-gradient-to-r from-primary-600 to-accent-600 text-white text-base sm:text-lg font-semibold rounded-xl hover:shadow-2xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3 sm:py-4 bg-gradient-to-r from-primary-600 to-accent-600 text-white text-base sm:text-lg font-semibold rounded-xl hover:shadow-2xl transition"
                 >
-                  {loading ? 'Creating your account...' : '🚀 Create My Account'}
+                  Continue
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 5: Location & Profile Preview */}
+        {step === 5 && (
+          <div className="glass rounded-2xl shadow-xl p-5 sm:p-8 animate-fade-in">
+            <button
+              onClick={() => setStep(4)}
+              className="mb-4 sm:mb-6 flex items-center gap-2 text-sm"
+              style={{ color: '#00C2FF' }}
+            >
+              ← Back
+            </button>
+
+            <div className="max-w-2xl mx-auto">
+              {/* Profile Preview Card */}
+              <div 
+                className="mb-6 sm:mb-8 p-4 sm:p-6 rounded-2xl text-center"
+                style={{ 
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)'
+                }}
+              >
+                {/* Profile Picture */}
+                <div 
+                  className="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full mb-3 sm:mb-4 flex items-center justify-center"
+                  style={{ 
+                    background: 'linear-gradient(145deg, #2D2D2D, #1A1A1A)',
+                    border: '2px solid rgba(255, 255, 255, 0.1)'
+                  }}
+                >
+                  <span className="text-3xl sm:text-4xl">
+                    {ARCHETYPES.find(a => a.id === formData.archetype)?.icon || '👤'}
+                  </span>
+                </div>
+                
+                {/* Username */}
+                <h3 className="text-lg sm:text-xl font-bold mb-1" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+                  @{formData.username || 'username'}
+                </h3>
+                
+                {/* Role */}
+                <p className="text-xs sm:text-sm mb-2" style={{ color: '#00C2FF' }}>
+                  {formData.role || 'Your Role'}
+                </p>
+                
+                {/* Location */}
+                {formData.location && (
+                  <p className="text-xs sm:text-sm flex items-center justify-center gap-1" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                    <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {formData.location}
+                  </p>
+                )}
+                
+                {/* Bio Preview */}
+                {formData.bio && (
+                  <p className="mt-2 sm:mt-3 text-xs sm:text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                    {formData.bio}
+                  </p>
+                )}
+              </div>
+
+              {/* Location Input */}
+              <div className="mb-4 sm:mb-6">
+                <label className="block text-xs sm:text-sm font-medium mb-2" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
+                  Where are you based?
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., Paris, France"
+                  value={formData.location}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value }))}
+                  className="w-full px-4 sm:px-5 py-3 sm:py-3.5 border-2 rounded-xl"
+                  style={{ 
+                    background: 'rgba(255, 255, 255, 0.05)', 
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    color: 'rgba(255, 255, 255, 0.95)'
+                  }}
+                />
+              </div>
+
+              {/* Bio Input */}
+              <div className="mb-6 sm:mb-8">
+                <label className="block text-xs sm:text-sm font-medium mb-2" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
+                  Tell about yourself
+                </label>
+                <div className="relative">
+                  <textarea
+                    placeholder="A brief description of who you are..."
+                    value={formData.bio}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 90) {
+                        setFormData((prev) => ({ ...prev, bio: e.target.value }));
+                      }
+                    }}
+                    maxLength={90}
+                    rows={2}
+                    className="w-full px-4 sm:px-5 py-3 sm:py-3.5 border-2 rounded-xl resize-none"
+                    style={{ 
+                      background: 'rgba(255, 255, 255, 0.05)', 
+                      borderColor: 'rgba(255, 255, 255, 0.1)',
+                      color: 'rgba(255, 255, 255, 0.95)'
+                    }}
+                  />
+                  <span 
+                    className="absolute bottom-2 right-3 text-[10px] sm:text-xs"
+                    style={{ color: formData.bio.length > 80 ? '#FF9F0A' : 'rgba(255, 255, 255, 0.4)' }}
+                  >
+                    {formData.bio.length}/90
+                  </span>
+                </div>
+              </div>
+
+              {/* Complete Button */}
+              <button
+                onClick={handleFinalSubmit}
+                disabled={loading}
+                className="w-full py-3 sm:py-4 text-white text-base sm:text-lg font-bold rounded-xl hover:shadow-2xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  background: 'linear-gradient(135deg, #00C2FF 0%, #0A84FF 100%)',
+                  boxShadow: '0 4px 20px rgba(0, 194, 255, 0.3)'
+                }}
+              >
+                {loading ? 'Creating your profile...' : '🚀 LEVEL UP'}
+              </button>
             </div>
           </div>
         )}
