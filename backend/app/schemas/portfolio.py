@@ -22,6 +22,14 @@ class PortfolioItemUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     order: Optional[int] = None
+    content_type: Optional[str] = None
+    content_url: Optional[str] = None
+    thumbnail_url: Optional[str] = None
+    text_content: Optional[str] = None
+    aspect_ratio: Optional[str] = None
+    attachment_url: Optional[str] = None
+    attachment_type: Optional[str] = None
+    is_draft: Optional[bool] = None
 
 
 class PortfolioItemResponse(BaseModel):

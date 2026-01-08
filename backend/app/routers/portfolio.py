@@ -244,12 +244,39 @@ async def update_portfolio_item(
     if not item or item.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Portfolio item not found")
     
+    # Track if transitioning from draft to published
+    was_draft = item.is_draft
+    
+    # Update all provided fields
     if updates.title is not None:
         item.title = updates.title
     if updates.description is not None:
         item.description = updates.description
     if updates.order is not None:
         item.order = updates.order
+    if updates.content_type is not None:
+        item.content_type = updates.content_type
+    if updates.content_url is not None:
+        item.content_url = updates.content_url
+    if updates.thumbnail_url is not None:
+        item.thumbnail_url = updates.thumbnail_url
+    if updates.text_content is not None:
+        item.text_content = updates.text_content
+    if updates.aspect_ratio is not None:
+        item.aspect_ratio = updates.aspect_ratio
+    if updates.attachment_url is not None:
+        item.attachment_url = updates.attachment_url
+    if updates.attachment_type is not None:
+        item.attachment_type = updates.attachment_type
+    if updates.is_draft is not None:
+        item.is_draft = updates.is_draft
+        
+        # If publishing a draft (transitioning from draft to published), increment profile count
+        if was_draft and not updates.is_draft:
+            profile = session.exec(select(Profile).where(Profile.user_id == current_user.id)).first()
+            if profile:
+                profile.portfolio_items_count += 1
+                session.add(profile)
     
     session.add(item)
     session.commit()
