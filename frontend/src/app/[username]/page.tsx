@@ -92,7 +92,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
     { id: '1', label: 'Message Me', url: '', type: 'message' },
     { id: '2', label: 'Email', url: '', type: 'email' }
   ]);
-  const [showButtonEditor, setShowButtonEditor] = useState(false);
   const [editingButtonId, setEditingButtonId] = useState<string | null>(null);
   
   const dashboardRef = useRef<HTMLDivElement>(null);
@@ -680,7 +679,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 setShowCustomizePanel(newState);
                 // Reset button editor when closing customize mode
                 if (!newState) {
-                  setShowButtonEditor(false);
                   setEditingButtonId(null);
                 }
               }}
@@ -737,11 +735,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Action Buttons - Editable in Customize Mode */}
       <div 
         className={`dashboard-actions-wrapper ${isOwnProfile && showCustomizePanel ? 'customize-active' : ''}`}
-        onClick={() => {
-          if (isOwnProfile && showCustomizePanel && !showButtonEditor) {
-            setShowButtonEditor(true);
-          }
-        }}
         style={{
           position: 'relative',
           padding: isOwnProfile && showCustomizePanel ? '12px' : '0 16px',
@@ -751,142 +744,125 @@ export default function ProfilePage({ params }: { params: { username: string } }
           background: isOwnProfile && showCustomizePanel ? 'rgba(255, 255, 255, 0.02)' : 'transparent',
           border: isOwnProfile && showCustomizePanel ? '1px solid rgba(0, 194, 255, 0.25)' : 'none',
           borderRadius: isOwnProfile && showCustomizePanel ? '16px' : '0',
-          cursor: isOwnProfile && showCustomizePanel && !showButtonEditor ? 'pointer' : 'default',
-          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-          animation: isOwnProfile && showCustomizePanel && !showButtonEditor ? 'gentlePulse 3s ease-in-out infinite' : 'none'
+          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
         }}
       >
-        {/* Floating Save & Close Buttons when editing */}
-        {isOwnProfile && showCustomizePanel && showButtonEditor && (
-          <>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowButtonEditor(false);
-                setEditingButtonId(null);
-                toast.success('Buttons saved!');
-              }}
-              title="Save changes"
-              style={{
-                position: 'absolute',
-                top: '-12px',
-                right: '50px',
-                width: '36px',
-                height: '36px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: '#00C2FF',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '2px solid #111',
-                borderRadius: '50%',
-                color: '#FFFFFF',
-                cursor: 'pointer',
-                transition: 'all 150ms cubic-bezier(0.22, 0.61, 0.36, 1)',
-                zIndex: 20,
-                boxShadow: '0 4px 12px rgba(0, 194, 255, 0.3)'
-              }}
-            >
-              <CheckIcon style={{ width: '18px', height: '18px', strokeWidth: 2.5 }} />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowButtonEditor(false);
-                setEditingButtonId(null);
-              }}
-              title="Close editor"
-              style={{
-                position: 'absolute',
-                top: '-12px',
-                right: '-12px',
-                width: '36px',
-                height: '36px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '2px solid #111',
-                borderRadius: '50%',
-                color: '#FFFFFF',
-                cursor: 'pointer',
-                transition: 'all 150ms cubic-bezier(0.22, 0.61, 0.36, 1)',
-                zIndex: 20,
-                fontSize: '18px',
-                fontWeight: 700
-              }}
-            >
-              ✕
-            </button>
-          </>
-        )}
-
         {/* Action Buttons Row */}
         <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
           {isOwnProfile ? (
-            // Owner view - dynamic buttons
-            actionButtons.map((button, index) => (
-              <button
-                key={button.id}
-                onClick={(e) => {
-                  if (!showCustomizePanel) {
+            // Owner view - dynamic buttons (clickable in customize mode)
+            <>
+              {actionButtons.map((button, index) => (
+                <button
+                  key={button.id}
+                  onClick={(e) => {
                     e.stopPropagation();
-                    handleButtonClick(button);
-                  }
-                }}
-                className={`action-btn ${getButtonSizeClass(index, actionButtons.length)}`}
-                style={{
-                  flex: actionButtons.length === 2 
-                    ? (index === 0 ? '0 0 calc(65% - 4px)' : '0 0 calc(35% - 4px)')
-                    : actionButtons.length === 3 
-                    ? '1 1 33.333%'
-                    : actionButtons.length === 4
-                    ? '1 1 25%'
-                    : '1 1 100%',
-                  height: '32px',
-                  background: showCustomizePanel ? '#1f1f1f' : '#1F1F1F',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: 'rgba(255, 255, 255, 0.75)',
-                  cursor: showCustomizePanel ? 'default' : 'pointer',
-                  padding: '5px 16px',
-                  borderRadius: '12px',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  textTransform: 'none',
-                  letterSpacing: '-0.2px',
-                  transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-                  textAlign: 'center',
-                  pointerEvents: showCustomizePanel ? 'none' : 'auto'
-                }}
-                onMouseEnter={(e) => {
-                  if (!showCustomizePanel) {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                    e.currentTarget.style.color = 'rgba(255, 255, 255, 1)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!showCustomizePanel) {
-                    e.currentTarget.style.background = '#1F1F1F';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                    e.currentTarget.style.color = 'rgba(255, 255, 255, 0.75)';
-                  }
-                }}
-                onMouseDown={(e) => {
-                  if (!showCustomizePanel) {
+                    if (showCustomizePanel) {
+                      // Toggle editing this button
+                      setEditingButtonId(editingButtonId === button.id ? null : button.id);
+                    } else {
+                      handleButtonClick(button);
+                    }
+                  }}
+                  className={`action-btn ${getButtonSizeClass(index, actionButtons.length)}`}
+                  style={{
+                    flex: actionButtons.length === 2 
+                      ? (index === 0 ? '0 0 calc(65% - 4px)' : '0 0 calc(35% - 4px)')
+                      : actionButtons.length === 3 
+                      ? '1 1 33.333%'
+                      : actionButtons.length === 4
+                      ? '1 1 25%'
+                      : '1 1 100%',
+                    height: '32px',
+                    background: showCustomizePanel && editingButtonId === button.id 
+                      ? 'rgba(0, 194, 255, 0.15)' 
+                      : '#1F1F1F',
+                    border: showCustomizePanel && editingButtonId === button.id 
+                      ? '1px solid rgba(0, 194, 255, 0.5)' 
+                      : '1px solid rgba(255, 255, 255, 0.1)',
+                    color: showCustomizePanel && editingButtonId === button.id 
+                      ? '#00C2FF' 
+                      : 'rgba(255, 255, 255, 0.75)',
+                    cursor: 'pointer',
+                    padding: '5px 16px',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    textTransform: 'none',
+                    letterSpacing: '-0.2px',
+                    transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                    textAlign: 'center'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!showCustomizePanel) {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                      e.currentTarget.style.color = 'rgba(255, 255, 255, 1)';
+                    } else if (editingButtonId !== button.id) {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                      e.currentTarget.style.borderColor = 'rgba(0, 194, 255, 0.3)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!showCustomizePanel) {
+                      e.currentTarget.style.background = '#1F1F1F';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.75)';
+                    } else if (editingButtonId !== button.id) {
+                      e.currentTarget.style.background = '#1F1F1F';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    }
+                  }}
+                  onMouseDown={(e) => {
                     e.currentTarget.style.transform = 'scale(0.98)';
-                  }
-                }}
-                onMouseUp={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                }}
-              >
-                {button.label}
-              </button>
-            ))
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                >
+                  {button.label}
+                </button>
+              ))}
+              
+              {/* Add Button - shows as a button slot when < 4 buttons */}
+              {showCustomizePanel && actionButtons.length < 4 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddButton();
+                  }}
+                  style={{
+                    flex: actionButtons.length === 1 ? '0 0 calc(35% - 4px)' : '0 0 auto',
+                    minWidth: '60px',
+                    height: '32px',
+                    background: 'transparent',
+                    border: '1.5px dashed rgba(0, 194, 255, 0.4)',
+                    color: '#00C2FF',
+                    cursor: 'pointer',
+                    padding: '5px 12px',
+                    borderRadius: '12px',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                    transition: 'all 0.15s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(0, 194, 255, 0.08)';
+                    e.currentTarget.style.borderColor = 'rgba(0, 194, 255, 0.6)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.borderColor = 'rgba(0, 194, 255, 0.4)';
+                  }}
+                >
+                  <PlusIcon style={{ width: '14px', height: '14px', strokeWidth: 2.5 }} />
+                  Add
+                </button>
+              )}
+            </>
           ) : (
             // Visitor view - Follow & Message buttons
             <>
@@ -900,191 +876,119 @@ export default function ProfilePage({ params }: { params: { username: string } }
           )}
         </div>
 
-        {/* Customize Hint */}
-        {isOwnProfile && showCustomizePanel && !showButtonEditor && (
-          <div style={{
-            textAlign: 'center',
-            fontSize: '11px',
-            fontWeight: 600,
-            color: '#00C2FF',
-            padding: '4px 0',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            opacity: 0.9,
-            marginTop: '4px'
-          }}>
-            Tap to edit buttons
-          </div>
-        )}
-
-        {/* Button Editor Panel */}
-        {isOwnProfile && showCustomizePanel && showButtonEditor && (
-          <div style={{
-            marginTop: '12px',
-            padding: '12px',
-            background: 'rgba(0, 0, 0, 0.4)',
-            borderRadius: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.08)'
-          }}>
-            <div style={{ 
-              fontSize: '11px', 
-              fontWeight: 700, 
-              color: 'rgba(255, 255, 255, 0.5)', 
-              textTransform: 'uppercase', 
-              letterSpacing: '0.5px',
-              marginBottom: '10px'
-            }}>
-              Edit Buttons
-            </div>
-            
-            {/* Button List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {actionButtons.map((button) => (
-                <div 
-                  key={button.id}
+        {/* Inline Button Editor - appears below when editing a button */}
+        {isOwnProfile && showCustomizePanel && editingButtonId && (
+          <div 
+            style={{
+              marginTop: '10px',
+              padding: '12px',
+              background: 'rgba(0, 194, 255, 0.06)',
+              borderRadius: '12px',
+              border: '1px solid rgba(0, 194, 255, 0.2)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {actionButtons.filter(b => b.id === editingButtonId).map(button => (
+              <div key={button.id} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {/* Label Input */}
+                <div>
+                  <label style={{ fontSize: '10px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '0.3px', marginBottom: '4px', display: 'block' }}>
+                    Label
+                  </label>
+                  <input
+                    type="text"
+                    value={button.label}
+                    onChange={(e) => handleUpdateButton(button.id, { label: e.target.value })}
+                    placeholder="Button text"
+                    style={{
+                      width: '100%',
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      padding: '8px 12px',
+                      color: '#FFF',
+                      fontSize: '13px',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+                
+                {/* Type Select */}
+                <div>
+                  <label style={{ fontSize: '10px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '0.3px', marginBottom: '4px', display: 'block' }}>
+                    Type
+                  </label>
+                  <select
+                    value={button.type}
+                    onChange={(e) => handleUpdateButton(button.id, { type: e.target.value as ActionButton['type'] })}
+                    style={{
+                      width: '100%',
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      padding: '8px 12px',
+                      color: '#FFF',
+                      fontSize: '13px',
+                      outline: 'none'
+                    }}
+                  >
+                    <option value="link">Link</option>
+                    <option value="email">Email</option>
+                    <option value="message">Message/Share</option>
+                  </select>
+                </div>
+                
+                {/* URL/Email Input */}
+                {button.type !== 'message' && (
+                  <div>
+                    <label style={{ fontSize: '10px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '0.3px', marginBottom: '4px', display: 'block' }}>
+                      {button.type === 'email' ? 'Email Address' : 'URL'}
+                    </label>
+                    <input
+                      type={button.type === 'email' ? 'email' : 'url'}
+                      value={button.url}
+                      onChange={(e) => handleUpdateButton(button.id, { url: e.target.value })}
+                      placeholder={button.type === 'email' ? 'your@email.com' : 'https://...'}
+                      style={{
+                        width: '100%',
+                        background: 'rgba(255, 255, 255, 0.06)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '8px',
+                        padding: '8px 12px',
+                        color: '#FFF',
+                        fontSize: '13px',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                )}
+                
+                {/* Delete Button */}
+                <button
+                  onClick={() => handleDeleteButton(button.id)}
                   style={{
-                    background: editingButtonId === button.id ? 'rgba(0, 194, 255, 0.08)' : 'rgba(255, 255, 255, 0.04)',
-                    border: editingButtonId === button.id ? '1px solid rgba(0, 194, 255, 0.3)' : '1px solid rgba(255, 255, 255, 0.08)',
-                    borderRadius: '10px',
-                    padding: '10px 12px',
+                    width: '100%',
+                    marginTop: '4px',
+                    padding: '8px',
+                    borderRadius: '8px',
+                    background: 'rgba(255, 59, 48, 0.1)',
+                    border: '1px solid rgba(255, 59, 48, 0.2)',
+                    color: '#FF3B30',
+                    fontSize: '12px',
+                    fontWeight: 600,
                     cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
                     transition: 'all 150ms ease'
                   }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditingButtonId(editingButtonId === button.id ? null : button.id);
-                  }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: editingButtonId === button.id ? '10px' : '0' }}>
-                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#FFF' }}>{button.label}</span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteButton(button.id);
-                      }}
-                      style={{
-                        width: '24px',
-                        height: '24px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: 'rgba(255, 59, 48, 0.15)',
-                        border: '1px solid rgba(255, 59, 48, 0.3)',
-                        borderRadius: '6px',
-                        color: '#FF3B30',
-                        cursor: 'pointer',
-                        transition: 'all 150ms ease'
-                      }}
-                    >
-                      <TrashIcon style={{ width: '14px', height: '14px' }} />
-                    </button>
-                  </div>
-                  
-                  {/* Expanded Edit Form */}
-                  {editingButtonId === button.id && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }} onClick={(e) => e.stopPropagation()}>
-                      <div>
-                        <label style={{ fontSize: '10px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '0.3px', marginBottom: '4px', display: 'block' }}>
-                          Label
-                        </label>
-                        <input
-                          type="text"
-                          value={button.label}
-                          onChange={(e) => handleUpdateButton(button.id, { label: e.target.value })}
-                          placeholder="Button text"
-                          style={{
-                            width: '100%',
-                            background: 'rgba(255, 255, 255, 0.04)',
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
-                            borderRadius: '8px',
-                            padding: '8px 12px',
-                            color: '#FFF',
-                            fontSize: '13px',
-                            outline: 'none'
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: '10px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '0.3px', marginBottom: '4px', display: 'block' }}>
-                          Type
-                        </label>
-                        <select
-                          value={button.type}
-                          onChange={(e) => handleUpdateButton(button.id, { type: e.target.value as ActionButton['type'] })}
-                          style={{
-                            width: '100%',
-                            background: 'rgba(255, 255, 255, 0.04)',
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
-                            borderRadius: '8px',
-                            padding: '8px 12px',
-                            color: '#FFF',
-                            fontSize: '13px',
-                            outline: 'none'
-                          }}
-                        >
-                          <option value="link">Link</option>
-                          <option value="email">Email</option>
-                          <option value="message">Message/Share</option>
-                        </select>
-                      </div>
-                      {button.type !== 'message' && (
-                        <div>
-                          <label style={{ fontSize: '10px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '0.3px', marginBottom: '4px', display: 'block' }}>
-                            {button.type === 'email' ? 'Email Address' : 'URL'}
-                          </label>
-                          <input
-                            type={button.type === 'email' ? 'email' : 'url'}
-                            value={button.url}
-                            onChange={(e) => handleUpdateButton(button.id, { url: e.target.value })}
-                            placeholder={button.type === 'email' ? 'your@email.com' : 'https://...'}
-                            style={{
-                              width: '100%',
-                              background: 'rgba(255, 255, 255, 0.04)',
-                              border: '1px solid rgba(255, 255, 255, 0.08)',
-                              borderRadius: '8px',
-                              padding: '8px 12px',
-                              color: '#FFF',
-                              fontSize: '13px',
-                              outline: 'none'
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Add Button */}
-            {actionButtons.length < 4 && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddButton();
-                }}
-                style={{
-                  width: '100%',
-                  marginTop: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  padding: '10px',
-                  borderRadius: '10px',
-                  background: 'rgba(0, 194, 255, 0.08)',
-                  border: '1.5px dashed rgba(0, 194, 255, 0.3)',
-                  color: '#00C2FF',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 150ms ease'
-                }}
-              >
-                <PlusIcon style={{ width: '16px', height: '16px', strokeWidth: 2.5 }} />
-                Add Button
-              </button>
-            )}
+                  <TrashIcon style={{ width: '14px', height: '14px' }} />
+                  Delete Button
+                </button>
+              </div>
+            ))}
           </div>
         )}
       </div>
