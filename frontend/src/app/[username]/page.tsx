@@ -544,6 +544,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
             </div>
           </div>
           <div className="dashboard-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            {/* ================================================================
+                FEATURE_DISABLED: DRAFTS
+                ================================================================
+                Drafts feature temporarily hidden for V1 release.
+                To re-enable: uncomment the button below.
+                Backend endpoints remain active: /api/portfolio/drafts, /api/projects/drafts
+                Route still accessible: /drafts (for testing)
+                ================================================================
             <button 
               onClick={(e) => {
                 e.stopPropagation();
@@ -591,6 +599,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             >
               <img src="/layers.svg" alt="Drafts" style={{ width: '20px', height: '20px', filter: 'invert(1) opacity(0.44)' }} />
             </button>
+            END FEATURE_DISABLED: DRAFTS */}
             <button 
               onClick={(e) => {
                 e.stopPropagation();
