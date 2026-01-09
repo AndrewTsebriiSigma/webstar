@@ -99,6 +99,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [editedName, setEditedName] = useState('');
   const [editedBio, setEditedBio] = useState('');
   const [editedLocation, setEditedLocation] = useState('');
+  const [locationSuggestions, setLocationSuggestions] = useState<Array<{place_name: string; id: string}>>([]);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [editedRole, setEditedRole] = useState('');
   const [isUploadingProfilePic, setIsUploadingProfilePic] = useState(false);
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
@@ -416,6 +418,45 @@ export default function ProfilePage({ params }: { params: { username: string } }
   // Auto-save profile info on blur
   const handleProfileFieldBlur = () => {
     saveProfileInfo();
+  };
+
+  // Mapbox location search
+  const MAPBOX_TOKEN = 'pk.eyJ1Ijoid2Vic3RhcnVzZXIiLCJhIjoiY21rNmF2NDluMDFzaDNlcG5tOHVzN2xsMCJ9.VZVvRWxM2wScW3M1D299fQ';
+
+  const searchLocation = async (query: string) => {
+    if (!query || query.length < 2) {
+      setLocationSuggestions([]);
+      setShowLocationDropdown(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&types=place,locality,neighborhood,address&limit=5`
+      );
+      const data = await response.json();
+      
+      if (data.features) {
+        setLocationSuggestions(
+          data.features.map((feature: any) => ({
+            place_name: feature.place_name,
+            id: feature.id
+          }))
+        );
+        setShowLocationDropdown(true);
+      }
+    } catch (error) {
+      console.error('Location search error:', error);
+      setLocationSuggestions([]);
+    }
+  };
+
+  const handleLocationSelect = (placeName: string) => {
+    setEditedLocation(placeName);
+    setShowLocationDropdown(false);
+    setLocationSuggestions([]);
+    // Auto-save after selection
+    handleProfileFieldBlur();
   };
 
   if (loading) {
@@ -758,25 +799,72 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
         {/* Location & Role - 14px to dashboard */}
         <div className="flex items-center justify-center gap-2 flex-wrap px-2" style={{ marginBottom: '14px' }}>
-          <div className="flex items-center gap-1" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
+          <div className="flex items-center gap-1 relative" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
             <MapPinIcon className="w-3.5 h-3.5 flex-shrink-0" />
             {isOwnProfile && showCustomizePanel ? (
-              <input
-                type="text"
-                value={editedLocation}
-                onChange={(e) => setEditedLocation(e.target.value)}
-                onBlur={handleProfileFieldBlur}
-                placeholder="Location"
-                className="magic-editable"
-                style={{ 
-                  color: 'rgba(255, 255, 255, 0.75)',
-                  fontSize: '13px',
-                  background: 'transparent',
-                  borderRadius: '6px',
-                  padding: '2px 8px',
-                  width: '100px'
-                }}
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={editedLocation}
+                  onChange={(e) => {
+                    setEditedLocation(e.target.value);
+                    searchLocation(e.target.value);
+                  }}
+                  onFocus={() => {
+                    if (locationSuggestions.length > 0) setShowLocationDropdown(true);
+                  }}
+                  onBlur={() => {
+                    // Delay to allow click on dropdown
+                    setTimeout(() => setShowLocationDropdown(false), 200);
+                  }}
+                  placeholder="Search location..."
+                  className="magic-editable"
+                  style={{ 
+                    color: 'rgba(255, 255, 255, 0.75)',
+                    fontSize: '13px',
+                    background: 'transparent',
+                    borderRadius: '6px',
+                    padding: '2px 8px',
+                    minWidth: '150px'
+                  }}
+                />
+                {/* Location dropdown */}
+                {showLocationDropdown && locationSuggestions.length > 0 && (
+                  <div 
+                    className="absolute left-0 mt-1 rounded-lg overflow-hidden shadow-xl"
+                    style={{
+                      background: 'rgba(20, 25, 35, 0.98)',
+                      border: '1px solid rgba(87, 191, 249, 0.3)',
+                      backdropFilter: 'blur(20px)',
+                      zIndex: 100,
+                      minWidth: '280px',
+                      top: '100%'
+                    }}
+                  >
+                    {locationSuggestions.map((suggestion) => (
+                      <button
+                        key={suggestion.id}
+                        type="button"
+                        onClick={() => handleLocationSelect(suggestion.place_name)}
+                        className="w-full text-left px-3 py-2 transition-all duration-150 hover:bg-[#57BFF9]/20"
+                        style={{
+                          color: 'rgba(255, 255, 255, 0.9)',
+                          fontSize: '13px',
+                          borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+                        }}
+                      >
+                        <span className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-[#57BFF9] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          <span className="truncate">{suggestion.place_name}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             ) : (
               <span>{profile.location || 'Paris, France'}</span>
             )}
