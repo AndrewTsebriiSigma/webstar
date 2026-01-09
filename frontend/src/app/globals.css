@@ -1009,3 +1009,46 @@ html {
 .portfolio-customizer-inline {
   animation: slideDown 0.3s ease-out;
 }
+
+/* ================================================================
+   Dashboard Action Buttons - Editable in Customize Mode
+   ================================================================ */
+
+/* Gentle Pulse Animation for editable area */
+@keyframes gentlePulse {
+  0%, 100% { 
+    border-color: rgba(0, 194, 255, 0.25);
+    box-shadow: 0 0 0 0 rgba(0, 194, 255, 0.08);
+  }
+  50% { 
+    border-color: rgba(0, 194, 255, 0.45);
+    box-shadow: 0 0 20px 0 rgba(0, 194, 255, 0.08);
+  }
+}
+
+.dashboard-actions-wrapper.customize-active:hover {
+  border-color: rgba(0, 194, 255, 0.55) !important;
+  box-shadow: 0 0 24px 0 rgba(0, 194, 255, 0.18) !important;
+  animation: none !important;
+}
+
+/* Button Editor Select Styling */
+.dashboard-actions-wrapper select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  padding-right: 32px;
+}
+
+.dashboard-actions-wrapper select:focus {
+  border-color: rgba(0, 194, 255, 0.4);
+  box-shadow: 0 0 0 3px rgba(0, 194, 255, 0.1);
+}
+
+.dashboard-actions-wrapper input:focus {
+  border-color: rgba(0, 194, 255, 0.4);
+  box-shadow: 0 0 0 3px rgba(0, 194, 255, 0.1);
+}
