@@ -1,4 +1,9 @@
-"""File upload router."""
+"""File upload router with FFmpeg media compression.
+
+Supports photo, video, audio, and PDF uploads to Cloudflare R2.
+Media files are automatically compressed using FFmpeg before storage
+to reduce costs while maintaining display quality.
+"""
 import os
 import uuid
 import logging
@@ -12,6 +17,7 @@ from app.db.models import User, Profile, PointsTransaction, UserPoints
 from app.deps.auth import get_current_user
 from app.core.config import settings
 from app.services.s3_service import s3_service
+from app.services.media_compression_service import compression_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -46,46 +52,61 @@ async def upload_profile_picture(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
-    """Upload profile picture to S3 or local storage."""
+    """Upload profile picture to R2 with optional compression."""
     try:
         # Validate file type
         if not file.content_type or not file.content_type.startswith("image/"):
             raise HTTPException(status_code=400, detail="File must be an image")
         
-        # Generate unique filename
-        file_ext = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
-        filename = f"{uuid.uuid4()}{file_ext}"
-        
         # Read file content
         content = await file.read()
+        original_size = len(content)
         
-        # Try S3 first (production), fallback to local (development)
+        # Compress image if FFmpeg is available
+        final_content = content
+        final_filename = f"{uuid.uuid4()}{os.path.splitext(file.filename)[1] if file.filename else '.jpg'}"
+        final_content_type = file.content_type or "image/jpeg"
+        
+        if settings.COMPRESSION_ENABLED and compression_service.is_available():
+            result = compression_service.compress_image(
+                content, 
+                file.filename or "image.jpg",
+                settings.COMPRESSION_IMAGE_PRESET,
+                settings.COMPRESSION_IMAGE_FORMAT
+            )
+            if result.success and result.compressed_content:
+                final_content = result.compressed_content
+                final_filename = result.output_filename
+                final_content_type = result.content_type
+                logger.info(f"Profile picture compressed: {result.savings_percent} reduction")
+        
+        # Try R2 first (production), fallback to local (development)
         if s3_service.is_available():
-            # Upload to S3
-            s3_key = f"profile_pictures/{filename}"
+            # Upload to R2
+            s3_key = f"profile_pictures/{final_filename}"
             file_url = s3_service.upload_file(
-                file_content=content,
+                file_content=final_content,
                 file_key=s3_key,
-                content_type=file.content_type or "image/jpeg"
+                content_type=final_content_type
             )
             
             if not file_url:
                 raise HTTPException(
                     status_code=500,
-                    detail="Failed to upload to S3. Please check server logs."
+                    detail="Failed to upload to R2. Please check server logs."
                 )
             
-            logger.info(f"Profile picture uploaded to S3: {file_url}")
+            logger.info(f"Profile picture uploaded to R2: {file_url}")
         else:
             # Fallback to local storage (development only)
-            logger.warning("S3 not available, using local storage (NOT recommended for production)")
-            file_path = UPLOAD_DIR / "profile_pictures" / filename
+            logger.warning("R2 not available, using local storage (NOT recommended for production)")
+            file_path = UPLOAD_DIR / "profile_pictures" / final_filename
             file_path.parent.mkdir(exist_ok=True, parents=True)
             
             with open(file_path, "wb") as f:
-                f.write(content)
+                f.write(final_content)
             
-            file_url = f"/uploads/profile_pictures/{filename}"
+            file_url = f"/uploads/profile_pictures/{final_filename}"
             logger.info(f"Profile picture uploaded locally: {file_url}")
         
         # Update profile
@@ -101,7 +122,10 @@ async def upload_profile_picture(
         
         return {
             "message": "Profile picture uploaded successfully",
-            "url": file_url
+            "url": file_url,
+            "original_size": original_size,
+            "final_size": len(final_content),
+            "compressed": len(final_content) < original_size
         }
     except HTTPException:
         raise
@@ -118,19 +142,37 @@ async def upload_profile_picture(
 async def upload_media(
     file: UploadFile = File(...),
     media_type: str = Form("photo"),
+    compress: bool = Form(True),
+    quality: str = Form("standard"),
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
-    """Upload media file (photo, video, audio, pdf) to S3 or local storage."""
+    """Upload media file with automatic FFmpeg compression.
+    
+    Compression reduces storage costs significantly:
+    - Video: 70-85% reduction (H.264/AAC in MP4)
+    - Photo: 60-80% reduction (WebP or optimized JPEG)
+    - Audio: 50-70% reduction (AAC in M4A)
+    - PDF: No compression (kept as-is)
+    
+    Args:
+        file: The media file to upload
+        media_type: Type of media (photo, video, audio, pdf)
+        compress: Whether to compress the file (default: True)
+        quality: Compression quality preset (high, standard, low)
+    """
     try:
-        logger.info(f"Upload request - media_type: {media_type}, file.content_type: {file.content_type}, filename: {file.filename}")
+        logger.info(
+            f"Upload request - media_type: {media_type}, compress: {compress}, "
+            f"quality: {quality}, content_type: {file.content_type}, filename: {file.filename}"
+        )
         
         # Validate media type
         valid_media_types = ["photo", "video", "audio", "pdf"]
         if media_type not in valid_media_types:
             raise HTTPException(status_code=400, detail=f"Invalid media type: {media_type}")
         
-        # Validate file type - more permissive approach
+        # Validate file type - permissive approach
         valid_types = {
             "photo": ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"],
             "video": [
@@ -139,11 +181,11 @@ async def upload_media(
                 "video/x-msvideo", 
                 "video/webm", 
                 "video/mpeg",
-                "video/x-matroska",  # .mkv files
+                "video/x-matroska",
                 "video/ogg",
-                "application/octet-stream"  # Fallback for unknown types
+                "application/octet-stream"
             ],
-            "audio": ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/mp4"],
+            "audio": ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/mp4", "audio/x-m4a"],
             "pdf": ["application/pdf"]
         }
         
@@ -165,73 +207,151 @@ async def upload_media(
                     detail=f"Invalid file type '{file.content_type}' for {media_type}. Expected: {', '.join(valid_types[media_type])}"
                 )
         
-        # Generate unique filename
-        file_ext = os.path.splitext(file.filename)[1] if file.filename else ""
-        filename = f"{uuid.uuid4()}{file_ext}"
-        
         # Read file content
         content = await file.read()
+        original_size = len(content)
         
-        # Validate file size (500MB max for videos, 50MB for audio/pdf, 10MB for photos)
+        # Validate file size (larger limits now that we compress)
         max_sizes = {
-            "photo": 10 * 1024 * 1024,     # 10MB (increased from 5MB)
-            "video": 500 * 1024 * 1024,    # 500MB (increased from 200MB)
-            "audio": 50 * 1024 * 1024,     # 50MB (increased from 10MB)
-            "pdf": 50 * 1024 * 1024        # 50MB (increased from 10MB)
+            "photo": 20 * 1024 * 1024,      # 20MB (will compress to ~2-5MB)
+            "video": 1024 * 1024 * 1024,    # 1GB (will compress significantly)
+            "audio": 100 * 1024 * 1024,     # 100MB (will compress to ~20-30MB)
+            "pdf": 50 * 1024 * 1024         # 50MB (no compression)
         }
         
-        if len(content) > max_sizes[media_type]:
+        if original_size > max_sizes[media_type]:
             max_size_mb = max_sizes[media_type] / (1024 * 1024)
             raise HTTPException(
                 status_code=413,
-                detail=f"File too large. Maximum size for {media_type} is {max_size_mb}MB"
+                detail=f"File too large. Maximum size for {media_type} is {max_size_mb:.0f}MB"
             )
         
-        # Try S3 first (production), fallback to local (development)
+        # === COMPRESSION LOGIC ===
+        final_content = content
+        file_ext = os.path.splitext(file.filename)[1] if file.filename else ""
+        final_filename = f"{uuid.uuid4()}{file_ext}"
+        final_content_type = file.content_type or "application/octet-stream"
+        compression_applied = False
+        compression_error = None
+        
+        # Use compression settings from config if not explicitly disabled
+        should_compress = compress and settings.COMPRESSION_ENABLED and compression_service.is_available()
+        
+        if should_compress and media_type != "pdf":
+            # Use quality from request or fall back to config
+            preset = quality if quality in ["high", "standard", "low"] else settings.COMPRESSION_VIDEO_PRESET
+            
+            if media_type == "video":
+                logger.info(f"Compressing video with preset: {preset}")
+                result = compression_service.compress_video(
+                    content, 
+                    file.filename or "video.mp4", 
+                    preset
+                )
+                if result.success and result.compressed_content:
+                    final_content = result.compressed_content
+                    final_filename = result.output_filename
+                    final_content_type = result.content_type
+                    compression_applied = True
+                    logger.info(f"Video compressed: {result.savings_percent} reduction")
+                else:
+                    compression_error = result.error
+                    logger.warning(f"Video compression failed, using original: {result.error}")
+            
+            elif media_type == "photo":
+                logger.info(f"Compressing image with preset: {preset}")
+                result = compression_service.compress_image(
+                    content, 
+                    file.filename or "image.jpg",
+                    preset,
+                    settings.COMPRESSION_IMAGE_FORMAT
+                )
+                if result.success and result.compressed_content:
+                    final_content = result.compressed_content
+                    final_filename = result.output_filename
+                    final_content_type = result.content_type
+                    compression_applied = True
+                    logger.info(f"Image compressed: {result.savings_percent} reduction")
+                else:
+                    compression_error = result.error
+                    logger.warning(f"Image compression failed, using original: {result.error}")
+            
+            elif media_type == "audio":
+                logger.info(f"Compressing audio with preset: {preset}")
+                result = compression_service.compress_audio(
+                    content, 
+                    file.filename or "audio.mp3",
+                    preset
+                )
+                if result.success and result.compressed_content:
+                    final_content = result.compressed_content
+                    final_filename = result.output_filename
+                    final_content_type = result.content_type
+                    compression_applied = True
+                    logger.info(f"Audio compressed: {result.savings_percent} reduction")
+                else:
+                    compression_error = result.error
+                    logger.warning(f"Audio compression failed, using original: {result.error}")
+        
+        elif media_type == "pdf":
+            # PDFs are not compressed, keep original
+            final_filename = f"{uuid.uuid4()}.pdf"
+            final_content_type = "application/pdf"
+        
+        # === UPLOAD TO R2 ===
+        final_size = len(final_content)
+        
         if s3_service.is_available():
-            # Upload to S3
-            s3_key = f"{media_type}/{filename}"
+            s3_key = f"{media_type}/{final_filename}"
             file_url = s3_service.upload_file(
-                file_content=content,
+                file_content=final_content,
                 file_key=s3_key,
-                content_type=file.content_type or "application/octet-stream"
+                content_type=final_content_type
             )
             
             if not file_url:
                 raise HTTPException(
                     status_code=500,
-                    detail="Failed to upload to S3. Please check AWS credentials and bucket configuration."
+                    detail="Failed to upload to R2. Please check credentials and bucket configuration."
                 )
             
-            logger.info(f"Media uploaded to S3: {file_url}")
+            logger.info(f"Media uploaded to R2: {file_url} ({final_size/1024/1024:.2f}MB)")
         else:
             # Fallback to local storage (development only)
-            logger.warning("S3 not available, using local storage (NOT recommended for production)")
+            logger.warning("R2 not available, using local storage (NOT recommended for production)")
             
             try:
-                file_path = UPLOAD_DIR / media_type / filename
+                file_path = UPLOAD_DIR / media_type / final_filename
                 file_path.parent.mkdir(exist_ok=True, parents=True)
                 
                 with open(file_path, "wb") as f:
-                    f.write(content)
+                    f.write(final_content)
                 
-                # Return a placeholder URL that indicates local storage
-                # In production, you MUST configure S3
-                file_url = f"/uploads/{media_type}/{filename}"
+                file_url = f"/uploads/{media_type}/{final_filename}"
                 logger.info(f"Media uploaded locally: {file_url}")
             except Exception as e:
                 logger.error(f"Failed to save file locally: {str(e)}")
                 raise HTTPException(
                     status_code=500,
-                    detail="File upload failed. S3 is not configured and local storage is unavailable. Please configure AWS S3 credentials."
+                    detail="File upload failed. R2 is not configured and local storage is unavailable."
                 )
+        
+        # Calculate savings
+        savings_bytes = original_size - final_size
+        savings_percent = (savings_bytes / original_size * 100) if original_size > 0 else 0
         
         return {
             "message": "Media uploaded successfully",
             "url": file_url,
             "media_type": media_type,
-            "filename": filename
+            "filename": final_filename,
+            "original_size": original_size,
+            "final_size": final_size,
+            "compression_applied": compression_applied,
+            "compression_savings": f"{savings_percent:.1f}%",
+            "compression_error": compression_error
         }
+        
     except HTTPException:
         raise
     except Exception as e:
@@ -248,49 +368,81 @@ async def upload_project_cover(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
-    """Upload project cover image to S3 or local storage."""
+    """Upload project cover image to R2 with compression."""
     # Validate file type
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
     
-    # Generate unique filename
-    file_ext = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
-    filename = f"{uuid.uuid4()}{file_ext}"
-    
     # Read file content
     content = await file.read()
+    original_size = len(content)
     
-    # Try S3 first (production), fallback to local (development)
+    # Compress image if FFmpeg is available
+    final_content = content
+    final_filename = f"{uuid.uuid4()}{os.path.splitext(file.filename)[1] if file.filename else '.jpg'}"
+    final_content_type = file.content_type or "image/jpeg"
+    
+    if settings.COMPRESSION_ENABLED and compression_service.is_available():
+        result = compression_service.compress_image(
+            content,
+            file.filename or "cover.jpg",
+            settings.COMPRESSION_IMAGE_PRESET,
+            settings.COMPRESSION_IMAGE_FORMAT
+        )
+        if result.success and result.compressed_content:
+            final_content = result.compressed_content
+            final_filename = result.output_filename
+            final_content_type = result.content_type
+            logger.info(f"Project cover compressed: {result.savings_percent} reduction")
+    
+    # Try R2 first (production), fallback to local (development)
     if s3_service.is_available():
-        # Upload to S3
-        s3_key = f"project_covers/{filename}"
+        s3_key = f"project_covers/{final_filename}"
         file_url = s3_service.upload_file(
-            file_content=content,
+            file_content=final_content,
             file_key=s3_key,
-            content_type=file.content_type or "image/jpeg"
+            content_type=final_content_type
         )
         
         if not file_url:
             raise HTTPException(
                 status_code=500,
-                detail="Failed to upload to S3. Please check server logs."
+                detail="Failed to upload to R2. Please check server logs."
             )
         
-        logger.info(f"Project cover uploaded to S3: {file_url}")
+        logger.info(f"Project cover uploaded to R2: {file_url}")
     else:
         # Fallback to local storage (development only)
-        logger.warning("S3 not available, using local storage (NOT recommended for production)")
-        file_path = UPLOAD_DIR / "project_covers" / filename
+        logger.warning("R2 not available, using local storage (NOT recommended for production)")
+        file_path = UPLOAD_DIR / "project_covers" / final_filename
         file_path.parent.mkdir(exist_ok=True, parents=True)
         
         with open(file_path, "wb") as f:
-            f.write(content)
+            f.write(final_content)
         
-        file_url = f"/uploads/project_covers/{filename}"
+        file_url = f"/uploads/project_covers/{final_filename}"
         logger.info(f"Project cover uploaded locally: {file_url}")
     
     return {
         "message": "Project cover uploaded successfully",
-        "url": file_url
+        "url": file_url,
+        "original_size": original_size,
+        "final_size": len(final_content),
+        "compressed": len(final_content) < original_size
     }
 
+
+@router.get("/compression-status")
+async def get_compression_status():
+    """Check if media compression is available and configured."""
+    return {
+        "compression_enabled": settings.COMPRESSION_ENABLED,
+        "ffmpeg_available": compression_service.is_available(),
+        "presets": {
+            "video": settings.COMPRESSION_VIDEO_PRESET,
+            "image": settings.COMPRESSION_IMAGE_PRESET,
+            "audio": settings.COMPRESSION_AUDIO_PRESET
+        },
+        "image_format": settings.COMPRESSION_IMAGE_FORMAT,
+        "status": "operational" if compression_service.is_available() else "ffmpeg_not_installed"
+    }

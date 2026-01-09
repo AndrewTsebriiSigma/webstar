@@ -74,6 +74,34 @@ S3_PRESIGNED_URL_EXPIRATION=3600  # 1 hour
 DEFAULT_PAGE_SIZE=20
 MAX_PAGE_SIZE=100
 
+# =============================================================================
+# MEDIA COMPRESSION (FFmpeg)
+# =============================================================================
+# Automatic compression of uploaded media files before R2 storage.
+# Significantly reduces storage costs while maintaining display quality.
+# 
+# Compression ratios:
+# - Video: 70-85% reduction (H.264/AAC in MP4)
+# - Images: 60-80% reduction (WebP or optimized JPEG)
+# - Audio: 50-70% reduction (AAC in M4A)
+# - PDF: No compression (kept as-is)
+#
+# Requirements: FFmpeg must be installed on the server
+# (Automatically installed via build.sh on Render)
+
+COMPRESSION_ENABLED=True
+
+# Quality presets: "high", "standard", "low"
+# - high: Best quality, larger files (for premium content)
+# - standard: Balanced quality/size (recommended)
+# - low: Smallest files, lower quality (for bandwidth-constrained users)
+COMPRESSION_VIDEO_PRESET=standard
+COMPRESSION_IMAGE_PRESET=standard
+COMPRESSION_AUDIO_PRESET=standard
+
+# Image output format: "webp" (best compression) or "jpeg" (max compatibility)
+COMPRESSION_IMAGE_FORMAT=webp
+
 # Email Configuration (Optional - for future features)
 # SMTP_HOST=smtp.gmail.com
 # SMTP_PORT=587

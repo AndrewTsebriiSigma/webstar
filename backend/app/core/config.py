@@ -64,6 +64,17 @@ class Settings(BaseSettings):
     DEFAULT_PAGE_SIZE: int = 20
     MAX_PAGE_SIZE: int = 100
     
+    # Media Compression Settings (FFmpeg)
+    # Enable/disable automatic media compression before R2 upload
+    COMPRESSION_ENABLED: bool = True
+    # Quality presets: "high", "standard", "low"
+    # High = best quality, larger files; Low = smaller files, lower quality
+    COMPRESSION_VIDEO_PRESET: str = "standard"
+    COMPRESSION_IMAGE_PRESET: str = "standard"
+    COMPRESSION_AUDIO_PRESET: str = "standard"
+    # Image output format: "webp" (best compression) or "jpeg" (max compatibility)
+    COMPRESSION_IMAGE_FORMAT: str = "webp"
+    
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
