@@ -864,6 +864,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
         {activeTab === 'about' && (
           <AboutSection
             isOwnProfile={isOwnProfile}
+            isCustomizeMode={showCustomizePanel}
             profile={profile}
             onUpdate={() => loadProfile(true)}
           />

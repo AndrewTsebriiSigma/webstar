@@ -231,9 +231,9 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
     social: {
       label: 'SOCIAL',
       platforms: [
-        { id: 'instagram', name: 'Instagram', icon: '/icons/social (1).png', color: '#E4405F', domain: 'instagram.com' },
+        { id: 'instagram', name: 'Instagram', icon: '/icons/social.png', color: '#E4405F', domain: 'instagram.com' },
         { id: 'facebook', name: 'Facebook', icon: '/icons/facebook.png', color: '#1877F2', domain: 'facebook.com' },
-        { id: 'x', name: 'X', icon: '/icons/social.png', color: '#000000', domain: 'x.com' },
+        { id: 'x', name: 'X', icon: '/icons/twitter.png', color: '#000000', domain: 'x.com' },
         { id: 'snapchat', name: 'Snapchat', icon: '👻', color: '#FFFC00', domain: 'snapchat.com' },
         { id: 'pinterest', name: 'Pinterest', icon: '/icons/pinterest.png', color: '#E60023', domain: 'pinterest.com' },
         { id: 'tiktok', name: 'TikTok', icon: '/icons/tik-tok.png', color: '#000000', domain: 'tiktok.com' },
