@@ -35,6 +35,14 @@ export default function AnalyticsPage() {
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [loading, setLoading] = useState(true);
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
+  const [mediaCounts, setMediaCounts] = useState({
+    photo: 0,
+    video: 0,
+    audio: 0,
+    pdf: 0,
+    text: 0,
+    link: 0
+  });
   const viewsGraphRef = useRef<SVGSVGElement>(null);
   const clicksGraphRef = useRef<SVGSVGElement>(null);
 
@@ -44,7 +52,29 @@ export default function AnalyticsPage() {
       return;
     }
     loadAnalytics();
+    loadMediaCounts();
   }, [user]);
+
+  const loadMediaCounts = async () => {
+    try {
+      const { portfolioAPI } = await import('@/lib/api');
+      const response = await portfolioAPI.getItems();
+      const items = response.data;
+      
+      const counts = {
+        photo: items.filter((item: any) => item.content_type === 'photo').length,
+        video: items.filter((item: any) => item.content_type === 'video').length,
+        audio: items.filter((item: any) => item.content_type === 'audio').length,
+        pdf: items.filter((item: any) => item.content_type === 'pdf').length,
+        text: items.filter((item: any) => item.content_type === 'text').length,
+        link: items.filter((item: any) => item.content_type === 'link').length,
+      };
+      
+      setMediaCounts(counts);
+    } catch (error) {
+      console.error('Failed to load media counts:', error);
+    }
+  };
 
   const loadAnalytics = async () => {
     // Check cache first (2 minute TTL for analytics)
@@ -220,12 +250,6 @@ export default function AnalyticsPage() {
               {/* LEFT - Metrics */}
               <div className="analytics-left" style={{ paddingRight: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div className="analytics-header-inline">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="calendar-icon-inline">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                  </svg>
                   <span className="period-inline">TOTAL VIEWS</span>
                 </div>
 
@@ -341,10 +365,6 @@ export default function AnalyticsPage() {
               {/* LEFT - Metrics */}
               <div className="analytics-left" style={{ paddingRight: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div className="analytics-header-inline">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF006B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                  </svg>
                   <span className="period-inline">LINK CLICKS</span>
                 </div>
 
@@ -412,28 +432,155 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          {/* Info Section */}
-          <div style={{
-            padding: '16px',
-            background: 'rgba(255, 255, 255, 0.02)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
-            borderRadius: '12px',
-            marginTop: '8px'
-          }}>
-            <h3 style={{ fontSize: '12px', fontWeight: '600', marginBottom: '12px', color: 'rgba(255, 255, 255, 0.7)' }}>
-              About Your Analytics
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div>
-                <div style={{ fontSize: '11px', fontWeight: '600', color: '#00C2FF', marginBottom: '4px' }}>Profile Views</div>
-                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', lineHeight: '1.5' }}>
-                  The number of times your profile page was opened. This counts visits to your profile itself, regardless of whether the visitor clicked anything.
+          {/* Media Content Squares */}
+          <div style={{ marginTop: '8px' }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px'
+            }}>
+              {/* Photo */}
+              <div style={{
+                padding: '16px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                borderRadius: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <div style={{ fontSize: '20px', fontWeight: '700', color: '#F5F5F5' }}>
+                  {mediaCounts.photo}
+                </div>
+                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center' }}>
+                  Photos
                 </div>
               </div>
-              <div>
-                <div style={{ fontSize: '11px', fontWeight: '600', color: '#FF006B', marginBottom: '4px' }}>Link Clicks</div>
-                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', lineHeight: '1.5' }}>
-                  The number of times visitors clicked one of your links (external links like websites, social media, stores, etc.). This measures outbound traffic.
+
+              {/* Video */}
+              <div style={{
+                padding: '16px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                borderRadius: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF006B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                </svg>
+                <div style={{ fontSize: '20px', fontWeight: '700', color: '#F5F5F5' }}>
+                  {mediaCounts.video}
+                </div>
+                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center' }}>
+                  Videos
+                </div>
+              </div>
+
+              {/* Audio */}
+              <div style={{
+                padding: '16px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                borderRadius: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#57BFF9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 18V5l12-2v13"></path>
+                  <circle cx="6" cy="18" r="3"></circle>
+                  <circle cx="18" cy="16" r="3"></circle>
+                </svg>
+                <div style={{ fontSize: '20px', fontWeight: '700', color: '#F5F5F5' }}>
+                  {mediaCounts.audio}
+                </div>
+                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center' }}>
+                  Audio
+                </div>
+              </div>
+
+              {/* PDF */}
+              <div style={{
+                padding: '16px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                borderRadius: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFA500" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <div style={{ fontSize: '20px', fontWeight: '700', color: '#F5F5F5' }}>
+                  {mediaCounts.pdf}
+                </div>
+                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center' }}>
+                  PDFs
+                </div>
+              </div>
+
+              {/* Text/Memos */}
+              <div style={{
+                padding: '16px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                borderRadius: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9B59B6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+                <div style={{ fontSize: '20px', fontWeight: '700', color: '#F5F5F5' }}>
+                  {mediaCounts.text}
+                </div>
+                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center' }}>
+                  Memos
+                </div>
+              </div>
+
+              {/* Links */}
+              <div style={{
+                padding: '16px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                borderRadius: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00D9FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                </svg>
+                <div style={{ fontSize: '20px', fontWeight: '700', color: '#F5F5F5' }}>
+                  {mediaCounts.link}
+                </div>
+                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center' }}>
+                  Links
                 </div>
               </div>
             </div>
