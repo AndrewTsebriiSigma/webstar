@@ -34,7 +34,8 @@ import {
   PaintBrushIcon,
   TrashIcon,
   CheckIcon,
-  XMarkIcon
+  XMarkIcon,
+  CameraIcon
 } from '@heroicons/react/24/outline';
 import { BellIcon as BellSolidIcon, CheckBadgeIcon } from '@heroicons/react/24/solid';
 
@@ -94,7 +95,17 @@ export default function ProfilePage({ params }: { params: { username: string } }
   ]);
   const [editingButtonId, setEditingButtonId] = useState<string | null>(null);
   
+  // Profile info editing state (in customize mode)
+  const [editedName, setEditedName] = useState('');
+  const [editedBio, setEditedBio] = useState('');
+  const [editedLocation, setEditedLocation] = useState('');
+  const [editedRole, setEditedRole] = useState('');
+  const [isUploadingProfilePic, setIsUploadingProfilePic] = useState(false);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  
   const dashboardRef = useRef<HTMLDivElement>(null);
+  const profilePicInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
   
   const isOwnProfile = user?.username === username;
   
@@ -313,6 +324,100 @@ export default function ProfilePage({ params }: { params: { username: string } }
     return '';
   };
 
+  // Profile info editing handlers
+  const initializeProfileEditing = () => {
+    if (profile) {
+      setEditedName(profile.display_name || username);
+      setEditedBio(profile.bio || '');
+      setEditedLocation(profile.location || '');
+      setEditedRole(profile.role || '');
+    }
+  };
+
+  const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'banner') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+
+    const setUploading = type === 'profile' ? setIsUploadingProfilePic : setIsUploadingBanner;
+    setUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('media_type', 'photo');
+
+      const uploadResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/uploads/media`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: formData
+      });
+
+      if (!uploadResponse.ok) throw new Error('Upload failed');
+      
+      const uploadData = await uploadResponse.json();
+      const imageUrl = uploadData.url;
+
+      // Update profile with new image
+      const updateData = type === 'profile' 
+        ? { profile_picture: imageUrl }
+        : { banner_image: imageUrl };
+
+      await profileAPI.updateMe(updateData);
+      
+      // Refresh profile
+      const response = await profileAPI.getByUsername(username);
+      setProfile(response.data);
+      
+      toast.success(`${type === 'profile' ? 'Profile picture' : 'Banner'} updated!`);
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploading(false);
+      // Reset input
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const saveProfileInfo = async () => {
+    if (!profile) return;
+    
+    try {
+      await profileAPI.updateMe({
+        display_name: editedName || profile.display_name,
+        bio: editedBio,
+        location: editedLocation,
+        role: editedRole
+      });
+      
+      // Refresh profile
+      const response = await profileAPI.getByUsername(username);
+      setProfile(response.data);
+    } catch (error) {
+      console.error('Failed to save profile:', error);
+      toast.error('Failed to save changes');
+    }
+  };
+
+  // Auto-save profile info on blur
+  const handleProfileFieldBlur = () => {
+    saveProfileInfo();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#111111' }}>
@@ -400,9 +505,35 @@ export default function ProfilePage({ params }: { params: { username: string } }
         </header>
       )}
 
+      {/* Hidden file inputs for image uploads */}
+      <input
+        ref={bannerInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={(e) => handleProfileImageUpload(e, 'banner')}
+      />
+      <input
+        ref={profilePicInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={(e) => handleProfileImageUpload(e, 'profile')}
+      />
+
       {/* Cover Image Area - webSTAR: 176px height */}
       <div className="relative">
-        <div className="h-40 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 relative overflow-hidden">
+        <div 
+          className={`h-40 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 relative overflow-hidden ${isOwnProfile && showCustomizePanel ? 'magic-editable-container' : ''}`}
+          style={{
+            cursor: isOwnProfile && showCustomizePanel ? 'pointer' : 'default'
+          }}
+          onClick={() => {
+            if (isOwnProfile && showCustomizePanel && !isUploadingBanner) {
+              bannerInputRef.current?.click();
+            }
+          }}
+        >
           {profile.banner_image ? (
             <img
               src={profile.banner_image}
@@ -413,11 +544,47 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <div className="absolute inset-0 bg-[url('/api/placeholder/1200/400')] bg-cover bg-center opacity-20" />
           )}
           
-          {/* Viewer Mode & Settings - Bigger buttons */}
+          {/* Banner upload overlay - shows in customize mode */}
+          {isOwnProfile && showCustomizePanel && (
+            <div 
+              className="absolute inset-0 flex items-center justify-center transition-all duration-300"
+              style={{
+                background: 'rgba(0, 0, 0, 0.5)',
+                pointerEvents: 'none',
+                borderBottom: '3px solid #57BFF9',
+                boxShadow: 'inset 0 0 30px rgba(87, 191, 249, 0.2)'
+              }}
+            >
+              {isUploadingBanner ? (
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#57BFF9]"></div>
+              ) : (
+                <div className="flex flex-col items-center gap-2" style={{ color: '#57BFF9' }}>
+                  <div 
+                    className="rounded-full p-3"
+                    style={{ 
+                      background: 'rgba(87, 191, 249, 0.15)', 
+                      border: '2px solid #57BFF9',
+                      animation: 'magicShimmer 2s infinite ease-in-out'
+                    }}
+                  >
+                    <CameraIcon className="w-8 h-8" />
+                  </div>
+                  <span style={{ fontSize: '14px', fontWeight: 600, textShadow: '0 0 10px rgba(87, 191, 249, 0.5)' }}>
+                    Click to Change Banner
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Viewer Mode & Settings - Bigger buttons - Always on top */}
           {isOwnProfile && (
-            <div className="absolute top-4 left-4 right-4 flex justify-between">
+            <div className="absolute top-4 left-4 right-4 flex justify-between" style={{ zIndex: 10 }}>
               <button 
-                onClick={() => setViewerMode(!viewerMode)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setViewerMode(!viewerMode);
+                }}
                 className="banner-action-btn flex items-center justify-center"
                 style={{ 
                   width: '37px',
@@ -439,7 +606,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
               {/* Hide settings gear icon in viewer mode */}
               {!viewerMode && (
                 <button 
-                  onClick={() => setShowSettingsModal(true)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowSettingsModal(true);
+                  }}
                   className="banner-action-btn flex items-center justify-center"
                   style={{ 
                     width: '37px',
@@ -466,26 +636,55 @@ export default function ProfilePage({ params }: { params: { username: string } }
         {/* Avatar - 166px, 2/3 banner overlap (110px) */}
         <div className="relative px-4 -mt-[110px]">
           <div className="flex items-center justify-center">
-            {profile.profile_picture ? (
-              <img
-                src={profile.profile_picture}
-                alt={profile.display_name || username}
-                className="w-[150px] h-[150px] rounded-full object-cover"
-                style={{
-                  border: '6px solid #111111',
-                  boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
-                }}
-              />
-            ) : (
-              <div className="w-[150px] h-[150px] rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-4xl font-bold"
-                style={{
-                  border: '6px solid #111111',
-                  boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
-                }}
-              >
-                {(profile.display_name || username).charAt(0).toUpperCase()}
-              </div>
-            )}
+            <div 
+              className="relative"
+              style={{
+                cursor: isOwnProfile && showCustomizePanel ? 'pointer' : 'default'
+              }}
+              onClick={() => {
+                if (isOwnProfile && showCustomizePanel && !isUploadingProfilePic) {
+                  profilePicInputRef.current?.click();
+                }
+              }}
+            >
+              {profile.profile_picture ? (
+                <img
+                  src={profile.profile_picture}
+                  alt={profile.display_name || username}
+                  className={`w-[150px] h-[150px] rounded-full object-cover ${isOwnProfile && showCustomizePanel ? 'magic-editable' : ''}`}
+                  style={{
+                    border: '6px solid #111111',
+                    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
+                  }}
+                />
+              ) : (
+                <div className={`w-[150px] h-[150px] rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-4xl font-bold ${isOwnProfile && showCustomizePanel ? 'magic-editable' : ''}`}
+                  style={{
+                    border: '6px solid #111111',
+                    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
+                  }}
+                >
+                  {(profile.display_name || username).charAt(0).toUpperCase()}
+                </div>
+              )}
+              
+              {/* Profile picture upload overlay */}
+              {isOwnProfile && showCustomizePanel && (
+                <div 
+                  className="absolute inset-0 rounded-full flex items-center justify-center"
+                  style={{
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    pointerEvents: 'none'
+                  }}
+                >
+                  {isUploadingProfilePic ? (
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                  ) : (
+                    <CameraIcon className="w-10 h-10" style={{ color: '#57BFF9' }} />
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -495,9 +694,29 @@ export default function ProfilePage({ params }: { params: { username: string } }
         {/* Name + Badge - Centered together as unit */}
         <div className="flex items-center justify-center pt-2" style={{ marginBottom: '14px' }}>
           <div className="inline-flex items-center gap-1.5">
-            <h1 className="text-xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)', letterSpacing: '-0.2px' }}>
-              {profile.display_name || username}
-            </h1>
+            {isOwnProfile && showCustomizePanel ? (
+              <input
+                type="text"
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
+                onBlur={handleProfileFieldBlur}
+                placeholder="Your name"
+                className="text-xl font-bold text-center magic-editable"
+                style={{ 
+                  color: 'rgba(245, 245, 245, 0.95)', 
+                  letterSpacing: '-0.2px',
+                  background: 'transparent',
+                  borderRadius: '8px',
+                  padding: '4px 12px',
+                  minWidth: '120px',
+                  maxWidth: '250px'
+                }}
+              />
+            ) : (
+              <h1 className="text-xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)', letterSpacing: '-0.2px' }}>
+                {profile.display_name || username}
+              </h1>
+            )}
             {profile.expertise_badge && (
               <CheckBadgeIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" style={{ marginTop: '-1px' }} />
             )}
@@ -505,28 +724,88 @@ export default function ProfilePage({ params }: { params: { username: string } }
         </div>
         
         {/* Bio - 10px gap */}
-        <p className="text-sm px-2" style={{ 
-          color: 'rgba(255, 255, 255, 0.75)',
-          fontSize: '15px',
-          lineHeight: '1.4',
-          opacity: 0.9,
-          marginBottom: '8px'
-        }}>
-          {profile.bio || 'Make original the only standard.'}
-        </p>
+        {isOwnProfile && showCustomizePanel ? (
+          <textarea
+            value={editedBio}
+            onChange={(e) => setEditedBio(e.target.value)}
+            onBlur={handleProfileFieldBlur}
+            placeholder="Write your bio..."
+            rows={2}
+            className="text-sm px-2 w-full magic-editable"
+            style={{ 
+              color: 'rgba(255, 255, 255, 0.75)',
+              fontSize: '15px',
+              lineHeight: '1.4',
+              marginBottom: '8px',
+              background: 'transparent',
+              borderRadius: '8px',
+              padding: '8px 12px',
+              resize: 'none',
+              textAlign: 'center'
+            }}
+          />
+        ) : (
+          <p className="text-sm px-2" style={{ 
+            color: 'rgba(255, 255, 255, 0.75)',
+            fontSize: '15px',
+            lineHeight: '1.4',
+            opacity: 0.9,
+            marginBottom: '8px'
+          }}>
+            {profile.bio || 'Make original the only standard.'}
+          </p>
+        )}
 
         {/* Location & Role - 14px to dashboard */}
         <div className="flex items-center justify-center gap-2 flex-wrap px-2" style={{ marginBottom: '14px' }}>
           <div className="flex items-center gap-1" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
-            <MapPinIcon className="w-3.5 h-3.5" />
-            <span>{profile.location || 'Paris, France'}</span>
+            <MapPinIcon className="w-3.5 h-3.5 flex-shrink-0" />
+            {isOwnProfile && showCustomizePanel ? (
+              <input
+                type="text"
+                value={editedLocation}
+                onChange={(e) => setEditedLocation(e.target.value)}
+                onBlur={handleProfileFieldBlur}
+                placeholder="Location"
+                className="magic-editable"
+                style={{ 
+                  color: 'rgba(255, 255, 255, 0.75)',
+                  fontSize: '13px',
+                  background: 'transparent',
+                  borderRadius: '6px',
+                  padding: '2px 8px',
+                  width: '100px'
+                }}
+              />
+            ) : (
+              <span>{profile.location || 'Paris, France'}</span>
+            )}
           </div>
           
           <div style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '12px', opacity: 0.5 }}>•</div>
           
           <div className="flex items-center gap-1" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
-            <BriefcaseIcon className="w-3.5 h-3.5" />
-            <span>{profile.role || 'Creator'}</span>
+            <BriefcaseIcon className="w-3.5 h-3.5 flex-shrink-0" />
+            {isOwnProfile && showCustomizePanel ? (
+              <input
+                type="text"
+                value={editedRole}
+                onChange={(e) => setEditedRole(e.target.value)}
+                onBlur={handleProfileFieldBlur}
+                placeholder="Role"
+                className="magic-editable"
+                style={{ 
+                  color: 'rgba(255, 255, 255, 0.75)',
+                  fontSize: '13px',
+                  background: 'transparent',
+                  borderRadius: '6px',
+                  padding: '2px 8px',
+                  width: '100px'
+                }}
+              />
+            ) : (
+              <span>{profile.role || 'Creator'}</span>
+            )}
           </div>
         </div>
       </div>
@@ -677,9 +956,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 e.stopPropagation();
                 const newState = !showCustomizePanel;
                 setShowCustomizePanel(newState);
-                // Reset button editor when closing customize mode
-                if (!newState) {
+                // Initialize or reset editing states
+                if (newState) {
+                  initializeProfileEditing();
+                } else {
                   setEditingButtonId(null);
+                  // Save any pending profile changes
+                  saveProfileInfo();
                 }
               }}
               className="action-button"

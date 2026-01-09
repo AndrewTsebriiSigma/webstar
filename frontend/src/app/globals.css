@@ -1052,3 +1052,130 @@ html {
   border-color: rgba(0, 194, 255, 0.4);
   box-shadow: 0 0 0 3px rgba(0, 194, 255, 0.1);
 }
+
+/* ================================================================
+   Magic Particles Animation - iOS-style shimmer for editable elements
+   ================================================================ */
+
+/* Shimmer glow animation */
+@keyframes magicShimmer {
+  0% {
+    box-shadow: 
+      0 0 8px rgba(87, 191, 249, 0.3),
+      0 0 16px rgba(87, 191, 249, 0.15),
+      inset 0 0 4px rgba(87, 191, 249, 0.1);
+    border-color: rgba(87, 191, 249, 0.4);
+  }
+  25% {
+    box-shadow: 
+      0 0 12px rgba(87, 191, 249, 0.5),
+      0 0 24px rgba(87, 191, 249, 0.25),
+      inset 0 0 6px rgba(87, 191, 249, 0.15);
+    border-color: rgba(87, 191, 249, 0.6);
+  }
+  50% {
+    box-shadow: 
+      0 0 16px rgba(87, 191, 249, 0.4),
+      0 0 32px rgba(87, 191, 249, 0.2),
+      inset 0 0 8px rgba(87, 191, 249, 0.12);
+    border-color: rgba(87, 191, 249, 0.5);
+  }
+  75% {
+    box-shadow: 
+      0 0 10px rgba(87, 191, 249, 0.45),
+      0 0 20px rgba(87, 191, 249, 0.22),
+      inset 0 0 5px rgba(87, 191, 249, 0.13);
+    border-color: rgba(87, 191, 249, 0.55);
+  }
+  100% {
+    box-shadow: 
+      0 0 8px rgba(87, 191, 249, 0.3),
+      0 0 16px rgba(87, 191, 249, 0.15),
+      inset 0 0 4px rgba(87, 191, 249, 0.1);
+    border-color: rgba(87, 191, 249, 0.4);
+  }
+}
+
+/* Sparkle particles floating effect */
+@keyframes sparkleFloat {
+  0%, 100% {
+    opacity: 0.4;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.1);
+  }
+}
+
+/* Magic editable class - apply to elements in customize mode */
+.magic-editable {
+  position: relative;
+  border: 1.5px solid rgba(87, 191, 249, 0.4) !important;
+  animation: magicShimmer 2.5s ease-in-out infinite;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.magic-editable:hover {
+  animation: magicShimmer 1.5s ease-in-out infinite;
+  border-color: rgba(87, 191, 249, 0.7) !important;
+}
+
+.magic-editable:focus {
+  animation: none;
+  box-shadow: 
+    0 0 20px rgba(87, 191, 249, 0.5),
+    0 0 40px rgba(87, 191, 249, 0.25),
+    inset 0 0 8px rgba(87, 191, 249, 0.15);
+  border-color: rgba(87, 191, 249, 0.8) !important;
+}
+
+/* Magic editable container (for images) */
+.magic-editable-container {
+  position: relative;
+  animation: magicShimmer 2.5s ease-in-out infinite;
+  border-radius: inherit;
+}
+
+.magic-editable-container::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border: 2px solid transparent;
+  background: linear-gradient(135deg, 
+    rgba(87, 191, 249, 0.6) 0%, 
+    rgba(87, 191, 249, 0.2) 25%, 
+    rgba(87, 191, 249, 0.6) 50%, 
+    rgba(87, 191, 249, 0.2) 75%, 
+    rgba(87, 191, 249, 0.6) 100%
+  );
+  background-size: 300% 300%;
+  animation: borderGradient 3s ease infinite;
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes borderGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Sparkle dots */
+.magic-editable-container::after {
+  content: '✦';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  font-size: 14px;
+  color: #57BFF9;
+  animation: sparkleFloat 1.5s ease-in-out infinite;
+  text-shadow: 0 0 8px rgba(87, 191, 249, 0.8);
+  z-index: 2;
+}

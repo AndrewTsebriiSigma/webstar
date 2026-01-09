@@ -63,6 +63,8 @@ async def get_my_profile(
         bio=profile.bio,
         about=profile.about,
         profile_picture=profile.profile_picture,
+        banner_image=profile.banner_image,
+        location=profile.location,
         skills=profile.skills,
         experience=profile.experience,
         social_links=profile.social_links,
@@ -92,18 +94,41 @@ async def update_my_profile(
 ):
     """Update current user's profile."""
     try:
+        # Debug: log incoming updates
+        logger.info(f"Profile update request: {updates.model_dump(exclude_unset=True)}")
+        
         profile = session.exec(select(Profile).where(Profile.user_id == current_user.id)).first()
         
         if not profile:
             raise HTTPException(status_code=404, detail="Profile not found")
         
+        # Track if any changes were made
+        changes_made = False
+        
         # Update fields
         if updates.display_name is not None:
             profile.display_name = updates.display_name
+            changes_made = True
         if updates.bio is not None:
             profile.bio = updates.bio
+            changes_made = True
         if updates.about is not None:
             profile.about = updates.about
+            changes_made = True
+        if updates.profile_picture is not None:
+            logger.info(f"Updating profile_picture to: {updates.profile_picture}")
+            profile.profile_picture = updates.profile_picture
+            changes_made = True
+        if updates.banner_image is not None:
+            logger.info(f"Updating banner_image to: {updates.banner_image}")
+            profile.banner_image = updates.banner_image
+            changes_made = True
+        if updates.location is not None:
+            profile.location = updates.location
+            changes_made = True
+        if updates.role is not None:
+            profile.role = updates.role
+            changes_made = True
         if updates.skills is not None:
             profile.skills = updates.skills
         if updates.experience is not None:
@@ -152,6 +177,8 @@ async def update_my_profile(
         bio=profile.bio,
         about=profile.about,
         profile_picture=profile.profile_picture,
+        banner_image=profile.banner_image,
+        location=profile.location,
         skills=profile.skills,
         experience=profile.experience,
         social_links=profile.social_links,
@@ -250,6 +277,8 @@ async def get_profile_by_username(
         bio=profile.bio,
         about=profile.about,
         profile_picture=profile.profile_picture,
+        banner_image=profile.banner_image,
+        location=profile.location,
         skills=profile.skills,
         experience=profile.experience,
         social_links=profile.social_links,

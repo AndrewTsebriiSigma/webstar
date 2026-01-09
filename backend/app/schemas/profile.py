@@ -8,6 +8,10 @@ class ProfileUpdate(BaseModel):
     display_name: Optional[str] = None
     bio: Optional[str] = Field(None, max_length=200)  # Short bio below profile picture
     about: Optional[str] = Field(None, max_length=500)  # Detailed about section
+    profile_picture: Optional[str] = None  # Profile picture URL
+    banner_image: Optional[str] = None  # Banner/header image URL
+    location: Optional[str] = None  # User location
+    role: Optional[str] = None  # User role/title
     skills: Optional[str] = None  # Comma-separated, max 6
     experience: Optional[str] = None  # JSON string
     social_links: Optional[str] = None  # JSON string
@@ -30,6 +34,8 @@ class ProfileResponse(BaseModel):
     bio: Optional[str]  # Short bio below profile picture
     about: Optional[str]  # Detailed about section
     profile_picture: Optional[str]
+    banner_image: Optional[str]  # Banner/header image URL
+    location: Optional[str]  # User location
     skills: Optional[str]
     experience: Optional[str]
     social_links: Optional[str]
