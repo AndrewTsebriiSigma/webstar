@@ -60,6 +60,14 @@ class Settings(BaseSettings):
     S3_BUCKET_NAME: str = "webstar-uploads"
     S3_PRESIGNED_URL_EXPIRATION: int = 3600
     
+    # Email Settings (Gmail SMTP)
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = "webstar.capital@gmail.com"
+    SMTP_PASSWORD: str = ""  # App password from env
+    SMTP_FROM_EMAIL: str = "webstar.capital@gmail.com"
+    SMTP_FROM_NAME: str = "WebStar"
+    
     # Pagination
     DEFAULT_PAGE_SIZE: int = 20
     MAX_PAGE_SIZE: int = 100

@@ -102,13 +102,24 @@ COMPRESSION_AUDIO_PRESET=standard
 # Image output format: "webp" (best compression) or "jpeg" (max compatibility)
 COMPRESSION_IMAGE_FORMAT=webp
 
-# Email Configuration (Optional - for future features)
-# SMTP_HOST=smtp.gmail.com
-# SMTP_PORT=587
-# SMTP_USER=your-email@gmail.com
-# SMTP_PASSWORD=your-app-password
-# SMTP_FROM_EMAIL=noreply@webstar.app
-# SMTP_FROM_NAME=WebStar
+# =============================================================================
+# EMAIL VERIFICATION (Required for Signup)
+# =============================================================================
+# Email verification is required for new user registration.
+# Uses Gmail SMTP with App Password for sending verification codes.
+#
+# Setup Steps:
+# 1. Use a Gmail account (webstar.capital@gmail.com for production)
+# 2. Enable 2-Factor Authentication on the Gmail account
+# 3. Generate an App Password: Google Account -> Security -> App passwords
+# 4. Use the App Password (not your regular Gmail password)
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=webstar.capital@gmail.com
+SMTP_PASSWORD=your-gmail-app-password
+SMTP_FROM_EMAIL=webstar.capital@gmail.com
+SMTP_FROM_NAME=WebStar
 
 # Logging (Optional)
 # LOG_LEVEL=INFO  # DEBUG | INFO | WARNING | ERROR | CRITICAL

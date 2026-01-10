@@ -10,12 +10,14 @@ from authlib.integrations.starlette_client import OAuth
 from starlette.requests import Request
 import secrets
 
+from fastapi import Body
 from app.db.base import get_session
-from app.db.models import User, Profile, OnboardingProgress, UserPoints
+from app.db.models import User, Profile, OnboardingProgress, UserPoints, EmailVerification
 from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token, decode_token, get_current_user
 from app.core.config import settings
 from app.schemas.auth import UserRegister, UserLogin, Token, RefreshToken, GoogleAuth, UserResponse, LoginResponse, Verify2FALoginRequest, ProfileSetup
 from app.services.totp_service import TOTPService
+from app.services.email_service import generate_verification_code, send_verification_email
 
 router = APIRouter()
 
@@ -42,9 +44,107 @@ async def check_email_exists(email: str, session: Session = Depends(get_session)
     return {"exists": user is not None}
 
 
+@router.post("/send-verification-code")
+async def send_verification_code(
+    email: str = Body(..., embed=True),
+    session: Session = Depends(get_session)
+):
+    """Send email verification code for signup."""
+    # Check if email already registered
+    existing_user = session.exec(
+        select(User).where(func.lower(User.email) == func.lower(email))
+    ).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    # Delete any existing codes for this email
+    existing_codes = session.exec(
+        select(EmailVerification).where(
+            func.lower(EmailVerification.email) == func.lower(email)
+        )
+    ).all()
+    for code_record in existing_codes:
+        session.delete(code_record)
+    session.commit()
+    
+    # Generate new code
+    code = generate_verification_code()
+    expires_at = datetime.utcnow() + timedelta(minutes=10)
+    
+    # Store verification record
+    verification = EmailVerification(
+        email=email.lower(),
+        code=code,
+        expires_at=expires_at
+    )
+    session.add(verification)
+    session.commit()
+    
+    # Send email
+    if not send_verification_email(email, code):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send verification email. Please try again."
+        )
+    
+    return {"message": "Verification code sent", "expires_in": 600}
+
+
+@router.post("/verify-email-code")
+async def verify_email_code(
+    email: str = Body(...),
+    code: str = Body(...),
+    session: Session = Depends(get_session)
+):
+    """Verify email code for signup."""
+    verification = session.exec(
+        select(EmailVerification).where(
+            (func.lower(EmailVerification.email) == func.lower(email)) &
+            (EmailVerification.code == code) &
+            (EmailVerification.verified == False)
+        )
+    ).first()
+    
+    if not verification:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid verification code"
+        )
+    
+    if datetime.utcnow() > verification.expires_at:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Verification code expired"
+        )
+    
+    # Mark as verified
+    verification.verified = True
+    session.add(verification)
+    session.commit()
+    
+    return {"message": "Email verified successfully", "verified": True}
+
+
 @router.post("/register", response_model=Token)
 async def register(user_data: UserRegister, session: Session = Depends(get_session)):
     """Register a new user with email and password."""
+    # Check if email has been verified
+    verification = session.exec(
+        select(EmailVerification).where(
+            (func.lower(EmailVerification.email) == func.lower(user_data.email)) &
+            (EmailVerification.verified == True)
+        )
+    ).first()
+    
+    if not verification:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email not verified. Please verify your email first."
+        )
+    
     # Check if email exists
     existing_user = session.exec(select(User).where(User.email == user_data.email)).first()
     if existing_user:

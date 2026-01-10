@@ -102,6 +102,20 @@ export default function UnifiedAuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [checkingEmail, setCheckingEmail] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+
+  // Check if returning from email verification
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('verified') === 'true' && params.get('email')) {
+      const verifiedEmail = params.get('email')!;
+      setEmail(verifiedEmail);
+      setEmailVerified(true);
+      setAuthState('register');
+      // Clean URL
+      window.history.replaceState({}, '', '/auth');
+    }
+  }, []);
 
   // Check if email exists when user continues
   const handleEmailContinue = async (e: React.FormEvent) => {
@@ -119,16 +133,29 @@ export default function UnifiedAuthPage() {
     setError('');
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/check-email/${encodeURIComponent(email)}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/auth/check-email/${encodeURIComponent(email)}`);
       const data = await response.json();
       
       if (data.exists) {
         setAuthState('login');
       } else {
-        setAuthState('register');
+        // New user - send verification code and redirect
+        const verifyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/auth/send-verification-code`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        
+        if (!verifyResponse.ok) {
+          const errorData = await verifyResponse.json();
+          throw new Error(errorData.detail || 'Failed to send verification code');
+        }
+        
+        // Redirect to verification page
+        router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
       }
-    } catch (err) {
-      setAuthState('register');
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong');
     } finally {
       setCheckingEmail(false);
     }

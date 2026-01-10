@@ -30,6 +30,18 @@ class User(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+class EmailVerification(SQLModel, table=True):
+    """Email verification codes for signup."""
+    __tablename__ = "email_verifications"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    email: str = Field(index=True, nullable=False)
+    code: str = Field(nullable=False)  # 6-digit code
+    expires_at: datetime = Field(nullable=False)
+    verified: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
 class OnboardingProgress(SQLModel, table=True):
     """Track user onboarding progress."""
     __tablename__ = "onboarding_progress"
