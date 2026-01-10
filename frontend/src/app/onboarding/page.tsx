@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { onboardingAPI } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 // Matrix Rain for Finale
 const MatrixRain = () => {
@@ -98,15 +99,23 @@ const POPULAR_ROLES = [
 
 const EXPERTISE_LABELS = ['Emerging', 'Developing', 'Established'];
 
+// Get expertise label based on slider value (0-100)
+const getExpertiseLabel = (value: number): string => {
+  if (value < 33) return 'Emerging';
+  if (value < 67) return 'Developing';
+  return 'Established';
+};
+
 export default function OnboardingPage() {
   const router = useRouter();
+  const { updateUser } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     archetype: '',
     role: '',
-    expertise: 1,
+    expertise: 50, // 0-100 range for smooth slider
     location: '',
     username: ''
   });
@@ -116,6 +125,47 @@ export default function OnboardingPage() {
   const [finaleProgress, setFinaleProgress] = useState(0);
   const [finaleSteps, setFinaleSteps] = useState<string[]>([]);
   const [error, setError] = useState('');
+  
+  // Mapbox location search state
+  const [locationSuggestions, setLocationSuggestions] = useState<Array<{place_name: string; id: string}>>([]);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  
+  // Mapbox location search
+  const MAPBOX_TOKEN = 'pk.eyJ1Ijoid2Vic3RhcnVzZXIiLCJhIjoiY21rNmF2NDluMDFzaDNlcG5tOHVzN2xsMCJ9.VZVvRWxM2wScW3M1D299fQ';
+
+  const searchLocation = async (query: string) => {
+    if (!query || query.length < 2) {
+      setLocationSuggestions([]);
+      setShowLocationDropdown(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&types=place,locality,neighborhood,address&limit=5`
+      );
+      const data = await response.json();
+      
+      if (data.features) {
+        setLocationSuggestions(
+          data.features.map((feature: any) => ({
+            place_name: feature.place_name,
+            id: feature.id
+          }))
+        );
+        setShowLocationDropdown(true);
+      }
+    } catch (error) {
+      console.error('Location search error:', error);
+      setLocationSuggestions([]);
+    }
+  };
+
+  const handleLocationSelect = (placeName: string) => {
+    setFormData(prev => ({ ...prev, location: placeName }));
+    setShowLocationDropdown(false);
+    setLocationSuggestions([]);
+  };
 
   // Check username availability
   useEffect(() => {
@@ -170,8 +220,8 @@ export default function OnboardingPage() {
         'communicator': 'Communicator'
       };
 
-      // Map expertise index to label
-      const expertiseLabel = EXPERTISE_LABELS[formData.expertise];
+      // Map expertise value to label
+      const expertiseLabel = getExpertiseLabel(formData.expertise);
 
       // Validate mapped values
       if (!archetypeMap[formData.archetype]) {
@@ -187,12 +237,15 @@ export default function OnboardingPage() {
         location: formData.location || undefined
       });
 
-      // Update local storage
+      // Update local storage AND AuthContext
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       user.full_name = formData.fullName;
       user.username = formData.username;
       user.onboarding_completed = true;
       localStorage.setItem('user', JSON.stringify(user));
+      
+      // Sync with AuthContext so profile page recognizes the user
+      updateUser(user);
 
       await new Promise(r => setTimeout(r, 500));
       router.push(`/${formData.username}`);
@@ -251,13 +304,13 @@ export default function OnboardingPage() {
             <div 
               className="h-full rounded-full transition-all"
               style={{ 
-                width: `${(formData.expertise / 2) * 100}%`,
+                width: `${formData.expertise}%`,
                 background: 'linear-gradient(90deg, #00C2FF, #0088CC)'
               }}
             />
           </div>
           <p className="text-xs mt-1" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
-            {EXPERTISE_LABELS[formData.expertise]}
+            {getExpertiseLabel(formData.expertise)}
           </p>
         </div>
       )}
@@ -606,7 +659,7 @@ export default function OnboardingPage() {
                   How seasoned are you?
                 </h2>
                 <p className="text-lg" style={{ color: '#00C2FF' }}>
-                  {EXPERTISE_LABELS[formData.expertise]}
+                  {getExpertiseLabel(formData.expertise)}
                 </p>
               </div>
 
@@ -614,12 +667,13 @@ export default function OnboardingPage() {
                 <input
                   type="range"
                   min="0"
-                  max="2"
+                  max="100"
+                  step="1"
                   value={formData.expertise}
                   onChange={(e) => setFormData(prev => ({ ...prev, expertise: parseInt(e.target.value) }))}
                   className="w-full h-2 rounded-full appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #00C2FF ${(formData.expertise / 2) * 100}%, rgba(255,255,255,0.1) ${(formData.expertise / 2) * 100}%)`
+                    background: `linear-gradient(to right, #00C2FF ${formData.expertise}%, rgba(255,255,255,0.1) ${formData.expertise}%)`
                   }}
                 />
                 <div className="flex justify-between mt-2">
@@ -668,7 +722,7 @@ export default function OnboardingPage() {
               </div>
 
               <div 
-                className="onboarding-input-wrapper mb-4"
+                className="onboarding-input-wrapper mb-4 relative"
                 style={{
                   background: 'rgba(255, 255, 255, 0.02)',
                   borderRadius: '12px'
@@ -676,9 +730,19 @@ export default function OnboardingPage() {
               >
                 <input
                   type="text"
-                  placeholder="e.g., Brooklyn, NY"
+                  placeholder="Search your city..."
                   value={formData.location}
-                  onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, location: e.target.value }));
+                    searchLocation(e.target.value);
+                  }}
+                  onFocus={() => {
+                    if (locationSuggestions.length > 0) setShowLocationDropdown(true);
+                  }}
+                  onBlur={() => {
+                    // Delay to allow click on dropdown
+                    setTimeout(() => setShowLocationDropdown(false), 200);
+                  }}
                   className="w-full px-5 py-4 text-lg"
                   style={{
                     background: 'transparent',
@@ -688,6 +752,42 @@ export default function OnboardingPage() {
                   }}
                   autoFocus
                 />
+                
+                {/* Location suggestions dropdown */}
+                {showLocationDropdown && locationSuggestions.length > 0 && (
+                  <div 
+                    className="absolute left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-xl"
+                    style={{
+                      background: 'rgba(20, 25, 35, 0.98)',
+                      border: '1px solid rgba(0, 194, 255, 0.3)',
+                      backdropFilter: 'blur(20px)',
+                      zIndex: 100,
+                      top: '100%'
+                    }}
+                  >
+                    {locationSuggestions.map((suggestion) => (
+                      <button
+                        key={suggestion.id}
+                        type="button"
+                        onClick={() => handleLocationSelect(suggestion.place_name)}
+                        className="w-full text-left px-4 py-3 transition-all duration-150 hover:bg-[#00C2FF]/20"
+                        style={{
+                          color: 'rgba(255, 255, 255, 0.9)',
+                          fontSize: '14px',
+                          borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+                        }}
+                      >
+                        <span className="flex items-center gap-3">
+                          <svg className="w-4 h-4 text-[#00C2FF] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          <span className="truncate">{suggestion.place_name}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <p className="text-xs mb-6 text-center" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
