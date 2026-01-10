@@ -1336,7 +1336,11 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 className="flex items-center justify-between" 
                 style={{ color: 'rgba(255,255,255,0.5)' }}
               >
-                {/* Left: Secondary action - Publish when in draft mode, Save as draft otherwise */}
+                {/* FEATURE_DISABLED: SAVE_AS_DRAFT
+                    Save as Draft button temporarily hidden for V1 release.
+                    Functionality preserved - can be re-enabled by uncommenting.
+                */}
+                {/* Left: Secondary action - Publish when in draft mode, Save as draft otherwise
                 <button
                   onClick={defaultSaveAsDraft ? handleSubmit : handleSaveAsDraft}
                   disabled={uploading || (selectedContentType === 'text' ? !textContent.trim() : !file)}
@@ -1360,6 +1364,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     </>
                   )}
                 </button>
+                END FEATURE_DISABLED: SAVE_AS_DRAFT */}
                 
                 {/* Right: Attachment icons (always visible, disabled when not applicable) */}
                 <div className="flex items-center" style={{ gap: '25px' }}>

@@ -32,6 +32,8 @@ class CompleteOnboarding(BaseModel):
     archetype: str
     role: str
     expertise_level: str
+    username: Optional[str] = None  # Username chosen during onboarding
+    full_name: Optional[str] = None  # Full name entered during onboarding
     location: Optional[str] = None  # User's location (e.g., "Paris, France")
     bio: Optional[str] = Field(None, max_length=90)  # Short profile description
 

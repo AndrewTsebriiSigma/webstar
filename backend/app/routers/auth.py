@@ -34,6 +34,13 @@ oauth.register(
 oauth_states = {}
 
 
+@router.get("/check-email/{email}")
+async def check_email_exists(email: str, session: Session = Depends(get_session)):
+    """Check if email exists in the system."""
+    user = session.exec(select(User).where(User.email == email)).first()
+    return {"exists": user is not None}
+
+
 @router.post("/register", response_model=Token)
 async def register(user_data: UserRegister, session: Session = Depends(get_session)):
     """Register a new user with email and password."""

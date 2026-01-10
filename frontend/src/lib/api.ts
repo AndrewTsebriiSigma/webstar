@@ -98,7 +98,7 @@ export const onboardingAPI = {
   setExpertise: (expertise_level: string) =>
     api.post('/api/onboarding/expertise', { expertise_level }),
   
-  complete: (data: { full_name?: string; username?: string; archetype: string; role: string; expertise_level: string; location?: string; bio?: string }) =>
+  complete: (data: { archetype: string; role: string; expertise_level: string; username?: string; full_name?: string; location?: string; bio?: string }) =>
     api.post('/api/onboarding/complete', data),
   
   checkUsernameAvailability: async (username: string) => {

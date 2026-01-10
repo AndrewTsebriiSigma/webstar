@@ -115,6 +115,7 @@ export default function OnboardingPage() {
   const [showFinale, setShowFinale] = useState(false);
   const [finaleProgress, setFinaleProgress] = useState(0);
   const [finaleSteps, setFinaleSteps] = useState<string[]>([]);
+  const [error, setError] = useState('');
 
   // Check username availability
   useEffect(() => {
@@ -161,13 +162,29 @@ export default function OnboardingPage() {
 
     // Complete onboarding
     try {
+      // Map archetype IDs to backend values
+      const archetypeMap: Record<string, string> = {
+        'engineer': 'Engineer',
+        'artist': 'Artist',
+        'sound': 'Sound-Maker',
+        'communicator': 'Communicator'
+      };
+
+      // Map expertise index to label
+      const expertiseLabel = EXPERTISE_LABELS[formData.expertise];
+
+      // Validate mapped values
+      if (!archetypeMap[formData.archetype]) {
+        throw new Error(`Invalid archetype: ${formData.archetype}`);
+      }
+
       await onboardingAPI.complete({
-        full_name: formData.fullName,
-        username: formData.username,
-        archetype: formData.archetype,
+        archetype: archetypeMap[formData.archetype],
         role: formData.role,
-        expertise_level: String(formData.expertise),
-        location: formData.location
+        expertise_level: expertiseLabel,
+        username: formData.username || undefined,
+        full_name: formData.fullName || undefined,
+        location: formData.location || undefined
       });
 
       // Update local storage
@@ -179,8 +196,11 @@ export default function OnboardingPage() {
 
       await new Promise(r => setTimeout(r, 500));
       router.push(`/${formData.username}`);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to complete onboarding:', err);
+      const errorMessage = err.response?.data?.detail || err.message || 'Failed to complete onboarding. Please try again.';
+      setError(errorMessage);
+      // Don't hide finale screen immediately - let user see the error and go back
     }
   };
 
@@ -271,38 +291,72 @@ export default function OnboardingPage() {
             Setting up your space...
           </p>
 
-          {/* Progress Bar */}
-          <div className="mb-8">
-            <div 
-              className="h-2 rounded-full overflow-hidden"
-              style={{ background: 'rgba(255, 255, 255, 0.1)' }}
+          {/* Error Display */}
+          {error && (
+            <div className="mb-6 p-4 rounded-xl text-sm text-center"
+              style={{ 
+                background: 'rgba(255, 69, 58, 0.1)', 
+                color: '#FF453A',
+                border: '1px solid rgba(255, 69, 58, 0.3)'
+              }}
             >
-              <div 
-                className="h-full rounded-full transition-all duration-100"
-                style={{ 
-                  width: `${finaleProgress}%`,
-                  background: 'linear-gradient(90deg, #00C2FF, #0088CC)'
+              {error}
+              <button
+                onClick={() => {
+                  setError('');
+                  setShowFinale(false);
+                  setFinaleProgress(0);
+                  setFinaleSteps([]);
+                  setStep(6); // Go back to username step
                 }}
-              />
+                className="mt-3 block w-full py-2 px-4 rounded-lg text-sm font-medium transition hover:opacity-80"
+                style={{
+                  background: 'rgba(255, 69, 58, 0.2)',
+                  color: '#FF453A',
+                  border: '1px solid rgba(255, 69, 58, 0.4)'
+                }}
+              >
+                Go Back to Fix
+              </button>
             </div>
-            <p className="text-sm mt-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-              {finaleProgress}%
-            </p>
-          </div>
+          )}
+
+          {/* Progress Bar */}
+          {!error && (
+            <div className="mb-8">
+              <div 
+                className="h-2 rounded-full overflow-hidden"
+                style={{ background: 'rgba(255, 255, 255, 0.1)' }}
+              >
+                <div 
+                  className="h-full rounded-full transition-all duration-100"
+                  style={{ 
+                    width: `${finaleProgress}%`,
+                    background: 'linear-gradient(90deg, #00C2FF, #0088CC)'
+                  }}
+                />
+              </div>
+              <p className="text-sm mt-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                {finaleProgress}%
+              </p>
+            </div>
+          )}
 
           {/* Steps */}
-          <div className="space-y-2 text-left">
-            {finaleSteps.map((s, i) => (
-              <div 
-                key={i}
-                className="flex items-center gap-2 text-sm animate-fade-in"
-                style={{ color: 'rgba(255, 255, 255, 0.7)' }}
-              >
-                {s}
-                <span style={{ color: '#30D158' }}>✓</span>
-              </div>
-            ))}
-          </div>
+          {!error && (
+            <div className="space-y-2 text-left">
+              {finaleSteps.map((s, i) => (
+                <div 
+                  key={i}
+                  className="flex items-center gap-2 text-sm animate-fade-in"
+                  style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                >
+                  {s}
+                  <span style={{ color: '#30D158' }}>✓</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -345,6 +399,19 @@ export default function OnboardingPage() {
             border: '1px solid rgba(255, 255, 255, 0.05)'
           }}
         >
+          {/* Error Display */}
+          {error && !showFinale && (
+            <div className="mb-4 p-3 rounded-xl text-sm text-center"
+              style={{ 
+                background: 'rgba(255, 69, 58, 0.1)', 
+                color: '#FF453A',
+                border: '1px solid rgba(255, 69, 58, 0.3)'
+              }}
+            >
+              {error}
+            </div>
+          )}
+          
           {/* Step 1: Name */}
           {step === 1 && (
             <>

@@ -143,7 +143,10 @@ export default function UnifiedAuthPage() {
     try {
       const response = await authAPI.login({ email, password });
       if (response.data.user) {
-        localStorage.setItem('token', response.data.access_token);
+        localStorage.setItem('access_token', response.data.access_token);
+        if (response.data.refresh_token) {
+          localStorage.setItem('refresh_token', response.data.refresh_token);
+        }
         localStorage.setItem('user', JSON.stringify(response.data.user));
         
         if (!response.data.user.onboarding_completed) {
@@ -153,7 +156,7 @@ export default function UnifiedAuthPage() {
         }
       }
     } catch (err: any) {
-      setError(err.message || 'Invalid credentials');
+      setError(err.response?.data?.detail || err.message || 'Invalid credentials');
     } finally {
       setLoading(false);
     }
@@ -174,14 +177,26 @@ export default function UnifiedAuthPage() {
     setError('');
 
     try {
-      const response = await authAPI.register({ email, password, username: '', full_name: '' });
+      // Generate a temporary username for registration (will be set during onboarding)
+      const tempUsername = `user_${Date.now()}`;
+      
+      const response = await authAPI.register({ 
+        email, 
+        password, 
+        username: tempUsername,
+        full_name: '' 
+      });
+      
       if (response.data.user) {
-        localStorage.setItem('token', response.data.access_token);
+        localStorage.setItem('access_token', response.data.access_token);
+        if (response.data.refresh_token) {
+          localStorage.setItem('refresh_token', response.data.refresh_token);
+        }
         localStorage.setItem('user', JSON.stringify(response.data.user));
         router.push('/onboarding');
       }
     } catch (err: any) {
-      setError(err.message || 'Registration failed');
+      setError(err.response?.data?.detail || err.message || 'Registration failed');
     } finally {
       setLoading(false);
     }

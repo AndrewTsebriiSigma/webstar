@@ -966,7 +966,11 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                   className="flex items-center justify-between" 
                   style={{ color: 'rgba(255,255,255,0.5)' }}
                 >
-                  {/* Secondary action button */}
+                  {/* FEATURE_DISABLED: SAVE_AS_DRAFT
+                      Save as Draft button temporarily hidden for V1 release.
+                      Functionality preserved - can be re-enabled by uncommenting.
+                  */}
+                  {/* Secondary action button
                   <button
                     onClick={secondaryAction}
                     disabled={saving || uploadingCover || !title.trim() || (isDraftMode && (!coverFile && !coverPreview))}
@@ -985,6 +989,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                     )}
                     <span className="text-[14px] font-medium">{secondaryLabel}</span>
                   </button>
+                  END FEATURE_DISABLED: SAVE_AS_DRAFT */}
                 </div>
               );
             })()}

@@ -219,11 +219,44 @@ async def complete_onboarding(
     
     session.add(onboarding)
     
+    # Update user username and full_name if provided
+    user_updated = False
+    if data.username and data.username != current_user.username:
+        # Check if username is already taken by another user
+        existing_username = session.exec(
+            select(User).where(
+                (User.username == data.username) & (User.id != current_user.id)
+            )
+        ).first()
+        if existing_username:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already taken"
+            )
+        # Validate username format (alphanumeric, underscore, 3-20 chars)
+        import re
+        if not re.match(r'^[a-zA-Z0-9_]{3,20}$', data.username):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username must be 3-20 characters and contain only letters, numbers, and underscores"
+            )
+        current_user.username = data.username
+        user_updated = True
+    
+    if data.full_name:
+        current_user.full_name = data.full_name
+        user_updated = True
+    
+    if user_updated:
+        session.add(current_user)
+    
     # Update profile
     profile = session.exec(select(Profile).where(Profile.user_id == current_user.id)).first()
     if profile:
         profile.role = data.role
         profile.expertise_badge = data.expertise_level
+        if data.full_name:
+            profile.display_name = data.full_name
         # Save location and bio if provided
         if data.location:
             profile.location = data.location
