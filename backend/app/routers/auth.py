@@ -2,6 +2,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session, select
+from sqlalchemy import func
+from datetime import datetime, timedelta
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from authlib.integrations.starlette_client import OAuth
@@ -14,7 +16,6 @@ from app.core.security import verify_password, get_password_hash, create_access_
 from app.core.config import settings
 from app.schemas.auth import UserRegister, UserLogin, Token, RefreshToken, GoogleAuth, UserResponse, LoginResponse, Verify2FALoginRequest, ProfileSetup
 from app.services.totp_service import TOTPService
-from datetime import timedelta
 
 router = APIRouter()
 
@@ -218,14 +219,31 @@ async def google_callback(request: Request, session: Session = Depends(get_sessi
         user = session.exec(select(User).where(User.google_id == google_id)).first()
         
         if not user:
-            # Check if email exists (account linking)
-            user = session.exec(select(User).where(User.email == email)).first()
+            # Check if email exists (account linking) - case-insensitive comparison
+            user = session.exec(
+                select(User).where(func.lower(User.email) == func.lower(email))
+            ).first()
             if user:
                 # Link Google account to existing user
                 user.google_id = google_id
                 user.oauth_provider = 'google'
                 session.add(user)
                 session.commit()
+                
+                # Ensure OnboardingProgress exists for linked accounts
+                onboarding_check = session.exec(
+                    select(OnboardingProgress).where(OnboardingProgress.user_id == user.id)
+                ).first()
+                if not onboarding_check:
+                    # Create onboarding progress for linked account
+                    # Mark as completed since they already have an existing account
+                    onboarding_check = OnboardingProgress(
+                        user_id=user.id,
+                        completed=True,
+                        completed_at=datetime.utcnow()
+                    )
+                    session.add(onboarding_check)
+                    session.commit()
             else:
                 # Create new user with temporary username
                 # Generate temporary username (will be changed in profile setup)
