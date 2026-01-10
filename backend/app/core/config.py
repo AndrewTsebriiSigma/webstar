@@ -68,6 +68,9 @@ class Settings(BaseSettings):
     SMTP_FROM_EMAIL: str = "webstar.capital@gmail.com"
     SMTP_FROM_NAME: str = "WebStar"
     
+    # Admin Panel
+    ADMIN_SETUP_SECRET: str = "webstar-admin-setup-2024"  # Change in production
+    
     # Pagination
     DEFAULT_PAGE_SIZE: int = 20
     MAX_PAGE_SIZE: int = 100

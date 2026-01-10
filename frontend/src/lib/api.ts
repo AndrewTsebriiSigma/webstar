@@ -248,3 +248,46 @@ export const settingsAPI = {
     }),
 };
 
+// Admin API
+export const adminAPI = {
+  // Dashboard
+  getStats: () => api.get('/api/admin/stats'),
+  getActivity: (limit: number = 50) => api.get(`/api/admin/activity?limit=${limit}`),
+  
+  // Users
+  listUsers: (params: { page?: number; limit?: number; search?: string; role?: string; banned?: string }) => {
+    const searchParams = new URLSearchParams();
+    if (params.page) searchParams.set('page', params.page.toString());
+    if (params.limit) searchParams.set('limit', params.limit.toString());
+    if (params.search) searchParams.set('search', params.search);
+    if (params.role) searchParams.set('role', params.role);
+    if (params.banned) searchParams.set('banned', params.banned);
+    return api.get(`/api/admin/users?${searchParams.toString()}`);
+  },
+  getUser: (userId: number) => api.get(`/api/admin/users/${userId}`),
+  banUser: (userId: number, reason: string) => api.post(`/api/admin/users/${userId}/ban`, { reason }),
+  unbanUser: (userId: number) => api.post(`/api/admin/users/${userId}/unban`),
+  deleteUser: (userId: number) => api.delete(`/api/admin/users/${userId}`),
+  
+  // Reports
+  listReports: (params: { page?: number; limit?: number; status?: string; target_type?: string }) => {
+    const searchParams = new URLSearchParams();
+    if (params.page) searchParams.set('page', params.page.toString());
+    if (params.limit) searchParams.set('limit', params.limit.toString());
+    if (params.status) searchParams.set('status', params.status);
+    if (params.target_type) searchParams.set('target_type', params.target_type);
+    return api.get(`/api/admin/reports?${searchParams.toString()}`);
+  },
+  getReport: (reportId: number) => api.get(`/api/admin/reports/${reportId}`),
+  resolveReport: (reportId: number, action: 'resolve' | 'dismiss', note?: string) => 
+    api.put(`/api/admin/reports/${reportId}/resolve`, { action, resolution_note: note }),
+  
+  // Admin Team
+  listAdmins: () => api.get('/api/admin/admins'),
+  promoteUser: (userId: number, newRole: string) => api.post(`/api/admin/admins/${userId}/promote`, { new_role: newRole }),
+  demoteUser: (userId: number) => api.post(`/api/admin/admins/${userId}/demote`),
+  
+  // Setup
+  setupFirstAdmin: (secretKey: string, userId: number) => 
+    api.post('/api/admin/setup-first-admin', { secret_key: secretKey, user_id: userId }),
+};

@@ -201,7 +201,9 @@ async def register(user_data: UserRegister, session: Session = Depends(get_sessi
             is_active=user.is_active,
             created_at=user.created_at.isoformat(),
             onboarding_completed=False,
-            profile_setup_completed=True
+            profile_setup_completed=True,
+            role=user.role or "user",
+            is_banned=user.is_banned or False
         )
     )
 
@@ -266,7 +268,9 @@ async def setup_profile(
         is_active=user.is_active,
         created_at=user.created_at.isoformat(),
         onboarding_completed=onboarding_completed,
-        profile_setup_completed=True
+        profile_setup_completed=True,
+        role=user.role or "user",
+        is_banned=user.is_banned or False
     )
 
 
@@ -489,7 +493,9 @@ async def login(user_data: UserLogin, session: Session = Depends(get_session)):
             full_name=user.full_name,
             is_active=user.is_active,
             created_at=user.created_at.isoformat(),
-            onboarding_completed=onboarding_completed
+            onboarding_completed=onboarding_completed,
+            role=user.role or "user",
+            is_banned=user.is_banned or False
         )
     )
 
@@ -575,7 +581,9 @@ async def google_auth(auth_data: GoogleAuth, session: Session = Depends(get_sess
                 full_name=user.full_name,
                 is_active=user.is_active,
                 created_at=user.created_at.isoformat(),
-                onboarding_completed=onboarding_completed
+                onboarding_completed=onboarding_completed,
+                role=user.role or "user",
+                is_banned=user.is_banned or False
             )
         )
     
@@ -666,7 +674,9 @@ async def verify_2fa_login(
             is_active=user.is_active,
             created_at=user.created_at.isoformat(),
             onboarding_completed=onboarding_completed,
-            profile_setup_completed=user.profile_setup_completed  # Include this field
+            profile_setup_completed=user.profile_setup_completed,
+            role=user.role or "user",
+            is_banned=user.is_banned or False
         )
     )
 
@@ -714,7 +724,9 @@ async def refresh(token_data: RefreshToken, session: Session = Depends(get_sessi
             full_name=user.full_name,
             is_active=user.is_active,
             created_at=user.created_at.isoformat(),
-            onboarding_completed=onboarding_completed
+            onboarding_completed=onboarding_completed,
+            role=user.role or "user",
+            is_banned=user.is_banned or False
         )
     )
 

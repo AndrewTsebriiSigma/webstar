@@ -43,6 +43,8 @@ class UserResponse(BaseModel):
     created_at: str
     onboarding_completed: bool
     profile_setup_completed: bool = True
+    role: str = "user"  # user, moderator, admin, super_admin
+    is_banned: bool = False
 
 
 class LoginResponse(BaseModel):

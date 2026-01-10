@@ -10,6 +10,9 @@ export interface User {
   is_active: boolean;
   created_at: string;
   onboarding_completed: boolean;
+  role?: string;  // user, moderator, admin, super_admin
+  is_banned?: boolean;
+  ban_reason?: string | null;
 }
 
 export interface AuthResponse {

@@ -35,7 +35,8 @@ import {
   TrashIcon,
   CheckIcon,
   XMarkIcon,
-  CameraIcon
+  CameraIcon,
+  FlagIcon
 } from '@heroicons/react/24/outline';
 import { BellIcon as BellSolidIcon, CheckBadgeIcon } from '@heroicons/react/24/solid';
 
@@ -74,6 +75,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [showNotifications, setShowNotifications] = useState(false);
   const [viewerMode, setViewerMode] = useState(false);
   const [showFeedModal, setShowFeedModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDescription, setReportDescription] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
   const [feedInitialPostId, setFeedInitialPostId] = useState<number | undefined>(undefined);
   const [currentAudioTrack, setCurrentAudioTrack] = useState<any>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -457,6 +462,46 @@ export default function ProfilePage({ params }: { params: { username: string } }
     setLocationSuggestions([]);
     // Auto-save after selection
     handleProfileFieldBlur();
+  };
+
+  // Report profile handler
+  const handleReportSubmit = async () => {
+    if (!reportReason) {
+      toast.error('Please select a reason');
+      return;
+    }
+    
+    setReportSubmitting(true);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const token = localStorage.getItem('access_token');
+      
+      const response = await fetch(`${baseUrl}/api/profiles/${username}/report`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` })
+        },
+        body: JSON.stringify({
+          reason: reportReason,
+          description: reportDescription || null
+        })
+      });
+
+      if (response.ok) {
+        toast.success('Report submitted. Our team will review it.');
+        setShowReportModal(false);
+        setReportReason('');
+        setReportDescription('');
+      } else {
+        const data = await response.json();
+        toast.error(data.detail || 'Failed to submit report');
+      }
+    } catch (error) {
+      toast.error('Failed to submit report');
+    } finally {
+      setReportSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -1243,6 +1288,17 @@ export default function ProfilePage({ params }: { params: { username: string } }
               <button className="flex-1 py-2 text-sm bg-gray-900 border border-gray-800 rounded-xl font-semibold transition">
                 Message
               </button>
+              <button 
+                onClick={() => setShowReportModal(true)}
+                className="w-10 h-10 flex items-center justify-center rounded-xl transition"
+                style={{ 
+                  background: 'rgba(255, 255, 255, 0.05)', 
+                  border: '1px solid rgba(255, 255, 255, 0.1)' 
+                }}
+                title="Report profile"
+              >
+                <FlagIcon style={{ width: '18px', height: '18px', color: 'rgba(255, 255, 255, 0.5)' }} />
+              </button>
             </>
           )}
         </div>
@@ -2007,6 +2063,100 @@ export default function ProfilePage({ params }: { params: { username: string } }
             }
           }}
         />
+      )}
+
+      {/* Report Profile Modal */}
+      {showReportModal && (
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50"
+          style={{ background: 'rgba(0, 0, 0, 0.8)' }}
+          onClick={(e) => e.target === e.currentTarget && setShowReportModal(false)}
+        >
+          <div 
+            className="rounded-2xl p-6 max-w-md w-full mx-4"
+            style={{ 
+              background: '#1C1C1E',
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+                Report Profile
+              </h3>
+              <button 
+                onClick={() => setShowReportModal(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition"
+              >
+                <XMarkIcon className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+              </button>
+            </div>
+            
+            <p className="text-sm mb-4" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+              Help us understand what's wrong with @{username}'s profile.
+            </p>
+            
+            <div className="space-y-2 mb-4">
+              {[
+                { id: 'spam', label: 'Spam or misleading', icon: '🚫' },
+                { id: 'harassment', label: 'Harassment or bullying', icon: '😤' },
+                { id: 'inappropriate', label: 'Inappropriate content', icon: '⚠️' },
+                { id: 'fake', label: 'Fake profile or impersonation', icon: '🎭' },
+                { id: 'copyright', label: 'Copyright violation', icon: '©️' },
+                { id: 'other', label: 'Other', icon: '📝' }
+              ].map((reason) => (
+                <button
+                  key={reason.id}
+                  onClick={() => setReportReason(reason.id)}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl text-left transition"
+                  style={{
+                    background: reportReason === reason.id ? 'rgba(0, 194, 255, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                    border: reportReason === reason.id ? '1px solid rgba(0, 194, 255, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)'
+                  }}
+                >
+                  <span>{reason.icon}</span>
+                  <span style={{ color: reportReason === reason.id ? '#00C2FF' : 'rgba(255, 255, 255, 0.7)' }}>
+                    {reason.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+            
+            <textarea
+              placeholder="Additional details (optional)..."
+              value={reportDescription}
+              onChange={(e) => setReportDescription(e.target.value)}
+              className="w-full p-3 rounded-xl mb-4 text-sm resize-none"
+              rows={3}
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: 'rgba(255, 255, 255, 0.9)'
+              }}
+            />
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowReportModal(false);
+                  setReportReason('');
+                  setReportDescription('');
+                }}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium"
+                style={{ background: 'rgba(255, 255, 255, 0.05)', color: 'rgba(255, 255, 255, 0.7)' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReportSubmit}
+                disabled={!reportReason || reportSubmitting}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium disabled:opacity-50 transition"
+                style={{ background: '#FF3B30', color: '#FFF' }}
+              >
+                {reportSubmitting ? 'Submitting...' : 'Submit Report'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

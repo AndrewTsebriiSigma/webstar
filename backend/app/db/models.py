@@ -26,6 +26,13 @@ class User(SQLModel, table=True):
     is_2fa_enabled: bool = Field(default=False)
     totp_secret: Optional[str] = None
     
+    # Admin/Role system - Roles: user, moderator, admin, super_admin
+    role: str = Field(default="user", index=True)
+    is_banned: bool = Field(default=False)
+    banned_at: Optional[datetime] = None
+    banned_by: Optional[int] = None  # Admin user ID who banned
+    ban_reason: Optional[str] = None
+    
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -231,4 +238,51 @@ class UserPoints(SQLModel, table=True):
     available_points: int = Field(default=0)  # After spending on rewards
     
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class Report(SQLModel, table=True):
+    """User reports for profiles/content moderation."""
+    __tablename__ = "reports"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    
+    # Reporter info
+    reporter_id: Optional[int] = Field(default=None, foreign_key="users.id")  # None for anonymous
+    reporter_ip: Optional[str] = None
+    
+    # Target info
+    target_type: str = Field(nullable=False, index=True)  # 'profile', 'portfolio', 'project'
+    target_id: int = Field(nullable=False)  # ID of the reported item
+    target_user_id: int = Field(foreign_key="users.id", nullable=False)  # Owner of reported item
+    
+    # Report details
+    reason: str = Field(nullable=False)  # 'spam', 'harassment', 'inappropriate', 'fake', 'copyright', 'other'
+    description: Optional[str] = Field(default=None, max_length=500)
+    
+    # Status: pending, reviewing, resolved, dismissed
+    status: str = Field(default="pending", index=True)
+    resolved_by: Optional[int] = Field(default=None, foreign_key="users.id")
+    resolved_at: Optional[datetime] = None
+    resolution_note: Optional[str] = None
+    
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class AdminAction(SQLModel, table=True):
+    """Audit log for admin actions."""
+    __tablename__ = "admin_actions"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    admin_id: int = Field(foreign_key="users.id", nullable=False, index=True)
+    
+    # Action details
+    action_type: str = Field(nullable=False, index=True)  # 'ban', 'unban', 'delete', 'edit', 'role_change', 'resolve_report'
+    target_type: str = Field(nullable=False)  # 'user', 'profile', 'portfolio', 'project', 'report'
+    target_id: int = Field(nullable=False)
+    
+    # Additional details as JSON string
+    details: Optional[str] = None
+    ip_address: Optional[str] = None
+    
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 

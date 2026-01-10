@@ -7,7 +7,8 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import OperationalError, IntegrityError
 
 from app.db.base import get_session
-from app.db.models import User, Profile, ProfileLike, UserPoints, PortfolioItem, Project
+from app.db.models import User, Profile, ProfileLike, UserPoints, PortfolioItem, Project, Report
+from pydantic import BaseModel
 from app.deps.auth import get_current_user, get_current_user_optional
 from app.schemas.profile import ProfileUpdate, ProfileResponse
 
@@ -376,4 +377,72 @@ async def unlike_profile(
     session.commit()
     
     return {"message": "Profile unliked successfully"}
+
+
+# ============================================================================
+# REPORT PROFILE
+# ============================================================================
+
+class ReportRequest(BaseModel):
+    reason: str  # 'spam', 'harassment', 'inappropriate', 'fake', 'copyright', 'other'
+    description: Optional[str] = None
+
+
+@router.post("/{username}/report")
+async def report_profile(
+    username: str,
+    request: ReportRequest,
+    session: Session = Depends(get_session),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    """Report a profile for moderation review."""
+    # Valid reasons
+    valid_reasons = ['spam', 'harassment', 'inappropriate', 'fake', 'copyright', 'other']
+    if request.reason not in valid_reasons:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid reason. Must be one of: {', '.join(valid_reasons)}"
+        )
+    
+    # Find the user being reported
+    target_user = session.exec(select(User).where(User.username == username)).first()
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Can't report yourself
+    if current_user and current_user.id == target_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot report your own profile"
+        )
+    
+    # Check for recent duplicate reports from same user/IP
+    if current_user:
+        existing_report = session.exec(
+            select(Report).where(
+                Report.reporter_id == current_user.id,
+                Report.target_user_id == target_user.id,
+                Report.target_type == "profile",
+                Report.status == "pending"
+            )
+        ).first()
+        if existing_report:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You have already reported this profile"
+            )
+    
+    # Create report
+    report = Report(
+        reporter_id=current_user.id if current_user else None,
+        target_type="profile",
+        target_id=target_user.id,
+        target_user_id=target_user.id,
+        reason=request.reason,
+        description=request.description
+    )
+    session.add(report)
+    session.commit()
+    
+    return {"message": "Report submitted successfully. Our team will review it."}
 

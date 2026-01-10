@@ -121,5 +121,14 @@ SMTP_PASSWORD=your-gmail-app-password
 SMTP_FROM_EMAIL=webstar.capital@gmail.com
 SMTP_FROM_NAME=WebStar
 
+# =============================================================================
+# ADMIN PANEL
+# =============================================================================
+# Secret key for setting up the first super_admin user.
+# Change this to a secure random value in production!
+# After first admin is set up, this key is no longer needed.
+
+ADMIN_SETUP_SECRET=webstar-admin-setup-2024
+
 # Logging (Optional)
 # LOG_LEVEL=INFO  # DEBUG | INFO | WARNING | ERROR | CRITICAL
