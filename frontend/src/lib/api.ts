@@ -98,8 +98,23 @@ export const onboardingAPI = {
   setExpertise: (expertise_level: string) =>
     api.post('/api/onboarding/expertise', { expertise_level }),
   
-  complete: (data: { archetype: string; role: string; expertise_level: string; location?: string; bio?: string }) =>
+  complete: (data: { full_name?: string; username?: string; archetype: string; role: string; expertise_level: string; location?: string; bio?: string }) =>
     api.post('/api/onboarding/complete', data),
+  
+  checkUsernameAvailability: async (username: string) => {
+    try {
+      await api.get(`/api/profiles/${username}`);
+      // If we get here, profile exists - username is taken
+      return { available: false };
+    } catch (error: any) {
+      // If 404, username is available
+      if (error.response?.status === 404) {
+        return { available: true };
+      }
+      // Other errors - assume not available to be safe
+      return { available: false };
+    }
+  },
 };
 
 // Profile API

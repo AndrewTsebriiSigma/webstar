@@ -166,7 +166,7 @@ export default function OnboardingPage() {
         username: formData.username,
         archetype: formData.archetype,
         role: formData.role,
-        expertise_level: formData.expertise,
+        expertise_level: String(formData.expertise),
         location: formData.location
       });
 
