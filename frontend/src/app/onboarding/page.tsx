@@ -2,429 +2,800 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
 import { onboardingAPI } from '@/lib/api';
-import toast from 'react-hot-toast';
 
+// Matrix Rain for Finale
+const MatrixRain = () => {
+  useEffect(() => {
+    const canvas = document.getElementById('finale-matrix') as HTMLCanvasElement;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789';
+    const fontSize = 14;
+    const columns = Math.floor(canvas.width / fontSize);
+    const drops: number[] = Array(columns).fill(1);
+
+    const draw = () => {
+      ctx.fillStyle = 'rgba(11, 11, 12, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      ctx.fillStyle = '#00C2FF';
+      ctx.font = `${fontSize}px monospace`;
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = chars[Math.floor(Math.random() * chars.length)];
+        const x = i * fontSize;
+        const y = drops[i] * fontSize;
+        
+        ctx.fillStyle = `rgba(0, 194, 255, ${Math.random() * 0.5})`;
+        ctx.fillText(text, x, y);
+
+        if (y > canvas.height && Math.random() > 0.98) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    };
+
+    const interval = setInterval(draw, 50);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('resize', resizeCanvas);
+    };
+  }, []);
+
+  return <canvas id="finale-matrix" className="absolute inset-0 pointer-events-none" />;
+};
+
+// Floating Orbs
+const FloatingOrbs = () => (
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div 
+      className="absolute w-[500px] h-[500px] rounded-full"
+      style={{
+        background: 'radial-gradient(circle, rgba(0, 194, 255, 0.12) 0%, transparent 70%)',
+        top: '10%',
+        left: '20%',
+        filter: 'blur(60px)',
+        animation: 'float 20s ease-in-out infinite'
+      }}
+    />
+    <div 
+      className="absolute w-[400px] h-[400px] rounded-full"
+      style={{
+        background: 'radial-gradient(circle, rgba(255, 100, 200, 0.08) 0%, transparent 70%)',
+        bottom: '20%',
+        right: '10%',
+        filter: 'blur(80px)',
+        animation: 'float 25s ease-in-out infinite reverse'
+      }}
+    />
+  </div>
+);
+
+// Archetype data
 const ARCHETYPES = [
-  { id: 'Engineer', name: 'Engineer', icon: '🔧', description: 'Build and create technical solutions' },
-  { id: 'Artist', name: 'Artist', icon: '🎨', description: 'Design visual experiences' },
-  { id: 'Sound-Maker', name: 'Sound-Maker', icon: '🎵', description: 'Craft audio experiences' },
-  { id: 'Communicator', name: 'Communicator', icon: '💬', description: 'Tell stories and connect' },
+  { id: 'engineer', icon: '🔧', label: 'Engineer' },
+  { id: 'artist', icon: '🎨', label: 'Artist' },
+  { id: 'sound', icon: '🎵', label: 'Sound' },
+  { id: 'communicator', icon: '💬', label: 'Communicator' },
 ];
 
-const EXPERTISE_LEVELS = [
-  { id: 'emerging', name: 'Emerging Creator', description: 'Just starting your journey' },
-  { id: 'developing', name: 'Developing Professional', description: 'Building your portfolio' },
-  { id: 'established', name: 'Established Expert', description: 'Proven track record' },
-  { id: 'leading', name: 'Leading Authority', description: 'Industry recognized' },
+const POPULAR_ROLES = [
+  'Product Designer', 'Software Engineer', 'Music Producer', 
+  'Content Creator', 'Brand Strategist', 'Creative Director'
 ];
+
+const EXPERTISE_LABELS = ['Emerging', 'Developing', 'Established'];
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  
-  // Raw slider value (0-99) for smooth dragging
-  const [sliderValue, setSliderValue] = useState(33);
-  
   const [formData, setFormData] = useState({
+    fullName: '',
     archetype: '',
     role: '',
-    expertiseLevel: '',
+    expertise: 1,
     location: '',
-    bio: '',
+    username: ''
   });
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [showFinale, setShowFinale] = useState(false);
+  const [finaleProgress, setFinaleProgress] = useState(0);
+  const [finaleSteps, setFinaleSteps] = useState<string[]>([]);
 
+  // Check username availability
   useEffect(() => {
-    if (!user) {
-      router.push('/auth/register');
+    if (!formData.username || formData.username.length < 3) {
+      setUsernameAvailable(null);
       return;
     }
 
-    if (user.onboarding_completed) {
-      router.push(`/${user.username}`);
-      return;
+    const timer = setTimeout(async () => {
+      setCheckingUsername(true);
+      try {
+        const response = await onboardingAPI.checkUsernameAvailability(formData.username);
+        setUsernameAvailable(response.available);
+      } catch {
+        setUsernameAvailable(null);
+      } finally {
+        setCheckingUsername(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [formData.username]);
+
+  // Handle finale animation
+  const startFinale = async () => {
+    setShowFinale(true);
+    
+    const steps = [
+      '⚡ Building your studio',
+      '🎨 Loading your portfolio',
+      '🔧 Configuring your tools',
+      '⭐ Preparing your star'
+    ];
+
+    for (let i = 0; i <= 100; i += 2) {
+      await new Promise(r => setTimeout(r, 50));
+      setFinaleProgress(i);
+      
+      if (i === 20) setFinaleSteps([steps[0]]);
+      if (i === 45) setFinaleSteps([steps[0], steps[1]]);
+      if (i === 70) setFinaleSteps([steps[0], steps[1], steps[2]]);
+      if (i === 90) setFinaleSteps([steps[0], steps[1], steps[2], steps[3]]);
     }
 
-    // If user exists but hasn't completed onboarding, show the page
-  }, [user, router]);
-
-  // Map slider value to expertise level
-  const getExpertiseLevelFromSlider = (value: number): string => {
-    if (value < 25) return 'emerging';
-    if (value < 50) return 'developing';
-    if (value < 75) return 'established';
-    return 'leading';
-  };
-
-  // Get the current expertise level based on slider
-  const currentExpertiseLevel = formData.expertiseLevel || getExpertiseLevelFromSlider(sliderValue);
-  const currentExpertiseIndex = EXPERTISE_LEVELS.findIndex(l => l.id === currentExpertiseLevel);
-
-  const handleComplete = async () => {
-    if (!formData.archetype || !formData.role || !currentExpertiseLevel) {
-      toast.error('Please complete all steps');
-      return;
-    }
-
-    setLoading(true);
+    // Complete onboarding
     try {
-      const response = await onboardingAPI.complete({
+      await onboardingAPI.complete({
+        full_name: formData.fullName,
+        username: formData.username,
         archetype: formData.archetype,
         role: formData.role,
-        expertise_level: currentExpertiseLevel,
-        location: formData.location || undefined,
-        bio: formData.bio || undefined,
+        expertise_level: formData.expertise,
+        location: formData.location
       });
-      
-      toast.success(`🎉 Welcome! You earned ${response.data.points_earned} points!`);
-      
-      // Get the LATEST user data from localStorage (setup-profile may have updated username)
-      // This is critical because the React state might have stale temp username
-      const freshUserData = localStorage.getItem('user');
-      const freshUser = freshUserData ? JSON.parse(freshUserData) : null;
-      const currentUsername = freshUser?.username || user?.username;
-      
-      // Update user's onboarding status with FRESH data (not stale React state)
-      if (freshUser) {
-        const updatedUser = { ...freshUser, onboarding_completed: true };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-      }
-      
-      // Use the correct (updated) username for redirect
-      window.location.href = `/${currentUsername}`;
-    } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Failed to complete onboarding');
-    } finally {
-      setLoading(false);
+
+      // Update local storage
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      user.full_name = formData.fullName;
+      user.username = formData.username;
+      user.onboarding_completed = true;
+      localStorage.setItem('user', JSON.stringify(user));
+
+      await new Promise(r => setTimeout(r, 500));
+      router.push(`/${formData.username}`);
+    } catch (err) {
+      console.error('Failed to complete onboarding:', err);
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: '#111111' }}>
-      <div className="max-w-4xl w-full">
-        {/* Progress Bar */}
-        <div className="mb-12">
-          <div className="flex items-center justify-center gap-2">
-            {[1, 2, 3, 4].map((s) => (
-              <div
-                key={s}
-                className="h-2 flex-1 rounded-full transition"
-                style={{ background: s <= step ? '#00C2FF' : 'rgba(255, 255, 255, 0.1)' }}
-              />
-            ))}
+  // Calculate inverse progress (bar gets smaller)
+  const getProgressWidth = () => {
+    const progress = ((6 - step + 1) / 6) * 100;
+    return `${progress}%`;
+  };
+
+  // Profile Preview Component
+  const ProfilePreview = () => (
+    <div 
+      className="rounded-2xl p-4 mb-6"
+      style={{
+        background: 'rgba(255, 255, 255, 0.03)',
+        border: '1px solid rgba(255, 255, 255, 0.05)'
+      }}
+    >
+      <div className="flex items-center gap-3">
+        <div 
+          className="w-12 h-12 rounded-xl flex items-center justify-center text-xl"
+          style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+        >
+          {formData.archetype ? ARCHETYPES.find(a => a.id === formData.archetype)?.icon : '👤'}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium truncate" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+            {formData.fullName || 'Your Name'}
+          </p>
+          <p className="text-sm truncate" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+            @{formData.username || 'username'}
+          </p>
+          {formData.role && (
+            <p className="text-xs mt-1 truncate" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+              {formData.role}
+            </p>
+          )}
+        </div>
+      </div>
+      {formData.location && (
+        <p className="text-xs mt-3 flex items-center gap-1" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+          📍 {formData.location}
+        </p>
+      )}
+      {step > 4 && (
+        <div className="mt-3">
+          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255, 255, 255, 0.1)' }}>
+            <div 
+              className="h-full rounded-full transition-all"
+              style={{ 
+                width: `${(formData.expertise / 2) * 100}%`,
+                background: 'linear-gradient(90deg, #00C2FF, #0088CC)'
+              }}
+            />
           </div>
-          <p className="text-center mt-4" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
-            Step {step} of 4
+          <p className="text-xs mt-1" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+            {EXPERTISE_LABELS[formData.expertise]}
           </p>
         </div>
+      )}
+    </div>
+  );
 
-        {/* Step 1: Archetype */}
-        {step === 1 && (
-          <div className="glass rounded-2xl shadow-xl p-8 animate-fade-in">
-            <h2 className="text-3xl font-bold text-center mb-12" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Choose Your Archetype</h2>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              {ARCHETYPES.map((archetype) => (
-                <button
-                  key={archetype.id}
-                  onClick={() => {
-                    setFormData((prev) => ({ ...prev, archetype: archetype.id }));
-                    setTimeout(() => setStep(2), 300);
-                  }}
-                  className="p-8 border-2 rounded-xl transition transform hover:scale-105 hover:shadow-lg"
-                  style={{
-                    borderColor: formData.archetype === archetype.id ? '#00C2FF' : 'rgba(255, 255, 255, 0.1)',
-                    background: formData.archetype === archetype.id ? 'rgba(0, 194, 255, 0.1)' : 'rgba(255, 255, 255, 0.02)'
-                  }}
-                >
-                  <div className="text-6xl mb-4">{archetype.icon}</div>
-                  <h3 className="text-xl font-semibold mb-2" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>{archetype.name}</h3>
-                  <p style={{ color: 'rgba(255, 255, 255, 0.75)' }}>{archetype.description}</p>
-                </button>
-              ))}
-            </div>
+  // Finale Screen
+  if (showFinale) {
+    return (
+      <div 
+        className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden"
+        style={{ background: '#0B0B0C' }}
+      >
+        <MatrixRain />
+        
+        <div className="relative z-10 text-center max-w-md">
+          <div 
+            className="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(135deg, #00C2FF 0%, #0088CC 100%)',
+              boxShadow: '0 4px 30px rgba(0, 194, 255, 0.4)'
+            }}
+          >
+            <span className="text-3xl">⭐</span>
           </div>
-        )}
+          
+          <h1 className="text-2xl font-bold mb-2" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+            WebSTAR
+          </h1>
+          <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+            Setting up your space...
+          </p>
 
-        {/* Step 2: Role */}
-        {step === 2 && (
-          <div className="glass rounded-2xl shadow-xl p-8 animate-fade-in">
-            <button
-              onClick={() => setStep(1)}
-              className="mb-6 flex items-center gap-2"
-              style={{ color: '#00C2FF' }}
+          {/* Progress Bar */}
+          <div className="mb-8">
+            <div 
+              className="h-2 rounded-full overflow-hidden"
+              style={{ background: 'rgba(255, 255, 255, 0.1)' }}
             >
-              ← Back
-            </button>
-
-            <h2 className="text-3xl font-bold text-center mb-8" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>What's Your Role?</h2>
-
-            <div className="max-w-md mx-auto">
-              <input
-                type="text"
-                placeholder="e.g., Product Designer, Music Producer, Software Engineer..."
-                value={formData.role}
-                onChange={(e) => setFormData((prev) => ({ ...prev, role: e.target.value }))}
-                className="w-full px-6 py-4 text-lg border-2 rounded-xl"
+              <div 
+                className="h-full rounded-full transition-all duration-100"
                 style={{ 
-                  background: 'rgba(255, 255, 255, 0.05)', 
-                  borderColor: 'rgba(255, 255, 255, 0.1)',
-                  color: 'rgba(255, 255, 255, 0.95)'
+                  width: `${finaleProgress}%`,
+                  background: 'linear-gradient(90deg, #00C2FF, #0088CC)'
                 }}
-                autoFocus
               />
+            </div>
+            <p className="text-sm mt-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+              {finaleProgress}%
+            </p>
+          </div>
 
-              <div className="mt-8">
-                <p className="text-sm mb-4" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Popular roles:</p>
-                <div className="flex flex-wrap gap-2">
-                  {['Product Designer', 'Software Engineer', 'Music Producer', 'Content Creator', 'Photographer', 'Video Editor'].map(
-                    (role) => (
-                      <button
-                        key={role}
-                        onClick={() => setFormData((prev) => ({ ...prev, role }))}
-                        className="px-4 py-2 rounded-lg transition text-sm"
-                        style={{ 
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          color: 'rgba(255, 255, 255, 0.95)'
-                        }}
-                      >
-                        {role}
-                      </button>
-                    )
-                  )}
-                </div>
+          {/* Steps */}
+          <div className="space-y-2 text-left">
+            {finaleSteps.map((s, i) => (
+              <div 
+                key={i}
+                className="flex items-center gap-2 text-sm animate-fade-in"
+                style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+              >
+                {s}
+                <span style={{ color: '#30D158' }}>✓</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      className="min-h-screen flex flex-col items-center px-4 py-8 relative overflow-hidden"
+      style={{ background: 'radial-gradient(ellipse at center, #0B0B0C 0%, #050506 100%)' }}
+    >
+      <FloatingOrbs />
+
+      {/* Progress Bar - Inverse (gets smaller) */}
+      <div className="w-full max-w-md mb-8 relative z-10">
+        <div 
+          className="h-2 rounded-full overflow-hidden"
+          style={{ background: 'rgba(255, 255, 255, 0.1)' }}
+        >
+          <div 
+            className="h-full rounded-full transition-all duration-500"
+            style={{ 
+              width: getProgressWidth(),
+              background: 'linear-gradient(90deg, #00C2FF, #0088CC)'
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="w-full max-w-md relative z-10 flex-1">
+        {/* Profile Preview */}
+        <ProfilePreview />
+
+        {/* Step Content */}
+        <div 
+          className="rounded-2xl p-6"
+          style={{
+            background: 'rgba(255, 255, 255, 0.03)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.05)'
+          }}
+        >
+          {/* Step 1: Name */}
+          {step === 1 && (
+            <>
+              <div className="text-center mb-6">
+                <span className="text-4xl mb-4 block">👋</span>
+                <h2 className="text-xl font-bold mb-1" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+                  Let's start with you.
+                </h2>
+                <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                  What should we call you?
+                </p>
               </div>
 
+              <div 
+                className="onboarding-input-wrapper mb-4"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  borderRadius: '12px'
+                }}
+              >
+                <input
+                  type="text"
+                  placeholder="Your name"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                  className="w-full px-5 py-4 text-lg"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: 'rgba(255, 255, 255, 0.95)'
+                  }}
+                  autoFocus
+                />
+              </div>
+
+              <p className="text-xs mb-6 text-center" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                This appears on your profile.
+              </p>
+
               <button
-                onClick={() => formData.role && setStep(3)}
-                disabled={!formData.role}
-                className="mt-12 w-full py-4 bg-gradient-primary text-white font-semibold rounded-xl hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => formData.fullName && setStep(2)}
+                disabled={!formData.fullName}
+                className="w-full py-4 font-semibold rounded-xl transition disabled:opacity-50"
+                style={{
+                  background: 'linear-gradient(135deg, #00C2FF 0%, #0099CC 100%)',
+                  color: '#FFF',
+                  border: 'none'
+                }}
               >
                 Continue
               </button>
-            </div>
-          </div>
-        )}
+            </>
+          )}
 
-        {/* Step 3: Expertise Level */}
-        {step === 3 && (
-          <div className="glass rounded-2xl shadow-xl p-8 animate-fade-in">
-            <button
-              onClick={() => setStep(2)}
-              className="mb-6 flex items-center gap-2"
-              style={{ color: '#00C2FF' }}
-            >
-              ← Back
-            </button>
+          {/* Step 2: Archetype */}
+          {step === 2 && (
+            <>
+              <button
+                onClick={() => setStep(1)}
+                className="text-sm mb-4 flex items-center gap-1"
+                style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+              >
+                ← Back
+              </button>
 
-            <div className="max-w-2xl mx-auto">
-              {/* Current Level Display */}
-              <div className="mb-12 text-center">
-                <p className="text-lg mb-3" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
-                  Your expertise level is:
-                </p>
-                <h3 className="text-3xl font-bold" style={{ color: '#00C2FF' }}>
-                  {EXPERTISE_LEVELS[currentExpertiseIndex]?.name || EXPERTISE_LEVELS[1].name}
-                </h3>
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-bold" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+                  Pick your vibe.
+                </h2>
               </div>
 
-              {/* Slider - 100 parts for fine-grained control, fully flexible */}
-              <div className="px-4">
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {ARCHETYPES.map(arch => (
+                  <button
+                    key={arch.id}
+                    onClick={() => {
+                      setFormData(prev => ({ ...prev, archetype: arch.id }));
+                      setTimeout(() => setStep(3), 300);
+                    }}
+                    className="p-4 rounded-xl transition"
+                    style={{
+                      background: formData.archetype === arch.id 
+                        ? 'rgba(0, 194, 255, 0.15)' 
+                        : 'rgba(255, 255, 255, 0.02)',
+                      border: formData.archetype === arch.id 
+                        ? '1px solid rgba(0, 194, 255, 0.3)' 
+                        : '1px solid rgba(255, 255, 255, 0.05)'
+                    }}
+                  >
+                    <span className="text-3xl block mb-2">{arch.icon}</span>
+                    <span className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                      {arch.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Step 3: Role */}
+          {step === 3 && (
+            <>
+              <button
+                onClick={() => setStep(2)}
+                className="text-sm mb-4 flex items-center gap-1"
+                style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+              >
+                ← Back
+              </button>
+
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-bold" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+                  What do you do?
+                </h2>
+              </div>
+
+              <div 
+                className="onboarding-input-wrapper mb-4"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  borderRadius: '12px'
+                }}
+              >
                 <input
-                  type="range"
-                  min="0"
-                  max="99"
-                  value={sliderValue}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    setSliderValue(value);
-                    // Also update the expertise level based on the value
-                    setFormData((prev) => ({ 
-                      ...prev, 
-                      expertiseLevel: getExpertiseLevelFromSlider(value)
-                    }));
-                  }}
-                  className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
+                  type="text"
+                  placeholder="e.g., Product Designer"
+                  value={formData.role}
+                  onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+                  className="w-full px-5 py-4 text-lg"
                   style={{
-                    background: `linear-gradient(to right, #0ea5e9 0%, #0ea5e9 ${sliderValue + 1}%, #e5e7eb ${sliderValue + 1}%, #e5e7eb 100%)`
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: 'rgba(255, 255, 255, 0.95)'
                   }}
+                  autoFocus
                 />
-                
-                {/* Level Labels */}
-                <div className="flex justify-between mt-4 px-1">
-                  {EXPERTISE_LEVELS.map((level, index) => (
+              </div>
+
+              <div className="mb-6">
+                <p className="text-xs mb-3" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                  Suggestions:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {POPULAR_ROLES.map(role => (
                     <button
-                      key={level.id}
-                      onClick={() => {
-                        // Set slider to middle of the level's range
-                        const newValue = index * 25 + 12;
-                        setSliderValue(Math.min(newValue, 99));
-                        setFormData((prev) => ({ ...prev, expertiseLevel: level.id }));
-                      }}
-                      className="text-xs font-medium transition cursor-pointer"
-                      style={{ 
-                        width: '22%', 
-                        textAlign: 'center',
-                        color: currentExpertiseLevel === level.id ? '#00C2FF' : 'rgba(255, 255, 255, 0.5)',
-                        fontWeight: currentExpertiseLevel === level.id ? 'bold' : 'normal'
+                      key={role}
+                      onClick={() => setFormData(prev => ({ ...prev, role }))}
+                      className="px-3 py-1.5 text-xs rounded-lg transition"
+                      style={{
+                        background: formData.role === role 
+                          ? 'rgba(0, 194, 255, 0.2)' 
+                          : 'rgba(255, 255, 255, 0.05)',
+                        color: 'rgba(255, 255, 255, 0.7)'
                       }}
                     >
-                      {level.name.split(' ')[0]}
+                      {role}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Continue Button */}
-              <div className="mt-12">
-                <button
-                  onClick={() => {
-                    if (!formData.expertiseLevel) {
-                      setFormData((prev) => ({ ...prev, expertiseLevel: getExpertiseLevelFromSlider(sliderValue) }));
-                    }
-                    setStep(4);
+              <button
+                onClick={() => formData.role && setStep(4)}
+                disabled={!formData.role}
+                className="w-full py-4 font-semibold rounded-xl transition disabled:opacity-50"
+                style={{
+                  background: 'linear-gradient(135deg, #00C2FF 0%, #0099CC 100%)',
+                  color: '#FFF',
+                  border: 'none'
+                }}
+              >
+                Continue
+              </button>
+            </>
+          )}
+
+          {/* Step 4: Expertise */}
+          {step === 4 && (
+            <>
+              <button
+                onClick={() => setStep(3)}
+                className="text-sm mb-4 flex items-center gap-1"
+                style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+              >
+                ← Back
+              </button>
+
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-bold mb-1" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+                  How seasoned are you?
+                </h2>
+                <p className="text-lg" style={{ color: '#00C2FF' }}>
+                  {EXPERTISE_LABELS[formData.expertise]}
+                </p>
+              </div>
+
+              <div className="mb-6 px-4">
+                <input
+                  type="range"
+                  min="0"
+                  max="2"
+                  value={formData.expertise}
+                  onChange={(e) => setFormData(prev => ({ ...prev, expertise: parseInt(e.target.value) }))}
+                  className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #00C2FF ${(formData.expertise / 2) * 100}%, rgba(255,255,255,0.1) ${(formData.expertise / 2) * 100}%)`
                   }}
-                  className="w-full py-4 bg-gradient-to-r from-primary-600 to-accent-600 text-white text-lg font-semibold rounded-xl hover:shadow-2xl transition"
+                />
+                <div className="flex justify-between mt-2">
+                  {EXPERTISE_LABELS.map(label => (
+                    <span key={label} className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <p className="text-xs mb-6 text-center" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                Shows as a bar on your profile.
+              </p>
+
+              <button
+                onClick={() => setStep(5)}
+                className="w-full py-4 font-semibold rounded-xl transition"
+                style={{
+                  background: 'linear-gradient(135deg, #00C2FF 0%, #0099CC 100%)',
+                  color: '#FFF',
+                  border: 'none'
+                }}
+              >
+                Continue
+              </button>
+            </>
+          )}
+
+          {/* Step 5: Location */}
+          {step === 5 && (
+            <>
+              <button
+                onClick={() => setStep(4)}
+                className="text-sm mb-4 flex items-center gap-1"
+                style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+              >
+                ← Back
+              </button>
+
+              <div className="text-center mb-6">
+                <span className="text-4xl mb-4 block">📍</span>
+                <h2 className="text-xl font-bold" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+                  Where are you based?
+                </h2>
+              </div>
+
+              <div 
+                className="onboarding-input-wrapper mb-4"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  borderRadius: '12px'
+                }}
+              >
+                <input
+                  type="text"
+                  placeholder="e.g., Brooklyn, NY"
+                  value={formData.location}
+                  onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                  className="w-full px-5 py-4 text-lg"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: 'rgba(255, 255, 255, 0.95)'
+                  }}
+                  autoFocus
+                />
+              </div>
+
+              <p className="text-xs mb-6 text-center" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                Optional. Helps people find you.
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setStep(6)}
+                  className="flex-1 py-4 font-medium rounded-xl transition"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    border: 'none'
+                  }}
+                >
+                  Skip
+                </button>
+                <button
+                  onClick={() => setStep(6)}
+                  className="flex-1 py-4 font-semibold rounded-xl transition"
+                  style={{
+                    background: 'linear-gradient(135deg, #00C2FF 0%, #0099CC 100%)',
+                    color: '#FFF',
+                    border: 'none'
+                  }}
                 >
                   Continue
                 </button>
               </div>
-            </div>
-          </div>
-        )}
+            </>
+          )}
 
-        {/* Step 4: Location & Profile Preview */}
-        {step === 4 && (
-          <div className="glass rounded-2xl shadow-xl p-8 animate-fade-in">
-            <button
-              onClick={() => setStep(3)}
-              className="mb-6 flex items-center gap-2"
-              style={{ color: '#00C2FF' }}
-            >
-              ← Back
-            </button>
+          {/* Step 6: Username */}
+          {step === 6 && (
+            <>
+              <button
+                onClick={() => setStep(5)}
+                className="text-sm mb-4 flex items-center gap-1"
+                style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+              >
+                ← Back
+              </button>
 
-            <div className="max-w-2xl mx-auto">
-              {/* Profile Preview Card */}
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-bold mb-1" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+                  Claim your URL.
+                </h2>
+                <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                  Last step. Your space, your link.
+                </p>
+              </div>
+
               <div 
-                className="mb-8 p-6 rounded-2xl text-center"
-                style={{ 
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)'
+                className="onboarding-input-wrapper mb-2 flex items-center overflow-hidden"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  borderRadius: '12px'
                 }}
               >
-                {/* Profile Picture */}
-                <div 
-                  className="w-24 h-24 mx-auto rounded-full mb-4 flex items-center justify-center"
+                <span 
+                  className="px-4 py-4 text-sm"
                   style={{ 
-                    background: 'linear-gradient(145deg, #2D2D2D, #1A1A1A)',
-                    border: '2px solid rgba(255, 255, 255, 0.1)'
+                    color: 'rgba(255, 255, 255, 0.4)',
+                    borderRight: '1px solid rgba(255, 255, 255, 0.05)'
                   }}
                 >
-                  <span className="text-4xl">
-                    {ARCHETYPES.find(a => a.id === formData.archetype)?.icon || '👤'}
-                  </span>
-                </div>
-                
-                {/* Username */}
-                <h3 className="text-xl font-bold mb-1" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
-                  @{user?.username || 'username'}
-                </h3>
-                
-                {/* Role */}
-                <p className="text-sm mb-2" style={{ color: '#00C2FF' }}>
-                  {formData.role || 'Your Role'}
-                </p>
-                
-                {/* Location */}
-                {formData.location && (
-                  <p className="text-sm flex items-center justify-center gap-1" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {formData.location}
-                  </p>
-                )}
-                
-                {/* Bio Preview */}
-                {formData.bio && (
-                  <p className="mt-3 text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                    {formData.bio}
-                  </p>
-                )}
-              </div>
-
-              {/* Location Input */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-2" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
-                  Where are you based?
-                </label>
+                  webstar.com/
+                </span>
                 <input
                   type="text"
-                  placeholder="e.g., Paris, France"
-                  value={formData.location}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value }))}
-                  className="w-full px-5 py-3.5 border-2 rounded-xl"
-                  style={{ 
-                    background: 'rgba(255, 255, 255, 0.05)', 
-                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                  placeholder="username"
+                  value={formData.username}
+                  onChange={(e) => {
+                    const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                    setFormData(prev => ({ ...prev, username: value }));
+                  }}
+                  className="flex-1 px-4 py-4"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
                     color: 'rgba(255, 255, 255, 0.95)'
                   }}
+                  autoFocus
                 />
+                {checkingUsername && (
+                  <div className="px-4">
+                    <div 
+                      className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"
+                      style={{ borderColor: '#00C2FF', borderTopColor: 'transparent' }}
+                    />
+                  </div>
+                )}
+                {!checkingUsername && usernameAvailable === true && (
+                  <div className="px-4">
+                    <svg className="w-5 h-5" fill="#30D158" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+                {!checkingUsername && usernameAvailable === false && (
+                  <div className="px-4">
+                    <svg className="w-5 h-5" fill="#FF453A" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
               </div>
 
-              {/* Bio Input */}
-              <div className="mb-8">
-                <label className="block text-sm font-medium mb-2" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
-                  Tell about yourself
-                </label>
-                <div className="relative">
-                  <textarea
-                    placeholder="A brief description of who you are..."
-                    value={formData.bio}
-                    onChange={(e) => {
-                      if (e.target.value.length <= 90) {
-                        setFormData((prev) => ({ ...prev, bio: e.target.value }));
-                      }
-                    }}
-                    maxLength={90}
-                    rows={2}
-                    className="w-full px-5 py-3.5 border-2 rounded-xl resize-none"
-                    style={{ 
-                      background: 'rgba(255, 255, 255, 0.05)', 
-                      borderColor: 'rgba(255, 255, 255, 0.1)',
-                      color: 'rgba(255, 255, 255, 0.95)'
-                    }}
-                  />
-                  <span 
-                    className="absolute bottom-2 right-3 text-xs"
-                    style={{ color: formData.bio.length > 80 ? '#FF9F0A' : 'rgba(255, 255, 255, 0.4)' }}
-                  >
-                    {formData.bio.length}/90
-                  </span>
-                </div>
-              </div>
+              {usernameAvailable === true && (
+                <p className="text-xs mb-4" style={{ color: '#30D158' }}>
+                  ✓ Available
+                </p>
+              )}
+              {usernameAvailable === false && (
+                <p className="text-xs mb-4" style={{ color: '#FF453A' }}>
+                  ✗ Already taken
+                </p>
+              )}
+              {usernameAvailable === null && formData.username && (
+                <p className="text-xs mb-4" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                  &nbsp;
+                </p>
+              )}
 
-              {/* Complete Button */}
               <button
-                onClick={handleComplete}
-                disabled={loading}
-                className="w-full py-4 text-white text-lg font-bold rounded-xl hover:shadow-2xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={startFinale}
+                disabled={!usernameAvailable || loading}
+                className="w-full py-4 font-semibold rounded-xl transition disabled:opacity-50 flex items-center justify-center gap-2"
                 style={{
-                  background: 'linear-gradient(135deg, #00C2FF 0%, #0A84FF 100%)',
-                  boxShadow: '0 4px 20px rgba(0, 194, 255, 0.3)'
+                  background: 'linear-gradient(135deg, #00C2FF 0%, #0099CC 100%)',
+                  color: '#FFF',
+                  border: 'none'
                 }}
               >
-                {loading ? 'Creating your profile...' : '🚀 LEVEL UP'}
+                🚀 Launch Your Space
               </button>
-            </div>
-          </div>
-        )}
+            </>
+          )}
+        </div>
       </div>
+
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translate(0, 0); }
+          50% { transform: translate(30px, -30px); }
+        }
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out forwards;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: #00C2FF;
+          cursor: pointer;
+          border: 2px solid #FFF;
+          box-shadow: 0 2px 8px rgba(0, 194, 255, 0.4);
+        }
+        input[type="range"]::-moz-range-thumb {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: #00C2FF;
+          cursor: pointer;
+          border: 2px solid #FFF;
+          box-shadow: 0 2px 8px rgba(0, 194, 255, 0.4);
+        }
+      `}</style>
     </div>
   );
 }

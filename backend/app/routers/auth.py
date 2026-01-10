@@ -98,6 +98,35 @@ async def register(user_data: UserRegister, session: Session = Depends(get_sessi
     )
 
 
+@router.get("/check-username/{username}")
+async def check_username(username: str, session: Session = Depends(get_session)):
+    """Check if a username is available."""
+    import re
+    
+    # Validate username format
+    if not re.match(r'^[a-zA-Z0-9_]{3,20}$', username):
+        return {"available": False, "reason": "Username must be 3-20 characters with only letters, numbers, and underscores"}
+    
+    # Check if username exists
+    existing = session.exec(select(User).where(User.username == username.lower())).first()
+    
+    return {"available": existing is None}
+
+
+@router.get("/check-email/{email}")
+async def check_email(email: str, session: Session = Depends(get_session)):
+    """Check if an email already exists (for unified auth flow)."""
+    from urllib.parse import unquote
+    
+    # Decode the email
+    decoded_email = unquote(email).lower()
+    
+    # Check if email exists
+    existing = session.exec(select(User).where(User.email == decoded_email)).first()
+    
+    return {"exists": existing is not None}
+
+
 @router.post("/setup-profile", response_model=UserResponse)
 async def setup_profile(
     profile_data: ProfileSetup,

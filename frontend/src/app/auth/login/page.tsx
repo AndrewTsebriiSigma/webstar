@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { authAPI } from '@/lib/api';
+import { useKeyboardScroll } from '@/hooks/useKeyboardScroll';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
@@ -134,6 +135,10 @@ export default function LoginPage() {
   const [totpCode, setTotpCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Handle mobile keyboard scroll behavior
+  useKeyboardScroll();
+  
   const [rememberMe, setRememberMe] = useState(() => {
     // Check if user previously opted for remember me
     if (typeof window !== 'undefined') {
@@ -341,31 +346,87 @@ export default function LoginPage() {
         >
           {step === 'credentials' ? (
             <form onSubmit={handleCredentialsSubmit} className="space-y-5">
-              <div>
+              <div 
+                className="input-wrapper"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid transparent',
+                  borderRadius: '12px',
+                  transition: 'border-color 0.15s, box-shadow 0.15s'
+                }}
+              >
                 <input
                   id="email"
                   type="text"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full"
+                  className="w-full px-4 py-3"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: 'rgba(255, 255, 255, 0.95)'
+                  }}
                   placeholder="Email or username"
                   autoComplete="username"
                   disabled={loading}
+                  onFocus={(e) => {
+                    const wrapper = e.currentTarget.parentElement;
+                    if (wrapper) {
+                      wrapper.style.borderColor = 'rgba(10, 132, 255, 0.5)';
+                      wrapper.style.boxShadow = '0 0 0 3px rgba(10, 132, 255, 0.1), 0 0 12px rgba(10, 132, 255, 0.1)';
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const wrapper = e.currentTarget.parentElement;
+                    if (wrapper) {
+                      wrapper.style.borderColor = 'transparent';
+                      wrapper.style.boxShadow = 'none';
+                    }
+                  }}
                 />
               </div>
 
-              <div className="relative">
+              <div 
+                className="input-wrapper relative"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid transparent',
+                  borderRadius: '12px',
+                  transition: 'border-color 0.15s, box-shadow 0.15s'
+                }}
+              >
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pr-10"
+                  className="w-full px-4 py-3 pr-10"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: 'rgba(255, 255, 255, 0.95)'
+                  }}
                   placeholder="Password"
                   autoComplete="current-password"
                   disabled={loading}
+                  onFocus={(e) => {
+                    const wrapper = e.currentTarget.parentElement;
+                    if (wrapper) {
+                      wrapper.style.borderColor = 'rgba(10, 132, 255, 0.5)';
+                      wrapper.style.boxShadow = '0 0 0 3px rgba(10, 132, 255, 0.1), 0 0 12px rgba(10, 132, 255, 0.1)';
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const wrapper = e.currentTarget.parentElement;
+                    if (wrapper) {
+                      wrapper.style.borderColor = 'transparent';
+                      wrapper.style.boxShadow = 'none';
+                    }
+                  }}
                 />
                 <button
                   type="button"

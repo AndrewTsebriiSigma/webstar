@@ -83,6 +83,12 @@ export const authAPI = {
   
   refresh: (refreshToken: string) =>
     api.post('/api/auth/refresh', { refresh_token: refreshToken }),
+  
+  checkUsername: (username: string) =>
+    api.get(`/api/auth/check-username/${username}`),
+  
+  updateProfile: (data: { username?: string; full_name?: string }) =>
+    api.post('/api/auth/setup-profile', data),
 };
 
 // Onboarding API

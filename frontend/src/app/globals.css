@@ -96,6 +96,111 @@
   * {
     @apply border-gray-700;
   }
+
+  /* ================================================================
+     Text Selection Styling - Blue highlight like editing mode
+     Matches the post editor selection style (#0A84FF)
+     ================================================================ */
+  ::selection {
+    background: rgba(10, 132, 255, 0.35) !important;
+    color: inherit !important;
+  }
+  
+  ::-moz-selection {
+    background: rgba(10, 132, 255, 0.35) !important;
+    color: inherit !important;
+  }
+  
+  /* Input/textarea text selection - matches app editing mode */
+  input::selection,
+  textarea::selection,
+  [contenteditable]::selection,
+  [contenteditable="true"]::selection {
+    background: rgba(10, 132, 255, 0.4) !important;
+    color: inherit !important;
+  }
+  
+  input::-moz-selection,
+  textarea::-moz-selection,
+  [contenteditable]::-moz-selection,
+  [contenteditable="true"]::-moz-selection {
+    background: rgba(10, 132, 255, 0.4) !important;
+    color: inherit !important;
+  }
+  
+  /* Caret color - matches blue theme */
+  input,
+  textarea,
+  [contenteditable],
+  [contenteditable="true"] {
+    caret-color: #00C2FF !important;
+  }
+
+  /* ================================================================
+     Prevent Zoom & Handle Mobile Keyboard Scroll
+     ================================================================ */
+  html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    touch-action: manipulation;
+  }
+  
+  /* Prevent zoom on input focus (iOS) - ensure 16px minimum */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+    touch-action: manipulation;
+  }
+  
+  /* Smooth scroll behavior for keyboard appearance */
+  body {
+    overscroll-behavior: none;
+  }
+  
+  /* When keyboard appears, scroll to focused element smoothly */
+  @supports (-webkit-touch-callout: none) {
+    /* iOS specific */
+    input:focus,
+    textarea:focus,
+    select:focus {
+      scroll-margin-top: 120px;
+      scroll-margin-bottom: 120px;
+    }
+  }
+
+  /* Custom Blue Thin Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 3px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #00C2FF 0%, #007EA7 100%);
+    border-radius: 3px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #33D1FF 0%, #00A8D6 100%);
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #00C2FF rgba(255, 255, 255, 0.02);
+  }
   
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -407,11 +512,12 @@ select {
   height: 48px;
   padding: 0 16px;
   border-radius: var(--radius-md);
-  background: var(--bg-surface-1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  border: none;
   color: var(--text-primary);
   font-size: 16px;
   transition: all var(--transition-fast);
+  outline: none;
 }
 
 textarea {
@@ -429,6 +535,7 @@ textarea::placeholder {
   color: var(--text-tertiary);
 }
 
+/* Inputs inside wrappers - no hover/focus border (wrapper handles it) */
 input[type="text"]:hover,
 input[type="email"]:hover,
 input[type="password"]:hover,
@@ -436,7 +543,7 @@ input[type="url"]:hover,
 input[type="number"]:hover,
 textarea:hover,
 select:hover {
-  border-color: rgba(255, 255, 255, 0.15);
+  border: none;
 }
 
 input[type="text"]:focus,
@@ -444,16 +551,57 @@ input[type="email"]:focus,
 input[type="password"]:focus,
 input[type="url"]:focus,
 input[type="number"]:focus,
+input[type="tel"]:focus,
+input[type="search"]:focus,
 textarea:focus,
 select:focus {
-  outline: none;
-  border: 2px solid var(--blue);
-  box-shadow: 0 0 0 4px var(--blue-10);
-  padding: 0 15px; /* Adjust for border width */
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
-textarea:focus {
-  padding: 11px 15px; /* Adjust for border width */
+/* Input Wrapper - handles border and focus styling */
+.input-wrapper {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  position: relative;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: none;
+}
+
+.input-wrapper.focused,
+.input-wrapper:focus-within {
+  border-color: rgba(10, 132, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.1), 0 0 12px rgba(10, 132, 255, 0.1);
+}
+
+/* Onboarding Input Wrapper - subtle blue stroke on focus */
+.onboarding-input-wrapper {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  box-shadow: none;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.onboarding-input-wrapper:focus-within {
+  border-color: rgba(10, 132, 255, 0.5);
+  box-shadow: none;
+  outline: none;
+}
+
+.onboarding-input-wrapper input {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.onboarding-input-wrapper input:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 input[type="text"]:disabled,
@@ -473,17 +621,17 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 30px var(--bg-surface-1) inset !important;
+  -webkit-box-shadow: 0 0 0 30px transparent inset !important;
   -webkit-text-fill-color: var(--text-primary) !important;
-  background-color: var(--bg-surface-1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background-color: transparent !important;
+  border: none !important;
   caret-color: var(--text-primary) !important;
   transition: background-color 5000s ease-in-out 0s;
 }
 
 input:-webkit-autofill:focus {
-  border: 2px solid var(--blue) !important;
-  box-shadow: 0 0 0 30px var(--bg-surface-1) inset, 0 0 0 4px var(--blue-10) !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* Progress Bars */
@@ -1178,4 +1326,71 @@ html {
   animation: sparkleFloat 1.5s ease-in-out infinite;
   text-shadow: 0 0 8px rgba(87, 191, 249, 0.8);
   z-index: 2;
+}
+
+/* ================================================================
+   Mobile Input Focus - Scroll & Keyboard Handling
+   ================================================================ */
+
+/* Wrapper that handles keyboard scroll behavior */
+.keyboard-aware {
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* When input is focused, ensure it stays visible */
+.input-focused {
+  scroll-padding-bottom: 300px;
+}
+
+/* Prevent body scroll when keyboard is open (optional utility) */
+.keyboard-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+/* Smooth transition for layout shifts */
+.keyboard-transition {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ================================================================
+   Focus Ring - Consistent blue stroke across all focusable elements
+   ================================================================ */
+
+/* Remove default focus outline and add custom blue ring */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* For elements that shouldn't show focus ring */
+.no-focus-ring:focus,
+.no-focus-ring:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Custom focus for buttons - glow instead of ring */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--blue-20), 0 0 12px var(--blue-10);
+}
+
+/* Interactive elements - subtle highlight on tap */
+@media (hover: none) and (pointer: coarse) {
+  button:active,
+  [role="button"]:active,
+  a:active {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
 }
