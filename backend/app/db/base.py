@@ -29,10 +29,16 @@ if "sqlite" in settings.DATABASE_URL:
             # If WAL mode fails, continue without it (fallback to default)
             pass
 else:
+    # PostgreSQL - production settings with proper pool management
     engine = create_engine(
         settings.DATABASE_URL,
         echo=settings.DEBUG,
-        pool_pre_ping=True,
+        pool_pre_ping=True,        # Verify connections before use
+        pool_size=10,              # Base pool size (increased from default 5)
+        max_overflow=20,           # Allow 20 additional connections (increased from 10)
+        pool_timeout=30,           # Wait max 30 seconds for connection
+        pool_recycle=1800,         # Recycle connections after 30 minutes
+        pool_reset_on_return="rollback",  # Reset connection state on return to pool
     )
 
 

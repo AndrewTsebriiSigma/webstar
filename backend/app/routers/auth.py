@@ -322,32 +322,22 @@ async def google_callback(request: Request, session: Session = Depends(get_sessi
         # Check if user exists with this Google ID
         user = session.exec(select(User).where(User.google_id == google_id)).first()
         
+        # Track if this is an existing user (for onboarding logic)
+        is_existing_user = user is not None
+        
         if not user:
             # Check if email exists (account linking) - case-insensitive comparison
             user = session.exec(
                 select(User).where(func.lower(User.email) == func.lower(email))
             ).first()
             if user:
+                # This is an existing user linking their Google account
+                is_existing_user = True
                 # Link Google account to existing user
                 user.google_id = google_id
                 user.oauth_provider = 'google'
                 session.add(user)
                 session.commit()
-                
-                # Ensure OnboardingProgress exists for linked accounts
-                onboarding_check = session.exec(
-                    select(OnboardingProgress).where(OnboardingProgress.user_id == user.id)
-                ).first()
-                if not onboarding_check:
-                    # Create onboarding progress for linked account
-                    # Mark as completed since they already have an existing account
-                    onboarding_check = OnboardingProgress(
-                        user_id=user.id,
-                        completed=True,
-                        completed_at=datetime.utcnow()
-                    )
-                    session.add(onboarding_check)
-                    session.commit()
             else:
                 # Create new user with temporary username
                 # Generate temporary username (will be changed in profile setup)
@@ -378,6 +368,27 @@ async def google_callback(request: Request, session: Session = Depends(get_sessi
                 points = UserPoints(user_id=user.id)
                 session.add(points)
                 
+                session.commit()
+        
+        # For existing users (returning via Google or linking account), ensure onboarding is complete
+        if is_existing_user:
+            onboarding_check = session.exec(
+                select(OnboardingProgress).where(OnboardingProgress.user_id == user.id)
+            ).first()
+            if not onboarding_check:
+                # Create completed onboarding for existing user
+                onboarding_check = OnboardingProgress(
+                    user_id=user.id,
+                    completed=True,
+                    completed_at=datetime.utcnow()
+                )
+                session.add(onboarding_check)
+                session.commit()
+            elif not onboarding_check.completed:
+                # Mark existing incomplete onboarding as complete for returning users
+                onboarding_check.completed = True
+                onboarding_check.completed_at = datetime.utcnow()
+                session.add(onboarding_check)
                 session.commit()
         
         # Check onboarding and profile setup status
