@@ -1756,21 +1756,29 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 style={{
                   display: 'grid',
                   gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
-                  gridAutoRows: 'auto',
+                  gridAutoRows: layoutMode === 'masonry' ? '10px' : 'auto',
                   gridAutoFlow: layoutMode === 'masonry' ? 'dense' : 'row',
                   gap: `${gridGap}px`,
                   width: '100%'
                 }}
               >
                 {[...portfolioItems].reverse().map((item, index) => {
-                  // Masonry layout: every 5th item (0-indexed: 0, 5, 10...) is featured (taller, spans 2 rows)
+                  // Masonry layout: every 5th item is featured (taller)
                   const isFeatured = layoutMode === 'masonry' && index % 5 === 0;
-                  // Get custom aspect ratio from item - ONLY in masonry mode
-                  // Uniform mode = all squares (1:1) for clean grid layout
-                  // Featured items get taller aspect ratio (portrait style)
-                  const itemAspectRatio = layoutMode === 'masonry' 
-                    ? (isFeatured ? 0.5 : getAspectRatio(item.aspect_ratio as WidgetSize))
-                    : 1;
+                  
+                  // Get custom aspect ratio from item - works in both modes
+                  const itemAspectRatio = isFeatured 
+                    ? 0.5 
+                    : getAspectRatio(item.aspect_ratio as WidgetSize);
+                  
+                  // Calculate row span for masonry mode based on aspect ratio
+                  // Base column width ~120px, row unit 10px
+                  const getRowSpanForItem = (ratio: number): number => {
+                    const baseHeight = 120 / ratio;
+                    return Math.max(8, Math.round(baseHeight / 10)); // Minimum 8 rows (80px)
+                  };
+                  
+                  const rowSpan = layoutMode === 'masonry' ? getRowSpanForItem(itemAspectRatio) : 1;
                   
                   return (
                     <div 
@@ -1786,7 +1794,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       onContextMenu={(e) => handleItemContextMenu(e, item)}
                       style={{
                         gridColumn: 'span 1',
-                        gridRow: isFeatured ? 'span 2' : 'span 1',
+                        gridRow: layoutMode === 'masonry' ? `span ${rowSpan}` : 'span 1',
                         borderRadius: gridRadius === 0 ? '0px' : `${gridRadius}px`,
                         overflow: 'hidden',
                         position: 'relative',
