@@ -105,6 +105,11 @@ export const onboardingAPI = {
   
   complete: (data: { archetype: string; role: string; expertise_level: string; username?: string; full_name?: string; location?: string; bio?: string }) =>
     api.post('/api/onboarding/complete', data),
+  
+  checkUsernameAvailability: async (username: string) => {
+    const response = await api.get(`/api/auth/check-username/${username}`);
+    return response.data;
+  },
 };
 
 // Profile API
