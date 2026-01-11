@@ -36,13 +36,13 @@ const PLACEHOLDER_TEXTS = [
   'What do you specialize in?'
 ];
 
-// Dynamic placeholder texts for Experience section
-const EXPERIENCE_PLACEHOLDER_TEXTS = [
-  'Product Designer at Apple',
-  'Software Engineer at Google',
-  'Marketing Lead at Meta',
-  'UX Researcher at Spotify',
-  'Creative Director at Nike'
+// Dynamic placeholder data for Experience section (full examples)
+const EXPERIENCE_PLACEHOLDER_DATA = [
+  { title: 'Product Designer', company: 'Apple', years: '2022 - Present', description: 'Led design for iOS accessibility features, improving user experience for 50M+ users.' },
+  { title: 'Software Engineer', company: 'Google', years: '2020 - 2022', description: 'Built scalable backend services handling 1M+ requests per day.' },
+  { title: 'Marketing Lead', company: 'Meta', years: '2019 - 2020', description: 'Drove growth campaigns resulting in 40% increase in user acquisition.' },
+  { title: 'UX Researcher', company: 'Spotify', years: '2018 - 2019', description: 'Conducted user studies that shaped the new playlist experience.' },
+  { title: 'Creative Director', company: 'Nike', years: '2016 - 2018', description: 'Directed global campaigns for Air Max and Jordan brands.' }
 ];
 
 // Dynamic placeholder texts for Skills section  
@@ -92,8 +92,11 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
   const [showFullAbout, setShowFullAbout] = useState(false);
   const [isSavingAbout, setIsSavingAbout] = useState(false);
 
-  // Experience placeholder animation
-  const [experiencePlaceholder, setExperiencePlaceholder] = useState(EXPERIENCE_PLACEHOLDER_TEXTS[0]);
+  // Experience placeholder animation (all fields)
+  const [expTitlePlaceholder, setExpTitlePlaceholder] = useState(EXPERIENCE_PLACEHOLDER_DATA[0].title);
+  const [expCompanyPlaceholder, setExpCompanyPlaceholder] = useState(EXPERIENCE_PLACEHOLDER_DATA[0].company);
+  const [expYearsPlaceholder, setExpYearsPlaceholder] = useState(EXPERIENCE_PLACEHOLDER_DATA[0].years);
+  const [expDescPlaceholder, setExpDescPlaceholder] = useState(EXPERIENCE_PLACEHOLDER_DATA[0].description);
   const experiencePlaceholderIndexRef = useRef(0);
   const experienceAnimationRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -270,11 +273,16 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
   }, [isCustomizeMode]);
 
   // Dynamic placeholder animation for Experience (when empty and not in customize mode)
+  // Animates all fields: title, company, years, description
   useEffect(() => {
     const hasExperience = profile?.experience && JSON.parse(profile.experience || '[]').length > 0;
     
     if (hasExperience || isCustomizeMode) {
-      setExperiencePlaceholder(EXPERIENCE_PLACEHOLDER_TEXTS[0]);
+      const first = EXPERIENCE_PLACEHOLDER_DATA[0];
+      setExpTitlePlaceholder(first.title);
+      setExpCompanyPlaceholder(first.company);
+      setExpYearsPlaceholder(first.years);
+      setExpDescPlaceholder(first.description);
       experiencePlaceholderIndexRef.current = 0;
       if (experienceAnimationRef.current) {
         clearTimeout(experienceAnimationRef.current);
@@ -282,33 +290,86 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
       return;
     }
 
-    let currentTextIndex = experiencePlaceholderIndexRef.current;
-    let currentText = EXPERIENCE_PLACEHOLDER_TEXTS[currentTextIndex];
-    let charIndex = currentText.length;
+    let currentDataIndex = experiencePlaceholderIndexRef.current;
+    let currentData = EXPERIENCE_PLACEHOLDER_DATA[currentDataIndex];
+    
+    // Track character indices for each field
+    let titleCharIndex = currentData.title.length;
+    let companyCharIndex = currentData.company.length;
+    let yearsCharIndex = currentData.years.length;
+    let descCharIndex = currentData.description.length;
     let isDeleting = true;
+    let phase = 0; // 0: title, 1: company, 2: years, 3: description
 
     const animate = () => {
       if (isDeleting) {
-        if (charIndex > 0) {
-          charIndex--;
-          setExperiencePlaceholder(currentText.substring(0, charIndex));
-          experienceAnimationRef.current = setTimeout(animate, 50);
-        } else {
+        // Delete phase - delete all fields simultaneously
+        let allDeleted = true;
+        
+        if (titleCharIndex > 0) {
+          titleCharIndex--;
+          setExpTitlePlaceholder(currentData.title.substring(0, titleCharIndex));
+          allDeleted = false;
+        }
+        if (companyCharIndex > 0) {
+          companyCharIndex--;
+          setExpCompanyPlaceholder(currentData.company.substring(0, companyCharIndex));
+          allDeleted = false;
+        }
+        if (yearsCharIndex > 0) {
+          yearsCharIndex--;
+          setExpYearsPlaceholder(currentData.years.substring(0, yearsCharIndex));
+          allDeleted = false;
+        }
+        if (descCharIndex > 0) {
+          descCharIndex--;
+          setExpDescPlaceholder(currentData.description.substring(0, descCharIndex));
+          allDeleted = false;
+        }
+        
+        if (allDeleted) {
           isDeleting = false;
-          currentTextIndex = (currentTextIndex + 1) % EXPERIENCE_PLACEHOLDER_TEXTS.length;
-          experiencePlaceholderIndexRef.current = currentTextIndex;
-          currentText = EXPERIENCE_PLACEHOLDER_TEXTS[currentTextIndex];
-          charIndex = 0;
-          experienceAnimationRef.current = setTimeout(animate, 500);
+          currentDataIndex = (currentDataIndex + 1) % EXPERIENCE_PLACEHOLDER_DATA.length;
+          experiencePlaceholderIndexRef.current = currentDataIndex;
+          currentData = EXPERIENCE_PLACEHOLDER_DATA[currentDataIndex];
+          titleCharIndex = 0;
+          companyCharIndex = 0;
+          yearsCharIndex = 0;
+          descCharIndex = 0;
+          experienceAnimationRef.current = setTimeout(animate, 400);
+        } else {
+          experienceAnimationRef.current = setTimeout(animate, 25);
         }
       } else {
-        if (charIndex < currentText.length) {
-          charIndex++;
-          setExperiencePlaceholder(currentText.substring(0, charIndex));
-          experienceAnimationRef.current = setTimeout(animate, 50);
-        } else {
+        // Type phase - type all fields simultaneously
+        let allTyped = true;
+        
+        if (titleCharIndex < currentData.title.length) {
+          titleCharIndex++;
+          setExpTitlePlaceholder(currentData.title.substring(0, titleCharIndex));
+          allTyped = false;
+        }
+        if (companyCharIndex < currentData.company.length) {
+          companyCharIndex++;
+          setExpCompanyPlaceholder(currentData.company.substring(0, companyCharIndex));
+          allTyped = false;
+        }
+        if (yearsCharIndex < currentData.years.length) {
+          yearsCharIndex++;
+          setExpYearsPlaceholder(currentData.years.substring(0, yearsCharIndex));
+          allTyped = false;
+        }
+        if (descCharIndex < currentData.description.length) {
+          descCharIndex++;
+          setExpDescPlaceholder(currentData.description.substring(0, descCharIndex));
+          allTyped = false;
+        }
+        
+        if (allTyped) {
           isDeleting = true;
-          experienceAnimationRef.current = setTimeout(animate, 3000);
+          experienceAnimationRef.current = setTimeout(animate, 4000); // Pause before deleting
+        } else {
+          experienceAnimationRef.current = setTimeout(animate, 30);
         }
       }
     };
@@ -1223,7 +1284,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                   </div>
                 </div>
               ) : (
-                // Animated placeholder for empty experience
+                // Animated placeholder for empty experience - shows full example
                 <div 
                   style={{
                     padding: 'var(--space-4)',
@@ -1236,30 +1297,33 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                     display: 'flex', 
                     alignItems: 'flex-start', 
                     gap: 'var(--space-3)',
-                    opacity: 0.4
+                    opacity: 0.5
                   }}>
+                    {/* Timeline dot */}
                     <div 
                       style={{ 
-                        width: '8px', 
-                        height: '8px', 
+                        width: '10px', 
+                        height: '10px', 
                         borderRadius: '50%', 
                         background: 'var(--blue)',
-                        marginTop: '6px',
-                        flexShrink: 0
+                        marginTop: '5px',
+                        flexShrink: 0,
+                        boxShadow: '0 0 8px rgba(0, 194, 255, 0.4)'
                       }} 
                     />
                     <div style={{ flex: 1 }}>
+                      {/* Job Title */}
                       <div 
                         style={{
                           fontSize: '16px',
                           fontWeight: 600,
-                          color: 'var(--text-secondary)',
-                          marginBottom: '4px',
-                          minHeight: '24px',
+                          color: 'var(--text-primary)',
+                          marginBottom: '2px',
+                          minHeight: '22px',
                           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
                         }}
                       >
-                        {experiencePlaceholder}
+                        {expTitlePlaceholder}
                         <span style={{ 
                           display: 'inline-block',
                           width: '2px',
@@ -1270,8 +1334,53 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                           verticalAlign: 'middle'
                         }} />
                       </div>
-                      <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                        2020 - Present
+                      
+                      {/* Company Name */}
+                      <div 
+                        style={{
+                          fontSize: '14px',
+                          fontWeight: 500,
+                          color: 'var(--blue)',
+                          marginBottom: '4px',
+                          minHeight: '20px',
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
+                        }}
+                      >
+                        {expCompanyPlaceholder}
+                      </div>
+                      
+                      {/* Years */}
+                      <div 
+                        style={{ 
+                          fontSize: '12px', 
+                          color: 'var(--text-tertiary)',
+                          marginBottom: '8px',
+                          minHeight: '16px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                          <line x1="16" y1="2" x2="16" y2="6"></line>
+                          <line x1="8" y1="2" x2="8" y2="6"></line>
+                          <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        {expYearsPlaceholder}
+                      </div>
+                      
+                      {/* Description */}
+                      <div 
+                        style={{ 
+                          fontSize: '13px', 
+                          color: 'var(--text-secondary)',
+                          lineHeight: '1.5',
+                          minHeight: '40px',
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
+                        }}
+                      >
+                        {expDescPlaceholder}
                       </div>
                     </div>
                   </div>
@@ -1280,7 +1389,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                       fontSize: '12px', 
                       color: 'var(--text-tertiary)', 
                       textAlign: 'center',
-                      marginTop: 'var(--space-3)',
+                      marginTop: 'var(--space-4)',
                       fontStyle: 'italic'
                     }}>
                       Tap Customize to add your experience

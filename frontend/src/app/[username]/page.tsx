@@ -100,11 +100,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [selectedItemForResize, setSelectedItemForResize] = useState<PortfolioItem | null>(null);
   const [sizePickerPosition, setSizePickerPosition] = useState({ x: 0, y: 0 });
   
-  // Action buttons customization state
-  const [actionButtons, setActionButtons] = useState<ActionButton[]>([
-    { id: '1', label: 'Message Me', url: '', type: 'message' },
-    { id: '2', label: 'Email', url: '', type: 'email' }
-  ]);
+  // Action buttons customization state - empty by default, users add their own
+  const [actionButtons, setActionButtons] = useState<ActionButton[]>([]);
   const [editingButtonId, setEditingButtonId] = useState<string | null>(null);
   
   // Profile info editing state (in customize mode)
@@ -390,10 +387,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
   };
 
   const handleDeleteButton = (id: string) => {
-    if (actionButtons.length <= 1) {
-      toast.error('At least one button is required');
-      return;
-    }
     setActionButtons(buttons => buttons.filter(btn => btn.id !== id));
     if (editingButtonId === id) {
       setEditingButtonId(null);
@@ -1258,6 +1251,26 @@ export default function ProfilePage({ params }: { params: { username: string } }
           {isOwnProfile ? (
             // Owner view - dynamic buttons (clickable in customize mode)
             <>
+              {/* Empty state placeholder when no buttons and not in customize mode */}
+              {actionButtons.length === 0 && !showCustomizePanel && (
+                <div 
+                  style={{
+                    flex: 1,
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    border: '1px dashed rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    color: 'rgba(255, 255, 255, 0.3)',
+                    fontSize: '12px',
+                    fontWeight: 500
+                  }}
+                >
+                  Tap Customize to add action buttons
+                </div>
+              )}
               {actionButtons.map((button, index) => (
                 <button
                   key={button.id}
@@ -1338,8 +1351,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
                     handleAddButton();
                   }}
                   style={{
-                    flex: actionButtons.length === 1 ? '0 0 calc(35% - 4px)' : '0 0 auto',
-                    minWidth: '60px',
+                    flex: actionButtons.length === 0 ? '1 1 100%' : actionButtons.length === 1 ? '0 0 calc(35% - 4px)' : '0 0 auto',
+                    minWidth: actionButtons.length === 0 ? 'auto' : '60px',
                     height: '32px',
                     background: 'transparent',
                     border: '1.5px dashed rgba(0, 194, 255, 0.4)',
