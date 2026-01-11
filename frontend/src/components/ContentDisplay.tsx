@@ -90,7 +90,7 @@ export default function ContentDisplay({
         overflow: 'hidden',
         boxSizing: 'border-box',
         position: 'relative',
-        borderRadius: customRadius !== undefined ? `${customRadius}px` : undefined
+        borderRadius: customRadius !== undefined ? (customRadius === 0 ? '0px' : `${customRadius}px`) : undefined
       }}
     >
       {renderContent()}
@@ -112,7 +112,6 @@ function PhotoDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => 
         width: '100%',
         height: '100%',
         position: 'relative',
-        borderRadius: 'var(--radius-lg)',
         overflow: 'hidden',
         cursor: onClick ? 'pointer' : 'default',
         background: 'rgba(255, 255, 255, 0.03)',
@@ -193,7 +192,6 @@ function AudioDisplayCompact({
       style={{
         width: '100%',
         height: '100%',
-        borderRadius: '5px',
         background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.12), rgba(0, 194, 255, 0.08))',
         padding: '24px 20px',
         display: 'flex',
@@ -426,7 +424,6 @@ function AudioDisplay({ item, isActive }: { item: PortfolioItem; isActive?: bool
       style={{
         width: '100%',
         height: '100%',
-        borderRadius: '5px',
         background: 'rgba(10, 132, 255, 0.08)',
         border: '1px solid rgba(10, 132, 255, 0.2)',
         padding: '20px',
@@ -617,7 +614,6 @@ function TextDisplayCompact({ item, onClick }: { item: PortfolioItem; onClick?: 
       style={{
         width: '100%',
         height: '100%',
-        borderRadius: '5px',
         background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.05), rgba(118, 75, 162, 0.05))',
         padding: '20px 16px',
         display: 'flex',
@@ -730,7 +726,6 @@ function TextDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => v
       style={{
         width: '100%',
         height: '100%',
-        borderRadius: '5px',
         background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.05), rgba(118, 75, 162, 0.05))',
         padding: '32px',
         display: 'flex',
@@ -812,7 +807,6 @@ function PDFDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => vo
       style={{
         width: '100%',
         height: '100%',
-        borderRadius: '5px',
         background: 'linear-gradient(135deg, rgba(0, 194, 255, 0.08), rgba(0, 194, 255, 0.04))',
         padding: '24px 16px',
         display: 'flex',
@@ -951,7 +945,6 @@ function VideoDisplay({
         width: '100%',
         height: '100%',
         position: 'relative',
-        borderRadius: 'var(--radius-lg)',
         overflow: 'hidden',
         cursor: onClick ? 'pointer' : 'default',
         background: 'rgba(255, 255, 255, 0.03)',
