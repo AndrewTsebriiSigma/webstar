@@ -96,7 +96,7 @@
   * {
     @apply border-gray-700;
   }
-
+  
   /* ================================================================
      Text Selection Styling - Blue highlight like editing mode
      Matches the post editor selection style (#0A84FF)
@@ -1147,7 +1147,7 @@ html {
   from {
     opacity: 0;
     transform: translateY(-8px);
-  }
+}
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1213,7 +1213,7 @@ html {
       0 0 16px rgba(87, 191, 249, 0.15),
       inset 0 0 4px rgba(87, 191, 249, 0.1);
     border-color: rgba(87, 191, 249, 0.4);
-  }
+}
   25% {
     box-shadow: 
       0 0 12px rgba(87, 191, 249, 0.5),
@@ -1227,7 +1227,7 @@ html {
       0 0 32px rgba(87, 191, 249, 0.2),
       inset 0 0 8px rgba(87, 191, 249, 0.12);
     border-color: rgba(87, 191, 249, 0.5);
-  }
+}
   75% {
     box-shadow: 
       0 0 10px rgba(87, 191, 249, 0.45),
@@ -1241,7 +1241,7 @@ html {
       0 0 16px rgba(87, 191, 249, 0.15),
       inset 0 0 4px rgba(87, 191, 249, 0.1);
     border-color: rgba(87, 191, 249, 0.4);
-  }
+}
 }
 
 /* Sparkle particles floating effect */
@@ -1253,7 +1253,7 @@ html {
   50% {
     opacity: 1;
     transform: translateY(-2px) scale(1.1);
-  }
+}
 }
 
 /* Magic editable class - apply to elements in customize mode */

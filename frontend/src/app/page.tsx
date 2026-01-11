@@ -199,6 +199,386 @@ function HeroGlow() {
   );
 }
 
+// Competitor Orbit - JARVIS Style with particles flowing to center
+function CompetitorOrbit() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
+  
+  // Mouse parallax for WebSTAR logo
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const offsetX = (e.clientX - centerX) / rect.width * 8;
+    const offsetY = (e.clientY - centerY) / rect.height * 8;
+    setMouseOffset({ x: offsetX, y: offsetY });
+  };
+
+  const handleMouseLeave = () => {
+    setMouseOffset({ x: 0, y: 0 });
+  };
+  
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const resizeCanvas = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    interface Particle {
+      x: number;
+      y: number;
+      size: number;
+      alpha: number;
+      speed: number;
+    }
+
+    const particles: Particle[] = [];
+    const centerX = () => canvas.width / 2;
+    const centerY = () => canvas.height / 2;
+
+    const createParticle = () => {
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 180 + Math.random() * 120;
+      particles.push({
+        x: centerX() + Math.cos(angle) * distance,
+        y: centerY() + Math.sin(angle) * distance,
+        size: 1 + Math.random() * 1.5,
+        alpha: 0.4 + Math.random() * 0.3,
+        speed: 0.4 + Math.random() * 0.4
+      });
+    };
+
+    for (let i = 0; i < 25; i++) createParticle();
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      particles.forEach((p, index) => {
+        const dx = centerX() - p.x;
+        const dy = centerY() - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist > 40) {
+          p.x += (dx / dist) * p.speed;
+          p.y += (dy / dist) * p.speed;
+          p.alpha -= 0.003;
+        } else {
+          p.alpha -= 0.03;
+        }
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 194, 255, ${p.alpha})`;
+        ctx.fill();
+
+        if (p.alpha <= 0) {
+          particles.splice(index, 1);
+          createParticle();
+        }
+      });
+
+      requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => window.removeEventListener('resize', resizeCanvas);
+  }, []);
+
+  // Organic neural network - 6 icons, unsynchronized breathing
+  const competitors = [
+    { icon: '/behance.png', radius: 34, size: 'lg', angle: 5, breathe: 'a', duration: 7 },
+    { icon: '/wix.png', radius: 40, size: 'lg', angle: 58, breathe: 'f', duration: 9 },
+    { icon: '/icons/social.png', radius: 32, size: 'lg', angle: 118, breathe: 'b', duration: 6 },
+    { icon: '/icons/linkedin.png', radius: 44, size: 'lg', angle: 172, breathe: 'c', duration: 11 },
+    { icon: '/linktree.png', radius: 36, size: 'lg', angle: 238, breathe: 'd', duration: 8 },
+    { icon: '/icons/soundcloud.png', radius: 38, size: 'lg', angle: 310, breathe: 'e', duration: 10 },
+  ];
+  
+  // Size classes - all bigger now
+  const sizeClasses = {
+    lg: 'w-9 h-9 sm:w-11 sm:h-11',
+    md: 'w-8 h-8 sm:w-10 sm:h-10',
+    sm: 'w-7 h-7 sm:w-9 sm:h-9'
+  };
+
+  return (
+    <section 
+      className="relative overflow-hidden py-16 sm:py-24"
+      style={{ background: '#0A0A0E' }}
+    >
+      {/* Particle Canvas */}
+      <canvas 
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full pointer-events-none"
+        style={{ opacity: 0.7 }}
+      />
+
+      {/* Grid Background */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            radial-gradient(circle at 50% 50%, rgba(0, 194, 255, 0.04) 0%, transparent 50%),
+            linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)
+          `,
+          backgroundSize: '100% 100%, 50px 50px, 50px 50px'
+        }}
+      />
+
+      <div className="relative z-10 max-w-4xl mx-auto px-4">
+        {/* Section Header */}
+        <div className="text-center mb-12 sm:mb-16">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3" style={{ color: '#fff' }}>
+            Everything flows to one place
+          </h2>
+          <p className="text-xs sm:text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            Stop spreading your work across platforms that don't serve you
+          </p>
+        </div>
+
+        {/* Orbit Container - Larger for 12 icons */}
+        <div 
+          ref={containerRef}
+          className="relative mx-auto"
+          style={{ width: '380px', height: '380px', maxWidth: '90vw', maxHeight: '90vw' }}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+        >
+          {/* Orbit Rings - Subtle, matching icon distances */}
+          <div 
+            className="absolute rounded-full"
+            style={{
+              inset: '0%',
+              border: '1px solid rgba(0, 194, 255, 0.05)',
+              animation: 'orbitPulse 5s ease-in-out infinite'
+            }}
+          />
+          <div 
+            className="absolute rounded-full"
+            style={{
+              inset: '12%',
+              border: '1px solid rgba(0, 194, 255, 0.08)',
+              animation: 'orbitPulse 5s ease-in-out infinite 1s'
+            }}
+          />
+          <div 
+            className="absolute rounded-full"
+            style={{
+              inset: '28%',
+              border: '1px solid rgba(0, 194, 255, 0.1)',
+              animation: 'orbitPulse 5s ease-in-out infinite 2s'
+            }}
+          />
+
+          {/* Competitor Icons - Gentle sway, not full rotation */}
+          <div 
+            className="absolute inset-0"
+            style={{ animation: 'orbitSway 12s ease-in-out infinite' }}
+          >
+            {competitors.map((comp, i) => {
+              const angleRad = (comp.angle * Math.PI) / 180;
+              const x = 50 + comp.radius * Math.cos(angleRad);
+              const y = 50 + comp.radius * Math.sin(angleRad);
+              
+              return (
+                <div
+                  key={i}
+                  className="absolute"
+                  style={{
+                    left: `${x}%`,
+                    top: `${y}%`,
+                    transform: 'translate(-50%, -50%)',
+                    animation: `breathe${comp.breathe.toUpperCase()} ${comp.duration}s ease-in-out infinite`
+                  }}
+                >
+                  {/* Counter-sway wrapper - keeps icon mostly upright */}
+                  <div style={{ animation: `iconSway${comp.breathe.toUpperCase()} ${15 + i * 3}s ease-in-out infinite` }}>
+                    {/* Competitor Icon - No hover effects */}
+                    <img 
+                      src={comp.icon} 
+                      alt=""
+                      className={`${sizeClasses[comp.size as keyof typeof sizeClasses]} object-contain`}
+                      style={{ 
+                        filter: 'grayscale(30%) brightness(0.8)',
+                        opacity: 0.85
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Connecting Lines SVG - Sways with icons */}
+          <svg 
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            style={{ animation: 'orbitSway 12s ease-in-out infinite' }}
+          >
+            {competitors.map((comp, i) => {
+              const angleRad = (comp.angle * Math.PI) / 180;
+              const x = 50 + comp.radius * Math.cos(angleRad);
+              const y = 50 + comp.radius * Math.sin(angleRad);
+              return (
+                <line
+                  key={i}
+                  x1="50%"
+                  y1="50%"
+                  x2={`${x}%`}
+                  y2={`${y}%`}
+                  stroke="rgba(0, 194, 255, 0.4)"
+                  strokeWidth="1"
+                  strokeDasharray="4 6"
+                  style={{
+                    animation: `orbitDash 3s linear infinite`,
+                    animationDelay: `${i * 0.15}s`
+                  }}
+                />
+              );
+            })}
+          </svg>
+
+          {/* Center WebSTAR Logo - with mouse parallax */}
+          <div 
+            className="absolute flex flex-col items-center justify-center group/logo cursor-pointer"
+            style={{
+              left: '50%',
+              top: '52%',
+              transform: `translate(calc(-50% + ${mouseOffset.x}px), calc(-50% + ${mouseOffset.y}px))`,
+              transition: 'transform 0.15s ease-out',
+              zIndex: 10
+            }}
+          >
+            {/* Glow */}
+            <div 
+              className="absolute w-32 h-32 sm:w-44 sm:h-44 rounded-full"
+              style={{
+                background: 'radial-gradient(circle, rgba(0, 194, 255, 0.3) 0%, transparent 70%)',
+                filter: 'blur(25px)',
+                animation: 'orbitPulse 3s ease-in-out infinite'
+              }}
+            />
+            {/* Logo Container - Tighter frame, hover scale */}
+            <div 
+              className="relative w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-xl flex items-center justify-center transition-transform duration-200 group-hover/logo:scale-110"
+              style={{
+                background: 'linear-gradient(135deg, rgba(0, 194, 255, 0.18) 0%, rgba(0, 80, 120, 0.18) 100%)',
+                border: '2px solid rgba(0, 194, 255, 0.5)',
+                boxShadow: '0 0 50px rgba(0, 194, 255, 0.3), inset 0 0 25px rgba(0, 194, 255, 0.1)'
+              }}
+            >
+              <img 
+                src="/webstar-logo.png" 
+                alt="WebSTAR" 
+                className="w-12 h-12 sm:w-14 sm:h-14"
+              />
+            </div>
+            <span 
+              className="mt-2 text-sm sm:text-base font-semibold"
+              style={{ color: '#00C2FF' }}
+            >
+              WebSTAR
+            </span>
+          </div>
+        </div>
+
+        {/* Bottom Tagline */}
+        <p 
+          className="text-center mt-10 sm:mt-14 text-[11px] sm:text-xs"
+          style={{ color: 'rgba(255,255,255,0.35)' }}
+        >
+          One space. Your rules. Forever.
+        </p>
+      </div>
+
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes orbitSway {
+          0%, 100% { transform: rotate(-20deg); }
+          50% { transform: rotate(20deg); }
+        }
+        @keyframes orbitSpin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes orbitCounterSpin {
+          from { transform: translate(-50%, -50%) rotate(0deg); }
+          to { transform: translate(-50%, -50%) rotate(-360deg); }
+        }
+        /* Icon sway animations - different timings for unsynchronized organic feel */
+        @keyframes iconSwayA {
+          0%, 100% { transform: rotate(-12deg); }
+          50% { transform: rotate(12deg); }
+        }
+        @keyframes iconSwayB {
+          0%, 100% { transform: rotate(10deg); }
+          50% { transform: rotate(-14deg); }
+        }
+        @keyframes iconSwayC {
+          0%, 100% { transform: rotate(-8deg); }
+          35% { transform: rotate(15deg); }
+          70% { transform: rotate(-5deg); }
+        }
+        @keyframes iconSwayD {
+          0%, 100% { transform: rotate(15deg); }
+          50% { transform: rotate(-10deg); }
+        }
+        @keyframes iconSwayE {
+          0%, 100% { transform: rotate(-15deg); }
+          40% { transform: rotate(8deg); }
+          80% { transform: rotate(-12deg); }
+        }
+        @keyframes iconSwayF {
+          0%, 100% { transform: rotate(8deg); }
+          50% { transform: rotate(-15deg); }
+        }
+        @keyframes orbitPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.015); }
+        }
+        @keyframes orbitDash {
+          to { stroke-dashoffset: -18; }
+        }
+        /* Breathing animations - scale only, lines stay connected */
+        @keyframes breatheA {
+          0%, 100% { transform: translate(-50%, -50%) scale(1); }
+          50% { transform: translate(-50%, -50%) scale(1.15); }
+        }
+        @keyframes breatheB {
+          0%, 100% { transform: translate(-50%, -50%) scale(1.1); }
+          50% { transform: translate(-50%, -50%) scale(0.9); }
+        }
+        @keyframes breatheC {
+          0%, 100% { transform: translate(-50%, -50%) scale(0.95); }
+          50% { transform: translate(-50%, -50%) scale(1.12); }
+        }
+        @keyframes breatheD {
+          0%, 100% { transform: translate(-50%, -50%) scale(1.05); }
+          50% { transform: translate(-50%, -50%) scale(0.88); }
+        }
+        @keyframes breatheE {
+          0%, 100% { transform: translate(-50%, -50%) scale(1); }
+          35% { transform: translate(-50%, -50%) scale(1.18); }
+          70% { transform: translate(-50%, -50%) scale(0.92); }
+        }
+        @keyframes breatheF {
+          0%, 100% { transform: translate(-50%, -50%) scale(0.9); }
+          50% { transform: translate(-50%, -50%) scale(1.1); }
+        }
+      `}</style>
+    </section>
+  );
+}
+
 // Showcase Profile Card - Glassy next-gen
 function ShowcaseCard({ profile }: { profile: { name: string; role: string; avatar: string; coverGradient: string; username: string; } }) {
   return (
@@ -379,7 +759,7 @@ export default function Home() {
   }, [selectedArchetype]);
   
   useEffect(() => {
-    const duration = 8000; // 8 seconds
+    const duration = 6000; // 6 seconds
     const tickInterval = 50; // Update progress every 50ms
     const increment = (tickInterval / duration) * 100;
     
@@ -565,7 +945,7 @@ export default function Home() {
               <p className="text-[11px]" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
                 1,000+ professionals building their space
               </p>
-            </div>
+          </div>
 
             <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 mt-3 sm:mt-4">
               {['⚡ 5 Min', '🎨 All Formats', '🔗 One Link', '💼 Pro'].map((badge, i) => (
@@ -583,10 +963,13 @@ export default function Home() {
                   {badge}
                 </span>
               ))}
-            </div>
-          </div>
-        </div>
+                  </div>
+                </div>
+                  </div>
       </section>
+
+      {/* ===================== COMPETITOR ORBIT - JARVIS Style ===================== */}
+      <CompetitorOrbit />
 
       {/* ===================== FEATURE SHOWCASE - Apple Quality ===================== */}
       <section 
@@ -608,42 +991,43 @@ export default function Home() {
           }}
         />
 
-        <div className="relative z-10 py-12 sm:py-16 md:py-20 px-4 sm:px-8 md:px-20">
-          <div className="max-w-5xl mx-auto">
-            {/* Section Header - Always on top, left-aligned */}
-            <div className="text-left mb-6 md:mb-0">
-              <p 
-                className="text-[10px] font-medium uppercase tracking-widest mb-2 md:mb-3"
-                style={{ color: '#00C2FF' }}
-              >
-                Your Space
-              </p>
-              <h2 
-                className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 md:mb-3 tracking-tight leading-tight"
-                style={{ color: '#FFFFFF' }}
-              >
-                Everything you do,<br />in one place.
-              </h2>
-              <p 
-                className="text-xs sm:text-sm mb-4 md:mb-10 leading-relaxed"
-                style={{ color: 'rgba(255, 255, 255, 0.4)', maxWidth: '380px' }}
-              >
-                A professional space that grows with you. Showcase work, document projects, tell your story.
-              </p>
-            </div>
+        <div className="relative z-10 py-12 sm:py-16 md:py-20 px-4">
+          <div className="max-w-3xl mx-auto">
 
-            <div className="flex flex-col md:grid md:grid-cols-2 gap-3 md:gap-16 items-center md:items-start">
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 md:gap-6 items-start">
               
-              {/* VERTICAL TABS - Hidden on mobile, shown on desktop LEFT */}
-              <div className="hidden md:block order-1">
-                {/* Feature List with indicator bars */}
-                <div>
+              {/* LEFT COLUMN - Header + Tabs on desktop, Header only on mobile */}
+              <div className="order-1">
+                {/* Section Header */}
+                <div className="text-left mb-6">
+                  <p 
+                    className="text-[10px] font-medium uppercase tracking-widest mb-2 md:mb-3"
+                    style={{ color: '#00C2FF' }}
+                  >
+                    Your Space
+                  </p>
+                  <h2 
+                    className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 md:mb-3 tracking-tight leading-tight"
+                    style={{ color: '#FFFFFF' }}
+                  >
+                    Everything you do,<br />in one place.
+                  </h2>
+                  <p 
+                    className="text-[11px] sm:text-xs"
+                    style={{ color: 'rgba(255, 255, 255, 0.5)', maxWidth: '340px' }}
+                  >
+                    Showcase work, document projects, tell your story.
+                  </p>
+                </div>
+
+                {/* VERTICAL TABS - Hidden on mobile, shown on desktop */}
+                <div className="hidden md:block space-y-1">
                   {[
-                    { id: 'overview', label: 'Overview' },
-                    { id: 'portfolio', label: 'Portfolio' },
-                    { id: 'projects', label: 'Projects' },
-                    { id: 'about', label: 'About' },
-                    { id: 'ctas', label: 'CTA' }
+                    { id: 'overview', label: 'Overview', desc: 'Your professional identity at a glance. Name, role, and what makes you unique.' },
+                    { id: 'portfolio', label: 'Portfolio', desc: 'Showcase your best work in a beautiful masonry grid. Images, videos, and more.' },
+                    { id: 'projects', label: 'Projects', desc: 'Document your journey. Case studies, milestones, and the story behind your work.' },
+                    { id: 'about', label: 'About', desc: 'Tell your story. Background, skills, experience — everything that defines you.' },
+                    { id: 'ctas', label: 'CTA', desc: 'Drive action. Custom buttons that connect visitors to what matters most.' }
                   ].map((feature, i) => (
                     <div
                       key={feature.id}
@@ -651,55 +1035,80 @@ export default function Home() {
                       tabIndex={0}
                       onClick={() => { setSelectedArchetype(i); setRotationProgress(0); progressRef.current = 0; }}
                       onKeyDown={(e) => { if (e.key === 'Enter') { setSelectedArchetype(i); setRotationProgress(0); progressRef.current = 0; } }}
-                      className="flex items-center gap-3"
+                      className="group relative"
                       style={{ 
-                        padding: '12px 0',
+                        padding: '8px 6px 8px 0',
                         cursor: 'pointer',
-                        outline: 'none'
+                        outline: 'none',
+                        borderRadius: '0 6px 6px 0',
+                        background: selectedArchetype === i 
+                          ? 'linear-gradient(90deg, rgba(0, 194, 255, 0.08) 0%, rgba(0, 194, 255, 0.02) 50%, transparent 70%)'
+                          : 'transparent',
+                        transition: 'background 0.3s ease'
                       }}
                     >
-                      {/* Vertical indicator bar with progress */}
-                      <div 
-                        style={{
-                          width: '3px',
-                          height: '22px',
-                          borderRadius: '2px',
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          flexShrink: 0,
-                          position: 'relative',
-                          overflow: 'hidden'
-                        }}
-                      >
-                        {/* Progress fill - drops from top down */}
+                      <div className="flex items-stretch gap-2.5">
+                        {/* Vertical indicator bar with progress - full height of block */}
                         <div 
                           style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: selectedArchetype === i ? `${rotationProgress}%` : '0%',
-                            background: '#00C2FF',
-                            borderRadius: '2px',
-                            transition: 'none'
+                            width: '3px',
+                            alignSelf: 'stretch',
+                            borderRadius: '0',
+                            background: 'rgba(255, 255, 255, 0.06)',
+                            flexShrink: 0,
+                            position: 'relative',
+                            overflow: 'hidden'
                           }}
-                        />
-                      </div>
-                      <span 
-                        className="text-[15px] font-medium"
-                        style={{ 
-                          color: selectedArchetype === i ? '#FFFFFF' : 'rgba(255, 255, 255, 0.4)',
-                          transition: 'color 0.2s ease'
-                        }}
-                      >
-                        {feature.label}
-                      </span>
+                        >
+                          {/* Progress fill - drops from top down */}
+                          <div 
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: selectedArchetype === i ? `${rotationProgress}%` : '0%',
+                              background: 'linear-gradient(180deg, #00C2FF 0%, #0099CC 100%)',
+                              transition: 'none'
+                            }}
+                          />
                   </div>
-                  ))}
+                        <div className="flex-1">
+                          <span 
+                            className="text-[14px] font-medium block"
+                            style={{ 
+                              color: selectedArchetype === i ? '#FFFFFF' : 'rgba(255, 255, 255, 0.4)',
+                              transition: 'color 0.2s ease'
+                            }}
+                          >
+                            {feature.label}
+                          </span>
+                          {/* Description - always visible when selected */}
+                          <div 
+                            style={{
+                              maxHeight: selectedArchetype === i ? '50px' : '0px',
+                              opacity: selectedArchetype === i ? 1 : 0,
+                              overflow: 'hidden',
+                              transition: 'max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease',
+                              marginTop: '3px'
+                            }}
+                          >
+                            <p 
+                              className="text-[11px] leading-snug"
+                              style={{ color: 'rgba(255, 255, 255, 0.5)', maxWidth: '260px' }}
+                            >
+                              {feature.desc}
+                            </p>
+                </div>
+                  </div>
                 </div>
               </div>
+                  ))}
+            </div>
+          </div>
 
-              {/* PHONE - First on mobile, RIGHT on desktop */}
-              <div className="flex justify-center order-1 md:order-2 w-full md:w-auto">
+              {/* PHONE - Second on mobile, RIGHT on desktop */}
+              <div className="flex justify-center md:justify-start order-2 w-full md:w-auto">
                 <div
                   className="w-[280px] sm:w-[280px] md:w-[280px]"
                   style={{
@@ -756,8 +1165,8 @@ export default function Home() {
                         }}
                       >
                         D
-                      </div>
-                    </div>
+        </div>
+      </div>
 
                     {/* Profile Info + CTA Buttons */}
                     <div style={{ padding: '34px 16px 12px', textAlign: 'center' }}>
@@ -782,7 +1191,7 @@ export default function Home() {
                             transition: 'opacity 0.3s ease'
                           }} 
                         />
-                      </div>
+              </div>
                       {/* Description - glows on Overview (index 0) */}
                       <div style={{ 
                         fontSize: '11px', 
@@ -792,7 +1201,7 @@ export default function Home() {
                         transition: 'all 0.3s ease'
                       }}>
                         Building the future of professional identity.
-                      </div>
+            </div>
                       {/* Location & Role - glows on Overview (index 0) */}
                       <div style={{ 
                         fontSize: '10px', 
@@ -807,7 +1216,7 @@ export default function Home() {
                       }}>
                         <span>📍 Toronto, Canada</span>
                         <span>💼 Marketing</span>
-                      </div>
+              </div>
                       
                       {/* CTA Buttons - Tinted by default, bright when CTA selected (index 4) */}
                       <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', marginBottom: '12px' }}>
@@ -848,8 +1257,8 @@ export default function Home() {
                         >
                           Email
                         </span>
-                      </div>
-                    </div>
+            </div>
+              </div>
 
                     {/* Tab Menu - Full width, indices: Portfolio=1, Projects=2, About=3 */}
                     <div style={{ display: 'flex', justifyContent: 'space-around', padding: '0 0 8px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -988,14 +1397,14 @@ export default function Home() {
               </div>
 
               {/* HORIZONTAL TABS - Mobile only, below phone */}
-              <div className="md:hidden order-2 w-full">
+              <div className="md:hidden order-3 w-full">
                 <div className="flex justify-center gap-1 p-2" style={{ background: 'transparent' }}>
                   {[
-                    { id: 'overview', label: 'Overview', short: 'Overview' },
-                    { id: 'portfolio', label: 'Portfolio', short: 'Portfolio' },
-                    { id: 'projects', label: 'Projects', short: 'Projects' },
-                    { id: 'about', label: 'About', short: 'About' },
-                    { id: 'ctas', label: 'CTA', short: 'CTA' }
+                    { id: 'overview', short: 'Overview' },
+                    { id: 'portfolio', short: 'Portfolio' },
+                    { id: 'projects', short: 'Projects' },
+                    { id: 'about', short: 'About' },
+                    { id: 'ctas', short: 'CTA' }
                   ].map((feature, i) => (
                     <button
                       key={feature.id}
@@ -1043,9 +1452,29 @@ export default function Home() {
                     </button>
                   ))}
                 </div>
-              </div>
+                {/* Mobile description - shows below tabs */}
+                <div 
+                  className="text-center px-4 mt-2"
+                  style={{
+                    transition: 'opacity 0.3s ease'
+                  }}
+                >
+                  <p 
+                    className="text-[11px] leading-relaxed"
+                    style={{ color: 'rgba(255, 255, 255, 0.4)' }}
+                  >
+                    {[
+                      'Your professional identity at a glance.',
+                      'Showcase your best work beautifully.',
+                      'Document your journey and milestones.',
+                      'Tell your story and background.',
+                      'Drive action with custom buttons.'
+                    ][selectedArchetype]}
+              </p>
             </div>
           </div>
+        </div>
+      </div>
         </div>
       </section>
 
@@ -1131,7 +1560,7 @@ export default function Home() {
                 Ready to own your space?
           </h2>
               
-              <Link
+          <Link
                 href="/auth"
                 className="inline-flex items-center px-5 py-2.5 sm:px-7 sm:py-3 text-sm font-semibold rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] mb-5 sm:mb-6"
                 style={{ 
@@ -1141,7 +1570,7 @@ export default function Home() {
                 }}
               >
                 Build Your Space
-              </Link>
+          </Link>
 
               {/* Checklist */}
               <div className="flex flex-wrap justify-center gap-3 sm:gap-5 mb-5 sm:mb-6">
@@ -1156,9 +1585,9 @@ export default function Home() {
                       <path d="M20 6L9 17l-5-5"/>
                     </svg>
                     <span className="text-[11px]" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{item}</span>
-              </div>
+        </div>
                 ))}
-              </div>
+      </div>
 
               <div className="flex items-center justify-center gap-0.5 mb-1.5">
                 {[1,2,3,4,5].map(i => (

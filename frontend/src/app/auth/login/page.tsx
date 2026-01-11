@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { authAPI } from '@/lib/api';
+import { useKeyboardScroll } from '@/hooks/useKeyboardScroll';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
@@ -134,6 +135,10 @@ export default function LoginPage() {
   const [totpCode, setTotpCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Handle mobile keyboard scroll behavior
+  useKeyboardScroll();
+  
   const [rememberMe, setRememberMe] = useState(() => {
     // Check if user previously opted for remember me
     if (typeof window !== 'undefined') {
@@ -300,35 +305,35 @@ export default function LoginPage() {
             {/* WebSTAR name - tight to logo */}
             <span 
               className="text-xl font-bold tracking-widest mt-2 relative z-10"
-              style={{ 
+            style={{ 
                 color: '#00C2FF',
                 textShadow: '0 0 20px rgba(0, 194, 255, 0.4)'
-              }}
-            >
+            }}
+          >
               WebSTAR
             </span>
           </Link>
         </div>
-
+          
         {/* Welcome text + Card - pushed down */}
         <div style={{ marginTop: '1vh' }}>
           <div className="text-center mb-8">
-            <h1 
-              className="text-3xl font-bold mb-2"
+          <h1 
+            className="text-3xl font-bold mb-2"
               style={{ color: '#FFFFFF' }}
-            >
+          >
               {step === 'credentials' ? 'Welcome back, Hero!' : 'Two-Factor Authentication'}
-            </h1>
-            
-            <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-              {step === 'credentials' 
+          </h1>
+          
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+            {step === 'credentials' 
                 ? 'Enter your space to continue building.' 
-                : 'Enter the 6-digit code from your authenticator app'
-              }
-            </p>
-          </div>
+              : 'Enter the 6-digit code from your authenticator app'
+            }
+          </p>
+        </div>
 
-          {/* Main Card */}
+        {/* Main Card */}
         <div 
           className="glass rounded-2xl p-8 animate-slide-up"
           style={{ 
@@ -341,31 +346,87 @@ export default function LoginPage() {
         >
           {step === 'credentials' ? (
             <form onSubmit={handleCredentialsSubmit} className="space-y-5">
-              <div>
+              <div 
+                className="input-wrapper"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid transparent',
+                  borderRadius: '12px',
+                  transition: 'border-color 0.15s, box-shadow 0.15s'
+                }}
+              >
                 <input
                   id="email"
                   type="text"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full"
+                  className="w-full px-4 py-3"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: 'rgba(255, 255, 255, 0.95)'
+                  }}
                   placeholder="Email or username"
                   autoComplete="username"
                   disabled={loading}
+                  onFocus={(e) => {
+                    const wrapper = e.currentTarget.parentElement;
+                    if (wrapper) {
+                      wrapper.style.borderColor = 'rgba(10, 132, 255, 0.5)';
+                      wrapper.style.boxShadow = '0 0 0 3px rgba(10, 132, 255, 0.1), 0 0 12px rgba(10, 132, 255, 0.1)';
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const wrapper = e.currentTarget.parentElement;
+                    if (wrapper) {
+                      wrapper.style.borderColor = 'transparent';
+                      wrapper.style.boxShadow = 'none';
+                    }
+                  }}
                 />
               </div>
 
-              <div className="relative">
+              <div 
+                className="input-wrapper relative"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid transparent',
+                  borderRadius: '12px',
+                  transition: 'border-color 0.15s, box-shadow 0.15s'
+                }}
+              >
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pr-10"
+                  className="w-full px-4 py-3 pr-10"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: 'rgba(255, 255, 255, 0.95)'
+                  }}
                   placeholder="Password"
                   autoComplete="current-password"
                   disabled={loading}
+                  onFocus={(e) => {
+                    const wrapper = e.currentTarget.parentElement;
+                    if (wrapper) {
+                      wrapper.style.borderColor = 'rgba(10, 132, 255, 0.5)';
+                      wrapper.style.boxShadow = '0 0 0 3px rgba(10, 132, 255, 0.1), 0 0 12px rgba(10, 132, 255, 0.1)';
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const wrapper = e.currentTarget.parentElement;
+                    if (wrapper) {
+                      wrapper.style.borderColor = 'transparent';
+                      wrapper.style.boxShadow = 'none';
+                    }
+                  }}
                 />
                 <button
                   type="button"
@@ -510,22 +571,22 @@ export default function LoginPage() {
             <>
               {/* OR Divider - Pill style */}
               <div className="my-5 flex items-center gap-3">
-                <div 
+                  <div 
                   className="flex-1 h-px"
                   style={{ 
                     background: 'linear-gradient(90deg, transparent, rgba(0, 194, 255, 0.3))'
                   }}
-                />
-                <span 
+                  />
+                  <span 
                   className="px-4 py-1 rounded-full text-xs tracking-widest"
-                  style={{ 
+                    style={{ 
                     background: 'rgba(20, 20, 24, 0.9)',
                     color: 'rgba(255, 255, 255, 0.4)',
                     border: '1px solid rgba(255, 255, 255, 0.06)'
-                  }}
-                >
+                    }}
+                  >
                   OR
-                </span>
+                  </span>
                 <div 
                   className="flex-1 h-px"
                   style={{ 
@@ -581,32 +642,32 @@ export default function LoginPage() {
           )}
         </div>
 
-          {step === '2fa' && (
-            <div 
-              className="mt-6 text-center text-xs p-4 rounded-lg"
-              style={{ 
-                color: 'var(--text-tertiary)',
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid rgba(255, 255, 255, 0.05)'
-              }}
+        {step === '2fa' && (
+          <div 
+            className="mt-6 text-center text-xs p-4 rounded-lg"
+            style={{ 
+              color: 'var(--text-tertiary)',
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(255, 255, 255, 0.05)'
+            }}
+          >
+            <svg 
+              className="w-4 h-4 inline-block mr-2 mb-1" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
             >
-              <svg 
-                className="w-4 h-4 inline-block mr-2 mb-1" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
-                />
-              </svg>
-              Protected by two-factor authentication
-            </div>
-          )}
-        </div>
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
+              />
+            </svg>
+            Protected by two-factor authentication
+          </div>
+        )}
+      </div>
       </div>
 
       {/* CSS Animations */}

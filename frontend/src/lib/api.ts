@@ -82,6 +82,12 @@ export const authAPI = {
   
   refresh: (refreshToken: string) =>
     api.post('/api/auth/refresh', { refresh_token: refreshToken }),
+  
+  checkUsername: (username: string) =>
+    api.get(`/api/auth/check-username/${username}`),
+  
+  updateProfile: (data: { username?: string; full_name?: string }) =>
+    api.post('/api/auth/setup-profile', data),
 };
 
 // Onboarding API
@@ -99,21 +105,6 @@ export const onboardingAPI = {
   
   complete: (data: { archetype: string; role: string; expertise_level: string; username?: string; full_name?: string; location?: string; bio?: string }) =>
     api.post('/api/onboarding/complete', data),
-  
-  checkUsernameAvailability: async (username: string) => {
-    try {
-      await api.get(`/api/profiles/${username}`);
-      // If we get here, profile exists - username is taken
-      return { available: false };
-    } catch (error: any) {
-      // If 404, username is available
-      if (error.response?.status === 404) {
-        return { available: true };
-      }
-      // Other errors - assume not available to be safe
-      return { available: false };
-    }
-  },
 };
 
 // Profile API
