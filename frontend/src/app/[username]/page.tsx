@@ -93,6 +93,12 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [gridRadius, setGridRadius] = useState(0); // 0-24px
   const [layoutMode, setLayoutMode] = useState<'uniform' | 'masonry'>('uniform');
   
+  // Size picker state for portfolio items
+  type WidgetSize = '1x1' | '4x5' | '5x4' | '4x6' | '3x4' | '16x9' | '4x3';
+  const [showSizePicker, setShowSizePicker] = useState(false);
+  const [selectedItemForResize, setSelectedItemForResize] = useState<PortfolioItem | null>(null);
+  const [sizePickerPosition, setSizePickerPosition] = useState({ x: 0, y: 0 });
+  
   // Action buttons customization state
   const [actionButtons, setActionButtons] = useState<ActionButton[]>([
     { id: '1', label: 'Message Me', url: '', type: 'message' },
@@ -158,6 +164,75 @@ export default function ProfilePage({ params }: { params: { username: string } }
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Widget size helper - converts size to aspect ratio
+  const getAspectRatio = (size: WidgetSize | string | null | undefined): number => {
+    switch (size) {
+      case '1x1': return 1;        // Square
+      case '4x5': return 0.8;      // Portrait
+      case '5x4': return 1.25;     // Landscape
+      case '4x6': return 0.66;     // Tall
+      case '3x4': return 0.75;     // Tall Portrait
+      case '16x9': return 1.777;   // Widescreen
+      case '4x3': return 1.333;    // Landscape
+      default: return 0.8;         // Default to 4:5 portrait
+    }
+  };
+
+  // Size picker label helper
+  const getSizeLabel = (size: WidgetSize): string => {
+    switch (size) {
+      case '1x1': return '1:1';
+      case '4x5': return '4:5';
+      case '5x4': return '5:4';
+      case '4x6': return '4:6';
+      case '3x4': return '3:4';
+      case '16x9': return '16:9';
+      case '4x3': return '4:3';
+      default: return '4:5';
+    }
+  };
+
+  // Handle right-click context menu for size picker
+  const handleItemContextMenu = (e: React.MouseEvent, item: PortfolioItem) => {
+    if (isOwnProfile && showCustomizePanel) {
+      e.preventDefault();
+      e.stopPropagation();
+      setSelectedItemForResize(item);
+      setShowSizePicker(true);
+      // Position picker near the click
+      const rect = e.currentTarget.getBoundingClientRect();
+      setSizePickerPosition({ 
+        x: Math.min(rect.left, window.innerWidth - 180), 
+        y: Math.min(rect.bottom + 8, window.innerHeight - 200)
+      });
+    }
+  };
+
+  // Handle size change for portfolio item
+  const handleSizeChange = async (newSize: WidgetSize) => {
+    if (!selectedItemForResize) return;
+    
+    try {
+      // Update via API - use updateItem method
+      await portfolioAPI.updateItem(selectedItemForResize.id, { aspect_ratio: newSize });
+      
+      // Update local state
+      setPortfolioItems(prev => prev.map(item => 
+        item.id === selectedItemForResize.id 
+          ? { ...item, aspect_ratio: newSize }
+          : item
+      ));
+      
+      toast.success('Size updated');
+    } catch (error) {
+      console.error('Failed to update size:', error);
+      toast.error('Failed to update size');
+    }
+    
+    setShowSizePicker(false);
+    setSelectedItemForResize(null);
+  };
 
   const loadProfile = async (forceRefresh = false) => {
     // Check cache first (5 minute TTL) for instant page loads
@@ -627,7 +702,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="absolute inset-0 bg-[url('/api/placeholder/1200/400')] bg-cover bg-center opacity-20" />
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-600/30 via-blue-500/20 to-purple-600/30" />
           )}
           
           {/* Banner upload overlay - shows in customize mode */}
@@ -1660,20 +1735,37 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 {[...portfolioItems].reverse().map((item, index) => {
                   // Masonry layout: every 5th item (0-indexed: 0, 5, 10...) spans 2 columns and 2 rows
                   const isFeatured = layoutMode === 'masonry' && index % 5 === 0 && gridColumns >= 2;
+                  // Get custom aspect ratio from item (stored in aspect_ratio field)
+                  const itemAspectRatio = layoutMode === 'masonry' 
+                    ? getAspectRatio(item.aspect_ratio as WidgetSize)
+                    : 1; // Uniform mode forces 1:1 square
                   
                   return (
                     <div 
-                      key={item.id} 
+                      key={item.id}
+                      className={`portfolio-grid-item ${showCustomizePanel && isOwnProfile ? 'customize-mode' : ''} ${selectedItemForResize?.id === item.id ? 'selected-for-resize' : ''}`}
                       onClick={() => {
-                        // Open feed modal for all content types
-                        setFeedInitialPostId(item.id);
-                        setShowFeedModal(true);
+                        // Only open feed modal if not in customize mode or if click wasn't a right-click
+                        if (!showCustomizePanel) {
+                          setFeedInitialPostId(item.id);
+                          setShowFeedModal(true);
+                        }
                       }}
+                      onContextMenu={(e) => handleItemContextMenu(e, item)}
                       style={{
                         gridColumn: isFeatured ? 'span 2' : 'span 1',
                         gridRow: isFeatured ? 'span 2' : 'span 1',
                         borderRadius: `${gridRadius}px`,
-                        overflow: 'hidden'
+                        overflow: 'hidden',
+                        position: 'relative',
+                        aspectRatio: layoutMode === 'masonry' ? itemAspectRatio : 1,
+                        cursor: showCustomizePanel && isOwnProfile ? 'context-menu' : 'pointer',
+                        transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                        border: selectedItemForResize?.id === item.id 
+                          ? '2px solid #00C2FF' 
+                          : showCustomizePanel && isOwnProfile 
+                            ? '1px solid rgba(0, 194, 255, 0.3)' 
+                            : 'none'
                       }}
                     >
                       <ContentDisplay 
@@ -1682,6 +1774,34 @@ export default function ProfilePage({ params }: { params: { username: string } }
                         showAttachments={false}
                         customRadius={gridRadius}
                       />
+                      
+                      {/* Customize mode corner indicators */}
+                      {showCustomizePanel && isOwnProfile && (
+                        <>
+                          <div className="customize-indicator" style={{ position: 'absolute', top: '6px', left: '6px', width: '8px', height: '8px', background: 'rgba(0, 194, 255, 0.6)', borderRadius: '50%', pointerEvents: 'none' }} />
+                          <div className="customize-indicator" style={{ position: 'absolute', top: '6px', right: '6px', width: '8px', height: '8px', background: 'rgba(0, 194, 255, 0.6)', borderRadius: '50%', pointerEvents: 'none' }} />
+                          <div className="customize-indicator" style={{ position: 'absolute', bottom: '6px', left: '6px', width: '8px', height: '8px', background: 'rgba(0, 194, 255, 0.6)', borderRadius: '50%', pointerEvents: 'none' }} />
+                          <div className="customize-indicator" style={{ position: 'absolute', bottom: '6px', right: '6px', width: '8px', height: '8px', background: 'rgba(0, 194, 255, 0.6)', borderRadius: '50%', pointerEvents: 'none' }} />
+                          
+                          {/* Size badge showing current aspect ratio */}
+                          <div style={{
+                            position: 'absolute',
+                            bottom: '6px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            background: 'rgba(0, 0, 0, 0.7)',
+                            backdropFilter: 'blur(8px)',
+                            padding: '2px 8px',
+                            borderRadius: '10px',
+                            fontSize: '10px',
+                            fontWeight: 600,
+                            color: '#00C2FF',
+                            pointerEvents: 'none'
+                          }}>
+                            {getSizeLabel((item.aspect_ratio as WidgetSize) || '4x5')}
+                          </div>
+                        </>
+                      )}
                     </div>
                   );
                 })}
@@ -2157,6 +2277,232 @@ export default function ProfilePage({ params }: { params: { username: string } }
             </div>
           </div>
         </div>
+      )}
+
+      {/* Size Picker Popup - Compact 2x3 grid matching Figma design */}
+      {showSizePicker && selectedItemForResize && (
+        <>
+          {/* Invisible overlay to catch clicks outside */}
+          <div 
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 999
+            }}
+            onClick={() => {
+              setShowSizePicker(false);
+              setSelectedItemForResize(null);
+            }}
+          />
+          
+          {/* Compact Size Picker Popup */}
+          <div 
+            style={{
+              position: 'fixed',
+              left: `${sizePickerPosition.x}px`,
+              top: `${sizePickerPosition.y}px`,
+              zIndex: 1000,
+              background: 'rgba(40, 40, 42, 0.95)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              borderRadius: '14px',
+              padding: '8px',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+              animation: 'sizePickerPop 0.15s ease-out'
+            }}
+          >
+            {/* 2x3 Size Grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '6px'
+            }}>
+              {/* Row 1 */}
+              {/* 1:1 Square */}
+              <button
+                onClick={() => handleSizeChange('1x1')}
+                style={{
+                  width: '52px',
+                  height: '52px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: (selectedItemForResize.aspect_ratio || '4x5') === '1x1' 
+                    ? 'rgba(0, 194, 255, 0.15)' 
+                    : 'rgba(60, 60, 62, 0.8)',
+                  border: (selectedItemForResize.aspect_ratio || '4x5') === '1x1' 
+                    ? '2px solid #00C2FF' 
+                    : '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <div style={{
+                  width: '20px',
+                  height: '20px',
+                  border: `2px solid ${(selectedItemForResize.aspect_ratio || '4x5') === '1x1' ? '#00C2FF' : 'rgba(255, 255, 255, 0.5)'}`,
+                  borderRadius: '3px'
+                }} />
+              </button>
+              
+              {/* 4:5 Portrait (default) */}
+              <button
+                onClick={() => handleSizeChange('4x5')}
+                style={{
+                  width: '52px',
+                  height: '52px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: (selectedItemForResize.aspect_ratio || '4x5') === '4x5' 
+                    ? 'rgba(0, 194, 255, 0.15)' 
+                    : 'rgba(60, 60, 62, 0.8)',
+                  border: (selectedItemForResize.aspect_ratio || '4x5') === '4x5' 
+                    ? '2px solid #00C2FF' 
+                    : '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <div style={{
+                  width: '16px',
+                  height: '20px',
+                  border: `2px solid ${(selectedItemForResize.aspect_ratio || '4x5') === '4x5' ? '#00C2FF' : 'rgba(255, 255, 255, 0.5)'}`,
+                  borderRadius: '3px'
+                }} />
+              </button>
+              
+              {/* 16:9 Wide */}
+              <button
+                onClick={() => handleSizeChange('16x9')}
+                style={{
+                  width: '52px',
+                  height: '52px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: (selectedItemForResize.aspect_ratio || '4x5') === '16x9' 
+                    ? 'rgba(0, 194, 255, 0.15)' 
+                    : 'rgba(60, 60, 62, 0.8)',
+                  border: (selectedItemForResize.aspect_ratio || '4x5') === '16x9' 
+                    ? '2px solid #00C2FF' 
+                    : '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <div style={{
+                  width: '26px',
+                  height: '14px',
+                  border: `2px solid ${(selectedItemForResize.aspect_ratio || '4x5') === '16x9' ? '#00C2FF' : 'rgba(255, 255, 255, 0.5)'}`,
+                  borderRadius: '2px'
+                }} />
+              </button>
+              
+              {/* Row 2 */}
+              {/* 4:6 Tall */}
+              <button
+                onClick={() => handleSizeChange('4x6')}
+                style={{
+                  width: '52px',
+                  height: '52px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: (selectedItemForResize.aspect_ratio || '4x5') === '4x6' 
+                    ? 'rgba(0, 194, 255, 0.15)' 
+                    : 'rgba(60, 60, 62, 0.8)',
+                  border: (selectedItemForResize.aspect_ratio || '4x5') === '4x6' 
+                    ? '2px solid #00C2FF' 
+                    : '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <div style={{
+                  width: '14px',
+                  height: '22px',
+                  border: `2px solid ${(selectedItemForResize.aspect_ratio || '4x5') === '4x6' ? '#00C2FF' : 'rgba(255, 255, 255, 0.5)'}`,
+                  borderRadius: '3px'
+                }} />
+              </button>
+              
+              {/* More options (3 dots) - could be 5:4 */}
+              <button
+                onClick={() => handleSizeChange('5x4')}
+                style={{
+                  width: '52px',
+                  height: '52px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '3px',
+                  background: (selectedItemForResize.aspect_ratio || '4x5') === '5x4' 
+                    ? 'rgba(0, 194, 255, 0.15)' 
+                    : 'rgba(60, 60, 62, 0.8)',
+                  border: (selectedItemForResize.aspect_ratio || '4x5') === '5x4' 
+                    ? '2px solid #00C2FF' 
+                    : '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {/* Landscape icon */}
+                <div style={{
+                  width: '22px',
+                  height: '18px',
+                  border: `2px solid ${(selectedItemForResize.aspect_ratio || '4x5') === '5x4' ? '#00C2FF' : 'rgba(255, 255, 255, 0.5)'}`,
+                  borderRadius: '3px'
+                }} />
+              </button>
+              
+              {/* 4:3 Standard */}
+              <button
+                onClick={() => handleSizeChange('4x3')}
+                style={{
+                  width: '52px',
+                  height: '52px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: (selectedItemForResize.aspect_ratio || '4x5') === '4x3' 
+                    ? 'rgba(0, 194, 255, 0.15)' 
+                    : 'rgba(60, 60, 62, 0.8)',
+                  border: (selectedItemForResize.aspect_ratio || '4x5') === '4x3' 
+                    ? '2px solid #00C2FF' 
+                    : '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {/* Expand arrows icon */}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={(selectedItemForResize.aspect_ratio || '4x5') === '4x3' ? '#00C2FF' : 'rgba(255, 255, 255, 0.5)'} strokeWidth="2">
+                  <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          {/* CSS Animation */}
+          <style jsx>{`
+            @keyframes sizePickerPop {
+              from {
+                opacity: 0;
+                transform: scale(0.9);
+              }
+              to {
+                opacity: 1;
+                transform: scale(1);
+              }
+            }
+          `}</style>
+        </>
       )}
     </div>
   );

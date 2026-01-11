@@ -117,7 +117,11 @@ function PhotoDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => 
         }}
         onError={(e) => {
           console.error('Failed to load image:', imageUrl);
-          e.currentTarget.src = '/api/placeholder/400/500';
+          // Use a simple gradient placeholder instead of broken URL
+          e.currentTarget.style.display = 'none';
+          if (e.currentTarget.parentElement) {
+            e.currentTarget.parentElement.style.background = 'linear-gradient(135deg, rgba(0, 194, 255, 0.2), rgba(118, 75, 162, 0.2))';
+          }
         }}
       />
     </div>
