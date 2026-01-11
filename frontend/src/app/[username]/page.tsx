@@ -1756,8 +1756,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 style={{
                   display: 'grid',
                   gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
-                  gridAutoRows: layoutMode === 'masonry' ? '1px' : 'auto',
-                  alignItems: layoutMode === 'uniform' ? 'stretch' : 'start',
+                  gridAutoRows: layoutMode === 'masonry' ? '10px' : 'auto',
                   gridAutoFlow: layoutMode === 'masonry' ? 'dense' : 'row',
                   gap: `${gridGap}px`,
                   width: '100%'
@@ -1767,20 +1766,16 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   // Masonry layout: every 5th item is featured (taller)
                   const isFeatured = layoutMode === 'masonry' && index % 5 === 0;
                   
-                  // Get custom aspect ratio from item
+                  // Get custom aspect ratio from item - works in both modes
                   const itemAspectRatio = isFeatured 
                     ? 0.5 
                     : getAspectRatio(item.aspect_ratio as WidgetSize);
                   
                   // Calculate row span for masonry mode based on aspect ratio
-                  // Account for gaps to prevent overlapping
+                  // Base column width ~120px, row unit 10px
                   const getRowSpanForItem = (ratio: number): number => {
-                    // Estimate column width based on container (~400px / columns)
-                    const estimatedColWidth = 400 / gridColumns;
-                    const itemHeight = estimatedColWidth / ratio;
-                    // Add gap compensation to prevent overlapping
-                    const rowUnit = 1; // 1px per row unit
-                    return Math.max(100, Math.ceil((itemHeight + gridGap) / rowUnit));
+                    const baseHeight = 120 / ratio;
+                    return Math.max(8, Math.round(baseHeight / 10)); // Minimum 8 rows (80px)
                   };
                   
                   const rowSpan = layoutMode === 'masonry' ? getRowSpanForItem(itemAspectRatio) : 1;
@@ -1803,7 +1798,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                         borderRadius: gridRadius === 0 ? '0px' : `${gridRadius}px`,
                         overflow: 'hidden',
                         position: 'relative',
-                        aspectRatio: layoutMode === 'masonry' ? itemAspectRatio : undefined,
+                        aspectRatio: itemAspectRatio,
                         cursor: showCustomizePanel && isOwnProfile ? 'context-menu' : 'pointer',
                         transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                         border: selectedItemForResize?.id === item.id 
