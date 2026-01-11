@@ -5,10 +5,9 @@
 services:
   - type: web
     name: webstar-backend
-    runtime: python
+    runtime: docker
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: bash start.sh
+    dockerfilePath: ./Dockerfile
     rootDir: backend
     # Environment variables for file upload limits
     envVars:

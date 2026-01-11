@@ -7,14 +7,13 @@ services:
     plan: free
     postgresMajorVersion: 15
 
-  # Backend API Service
+  # Backend API Service (Docker for FFmpeg support)
   - type: web
     name: webstar-backend
-    runtime: python
+    runtime: docker
     plan: free
     rootDir: backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: DATABASE_URL
         fromDatabase:

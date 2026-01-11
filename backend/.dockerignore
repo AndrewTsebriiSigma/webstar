@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Test files
+tests/
+test_*.py
+*_test.py
+
+# Local development
+*.db
+*.db-shm
+*.db-wal
+.env
+.env.local
+*.log
+
+# Uploads (handled by R2 in production)
+uploads/
+
+# Documentation
+*.md
+docs/
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
