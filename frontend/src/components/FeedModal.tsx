@@ -20,6 +20,9 @@ interface FeedModalProps {
   profile?: Profile;
   currentAudioTrack?: AudioTrack | null;
   onAudioTrackChange?: (track: AudioTrack | null) => void;
+  onPlayInMiniPlayer?: (item: PortfolioItem) => void;
+  isMiniPlayerMuted?: boolean;
+  onToggleMiniPlayerMute?: () => void;
 }
 
 export default function FeedModal({
@@ -29,7 +32,10 @@ export default function FeedModal({
   initialPostId,
   profile,
   currentAudioTrack,
-  onAudioTrackChange
+  onAudioTrackChange,
+  onPlayInMiniPlayer,
+  isMiniPlayerMuted,
+  onToggleMiniPlayerMute
 }: FeedModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -287,6 +293,10 @@ export default function FeedModal({
                     });
                   }
                 }}
+                onPlayInMiniPlayer={onPlayInMiniPlayer}
+                currentPlayingTrackId={currentAudioTrack?.id}
+                isMiniPlayerMuted={isMiniPlayerMuted}
+                onToggleMiniPlayerMute={onToggleMiniPlayerMute}
               />
             </div>
           </div>
@@ -300,17 +310,30 @@ export default function FeedModal({
 function FeedPostContent({ 
   post, 
   isActive,
-  onAudioClick
+  onAudioClick,
+  onPlayInMiniPlayer,
+  currentPlayingTrackId,
+  isMiniPlayerMuted,
+  onToggleMiniPlayerMute
 }: { 
   post: PortfolioItem;
   isActive: boolean;
   onAudioClick?: (post: PortfolioItem) => void;
+  onPlayInMiniPlayer?: (post: PortfolioItem) => void;
+  currentPlayingTrackId?: number;
+  isMiniPlayerMuted?: boolean;
+  onToggleMiniPlayerMute?: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true); // Default: sound OFF
 
-  // Auto-play video when it becomes active
+  // Check if this post is currently playing in mini-player
+  const isCurrentlyPlaying = currentPlayingTrackId === post.id;
+  
+  // Determine mute state for icon display
+  const showMuted = !isCurrentlyPlaying || isMiniPlayerMuted;
+
+  // Auto-play video when it becomes active (starts muted)
   useEffect(() => {
     if (post.content_type === 'video' && videoRef.current) {
       if (isActive) {
@@ -338,11 +361,21 @@ function FeedPostContent({
     }
   };
 
-  const toggleSound = (e: React.MouseEvent) => {
+  const handleMiniPlayerClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
+    if (onPlayInMiniPlayer) {
+      onPlayInMiniPlayer(post);
+    }
+  };
+
+  const handleSoundToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isCurrentlyPlaying && onToggleMiniPlayerMute) {
+      // Toggle mute on the mini-player
+      onToggleMiniPlayerMute();
+    } else if (onPlayInMiniPlayer) {
+      // Not playing - start playing in mini-player
+      onPlayInMiniPlayer(post);
     }
   };
 
@@ -382,7 +415,7 @@ function FeedPostContent({
                     : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${post.content_url}`}
                   loop
                   playsInline
-                  muted={isMuted}
+                  muted // Video always muted - audio via mini-player only
                   onClick={handleVideoClick}
                   style={{
                     width: '100%',
@@ -418,46 +451,93 @@ function FeedPostContent({
                     </svg>
                   </div>
                 )}
-                {/* Sound Toggle Button */}
-                <button
-                  onClick={toggleSound}
-                  style={{
-                    position: 'absolute',
-                    bottom: '16px',
-                    right: '16px',
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '50%',
-                    background: 'rgba(0, 0, 0, 0.6)',
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 150ms',
-                    zIndex: 10
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(0, 0, 0, 0.8)';
-                    e.currentTarget.style.transform = 'scale(1.1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(0, 0, 0, 0.6)';
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }}
-                >
-                  {isMuted ? (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-                      <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
-                    </svg>
-                  ) : (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-                      <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-                    </svg>
+                {/* Button container for sound and mini-player */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '16px',
+                  right: '16px',
+                  display: 'flex',
+                  gap: '8px',
+                  zIndex: 10
+                }}>
+                  {/* Sound Toggle Button - controls mini-player mute */}
+                  <button
+                    onClick={handleSoundToggle}
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '50%',
+                      background: 'rgba(0, 0, 0, 0.6)',
+                      backdropFilter: 'blur(10px)',
+                      WebkitBackdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 150ms'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(0, 0, 0, 0.8)';
+                      e.currentTarget.style.transform = 'scale(1.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(0, 0, 0, 0.6)';
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                    title={showMuted ? 'Unmute' : 'Mute'}
+                  >
+                    {showMuted ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                        <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                      </svg>
+                    )}
+                  </button>
+
+                  {/* Mini-Player Button - Opens audio in mini-player */}
+                  {onPlayInMiniPlayer && (
+                    <button
+                      onClick={handleMiniPlayerClick}
+                      style={{
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '50%',
+                        background: 'rgba(0, 0, 0, 0.6)',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 150ms'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(0, 194, 255, 0.3)';
+                        e.currentTarget.style.borderColor = 'rgba(0, 194, 255, 0.5)';
+                        e.currentTarget.style.transform = 'scale(1.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(0, 0, 0, 0.6)';
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }}
+                      title="Play audio in mini-player"
+                    >
+                      {/* Modern equalizer/waveform icon */}
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+                        <rect x="4" y="8" width="2" height="8" rx="1" fill="white" />
+                        <rect x="9" y="5" width="2" height="14" rx="1" fill="white" />
+                        <rect x="14" y="7" width="2" height="10" rx="1" fill="white" />
+                        <rect x="19" y="9" width="2" height="6" rx="1" fill="white" />
+                      </svg>
+                    </button>
                   )}
-                </button>
+                </div>
               </>
             ) : null}
           </div>
@@ -473,9 +553,8 @@ function FeedPostContent({
               overflow: 'hidden',
               position: 'relative'
             }}
-            onClick={() => onAudioClick?.(post)}
           >
-            {/* Audio Visual Display - No actual audio element */}
+            {/* Audio Visual Display - No inline audio element, uses mini-player */}
             <div 
               style={{
                 width: '100%',
@@ -569,19 +648,92 @@ function FeedPostContent({
                 </div>
               )}
 
-              {/* Tap to Play hint */}
-              <div 
-                style={{
-                  fontSize: '13px',
-                  color: 'rgba(10, 132, 255, 0.8)',
-                  textAlign: 'center',
-                  fontWeight: 600,
-                  position: 'relative',
-                  zIndex: 1,
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
-                }}
-              >
-                Tap to play in mini player
+              {/* Button container for sound and mini-player */}
+              <div style={{
+                position: 'absolute',
+                bottom: '16px',
+                right: '16px',
+                display: 'flex',
+                gap: '8px',
+                zIndex: 10
+              }}>
+                {/* Sound Toggle Button - controls mini-player mute */}
+                <button
+                  onClick={handleSoundToggle}
+                  style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '50%',
+                    background: 'rgba(0, 0, 0, 0.6)',
+                    backdropFilter: 'blur(10px)',
+                    WebkitBackdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 150ms'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(0, 0, 0, 0.8)';
+                    e.currentTarget.style.transform = 'scale(1.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(0, 0, 0, 0.6)';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                  title={showMuted ? 'Unmute' : 'Mute'}
+                >
+                  {showMuted ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                      <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                      <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                    </svg>
+                  )}
+                </button>
+
+                {/* Mini-Player Button - Opens audio in mini-player */}
+                {onPlayInMiniPlayer && (
+                  <button
+                    onClick={handleMiniPlayerClick}
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '50%',
+                      background: 'rgba(0, 0, 0, 0.6)',
+                      backdropFilter: 'blur(10px)',
+                      WebkitBackdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 150ms'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(0, 194, 255, 0.3)';
+                      e.currentTarget.style.borderColor = 'rgba(0, 194, 255, 0.5)';
+                      e.currentTarget.style.transform = 'scale(1.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(0, 0, 0, 0.6)';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                    title="Play in mini-player"
+                  >
+                    {/* Modern equalizer/waveform icon */}
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+                      <rect x="4" y="8" width="2" height="8" rx="1" fill="white" />
+                      <rect x="9" y="5" width="2" height="14" rx="1" fill="white" />
+                      <rect x="14" y="7" width="2" height="10" rx="1" fill="white" />
+                      <rect x="19" y="9" width="2" height="6" rx="1" fill="white" />
+                    </svg>
+                  </button>
+                )}
               </div>
             </div>
           </div>

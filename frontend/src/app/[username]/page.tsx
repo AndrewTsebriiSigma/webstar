@@ -81,6 +81,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [feedInitialPostId, setFeedInitialPostId] = useState<number | undefined>(undefined);
   const [currentAudioTrack, setCurrentAudioTrack] = useState<any>(null);
+  const [isMiniPlayerMuted, setIsMiniPlayerMuted] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showProjectDetail, setShowProjectDetail] = useState(false);
   const [scrollY, setScrollY] = useState(0);
@@ -232,6 +233,20 @@ export default function ProfilePage({ params }: { params: { username: string } }
     
     setShowSizePicker(false);
     setSelectedItemForResize(null);
+  };
+
+  // Handle playing media in mini-player (for video/audio)
+  const handlePlayInMiniPlayer = (item: PortfolioItem) => {
+    if (item.content_url) {
+      setCurrentAudioTrack({
+        id: item.id,
+        title: item.title || (item.content_type === 'video' ? 'Video' : 'Audio Track'),
+        url: item.content_url.startsWith('http') 
+          ? item.content_url 
+          : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`,
+        thumbnail: item.thumbnail_url || undefined
+      });
+    }
   };
 
   const loadProfile = async (forceRefresh = false) => {
@@ -1773,6 +1788,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
                         isActive={false}
                         showAttachments={false}
                         customRadius={gridRadius}
+                        onPlayInMiniPlayer={handlePlayInMiniPlayer}
+                        currentPlayingTrackId={currentAudioTrack?.id}
+                        isMiniPlayerMuted={isMiniPlayerMuted}
+                        onToggleMiniPlayerMute={() => setIsMiniPlayerMuted(!isMiniPlayerMuted)}
                       />
                       
                       {/* Customize mode corner indicators */}
@@ -2130,6 +2149,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
         profile={profile}
         currentAudioTrack={currentAudioTrack}
         onAudioTrackChange={setCurrentAudioTrack}
+        onPlayInMiniPlayer={handlePlayInMiniPlayer}
+        isMiniPlayerMuted={isMiniPlayerMuted}
+        onToggleMiniPlayerMute={() => setIsMiniPlayerMuted(!isMiniPlayerMuted)}
       />
 
       {/* Project Detail Modal */}
@@ -2182,6 +2204,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
               });
             }
           }}
+          isMuted={isMiniPlayerMuted}
+          onMuteChange={setIsMiniPlayerMuted}
         />
       )}
 

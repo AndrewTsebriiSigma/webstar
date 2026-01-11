@@ -22,6 +22,8 @@ interface MiniPlayerProps {
   onNext?: () => void;
   onPrevious?: () => void;
   onThumbnailClick?: () => void;
+  isMuted?: boolean;
+  onMuteChange?: (muted: boolean) => void;
 }
 
 export default function MiniPlayer({ 
@@ -29,13 +31,22 @@ export default function MiniPlayer({
   onClose,
   onNext,
   onPrevious,
-  onThumbnailClick
+  onThumbnailClick,
+  isMuted = false,
+  onMuteChange
 }: MiniPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Sync muted state from props
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
 
   useEffect(() => {
     if (track && audioRef.current) {
