@@ -240,6 +240,17 @@ class UserPoints(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+class OAuthState(SQLModel, table=True):
+    """OAuth state tokens for CSRF protection."""
+    __tablename__ = "oauth_states"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    state_token: str = Field(unique=True, index=True, nullable=False)
+    expires_at: datetime = Field(nullable=False)
+    used: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
 class Report(SQLModel, table=True):
     """User reports for profiles/content moderation."""
     __tablename__ = "reports"

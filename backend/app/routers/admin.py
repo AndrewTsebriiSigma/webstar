@@ -150,13 +150,13 @@ def log_admin_action(
 
 @router.post("/setup-first-admin")
 async def setup_first_admin(
-    request: SetupFirstAdminRequest,
+    data: SetupFirstAdminRequest,
     session: Session = Depends(get_session)
 ):
     """Set up the first super_admin. Only works when no super_admin exists."""
     # Check secret key from environment
     admin_secret = getattr(settings, 'ADMIN_SETUP_SECRET', 'webstar-admin-setup-2024')
-    if request.secret_key != admin_secret:
+    if data.secret_key != admin_secret:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Invalid secret key"
@@ -174,7 +174,7 @@ async def setup_first_admin(
         )
     
     # Get the user to promote
-    user = session.get(User, request.user_id)
+    user = session.get(User, data.user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

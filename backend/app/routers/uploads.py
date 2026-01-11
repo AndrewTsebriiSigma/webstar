@@ -211,7 +211,7 @@ async def upload_media(
         content = await file.read()
         original_size = len(content)
         
-        # Validate file size (larger limits now that we compress)
+        # SECURITY: Validate file size first (before validation)
         max_sizes = {
             "photo": 20 * 1024 * 1024,      # 20MB (will compress to ~2-5MB)
             "video": 1024 * 1024 * 1024,    # 1GB (will compress significantly)

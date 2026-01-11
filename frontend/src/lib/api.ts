@@ -2,10 +2,9 @@
  * API Client for WebStar V1
  */
 import axios from 'axios';
+import { API_URL, buildApiUrl } from './api-config';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
-// Create axios instance
+// Create axios instance with validated API URL
 const api = axios.create({
   baseURL: API_URL,
   headers: {

@@ -1,16 +1,31 @@
 """Storage diagnostic endpoint for troubleshooting."""
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from sqlmodel import Session
 from app.services.s3_service import s3_service
 from app.core.config import settings
+from app.deps.auth import get_current_user
+from app.db.models import User
+from app.db.base import get_session
 import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def require_admin_or_dev(current_user: User = Depends(get_current_user)):
+    """Require admin role or development environment."""
+    if settings.ENVIRONMENT.lower() == "production":
+        if current_user.role not in ["admin", "super_admin"]:
+            raise HTTPException(
+                status_code=403,
+                detail="Admin access required for diagnostics in production"
+            )
+    return current_user
+
+
 @router.get("/storage/status")
-async def storage_status():
-    """Check Cloudflare R2 / S3 storage configuration status."""
+async def storage_status(current_user: User = Depends(require_admin_or_dev)):
+    """Check Cloudflare R2 / S3 storage configuration status. Requires admin in production."""
     try:
         # Check R2 credentials (preferred)
         has_r2_account = bool(settings.R2_ACCOUNT_ID)
@@ -99,14 +114,14 @@ async def storage_status():
 
 # Legacy endpoint for backwards compatibility
 @router.get("/s3/status")
-async def s3_status():
-    """Legacy endpoint - redirects to /storage/status."""
-    return await storage_status()
+async def s3_status(current_user: User = Depends(require_admin_or_dev)):
+    """Legacy endpoint - redirects to /storage/status. Requires admin in production."""
+    return await storage_status(current_user)
 
 
 @router.get("/env/check")
-async def env_check():
-    """Check environment variable configuration."""
+async def env_check(current_user: User = Depends(require_admin_or_dev)):
+    """Check environment variable configuration. Requires admin in production."""
     # Determine storage provider
     using_r2 = bool(settings.R2_ACCOUNT_ID and settings.R2_ACCESS_KEY_ID and settings.R2_SECRET_ACCESS_KEY)
     

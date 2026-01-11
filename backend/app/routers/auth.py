@@ -1,5 +1,5 @@
 """Authentication router."""
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session, select
 from sqlalchemy import func
@@ -15,9 +15,11 @@ from app.db.base import get_session
 from app.db.models import User, Profile, OnboardingProgress, UserPoints, EmailVerification
 from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token, decode_token, get_current_user
 from app.core.config import settings
+from app.core.rate_limit import rate_limiter
 from app.schemas.auth import UserRegister, UserLogin, Token, RefreshToken, GoogleAuth, UserResponse, LoginResponse, Verify2FALoginRequest, ProfileSetup
 from app.services.totp_service import TOTPService
 from app.services.email_service import generate_verification_code, send_verification_email
+from app.services.oauth_state import oauth_state_manager
 
 router = APIRouter()
 
@@ -33,9 +35,6 @@ oauth.register(
     }
 )
 
-# Store for OAuth state tokens (in production, use Redis or database)
-oauth_states = {}
-
 
 @router.get("/check-email/{email}")
 async def check_email_exists(email: str, session: Session = Depends(get_session)):
@@ -46,10 +45,14 @@ async def check_email_exists(email: str, session: Session = Depends(get_session)
 
 @router.post("/send-verification-code")
 async def send_verification_code(
+    request: Request,
     email: str = Body(..., embed=True),
     session: Session = Depends(get_session)
 ):
     """Send email verification code for signup."""
+    # Rate limit: 3 requests per 10 minutes per IP
+    rate_limiter.require_rate_limit(request, max_requests=3, window_seconds=600)
+    
     # Check if email already registered
     existing_user = session.exec(
         select(User).where(func.lower(User.email) == func.lower(email))
@@ -129,8 +132,11 @@ async def verify_email_code(
 
 
 @router.post("/register", response_model=Token)
-async def register(user_data: UserRegister, session: Session = Depends(get_session)):
+async def register(request: Request, user_data: UserRegister, session: Session = Depends(get_session)):
     """Register a new user with email and password."""
+    # Rate limit: 3 registrations per 10 minutes per IP
+    rate_limiter.require_rate_limit(request, max_requests=3, window_seconds=600)
+    
     # Check if email has been verified
     verification = session.exec(
         select(EmailVerification).where(
@@ -443,8 +449,11 @@ async def google_callback(request: Request, session: Session = Depends(get_sessi
 
 
 @router.post("/login", response_model=LoginResponse)
-async def login(user_data: UserLogin, session: Session = Depends(get_session)):
+async def login(request: Request, user_data: UserLogin, session: Session = Depends(get_session)):
     """Login with email or username and password. May require 2FA verification."""
+    # Rate limit: 5 login attempts per minute per IP
+    rate_limiter.require_rate_limit(request, max_requests=5, window_seconds=60)
+    
     # Find user by email OR username
     user = session.exec(
         select(User).where(
@@ -607,10 +616,14 @@ async def google_auth(auth_data: GoogleAuth, session: Session = Depends(get_sess
 
 @router.post("/verify-2fa", response_model=Token)
 async def verify_2fa_login(
+    http_request: Request,
     request: Verify2FALoginRequest,
     session: Session = Depends(get_session)
 ):
     """Verify 2FA code and complete login."""
+    # Rate limit: 3 attempts per minute per IP (strict for 2FA)
+    rate_limiter.require_rate_limit(http_request, max_requests=3, window_seconds=60)
+    
     # Decode the temporary token
     payload = decode_token(request.temp_token)
     

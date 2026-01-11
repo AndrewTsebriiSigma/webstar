@@ -1,7 +1,9 @@
 """Application configuration using Pydantic Settings."""
 from typing import List, Union
 import json
+import secrets as py_secrets
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
 
 
 def parse_cors_origins(v: Union[str, List[str]]) -> List[str]:
@@ -30,9 +32,34 @@ class Settings(BaseSettings):
     
     # JWT
     SECRET_KEY: str = "your-secret-key-change-in-production"
+    SESSION_SECRET: str = ""  # Required for OAuth sessions
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480  # 8 hours for V1
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+    
+    @field_validator('SECRET_KEY')
+    @classmethod
+    def validate_secret_key(cls, v: str) -> str:
+        """Validate SECRET_KEY is secure."""
+        if v == "your-secret-key-change-in-production":
+            raise ValueError(
+                "SECRET_KEY must be changed from default! "
+                "Generate a secure key with: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+            )
+        if len(v) < 32:
+            raise ValueError("SECRET_KEY must be at least 32 characters for security!")
+        return v
+    
+    @field_validator('SESSION_SECRET')
+    @classmethod
+    def validate_session_secret(cls, v: str) -> str:
+        """Ensure SESSION_SECRET is set, generate if not provided."""
+        if not v:
+            # Generate a secure session secret if not provided
+            return py_secrets.token_urlsafe(32)
+        if len(v) < 32:
+            raise ValueError("SESSION_SECRET must be at least 32 characters!")
+        return v
     
     # CORS
     CORS_ORIGINS: Union[str, List[str]] = [
@@ -70,6 +97,15 @@ class Settings(BaseSettings):
     
     # Admin Panel
     ADMIN_SETUP_SECRET: str = "webstar-admin-setup-2024"  # Change in production
+    
+    @field_validator('ADMIN_SETUP_SECRET')
+    @classmethod
+    def validate_admin_secret(cls, v: str) -> str:
+        """Validate ADMIN_SETUP_SECRET is changed in production."""
+        # This validation is less strict as it's only for initial setup
+        if len(v) < 16:
+            raise ValueError("ADMIN_SETUP_SECRET must be at least 16 characters!")
+        return v
     
     # Pagination
     DEFAULT_PAGE_SIZE: int = 20

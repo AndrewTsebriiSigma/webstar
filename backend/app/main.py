@@ -1,15 +1,24 @@
 """FastAPI application factory and main entry point."""
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from pathlib import Path
+from sqlalchemy.exc import SQLAlchemyError
+from pydantic import ValidationError
 import secrets
+import time
 
 from app.core.config import settings
 from app.db.base import create_db_and_tables
-from app.routers import auth, onboarding, profile, portfolio, projects, economy, analytics, uploads, app_settings, diagnostics, admin
+from app.routers import auth, onboarding, profile, portfolio, projects, economy, analytics, uploads, app_settings, diagnostics, admin, admin
+from app.core.exception_handlers import (
+    sqlalchemy_exception_handler,
+    validation_exception_handler,
+    generic_exception_handler
+)
 
 
 @asynccontextmanager
@@ -22,6 +31,34 @@ async def lifespan(app: FastAPI):
     pass
 
 
+# Security Headers Middleware
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Add security headers to all responses."""
+    
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        
+        # Security headers
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        
+        # CSP header - adjust based on your needs
+        csp_directives = [
+            "default-src 'self'",
+            "img-src 'self' data: https:",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval'",  # Adjust for production
+            "style-src 'self' 'unsafe-inline'",
+            "font-src 'self' data:",
+            "connect-src 'self' https:",
+        ]
+        response.headers["Content-Security-Policy"] = "; ".join(csp_directives)
+        
+        return response
+
+
 app = FastAPI(
     title="WebStar V1 API",
     description="Backend API for WebStar V1 - One Professional Identity in One Link",
@@ -29,9 +66,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Add Security Headers Middleware
+app.add_middleware(SecurityHeadersMiddleware)
+
 # Add SessionMiddleware for OAuth (required by authlib)
-# Generate a random secret key for session encryption
-SESSION_SECRET = getattr(settings, 'SESSION_SECRET', None) or secrets.token_urlsafe(32)
+SESSION_SECRET = settings.SESSION_SECRET
 app.add_middleware(
     SessionMiddleware,
     secret_key=SESSION_SECRET,
@@ -86,9 +125,9 @@ else:
         cors_origins_list.append("http://localhost:3000")
     if "http://127.0.0.1:3000" not in cors_origins_list:
         cors_origins_list.append("http://127.0.0.1:3000")
-    # For development, allow all origins
-    if settings.ENVIRONMENT.lower() == "development":
-        cors_origins_list = ["*"]
+    # SECURITY FIX: Never use wildcard "*" even in development
+    # This allows proper CORS testing and prevents security issues
+    logger.info(f"Development CORS origins: {cors_origins_list}")
 
 app.add_middleware(
     CORSMiddleware,
@@ -139,4 +178,11 @@ async def root():
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
+
+
+# Register exception handlers
+app.add_exception_handler(SQLAlchemyError, sqlalchemy_exception_handler)
+app.add_exception_handler(ValidationError, validation_exception_handler)
+# Temporarily disabled to avoid hiding errors during debugging
+# app.add_exception_handler(Exception, generic_exception_handler)
 
