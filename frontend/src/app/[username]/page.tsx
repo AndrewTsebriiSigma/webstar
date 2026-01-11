@@ -93,6 +93,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [gridGap, setGridGap] = useState(5); // 0-20px
   const [gridRadius, setGridRadius] = useState(0); // 0-24px
   const [layoutMode, setLayoutMode] = useState<'uniform' | 'masonry'>('uniform');
+  const [gridAspectRatio, setGridAspectRatio] = useState<'1x1' | '4x5' | '5x4' | '4x6' | '3x4' | '16x9' | '4x3'>('1x1'); // Global aspect ratio for grid mode
   
   // Size picker state for portfolio items
   type WidgetSize = '1x1' | '4x5' | '5x4' | '4x6' | '3x4' | '16x9' | '4x3';
@@ -212,17 +213,23 @@ export default function ProfilePage({ params }: { params: { username: string } }
     if (!selectedItemForResize) return;
     
     try {
-      // Update via API - use updateItem method
-      await portfolioAPI.updateItem(selectedItemForResize.id, { aspect_ratio: newSize });
-      
-      // Update local state
-      setPortfolioItems(prev => prev.map(item => 
-        item.id === selectedItemForResize.id 
-          ? { ...item, aspect_ratio: newSize }
-          : item
-      ));
-      
-      toast.success('Size updated');
+      if (layoutMode === 'uniform') {
+        // Grid mode: update global aspect ratio (affects ALL items uniformly)
+        setGridAspectRatio(newSize);
+        toast.success('Grid aspect ratio updated');
+      } else {
+        // Masonry mode: update individual item's aspect ratio
+        await portfolioAPI.updateItem(selectedItemForResize.id, { aspect_ratio: newSize });
+        
+        // Update local state
+        setPortfolioItems(prev => prev.map(item => 
+          item.id === selectedItemForResize.id 
+            ? { ...item, aspect_ratio: newSize }
+            : item
+        ));
+        
+        toast.success('Size updated');
+      }
     } catch (error) {
       console.error('Failed to update size:', error);
       toast.error('Failed to update size');
@@ -1763,22 +1770,27 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 }}
               >
                 {[...portfolioItems].reverse().map((item, index) => {
-                  // Masonry layout: every 5th item is featured (taller)
+                  // Masonry: every 5th item is featured (taller)
                   const isFeatured = layoutMode === 'masonry' && index % 5 === 0;
                   
-                  // Get custom aspect ratio from item - works in both modes
-                  const itemAspectRatio = isFeatured 
-                    ? 0.5 
-                    : getAspectRatio(item.aspect_ratio as WidgetSize);
+                  // Determine aspect ratio based on mode:
+                  // Grid mode: ALL items use global gridAspectRatio
+                  // Masonry mode: each item uses its own aspect_ratio
+                  const displayRatio = layoutMode === 'uniform'
+                    ? getAspectRatio(gridAspectRatio)
+                    : (isFeatured ? 0.5 : getAspectRatio(item.aspect_ratio as WidgetSize));
                   
-                  // Calculate row span for masonry mode based on aspect ratio
-                  // Base column width ~120px, row unit 10px
-                  const getRowSpanForItem = (ratio: number): number => {
-                    const baseHeight = 120 / ratio;
-                    return Math.max(8, Math.round(baseHeight / 10)); // Minimum 8 rows (80px)
+                  // Calculate row span for masonry (accounts for gaps to prevent overlaps)
+                  // Formula: rows = (height + gap) / (rowUnit + gap)
+                  const calculateRowSpan = (ratio: number): number => {
+                    const estimatedColWidth = 400 / gridColumns; // Approximate column width
+                    const desiredHeight = estimatedColWidth / ratio;
+                    const rowUnit = 10; // gridAutoRows: 10px
+                    // Correct formula accounting for gaps between rows
+                    return Math.ceil((desiredHeight + gridGap) / (rowUnit + gridGap));
                   };
                   
-                  const rowSpan = layoutMode === 'masonry' ? getRowSpanForItem(itemAspectRatio) : 1;
+                  const rowSpan = layoutMode === 'masonry' ? calculateRowSpan(displayRatio) : 1;
                   
                   return (
                     <div 
@@ -1798,7 +1810,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
                         borderRadius: gridRadius === 0 ? '0px' : `${gridRadius}px`,
                         overflow: 'hidden',
                         position: 'relative',
-                        aspectRatio: itemAspectRatio,
+                        // Grid mode: use aspectRatio CSS for clean rendering
+                        // Masonry mode: height controlled by gridRow span only
+                        aspectRatio: layoutMode === 'uniform' ? displayRatio : undefined,
                         cursor: showCustomizePanel && isOwnProfile ? 'context-menu' : 'pointer',
                         transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                         border: selectedItemForResize?.id === item.id 
