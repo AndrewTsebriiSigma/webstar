@@ -191,6 +191,17 @@ export default function ProfilePage({ params }: { params: { username: string } }
     }
   };
 
+  // Calculate grid row span based on aspect ratio for uniform grid mode
+  // This allows custom sizes to work even in grid mode
+  const getRowSpan = (aspectRatio: number): number => {
+    // Base is 1:1 square = 1 row
+    // Portrait (tall) ratios need more rows to maintain proportion
+    if (aspectRatio >= 1) return 1; // Landscape or square fits in 1 row
+    if (aspectRatio >= 0.75) return 1; // Slightly tall still fits in 1 row visually
+    if (aspectRatio >= 0.6) return 2; // Very tall items span 2 rows
+    return 2; // Extra tall items
+  };
+
   // Handle right-click context menu for size picker
   const handleItemContextMenu = (e: React.MouseEvent, item: PortfolioItem) => {
     if (isOwnProfile && showCustomizePanel) {
@@ -1756,6 +1767,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 style={{
                   display: 'grid',
                   gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
+                  gridAutoRows: layoutMode === 'uniform' ? 'minmax(120px, auto)' : 'auto',
                   gap: `${gridGap}px`,
                   width: '100%'
                 }}
@@ -1764,9 +1776,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   // Masonry layout: every 5th item (0-indexed: 0, 5, 10...) spans 2 columns and 2 rows
                   const isFeatured = layoutMode === 'masonry' && index % 5 === 0 && gridColumns >= 2;
                   // Get custom aspect ratio from item (stored in aspect_ratio field)
-                  const itemAspectRatio = layoutMode === 'masonry' 
-                    ? getAspectRatio(item.aspect_ratio as WidgetSize)
-                    : 1; // Uniform mode forces 1:1 square
+                  // Always respect custom aspect ratio in both modes
+                  const itemAspectRatio = getAspectRatio(item.aspect_ratio as WidgetSize);
+                  
+                  // In uniform mode, calculate row span for items with custom aspect ratios
+                  const rowSpan = layoutMode === 'uniform' ? getRowSpan(itemAspectRatio) : 1;
                   
                   return (
                     <div 
@@ -1782,11 +1796,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       onContextMenu={(e) => handleItemContextMenu(e, item)}
                       style={{
                         gridColumn: isFeatured ? 'span 2' : 'span 1',
-                        gridRow: isFeatured ? 'span 2' : 'span 1',
+                        gridRow: isFeatured ? 'span 2' : (rowSpan > 1 ? `span ${rowSpan}` : 'span 1'),
                         borderRadius: `${gridRadius}px`,
                         overflow: 'hidden',
                         position: 'relative',
-                        aspectRatio: layoutMode === 'masonry' ? itemAspectRatio : 1,
+                        aspectRatio: itemAspectRatio, // Always use custom aspect ratio
                         cursor: showCustomizePanel && isOwnProfile ? 'context-menu' : 'pointer',
                         transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                         border: selectedItemForResize?.id === item.id 

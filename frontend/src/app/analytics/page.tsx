@@ -40,9 +40,9 @@ export default function AnalyticsPage() {
     video: 0,
     audio: 0,
     pdf: 0,
-    text: 0,
-    link: 0
+    text: 0
   });
+  const [projectsCount, setProjectsCount] = useState(0);
   const viewsGraphRef = useRef<SVGSVGElement>(null);
   const clicksGraphRef = useRef<SVGSVGElement>(null);
 
@@ -53,6 +53,7 @@ export default function AnalyticsPage() {
     }
     loadAnalytics();
     loadMediaCounts();
+    loadProjectsCount();
   }, [user]);
 
   const loadMediaCounts = async () => {
@@ -67,12 +68,21 @@ export default function AnalyticsPage() {
         audio: items.filter((item: any) => item.content_type === 'audio').length,
         pdf: items.filter((item: any) => item.content_type === 'pdf').length,
         text: items.filter((item: any) => item.content_type === 'text').length,
-        link: items.filter((item: any) => item.content_type === 'link').length,
       };
       
       setMediaCounts(counts);
     } catch (error) {
       console.error('Failed to load media counts:', error);
+    }
+  };
+
+  const loadProjectsCount = async () => {
+    try {
+      const { projectsAPI } = await import('@/lib/api');
+      const response = await projectsAPI.getProjects();
+      setProjectsCount(response.data?.length || 0);
+    } catch (error) {
+      console.error('Failed to load projects count:', error);
     }
   };
 
@@ -561,7 +571,7 @@ export default function AnalyticsPage() {
                 </div>
               </div>
 
-              {/* Links */}
+              {/* Projects */}
               <div style={{
                 padding: '16px',
                 background: 'rgba(255, 255, 255, 0.02)',
@@ -573,14 +583,13 @@ export default function AnalyticsPage() {
                 gap: '8px'
               }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00D9FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                 </svg>
                 <div style={{ fontSize: '20px', fontWeight: '700', color: '#F5F5F5' }}>
-                  {mediaCounts.link}
+                  {projectsCount}
                 </div>
                 <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center' }}>
-                  Links
+                  Projects
                 </div>
               </div>
             </div>
