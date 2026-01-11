@@ -281,11 +281,10 @@ async def setup_profile(
 
 
 @router.get("/google")
-async def google_login(request: Request):
+async def google_login(request: Request, session: Session = Depends(get_session)):
     """Initiate Google OAuth flow."""
-    # Generate state token for CSRF protection
-    state = secrets.token_urlsafe(32)
-    oauth_states[state] = True
+    # Generate state token for CSRF protection (stored in database)
+    state = oauth_state_manager.create_state(session)
     
     # Get the redirect URI from settings
     redirect_uri = settings.GOOGLE_REDIRECT_URI
@@ -298,16 +297,13 @@ async def google_login(request: Request):
 async def google_callback(request: Request, session: Session = Depends(get_session)):
     """Handle Google OAuth callback."""
     try:
-        # Verify state parameter (CSRF protection)
+        # Verify state parameter (CSRF protection) - validates and marks as used
         state = request.query_params.get('state')
-        if not state or state not in oauth_states:
+        if not oauth_state_manager.validate_and_consume_state(session, state):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid state parameter"
+                detail="Invalid or expired state parameter"
             )
-        
-        # Remove used state
-        oauth_states.pop(state, None)
         
         # Get the authorization token
         token = await oauth.google.authorize_access_token(request)
