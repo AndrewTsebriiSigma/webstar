@@ -41,9 +41,6 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
           // Load project media
           const mediaResponse = await projectsAPI.getProjectMedia(foundProject.id);
           setProjectMedia(mediaResponse.data || []);
-          
-          // Track view
-          await projectsAPI.trackView(foundProject.id);
         } else {
           setError('Project not found');
         }
@@ -217,10 +214,6 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
             marginBottom: '24px'
           }}
         >
-          <div>
-            <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', marginBottom: '4px' }}>Views</div>
-            <div style={{ fontSize: '18px', fontWeight: 700, color: '#FFF' }}>{project.views || 0}</div>
-          </div>
           <div>
             <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', marginBottom: '4px' }}>Items</div>
             <div style={{ fontSize: '18px', fontWeight: 700, color: '#FFF' }}>{projectMedia.length || project.media_count || 0}</div>

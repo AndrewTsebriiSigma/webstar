@@ -36,6 +36,34 @@ const PLACEHOLDER_TEXTS = [
   'What do you specialize in?'
 ];
 
+// Dynamic placeholder texts for Experience section
+const EXPERIENCE_PLACEHOLDER_TEXTS = [
+  'Product Designer at Apple',
+  'Software Engineer at Google',
+  'Marketing Lead at Meta',
+  'UX Researcher at Spotify',
+  'Creative Director at Nike'
+];
+
+// Dynamic placeholder texts for Skills section  
+const SKILLS_PLACEHOLDER_TEXTS = [
+  'UI/UX Design',
+  'React Development',
+  'Python Programming',
+  'Data Analysis',
+  'Project Management',
+  'Brand Strategy'
+];
+
+// Dynamic placeholder texts for Connect section
+const CONNECT_PLACEHOLDER_TEXTS = [
+  'Connect your Instagram',
+  'Link your LinkedIn profile',
+  'Add your GitHub',
+  'Share your Dribbble',
+  'Connect YouTube channel'
+];
+
 // GripVertical Icon component
 const GripVerticalIcon = ({ size = 16, strokeWidth = 2.5 }: { size?: number; strokeWidth?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
@@ -63,6 +91,21 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showFullAbout, setShowFullAbout] = useState(false);
   const [isSavingAbout, setIsSavingAbout] = useState(false);
+
+  // Experience placeholder animation
+  const [experiencePlaceholder, setExperiencePlaceholder] = useState(EXPERIENCE_PLACEHOLDER_TEXTS[0]);
+  const experiencePlaceholderIndexRef = useRef(0);
+  const experienceAnimationRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Skills placeholder animation
+  const [skillsPlaceholder, setSkillsPlaceholder] = useState(SKILLS_PLACEHOLDER_TEXTS[0]);
+  const skillsPlaceholderIndexRef = useRef(0);
+  const skillsAnimationRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Connect placeholder animation
+  const [connectPlaceholder, setConnectPlaceholder] = useState(CONNECT_PLACEHOLDER_TEXTS[0]);
+  const connectPlaceholderIndexRef = useRef(0);
+  const connectAnimationRef = useRef<NodeJS.Timeout | null>(null);
 
   // Skills editing
   const [skills, setSkills] = useState<Skill[]>([]);
@@ -173,7 +216,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
     };
   }, [aboutText, isCustomizeMode, isOwnProfile]);
 
-  // Dynamic placeholder animation
+  // Dynamic placeholder animation for About
   useEffect(() => {
     if (!isCustomizeMode) {
       setDisplayPlaceholder(PLACEHOLDER_TEXTS[0]);
@@ -225,6 +268,169 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
       }
     };
   }, [isCustomizeMode]);
+
+  // Dynamic placeholder animation for Experience (when empty and not in customize mode)
+  useEffect(() => {
+    const hasExperience = profile?.experience && JSON.parse(profile.experience || '[]').length > 0;
+    
+    if (hasExperience || isCustomizeMode) {
+      setExperiencePlaceholder(EXPERIENCE_PLACEHOLDER_TEXTS[0]);
+      experiencePlaceholderIndexRef.current = 0;
+      if (experienceAnimationRef.current) {
+        clearTimeout(experienceAnimationRef.current);
+      }
+      return;
+    }
+
+    let currentTextIndex = experiencePlaceholderIndexRef.current;
+    let currentText = EXPERIENCE_PLACEHOLDER_TEXTS[currentTextIndex];
+    let charIndex = currentText.length;
+    let isDeleting = true;
+
+    const animate = () => {
+      if (isDeleting) {
+        if (charIndex > 0) {
+          charIndex--;
+          setExperiencePlaceholder(currentText.substring(0, charIndex));
+          experienceAnimationRef.current = setTimeout(animate, 50);
+        } else {
+          isDeleting = false;
+          currentTextIndex = (currentTextIndex + 1) % EXPERIENCE_PLACEHOLDER_TEXTS.length;
+          experiencePlaceholderIndexRef.current = currentTextIndex;
+          currentText = EXPERIENCE_PLACEHOLDER_TEXTS[currentTextIndex];
+          charIndex = 0;
+          experienceAnimationRef.current = setTimeout(animate, 500);
+        }
+      } else {
+        if (charIndex < currentText.length) {
+          charIndex++;
+          setExperiencePlaceholder(currentText.substring(0, charIndex));
+          experienceAnimationRef.current = setTimeout(animate, 50);
+        } else {
+          isDeleting = true;
+          experienceAnimationRef.current = setTimeout(animate, 3000);
+        }
+      }
+    };
+
+    experienceAnimationRef.current = setTimeout(animate, 2000);
+
+    return () => {
+      if (experienceAnimationRef.current) {
+        clearTimeout(experienceAnimationRef.current);
+      }
+    };
+  }, [profile?.experience, isCustomizeMode]);
+
+  // Dynamic placeholder animation for Skills (when empty and not in customize mode)
+  useEffect(() => {
+    const hasSkills = profile?.skills && (
+      Array.isArray(JSON.parse(profile.skills || '[]')) 
+        ? JSON.parse(profile.skills || '[]').length > 0 
+        : profile.skills.length > 0
+    );
+    
+    if (hasSkills || isCustomizeMode) {
+      setSkillsPlaceholder(SKILLS_PLACEHOLDER_TEXTS[0]);
+      skillsPlaceholderIndexRef.current = 0;
+      if (skillsAnimationRef.current) {
+        clearTimeout(skillsAnimationRef.current);
+      }
+      return;
+    }
+
+    let currentTextIndex = skillsPlaceholderIndexRef.current;
+    let currentText = SKILLS_PLACEHOLDER_TEXTS[currentTextIndex];
+    let charIndex = currentText.length;
+    let isDeleting = true;
+
+    const animate = () => {
+      if (isDeleting) {
+        if (charIndex > 0) {
+          charIndex--;
+          setSkillsPlaceholder(currentText.substring(0, charIndex));
+          skillsAnimationRef.current = setTimeout(animate, 50);
+        } else {
+          isDeleting = false;
+          currentTextIndex = (currentTextIndex + 1) % SKILLS_PLACEHOLDER_TEXTS.length;
+          skillsPlaceholderIndexRef.current = currentTextIndex;
+          currentText = SKILLS_PLACEHOLDER_TEXTS[currentTextIndex];
+          charIndex = 0;
+          skillsAnimationRef.current = setTimeout(animate, 500);
+        }
+      } else {
+        if (charIndex < currentText.length) {
+          charIndex++;
+          setSkillsPlaceholder(currentText.substring(0, charIndex));
+          skillsAnimationRef.current = setTimeout(animate, 50);
+        } else {
+          isDeleting = true;
+          skillsAnimationRef.current = setTimeout(animate, 3000);
+        }
+      }
+    };
+
+    skillsAnimationRef.current = setTimeout(animate, 2500);
+
+    return () => {
+      if (skillsAnimationRef.current) {
+        clearTimeout(skillsAnimationRef.current);
+      }
+    };
+  }, [profile?.skills, isCustomizeMode]);
+
+  // Dynamic placeholder animation for Connect (when empty and not in customize mode)
+  useEffect(() => {
+    const hasSocialLinks = profile?.social_links && Object.keys(JSON.parse(profile.social_links || '{}')).length > 0;
+    
+    if (hasSocialLinks || isCustomizeMode) {
+      setConnectPlaceholder(CONNECT_PLACEHOLDER_TEXTS[0]);
+      connectPlaceholderIndexRef.current = 0;
+      if (connectAnimationRef.current) {
+        clearTimeout(connectAnimationRef.current);
+      }
+      return;
+    }
+
+    let currentTextIndex = connectPlaceholderIndexRef.current;
+    let currentText = CONNECT_PLACEHOLDER_TEXTS[currentTextIndex];
+    let charIndex = currentText.length;
+    let isDeleting = true;
+
+    const animate = () => {
+      if (isDeleting) {
+        if (charIndex > 0) {
+          charIndex--;
+          setConnectPlaceholder(currentText.substring(0, charIndex));
+          connectAnimationRef.current = setTimeout(animate, 50);
+        } else {
+          isDeleting = false;
+          currentTextIndex = (currentTextIndex + 1) % CONNECT_PLACEHOLDER_TEXTS.length;
+          connectPlaceholderIndexRef.current = currentTextIndex;
+          currentText = CONNECT_PLACEHOLDER_TEXTS[currentTextIndex];
+          charIndex = 0;
+          connectAnimationRef.current = setTimeout(animate, 500);
+        }
+      } else {
+        if (charIndex < currentText.length) {
+          charIndex++;
+          setConnectPlaceholder(currentText.substring(0, charIndex));
+          connectAnimationRef.current = setTimeout(animate, 50);
+        } else {
+          isDeleting = true;
+          connectAnimationRef.current = setTimeout(animate, 3000);
+        }
+      }
+    };
+
+    connectAnimationRef.current = setTimeout(animate, 3000);
+
+    return () => {
+      if (connectAnimationRef.current) {
+        clearTimeout(connectAnimationRef.current);
+      }
+    };
+  }, [profile?.social_links, isCustomizeMode]);
 
   // Platform categories configuration with image icons
   const PLATFORM_CATEGORIES = {
@@ -586,6 +792,13 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
 
   return (
     <div className="space-y-6">
+      {/* CSS for blinking cursor animation */}
+      <style jsx global>{`
+        @keyframes blink {
+          0%, 50% { opacity: 1; }
+          51%, 100% { opacity: 0; }
+        }
+      `}</style>
       {/* About Section */}
       <div 
         className="rounded-xl border relative"
@@ -714,16 +927,47 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                   )}
                 </>
               ) : (
-                // Placeholder for empty about (visible to all)
-                <p 
+                // Animated placeholder for empty about
+                <div 
                   style={{
-                    color: 'var(--text-tertiary)',
-                    fontSize: '15px',
-                    fontStyle: 'italic',
+                    padding: 'var(--space-4)',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    border: '1px dashed rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
                   }}
                 >
-                  {isOwnProfile ? 'Tap Customize to add your bio' : 'No bio added yet'}
-                </p>
+                  <p 
+                    style={{ 
+                      fontSize: '15px', 
+                      color: 'var(--text-secondary)',
+                      lineHeight: '22px',
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
+                      opacity: 0.5
+                    }}
+                  >
+                    {displayPlaceholder}
+                    <span style={{ 
+                      display: 'inline-block',
+                      width: '2px',
+                      height: '14px',
+                      background: 'var(--blue)',
+                      marginLeft: '2px',
+                      animation: 'blink 1s infinite',
+                      verticalAlign: 'middle'
+                    }} />
+                  </p>
+                  {isOwnProfile && (
+                    <p style={{ 
+                      fontSize: '12px', 
+                      color: 'var(--text-tertiary)', 
+                      textAlign: 'center',
+                      marginTop: 'var(--space-3)',
+                      fontStyle: 'italic'
+                    }}>
+                      Tap Customize to add your bio
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           )}
@@ -979,18 +1223,70 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                   </div>
                 </div>
               ) : (
-                // Placeholder for empty experience
-                <p 
+                // Animated placeholder for empty experience
+                <div 
                   style={{
-                    color: 'var(--text-tertiary)',
-                    fontSize: '15px',
-                    fontStyle: 'italic',
-                    textAlign: 'center',
-                    padding: 'var(--space-6) 0',
+                    padding: 'var(--space-4)',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    border: '1px dashed rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
                   }}
                 >
-                  {isOwnProfile ? 'Tap Customize to add experience' : 'No experience added yet'}
-                </p>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'flex-start', 
+                    gap: 'var(--space-3)',
+                    opacity: 0.4
+                  }}>
+                    <div 
+                      style={{ 
+                        width: '8px', 
+                        height: '8px', 
+                        borderRadius: '50%', 
+                        background: 'var(--blue)',
+                        marginTop: '6px',
+                        flexShrink: 0
+                      }} 
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div 
+                        style={{
+                          fontSize: '16px',
+                          fontWeight: 600,
+                          color: 'var(--text-secondary)',
+                          marginBottom: '4px',
+                          minHeight: '24px',
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
+                        }}
+                      >
+                        {experiencePlaceholder}
+                        <span style={{ 
+                          display: 'inline-block',
+                          width: '2px',
+                          height: '16px',
+                          background: 'var(--blue)',
+                          marginLeft: '2px',
+                          animation: 'blink 1s infinite',
+                          verticalAlign: 'middle'
+                        }} />
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                        2020 - Present
+                      </div>
+                    </div>
+                  </div>
+                  {isOwnProfile && (
+                    <p style={{ 
+                      fontSize: '12px', 
+                      color: 'var(--text-tertiary)', 
+                      textAlign: 'center',
+                      marginTop: 'var(--space-3)',
+                      fontStyle: 'italic'
+                    }}>
+                      Tap Customize to add your experience
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           )}
@@ -1213,18 +1509,72 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                   ))}
                 </div>
               ) : (
-                // Placeholder for empty skills
-                <p 
+                // Animated placeholder for empty skills
+                <div 
                   style={{
-                    color: 'var(--text-tertiary)',
-                    fontSize: '15px',
-                    fontStyle: 'italic',
-                    textAlign: 'center',
-                    padding: 'var(--space-6) 0',
+                    padding: 'var(--space-4)',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    border: '1px dashed rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
                   }}
                 >
-                  {isOwnProfile ? 'Tap Customize to add skills' : 'No skills added yet'}
-                </p>
+                  <div style={{ opacity: 0.4 }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between',
+                      marginBottom: 'var(--space-2)'
+                    }}>
+                      <span 
+                        style={{ 
+                          fontSize: '15px', 
+                          fontWeight: 600, 
+                          color: 'var(--text-secondary)',
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
+                        }}
+                      >
+                        {skillsPlaceholder}
+                        <span style={{ 
+                          display: 'inline-block',
+                          width: '2px',
+                          height: '14px',
+                          background: 'var(--blue)',
+                          marginLeft: '2px',
+                          animation: 'blink 1s infinite',
+                          verticalAlign: 'middle'
+                        }} />
+                      </span>
+                    </div>
+                    <div 
+                      style={{
+                        height: '8px',
+                        background: 'var(--bg-surface-strong)',
+                        borderRadius: '4px',
+                        overflow: 'hidden'
+                      }}
+                    >
+                      <div
+                        style={{ 
+                          width: '75%',
+                          height: '100%',
+                          background: 'linear-gradient(90deg, rgba(0, 194, 255, 0.3) 0%, rgba(0, 153, 204, 0.3) 100%)',
+                          borderRadius: '4px'
+                        }}
+                      />
+                    </div>
+                  </div>
+                  {isOwnProfile && (
+                    <p style={{ 
+                      fontSize: '12px', 
+                      color: 'var(--text-tertiary)', 
+                      textAlign: 'center',
+                      marginTop: 'var(--space-3)',
+                      fontStyle: 'italic'
+                    }}>
+                      Tap Customize to add your skills
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           )}
@@ -1573,18 +1923,82 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                   })}
                 </div>
               ) : (
-                // Placeholder for empty connect
-                <p 
+                // Animated placeholder for empty connect
+                <div 
                   style={{
-                    color: 'var(--text-tertiary)',
-                    fontSize: '15px',
-                    fontStyle: 'italic',
-                    textAlign: 'center',
-                    padding: 'var(--space-6) 0',
+                    padding: 'var(--space-4)',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    border: '1px dashed rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
                   }}
                 >
-                  {isOwnProfile ? 'Tap Customize to add social links' : 'No social links added yet'}
-                </p>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'center',
+                    gap: 'var(--space-3)',
+                    opacity: 0.4,
+                    marginBottom: 'var(--space-3)'
+                  }}>
+                    {/* Placeholder social icons */}
+                    {['/icons/instagram.png', '/icons/linkedin.png', '/icons/github.png'].map((icon, i) => (
+                      <div 
+                        key={i}
+                        style={{
+                          width: '48px',
+                          height: '48px',
+                          borderRadius: '12px',
+                          background: 'var(--bg-surface-strong)',
+                          border: '1px dashed rgba(255, 255, 255, 0.15)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <img 
+                          src={icon} 
+                          alt="" 
+                          style={{ 
+                            width: '24px', 
+                            height: '24px', 
+                            opacity: 0.5,
+                            filter: 'grayscale(100%)'
+                          }} 
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p 
+                    style={{ 
+                      fontSize: '13px', 
+                      color: 'var(--text-secondary)',
+                      textAlign: 'center',
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
+                      opacity: 0.6
+                    }}
+                  >
+                    {connectPlaceholder}
+                    <span style={{ 
+                      display: 'inline-block',
+                      width: '2px',
+                      height: '12px',
+                      background: 'var(--blue)',
+                      marginLeft: '2px',
+                      animation: 'blink 1s infinite',
+                      verticalAlign: 'middle'
+                    }} />
+                  </p>
+                  {isOwnProfile && (
+                    <p style={{ 
+                      fontSize: '12px', 
+                      color: 'var(--text-tertiary)', 
+                      textAlign: 'center',
+                      marginTop: 'var(--space-2)',
+                      fontStyle: 'italic'
+                    }}>
+                      Tap Customize to link your socials
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           )}
