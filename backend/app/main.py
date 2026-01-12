@@ -111,10 +111,16 @@ if settings.ENVIRONMENT.lower() == "production":
         if normalized not in cors_origins_list:
             cors_origins_list.append(normalized)
     
-    # Ensure the production frontend URL is always included
-    production_frontend = "https://webstar-frontend.onrender.com"
-    if production_frontend not in cors_origins_list:
-        cors_origins_list.append(production_frontend)
+    # Ensure the production frontend URLs are always included
+    # webstar.bio must be first for OAuth redirects (uses CORS_ORIGINS[0])
+    production_domains = [
+        "https://webstar.bio",
+        "https://www.webstar.bio",
+        "https://webstar-frontend.onrender.com"  # Keep for backwards compatibility
+    ]
+    for domain in production_domains:
+        if domain not in cors_origins_list:
+            cors_origins_list.append(domain)
     
     # Log CORS origins for debugging
     logger.info(f"CORS origins configured: {cors_origins_list}")
