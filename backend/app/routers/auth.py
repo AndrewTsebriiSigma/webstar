@@ -442,7 +442,7 @@ async def google_callback(request: Request, session: Session = Depends(get_sessi
             frontend_url = settings.CORS_ORIGINS[0] if isinstance(settings.CORS_ORIGINS, list) else settings.CORS_ORIGINS.split(',')[0].strip()
             
             redirect_url = f"{frontend_url}/auth/2fa-verify"
-            redirect_url += f"?temp_token={temp_token}&user_id={user.id}&username={user.username}&email={user.email}&full_name={user.full_name or ''}&onboarding_completed={onboarding_completed}&profile_setup_completed={profile_setup_completed}&oauth_login=true"
+            redirect_url += f"?temp_token={temp_token}&user_id={user.id}&username={user.username}&email={user.email}&full_name={user.full_name or ''}&onboarding_completed={str(onboarding_completed).lower()}&profile_setup_completed={str(profile_setup_completed).lower()}&oauth_login=true"
             
             return RedirectResponse(url=redirect_url)
         
@@ -455,7 +455,7 @@ async def google_callback(request: Request, session: Session = Depends(get_sessi
         
         # Always redirect to the callback page first
         redirect_url = f"{frontend_url}/auth/callback/google"
-        redirect_url += f"?access_token={access_token}&refresh_token={refresh_token_str}&user_id={user.id}&username={user.username}&email={user.email}&full_name={user.full_name or ''}&onboarding_completed={onboarding_completed}&profile_setup_completed={profile_setup_completed}"
+        redirect_url += f"?access_token={access_token}&refresh_token={refresh_token_str}&user_id={user.id}&username={user.username}&email={user.email}&full_name={user.full_name or ''}&onboarding_completed={str(onboarding_completed).lower()}&profile_setup_completed={str(profile_setup_completed).lower()}"
         
         return RedirectResponse(url=redirect_url)
         
