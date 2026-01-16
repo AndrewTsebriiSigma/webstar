@@ -179,7 +179,14 @@ export default function UnifiedAuthPage() {
         if (!response.data.user.onboarding_completed) {
           router.push('/onboarding');
         } else {
-          router.push(`/${response.data.user.username}`);
+          // Check for return URL (e.g., from clicking Follow as guest)
+          const returnUrl = sessionStorage.getItem('returnAfterAuth');
+          if (returnUrl) {
+            sessionStorage.removeItem('returnAfterAuth');
+            router.push(returnUrl);
+          } else {
+            router.push(`/${response.data.user.username}`);
+          }
         }
       }
     } catch (err: any) {

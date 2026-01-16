@@ -1424,14 +1424,46 @@ export default function ProfilePage({ params }: { params: { username: string } }
           ) : (
             // Visitor view - Follow & Message buttons
             <>
-              <button className="flex-1 py-2 text-sm bg-cyan-500 hover:bg-cyan-600 rounded-xl font-semibold transition">
+              <button 
+                onClick={() => {
+                  if (!user) {
+                    // Guest user - redirect to auth with return URL
+                    sessionStorage.setItem('returnAfterAuth', `/${username}`);
+                    router.push('/auth');
+                    return;
+                  }
+                  // TODO: Implement actual follow logic when backend is ready
+                  toast.success(`Following ${profile?.display_name || username}!`);
+                }}
+                className="flex-1 py-2 text-sm bg-cyan-500 hover:bg-cyan-600 rounded-xl font-semibold transition"
+              >
                 Follow
               </button>
-              <button className="flex-1 py-2 text-sm bg-gray-900 border border-gray-800 rounded-xl font-semibold transition">
+              <button 
+                onClick={() => {
+                  if (!user) {
+                    // Guest user - redirect to auth with return URL
+                    sessionStorage.setItem('returnAfterAuth', `/${username}`);
+                    router.push('/auth');
+                    return;
+                  }
+                  // TODO: Implement actual message logic when backend is ready
+                  toast('Messaging coming soon!');
+                }}
+                className="flex-1 py-2 text-sm bg-gray-900 border border-gray-800 rounded-xl font-semibold transition"
+              >
                 Message
               </button>
               <button 
-                onClick={() => setShowReportModal(true)}
+                onClick={() => {
+                  if (!user) {
+                    // Guest user - redirect to auth with return URL
+                    sessionStorage.setItem('returnAfterAuth', `/${username}`);
+                    router.push('/auth');
+                    return;
+                  }
+                  setShowReportModal(true);
+                }}
                 className="w-10 h-10 flex items-center justify-center rounded-xl transition"
                 style={{ 
                   background: 'rgba(255, 255, 255, 0.05)', 
