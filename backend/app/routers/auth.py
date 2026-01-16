@@ -38,8 +38,10 @@ oauth.register(
 
 @router.get("/check-email/{email}")
 async def check_email_exists(email: str, session: Session = Depends(get_session)):
-    """Check if email exists in the system."""
-    user = session.exec(select(User).where(User.email == email)).first()
+    """Check if email exists in the system (case-insensitive)."""
+    from urllib.parse import unquote
+    decoded_email = unquote(email).lower()
+    user = session.exec(select(User).where(func.lower(User.email) == decoded_email)).first()
     return {"exists": user is not None}
 
 
@@ -227,20 +229,6 @@ async def check_username(username: str, session: Session = Depends(get_session))
     existing = session.exec(select(User).where(User.username == username.lower())).first()
     
     return {"available": existing is None}
-
-
-@router.get("/check-email/{email}")
-async def check_email(email: str, session: Session = Depends(get_session)):
-    """Check if an email already exists (for unified auth flow)."""
-    from urllib.parse import unquote
-    
-    # Decode the email
-    decoded_email = unquote(email).lower()
-    
-    # Check if email exists
-    existing = session.exec(select(User).where(User.email == decoded_email)).first()
-    
-    return {"exists": existing is not None}
 
 
 @router.post("/setup-profile", response_model=UserResponse)

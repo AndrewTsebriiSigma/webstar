@@ -125,6 +125,38 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const heightReduction = Math.min(scrollY / 100, 1);
   const isScrolled = scrollY > 5;
 
+  // Load grid customization from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`portfolio_customization_${username}`);
+      if (saved) {
+        try {
+          const { gridColumns: gc, gridGap: gg, gridRadius: gr, layoutMode: lm, gridAspectRatio: gar } = JSON.parse(saved);
+          if (gc) setGridColumns(gc);
+          if (gg !== undefined) setGridGap(gg);
+          if (gr !== undefined) setGridRadius(gr);
+          if (lm) setLayoutMode(lm);
+          if (gar) setGridAspectRatio(gar);
+        } catch (e) {
+          // Invalid JSON, ignore
+        }
+      }
+    }
+  }, [username]);
+
+  // Save grid customization to localStorage when changed (only for own profile)
+  useEffect(() => {
+    if (isOwnProfile && typeof window !== 'undefined') {
+      localStorage.setItem(`portfolio_customization_${username}`, JSON.stringify({
+        gridColumns,
+        gridGap,
+        gridRadius,
+        layoutMode,
+        gridAspectRatio
+      }));
+    }
+  }, [gridColumns, gridGap, gridRadius, layoutMode, gridAspectRatio, isOwnProfile, username]);
+
   useEffect(() => {
     loadProfile();
   }, [username]);
@@ -823,25 +855,25 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 }
               }}
             >
-              {profile.profile_picture ? (
-                <img
-                  src={profile.profile_picture}
-                  alt={profile.display_name || username}
+            {profile.profile_picture ? (
+              <img
+                src={profile.profile_picture}
+                alt={profile.display_name || username}
                   className={`w-[150px] h-[150px] rounded-full object-cover ${isOwnProfile && showCustomizePanel ? 'magic-editable' : ''}`}
-                  style={{
-                    border: '6px solid #111111',
-                    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
-                  }}
-                />
-              ) : (
+                style={{
+                  border: '6px solid #111111',
+                  boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
+                }}
+              />
+            ) : (
                 <div className={`w-[150px] h-[150px] rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-4xl font-bold ${isOwnProfile && showCustomizePanel ? 'magic-editable' : ''}`}
-                  style={{
-                    border: '6px solid #111111',
-                    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
-                  }}
-                >
-                  {(profile.display_name || username).charAt(0).toUpperCase()}
-                </div>
+                style={{
+                  border: '6px solid #111111',
+                  boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
+                }}
+              >
+                {(profile.display_name || username).charAt(0).toUpperCase()}
+              </div>
               )}
               
               {/* Profile picture upload overlay */}
@@ -889,9 +921,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 }}
               />
             ) : (
-              <h1 className="text-xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)', letterSpacing: '-0.2px' }}>
-                {profile.display_name || username}
-              </h1>
+            <h1 className="text-xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)', letterSpacing: '-0.2px' }}>
+              {profile.display_name || username}
+            </h1>
             )}
             {profile.expertise_badge && (
               <CheckBadgeIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" style={{ marginTop: '-1px' }} />
@@ -921,15 +953,15 @@ export default function ProfilePage({ params }: { params: { username: string } }
             }}
           />
         ) : (
-          <p className="text-sm px-2" style={{ 
-            color: 'rgba(255, 255, 255, 0.75)',
-            fontSize: '15px',
-            lineHeight: '1.4',
-            opacity: 0.9,
-            marginBottom: '8px'
-          }}>
-            {profile.bio || 'Make original the only standard.'}
-          </p>
+        <p className="text-sm px-2" style={{ 
+          color: 'rgba(255, 255, 255, 0.75)',
+          fontSize: '15px',
+          lineHeight: '1.4',
+          opacity: 0.9,
+          marginBottom: '8px'
+        }}>
+          {profile.bio || 'Make original the only standard.'}
+        </p>
         )}
 
         {/* Location & Role - 14px to dashboard */}
@@ -1001,7 +1033,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 )}
               </div>
             ) : (
-              <span>{profile.location || 'Paris, France'}</span>
+            <span>{profile.location || 'Paris, France'}</span>
             )}
           </div>
           
@@ -1027,7 +1059,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 }}
               />
             ) : (
-              <span>{profile.role || 'Creator'}</span>
+            <span>{profile.role || 'Creator'}</span>
             )}
           </div>
         </div>
@@ -1208,20 +1240,20 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
               onMouseEnter={(e) => {
                 if (!showCustomizePanel) {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                  e.currentTarget.style.color = '#f5f5f5';
-                  const img = e.currentTarget.querySelector('img');
-                  if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.color = '#f5f5f5';
+                const img = e.currentTarget.querySelector('img');
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.95)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!showCustomizePanel) {
-                  e.currentTarget.style.background = '#2A2A2A';
-                  e.currentTarget.style.borderColor = '#414141';
-                  e.currentTarget.style.color = '#707070';
-                  const img = e.currentTarget.querySelector('img');
-                  if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
+                e.currentTarget.style.background = '#2A2A2A';
+                e.currentTarget.style.borderColor = '#414141';
+                e.currentTarget.style.color = '#707070';
+                const img = e.currentTarget.querySelector('img');
+                if (img) (img as HTMLImageElement).style.filter = 'invert(1) opacity(0.44)';
                 }
               }}
               onMouseDown={(e) => {
@@ -1241,7 +1273,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Action Buttons - Editable in Customize Mode */}
       <div 
         className={`dashboard-actions-wrapper ${isOwnProfile && showCustomizePanel ? 'customize-active' : ''}`}
-        style={{
+                style={{
           position: 'relative',
           padding: isOwnProfile && showCustomizePanel ? '12px' : '0 16px',
           marginBottom: isOwnProfile && showCustomizePanel ? '20px' : '12px',
@@ -1261,15 +1293,15 @@ export default function ProfilePage({ params }: { params: { username: string } }
               {/* Empty state placeholder when no buttons and not in customize mode */}
               {actionButtons.length === 0 && !showCustomizePanel && (
                 <div 
-                  style={{
+                style={{
                     flex: 1,
-                    height: '32px',
+                  height: '32px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     background: 'rgba(255, 255, 255, 0.02)',
                     border: '1px dashed rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
+                  borderRadius: '12px',
                     color: 'rgba(255, 255, 255, 0.3)',
                     fontSize: '12px',
                     fontWeight: 500
@@ -1279,7 +1311,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 </div>
               )}
               {actionButtons.map((button, index) => (
-                <button
+              <button 
                   key={button.id}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -1291,7 +1323,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                     }
                   }}
                   className={`action-btn ${getButtonSizeClass(index, actionButtons.length)}`}
-                  style={{
+                style={{
                     flex: actionButtons.length === 2 
                       ? (index === 0 ? '0 0 calc(65% - 4px)' : '0 0 calc(35% - 4px)')
                       : actionButtons.length === 3 
@@ -1299,7 +1331,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       : actionButtons.length === 4
                       ? '1 1 25%'
                       : '1 1 100%',
-                    height: '32px',
+                  height: '32px',
                     background: showCustomizePanel && editingButtonId === button.id 
                       ? 'rgba(0, 194, 255, 0.15)' 
                       : '#1F1F1F',
@@ -1309,84 +1341,84 @@ export default function ProfilePage({ params }: { params: { username: string } }
                     color: showCustomizePanel && editingButtonId === button.id 
                       ? '#00C2FF' 
                       : 'rgba(255, 255, 255, 0.75)',
-                    cursor: 'pointer',
+                  cursor: 'pointer',
                     padding: '5px 16px',
-                    borderRadius: '12px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    textTransform: 'none',
-                    letterSpacing: '-0.2px',
-                    transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  textTransform: 'none',
+                  letterSpacing: '-0.2px',
+                  transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                     textAlign: 'center'
-                  }}
-                  onMouseEnter={(e) => {
+                }}
+                onMouseEnter={(e) => {
                     if (!showCustomizePanel) {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
                       e.currentTarget.style.color = 'rgba(255, 255, 255, 1)';
                     } else if (editingButtonId !== button.id) {
                       e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
                       e.currentTarget.style.borderColor = 'rgba(0, 194, 255, 0.3)';
                     }
-                  }}
-                  onMouseLeave={(e) => {
+                }}
+                onMouseLeave={(e) => {
                     if (!showCustomizePanel) {
-                      e.currentTarget.style.background = '#1F1F1F';
+                  e.currentTarget.style.background = '#1F1F1F';
                       e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
                       e.currentTarget.style.color = 'rgba(255, 255, 255, 0.75)';
                     } else if (editingButtonId !== button.id) {
                       e.currentTarget.style.background = '#1F1F1F';
                       e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
                     }
-                  }}
-                  onMouseDown={(e) => {
+                }}
+                onMouseDown={(e) => {
                     e.currentTarget.style.transform = 'scale(0.98)';
-                  }}
-                  onMouseUp={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }}
-                >
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
                   {button.label}
-                </button>
+              </button>
               ))}
               
               {/* Add Button - shows as a button slot when < 4 buttons */}
               {showCustomizePanel && actionButtons.length < 4 && (
-                <button
+              <button 
                   onClick={(e) => {
                     e.stopPropagation();
                     handleAddButton();
                   }}
-                  style={{
+                style={{
                     flex: actionButtons.length === 0 ? '1 1 100%' : actionButtons.length === 1 ? '0 0 calc(35% - 4px)' : '0 0 auto',
                     minWidth: actionButtons.length === 0 ? 'auto' : '60px',
-                    height: '32px',
+                  height: '32px',
                     background: 'transparent',
                     border: '1.5px dashed rgba(0, 194, 255, 0.4)',
                     color: '#00C2FF',
-                    cursor: 'pointer',
+                  cursor: 'pointer',
                     padding: '5px 12px',
-                    borderRadius: '12px',
+                  borderRadius: '12px',
                     fontSize: '13px',
-                    fontWeight: '600',
+                  fontWeight: '600',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '4px',
                     transition: 'all 0.15s ease'
-                  }}
-                  onMouseEnter={(e) => {
+                }}
+                onMouseEnter={(e) => {
                     e.currentTarget.style.background = 'rgba(0, 194, 255, 0.08)';
                     e.currentTarget.style.borderColor = 'rgba(0, 194, 255, 0.6)';
-                  }}
-                  onMouseLeave={(e) => {
+                }}
+                onMouseLeave={(e) => {
                     e.currentTarget.style.background = 'transparent';
                     e.currentTarget.style.borderColor = 'rgba(0, 194, 255, 0.4)';
                   }}
                 >
                   <PlusIcon style={{ width: '14px', height: '14px', strokeWidth: 2.5 }} />
                   Add
-                </button>
+              </button>
               )}
             </>
           ) : (
@@ -1793,14 +1825,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   const rowSpan = layoutMode === 'masonry' ? calculateRowSpan(displayRatio) : 1;
                   
                   return (
-                    <div 
-                      key={item.id}
+                  <div 
+                    key={item.id} 
                       className={`portfolio-grid-item ${showCustomizePanel && isOwnProfile ? 'customize-mode' : ''} ${selectedItemForResize?.id === item.id ? 'selected-for-resize' : ''}`}
-                      onClick={() => {
+                    onClick={() => {
                         // Only open feed modal if not in customize mode or if click wasn't a right-click
                         if (!showCustomizePanel) {
-                          setFeedInitialPostId(item.id);
-                          setShowFeedModal(true);
+                      setFeedInitialPostId(item.id);
+                      setShowFeedModal(true);
                         }
                       }}
                       onContextMenu={(e) => handleItemContextMenu(e, item)}
@@ -1820,12 +1852,12 @@ export default function ProfilePage({ params }: { params: { username: string } }
                           : showCustomizePanel && isOwnProfile 
                             ? '1px solid rgba(0, 194, 255, 0.3)' 
                             : 'none'
-                      }}
-                    >
-                      <ContentDisplay 
-                        item={item} 
-                        isActive={false}
-                        showAttachments={false}
+                    }}
+                  >
+                    <ContentDisplay 
+                      item={item} 
+                      isActive={false}
+                      showAttachments={false}
                         customRadius={gridRadius}
                         onPlayInMiniPlayer={handlePlayInMiniPlayer}
                         currentPlayingTrackId={currentAudioTrack?.id}
@@ -1857,7 +1889,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                             pointerEvents: 'none'
                           }}>
                             {getSizeLabel((item.aspect_ratio as WidgetSize) || '4x5')}
-                          </div>
+                  </div>
                         </>
                       )}
                     </div>
