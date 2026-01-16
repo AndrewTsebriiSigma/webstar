@@ -203,26 +203,57 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
           )}
         </div>
 
-        {/* Stats */}
+        {/* Stats - Clean pill design */}
         <div 
           style={{
             display: 'flex',
-            gap: '24px',
-            padding: '16px',
-            background: 'rgba(255, 255, 255, 0.03)',
-            borderRadius: '12px',
-            marginBottom: '24px'
+            alignItems: 'center',
+            gap: '12px',
+            marginBottom: '24px',
+            flexWrap: 'wrap'
           }}
         >
-          <div>
-            <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', marginBottom: '4px' }}>Items</div>
-            <div style={{ fontSize: '18px', fontWeight: 700, color: '#FFF' }}>{projectMedia.length || project.media_count || 0}</div>
+          <div 
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 14px',
+              background: 'rgba(0, 194, 255, 0.1)',
+              borderRadius: '100px',
+              border: '1px solid rgba(0, 194, 255, 0.2)'
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" strokeWidth="2">
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="7" height="7" rx="1" />
+            </svg>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#00C2FF' }}>
+              {projectMedia.length || project.media_count || 0} items
+            </span>
           </div>
-          <div>
-            <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', marginBottom: '4px' }}>Created</div>
-            <div style={{ fontSize: '14px', fontWeight: 600, color: '#FFF' }}>
-              {new Date(project.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-            </div>
+          <div 
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 14px',
+              background: 'rgba(255, 255, 255, 0.04)',
+              borderRadius: '100px',
+              border: '1px solid rgba(255, 255, 255, 0.08)'
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(255,255,255,0.6)' }}>
+              {new Date(project.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+            </span>
           </div>
         </div>
 
