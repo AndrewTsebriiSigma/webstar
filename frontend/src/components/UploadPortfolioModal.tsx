@@ -856,6 +856,13 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 return (
                   <button
                     onClick={defaultSaveAsDraft ? handleSaveAsDraft : handleSubmit}
+                    onTouchEnd={(e) => {
+                      // Prevent double-firing on mobile
+                      e.preventDefault();
+                      if (isButtonEnabled) {
+                        (defaultSaveAsDraft ? handleSaveAsDraft : handleSubmit)();
+                      }
+                    }}
                     disabled={!isButtonEnabled}
                     className="text-[14px] font-semibold rounded-[8px] transition disabled:opacity-50 disabled:cursor-not-allowed publish-btn"
                     style={{
@@ -863,6 +870,9 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                       color: '#fff',
                       height: '32px',
                       padding: '0 32px',
+                      touchAction: 'manipulation', // Prevent 300ms tap delay
+                      WebkitTapHighlightColor: 'transparent', // Remove iOS tap highlight
+                      userSelect: 'none', // Prevent text selection
                     }}
                   >
                     {uploading ? '...' : (defaultSaveAsDraft ? 'Save Draft' : 'Publish')}

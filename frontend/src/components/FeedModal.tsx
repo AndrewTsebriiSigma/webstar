@@ -326,6 +326,8 @@ function FeedPostContent({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showPdfModal, setShowPdfModal] = useState(false);
+  const [showAttachmentPdfModal, setShowAttachmentPdfModal] = useState(false);
 
   // Check if this post is currently playing in mini-player
   const isCurrentlyPlaying = currentPlayingTrackId === post.id;
@@ -763,69 +765,147 @@ function FeedPostContent({
         );
       
       case 'pdf':
+        const pdfUrl = post.content_url && post.content_url.startsWith('http') 
+          ? post.content_url 
+          : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${post.content_url}`;
         return (
-          <div 
-            style={{
-              padding: '48px',
-              borderRadius: 'var(--radius-lg)',
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              marginBottom: '16px'
-            }}
-          >
+          <>
             <div 
               style={{
-                width: '80px',
-                height: '80px',
-                borderRadius: '50%',
-                background: 'rgba(0, 194, 255, 0.15)',
+                padding: '48px',
+                borderRadius: 'var(--radius-lg)',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center',
                 marginBottom: '16px'
               }}
             >
-              <svg 
-                className="w-10 h-10" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="#00C2FF"
-                strokeWidth={2}
+              <div 
+                style={{
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  background: 'rgba(0, 194, 255, 0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '16px'
+                }}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+                <svg 
+                  className="w-10 h-10" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="#00C2FF"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <button
+                onClick={() => setShowPdfModal(true)}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '20px',
+                  background: '#00C2FF',
+                  color: '#000000',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 150ms',
+                  opacity: post.content_url ? 1 : 0.5
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#33D1FF';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#00C2FF';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                View Document
+              </button>
             </div>
-            <a
-              href={post.content_url || '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                padding: '12px 24px',
-                borderRadius: '20px',
-                background: '#00C2FF',
-                color: '#000000',
-                fontWeight: 600,
-                fontSize: '14px',
-                textDecoration: 'none',
-                transition: 'all 150ms',
-                pointerEvents: post.content_url ? 'auto' : 'none',
-                opacity: post.content_url ? 1 : 0.5
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#33D1FF';
-                e.currentTarget.style.transform = 'scale(1.05)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#00C2FF';
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-            >
-              View Document
-            </a>
-          </div>
+            
+            {/* PDF Preview Modal */}
+            {showPdfModal && post.content_url && (
+              <div 
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  zIndex: 100,
+                  background: 'rgba(0, 0, 0, 0.95)',
+                  backdropFilter: 'blur(20px)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                {/* Header */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '16px 20px',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                }}>
+                  <h3 style={{
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    color: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                  }}>
+                    <svg className="w-5 h-5" fill="none" stroke="#00C2FF" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                    {post.title || 'Document'}
+                  </h3>
+                  <button
+                    onClick={() => setShowPdfModal(false)}
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="#FFFFFF" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* PDF Viewer */}
+                <div style={{ flex: 1, overflow: 'hidden', padding: '20px' }}>
+                  <iframe
+                    src={pdfUrl}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      border: 'none',
+                      borderRadius: '12px',
+                      background: '#FFFFFF',
+                    }}
+                    title="PDF Document"
+                  />
+                </div>
+              </div>
+            )}
+          </>
         );
       
       default:
@@ -935,72 +1015,150 @@ function FeedPostContent({
           )}
           
           {post.attachment_type === 'pdf' && (
-            <div 
-              style={{
-                padding: '16px',
-                borderRadius: '12px',
-                background: 'rgba(239, 68, 68, 0.08)',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px'
-              }}
-            >
-              <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '8px',
-                background: 'rgba(239, 68, 68, 0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}>
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#EF4444"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
+            <>
+              <div 
+                style={{
+                  padding: '16px',
+                  borderRadius: '12px',
+                  background: 'rgba(239, 68, 68, 0.08)',
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px'
+                }}
+              >
                 <div style={{
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: '#FFFFFF',
-                  marginBottom: '4px'
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '8px',
+                  background: 'rgba(239, 68, 68, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
                 }}>
-                  PDF Document
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#EF4444"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
                 </div>
-                <a
-                  href={post.attachment_url.startsWith('http') 
-                    ? post.attachment_url 
-                    : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${post.attachment_url}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: '#FFFFFF',
+                    marginBottom: '4px'
+                  }}>
+                    PDF Document
+                  </div>
+                  <button
+                    onClick={() => setShowAttachmentPdfModal(true)}
+                    style={{
+                      fontSize: '13px',
+                      color: '#EF4444',
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      cursor: 'pointer',
+                      fontWeight: 600
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.textDecoration = 'underline';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.textDecoration = 'none';
+                    }}
+                  >
+                    View Document →
+                  </button>
+                </div>
+              </div>
+              
+              {/* PDF Attachment Preview Modal */}
+              {showAttachmentPdfModal && post.attachment_url && (
+                <div 
+                  onClick={(e) => e.stopPropagation()}
                   style={{
-                    fontSize: '13px',
-                    color: '#EF4444',
-                    textDecoration: 'none',
-                    fontWeight: 600
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.textDecoration = 'underline';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.textDecoration = 'none';
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    zIndex: 100,
+                    background: 'rgba(0, 0, 0, 0.95)',
+                    backdropFilter: 'blur(20px)',
+                    display: 'flex',
+                    flexDirection: 'column',
                   }}
                 >
-                  View Document →
-                </a>
-              </div>
-            </div>
+                  {/* Header */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '16px 20px',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}>
+                    <h3 style={{
+                      fontSize: '16px',
+                      fontWeight: 600,
+                      color: '#FFFFFF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                    }}>
+                      <svg className="w-5 h-5" fill="none" stroke="#EF4444" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                      </svg>
+                      PDF Attachment
+                    </h3>
+                    <button
+                      onClick={() => setShowAttachmentPdfModal(false)}
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="#FFFFFF" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* PDF Viewer */}
+                  <div style={{ flex: 1, overflow: 'hidden', padding: '20px' }}>
+                    <iframe
+                      src={post.attachment_url.startsWith('http') 
+                        ? post.attachment_url 
+                        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${post.attachment_url}`}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        border: 'none',
+                        borderRadius: '12px',
+                        background: '#FFFFFF',
+                      }}
+                      title="PDF Attachment"
+                    />
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
