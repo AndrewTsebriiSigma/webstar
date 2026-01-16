@@ -1420,9 +1420,47 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   Add
               </button>
               )}
+              
+              {/* Copy Link Button - Always visible for owner */}
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigator.clipboard.writeText(window.location.href);
+                  toast.success('Profile link copied!');
+                }}
+                style={{
+                  height: '32px',
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  cursor: 'pointer',
+                  padding: '5px 12px',
+                  borderRadius: '12px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  transition: 'all 0.15s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                }}
+                title="Copy profile link"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                </svg>
+                Copy Link
+              </button>
             </>
           ) : (
-            // Visitor view - Follow & Message buttons
+            // Visitor view - Follow & Copy Link buttons
             <>
               <button 
                 onClick={() => {
@@ -1441,18 +1479,20 @@ export default function ProfilePage({ params }: { params: { username: string } }
               </button>
               <button 
                 onClick={() => {
-                  if (!user) {
-                    // Guest user - redirect to auth with return URL
-                    sessionStorage.setItem('returnAfterAuth', `/${username}`);
-                    router.push('/auth');
-                    return;
-                  }
-                  // TODO: Implement actual message logic when backend is ready
-                  toast('Messaging coming soon!');
+                  navigator.clipboard.writeText(window.location.href);
+                  toast.success('Profile link copied!');
                 }}
-                className="flex-1 py-2 text-sm bg-gray-900 border border-gray-800 rounded-xl font-semibold transition"
+                className="flex-1 py-2 text-sm rounded-xl font-semibold transition flex items-center justify-center gap-2"
+                style={{ 
+                  background: 'rgba(255, 255, 255, 0.06)', 
+                  border: '1px solid rgba(255, 255, 255, 0.1)' 
+                }}
               >
-                Message
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                </svg>
+                Copy Link
               </button>
               <button 
                 onClick={() => {
@@ -1535,7 +1575,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   >
                     <option value="link">Link</option>
                     <option value="email">Email</option>
-                    <option value="message">Message/Share</option>
                   </select>
                 </div>
                 

@@ -501,7 +501,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
         { id: 'instagram', name: 'Instagram', icon: '/icons/social.png', color: '#E4405F', domain: 'instagram.com' },
         { id: 'facebook', name: 'Facebook', icon: '/icons/facebook.png', color: '#1877F2', domain: 'facebook.com' },
         { id: 'x', name: 'X', icon: '/icons/twitter.png', color: '#000000', domain: 'x.com' },
-        { id: 'snapchat', name: 'Snapchat', icon: '👻', color: '#FFFC00', domain: 'snapchat.com' },
+        { id: 'snapchat', name: 'Snapchat', icon: '/icons/snapchat.png', color: '#FFFC00', domain: 'snapchat.com' },
         { id: 'pinterest', name: 'Pinterest', icon: '/icons/pinterest.png', color: '#E60023', domain: 'pinterest.com' },
         { id: 'tiktok', name: 'TikTok', icon: '/icons/tik-tok.png', color: '#000000', domain: 'tiktok.com' },
         { id: 'reddit', name: 'Reddit', icon: '/icons/reddit.png', color: '#FF4500', domain: 'reddit.com' },
