@@ -12,13 +12,13 @@ import secrets
 
 from fastapi import Body
 from app.db.base import get_session
-from app.db.models import User, Profile, OnboardingProgress, UserPoints, EmailVerification
+from app.db.models import User, Profile, OnboardingProgress, UserPoints, EmailVerification, PasswordResetToken
 from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token, decode_token, get_current_user
 from app.core.config import settings
 from app.core.rate_limit import rate_limiter
 from app.schemas.auth import UserRegister, UserLogin, Token, RefreshToken, GoogleAuth, UserResponse, LoginResponse, Verify2FALoginRequest, ProfileSetup
 from app.services.totp_service import TOTPService
-from app.services.email_service import generate_verification_code, send_verification_email
+from app.services.email_service import generate_verification_code, send_verification_email, send_password_reset_email
 from app.services.oauth_state import oauth_state_manager
 
 router = APIRouter()
@@ -779,3 +779,120 @@ async def refresh(token_data: RefreshToken, session: Session = Depends(get_sessi
         )
     )
 
+
+@router.post("/forgot-password")
+async def forgot_password(
+    request: Request,
+    email: str = Body(..., embed=True),
+    session: Session = Depends(get_session)
+):
+    """Send password reset email."""
+    # Rate limit: 3 requests per 10 minutes per IP
+    rate_limiter.require_rate_limit(request, max_requests=3, window_seconds=600)
+    
+    # Find user by email (case-insensitive)
+    user = session.exec(
+        select(User).where(func.lower(User.email) == func.lower(email))
+    ).first()
+    
+    # Always return success to prevent email enumeration attacks
+    if not user:
+        return {"message": "If an account exists with this email, you will receive a password reset link"}
+    
+    # Check if user has a password (not OAuth-only user)
+    if not user.hashed_password:
+        return {"message": "If an account exists with this email, you will receive a password reset link"}
+    
+    # Delete any existing reset tokens for this user
+    existing_tokens = session.exec(
+        select(PasswordResetToken).where(PasswordResetToken.user_id == user.id)
+    ).all()
+    for token_record in existing_tokens:
+        session.delete(token_record)
+    session.commit()
+    
+    # Generate reset token (secure random string)
+    reset_token = secrets.token_urlsafe(32)
+    expires_at = datetime.utcnow() + timedelta(hours=1)
+    
+    # Store reset token
+    token_record = PasswordResetToken(
+        user_id=user.id,
+        token=reset_token,
+        expires_at=expires_at
+    )
+    session.add(token_record)
+    session.commit()
+    
+    # Build reset link
+    frontend_url = settings.CORS_ORIGINS[0] if isinstance(settings.CORS_ORIGINS, list) else settings.CORS_ORIGINS.split(',')[0].strip()
+    reset_link = f"{frontend_url}/auth/reset-password?token={reset_token}"
+    
+    # Send email
+    if not send_password_reset_email(user.email, reset_link):
+        # Log error but don't reveal to user
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to send password reset email to {user.email}")
+    
+    return {"message": "If an account exists with this email, you will receive a password reset link"}
+
+
+@router.post("/reset-password")
+async def reset_password(
+    request: Request,
+    token: str = Body(...),
+    new_password: str = Body(...),
+    session: Session = Depends(get_session)
+):
+    """Reset password using token from email."""
+    # Rate limit: 5 attempts per 10 minutes per IP
+    rate_limiter.require_rate_limit(request, max_requests=5, window_seconds=600)
+    
+    # Validate password
+    if len(new_password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 8 characters long"
+        )
+    
+    # Find the reset token
+    token_record = session.exec(
+        select(PasswordResetToken).where(
+            (PasswordResetToken.token == token) &
+            (PasswordResetToken.used == False)
+        )
+    ).first()
+    
+    if not token_record:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset link"
+        )
+    
+    # Check if token is expired
+    if datetime.utcnow() > token_record.expires_at:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Reset link has expired. Please request a new one."
+        )
+    
+    # Get user
+    user = session.get(User, token_record.user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid reset link"
+        )
+    
+    # Update password
+    user.hashed_password = get_password_hash(new_password)
+    session.add(user)
+    
+    # Mark token as used
+    token_record.used = True
+    session.add(token_record)
+    
+    session.commit()
+    
+    return {"message": "Password reset successfully"}

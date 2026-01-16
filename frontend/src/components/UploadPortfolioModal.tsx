@@ -785,9 +785,15 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 }}
               >
                 <div 
-                  className="w-12 h-12 rounded-full"
+                  className="w-12 h-12 rounded-full flex items-center justify-center"
                   style={{ background: 'rgba(20, 20, 20, 1)' }}
-                />
+                >
+                  {displayProgress >= 85 ? (
+                    <svg className="w-5 h-5 text-cyan-400 animate-pulse" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                    </svg>
+                  ) : null}
+                </div>
               </div>
             </div>
             <p 
@@ -795,6 +801,14 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               style={{ fontVariantNumeric: 'tabular-nums' }}
             >
               {displayProgress}%
+            </p>
+            <p 
+              className="mt-2 text-white/40 text-sm"
+            >
+              {displayProgress < 30 ? 'Uploading...' : 
+               displayProgress < 60 ? 'Processing media...' :
+               displayProgress < 85 ? 'Optimizing...' :
+               'Finalizing...'}
             </p>
           </div>
         )}

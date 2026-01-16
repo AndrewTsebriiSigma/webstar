@@ -251,6 +251,18 @@ class OAuthState(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+class PasswordResetToken(SQLModel, table=True):
+    """Password reset tokens for forgot password flow."""
+    __tablename__ = "password_reset_tokens"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", nullable=False, index=True)
+    token: str = Field(unique=True, index=True, nullable=False)
+    expires_at: datetime = Field(nullable=False)
+    used: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
 class Report(SQLModel, table=True):
     """User reports for profiles/content moderation."""
     __tablename__ = "reports"

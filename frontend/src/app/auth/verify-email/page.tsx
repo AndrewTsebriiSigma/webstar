@@ -145,6 +145,39 @@ function VerifyEmailContent() {
           </Link>
         </div>
 
+        {/* Progress Steps */}
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <div className="flex items-center gap-1">
+            <div 
+              className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold"
+              style={{ background: 'rgba(52, 199, 89, 0.2)', color: '#34C759' }}
+            >
+              ✓
+            </div>
+            <span className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>Email</span>
+          </div>
+          <div className="w-8 h-[2px]" style={{ background: 'rgba(0, 194, 255, 0.3)' }} />
+          <div className="flex items-center gap-1">
+            <div 
+              className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold"
+              style={{ background: 'rgba(0, 194, 255, 0.2)', color: '#00C2FF' }}
+            >
+              2
+            </div>
+            <span className="text-xs" style={{ color: '#00C2FF' }}>Verify</span>
+          </div>
+          <div className="w-8 h-[2px]" style={{ background: 'rgba(255, 255, 255, 0.1)' }} />
+          <div className="flex items-center gap-1">
+            <div 
+              className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold"
+              style={{ background: 'rgba(255, 255, 255, 0.06)', color: 'rgba(255, 255, 255, 0.3)' }}
+            >
+              3
+            </div>
+            <span className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.3)' }}>Password</span>
+          </div>
+        </div>
+
         {/* Card */}
         <div 
           className="rounded-3xl p-8"

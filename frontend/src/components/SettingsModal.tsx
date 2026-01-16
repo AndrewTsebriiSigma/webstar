@@ -87,6 +87,295 @@ const GlassCard = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
+// Change Email Section Component
+const ChangeEmailSection = ({ onBack }: { onBack: () => void }) => {
+  const [newEmail, setNewEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newEmail || !password) return;
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await settingsAPI.changeEmail(newEmail, password);
+      if (response.data) {
+        setSuccess(true);
+        toast.success('Email updated successfully!');
+        // Update local storage
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        user.email = newEmail;
+        localStorage.setItem('user', JSON.stringify(user));
+        setTimeout(() => onBack(), 1500);
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to update email');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="text-center py-8">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" 
+          style={{ background: 'rgba(52, 199, 89, 0.1)' }}>
+          <svg className="w-8 h-8 text-[#34C759]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#FFFFFF', marginBottom: '8px' }}>Email Updated!</h3>
+        <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Your email has been changed successfully.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#FFFFFF', marginBottom: '16px' }}>Change Email</h3>
+      
+      {error && (
+        <div className="mb-4 p-3 rounded-xl text-sm"
+          style={{ background: 'rgba(255, 69, 58, 0.1)', color: '#FF453A' }}
+        >
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        <div style={{ marginBottom: '12px' }}>
+          <label style={{ display: 'block', fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '6px' }}>
+            New Email
+          </label>
+          <input
+            type="email"
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
+            placeholder="your@newemail.com"
+            style={{
+              width: '100%',
+              padding: '12px 14px',
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              borderRadius: '12px',
+              color: '#FFFFFF',
+              fontSize: '15px',
+              outline: 'none'
+            }}
+            required
+          />
+        </div>
+
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '6px' }}>
+            Current Password
+          </label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password to confirm"
+            style={{
+              width: '100%',
+              padding: '12px 14px',
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              borderRadius: '12px',
+              color: '#FFFFFF',
+              fontSize: '15px',
+              outline: 'none'
+            }}
+            required
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading || !newEmail || !password}
+          style={{
+            width: '100%',
+            padding: '14px',
+            background: loading || !newEmail || !password ? 'rgba(255, 255, 255, 0.1)' : '#00C2FF',
+            borderRadius: '12px',
+            color: '#FFFFFF',
+            fontSize: '15px',
+            fontWeight: 600,
+            border: 'none',
+            cursor: loading || !newEmail || !password ? 'not-allowed' : 'pointer',
+            transition: 'background 0.2s'
+          }}
+        >
+          {loading ? 'Updating...' : 'Update Email'}
+        </button>
+      </form>
+    </div>
+  );
+};
+
+// Change Password Section Component
+const ChangePasswordSection = ({ onBack }: { onBack: () => void }) => {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (newPassword.length < 8) {
+      setError('New password must be at least 8 characters');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await settingsAPI.changePassword(currentPassword, newPassword);
+      if (response.data) {
+        setSuccess(true);
+        toast.success('Password updated successfully!');
+        setTimeout(() => onBack(), 1500);
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to update password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="text-center py-8">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" 
+          style={{ background: 'rgba(52, 199, 89, 0.1)' }}>
+          <svg className="w-8 h-8 text-[#34C759]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#FFFFFF', marginBottom: '8px' }}>Password Updated!</h3>
+        <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Your password has been changed successfully.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#FFFFFF', marginBottom: '16px' }}>Change Password</h3>
+      
+      {error && (
+        <div className="mb-4 p-3 rounded-xl text-sm"
+          style={{ background: 'rgba(255, 69, 58, 0.1)', color: '#FF453A' }}
+        >
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        <div style={{ marginBottom: '12px' }}>
+          <label style={{ display: 'block', fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '6px' }}>
+            Current Password
+          </label>
+          <input
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            placeholder="Enter current password"
+            style={{
+              width: '100%',
+              padding: '12px 14px',
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              borderRadius: '12px',
+              color: '#FFFFFF',
+              fontSize: '15px',
+              outline: 'none'
+            }}
+            required
+          />
+        </div>
+
+        <div style={{ marginBottom: '12px' }}>
+          <label style={{ display: 'block', fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '6px' }}>
+            New Password
+          </label>
+          <input
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="At least 8 characters"
+            style={{
+              width: '100%',
+              padding: '12px 14px',
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              borderRadius: '12px',
+              color: '#FFFFFF',
+              fontSize: '15px',
+              outline: 'none'
+            }}
+            required
+          />
+        </div>
+
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '6px' }}>
+            Confirm New Password
+          </label>
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Repeat new password"
+            style={{
+              width: '100%',
+              padding: '12px 14px',
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              borderRadius: '12px',
+              color: '#FFFFFF',
+              fontSize: '15px',
+              outline: 'none'
+            }}
+            required
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading || !currentPassword || !newPassword || !confirmPassword}
+          style={{
+            width: '100%',
+            padding: '14px',
+            background: loading || !currentPassword || !newPassword || !confirmPassword ? 'rgba(255, 255, 255, 0.1)' : '#00C2FF',
+            borderRadius: '12px',
+            color: '#FFFFFF',
+            fontSize: '15px',
+            fontWeight: 600,
+            border: 'none',
+            cursor: loading || !currentPassword || !newPassword || !confirmPassword ? 'not-allowed' : 'pointer',
+            transition: 'background 0.2s'
+          }}
+        >
+          {loading ? 'Updating...' : 'Update Password'}
+        </button>
+      </form>
+    </div>
+  );
+};
+
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const router = useRouter();
   const { logout } = useAuth();
@@ -310,17 +599,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </button>
 
                 {activeSection === 'email' && (
-                  <div>
-                    <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#FFFFFF', marginBottom: '16px' }}>Change Email</h3>
-                    <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Coming soon...</p>
-                  </div>
+                  <ChangeEmailSection onBack={() => setActiveSection(null)} />
                 )}
 
                 {activeSection === 'password' && (
-                  <div>
-                    <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#FFFFFF', marginBottom: '16px' }}>Change Password</h3>
-                    <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Coming soon...</p>
-                  </div>
+                  <ChangePasswordSection onBack={() => setActiveSection(null)} />
                 )}
 
                 {activeSection === 'blocked' && (

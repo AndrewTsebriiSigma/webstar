@@ -194,7 +194,7 @@ export default function UnifiedAuthPage() {
     e.preventDefault();
     
     // Validate password on submit
-    if (password.length < 8) {
+    if (!isPasswordValid(password)) {
       validatePassword(password);
       return;
     }
@@ -250,11 +250,32 @@ export default function UnifiedAuthPage() {
 
   // Validate password on register
   const validatePassword = (pwd: string) => {
-    if (pwd.length > 0 && pwd.length < 8) {
+    if (pwd.length === 0) {
+      setPasswordError('');
+      return;
+    }
+    if (pwd.length < 8) {
       setPasswordError('Password must be at least 8 characters');
+    } else if (!/[A-Z]/.test(pwd)) {
+      setPasswordError('Password must contain an uppercase letter');
+    } else if (!/[a-z]/.test(pwd)) {
+      setPasswordError('Password must contain a lowercase letter');
+    } else if (!/[0-9]/.test(pwd)) {
+      setPasswordError('Password must contain a number');
+    } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) {
+      setPasswordError('Password must contain a special character');
     } else {
       setPasswordError('');
     }
+  };
+
+  // Check if password meets all requirements
+  const isPasswordValid = (pwd: string) => {
+    return pwd.length >= 8 &&
+      /[A-Z]/.test(pwd) &&
+      /[a-z]/.test(pwd) &&
+      /[0-9]/.test(pwd) &&
+      /[!@#$%^&*(),.?":{}|<>]/.test(pwd);
   };
 
   // Check if email is valid
@@ -640,7 +661,7 @@ export default function UnifiedAuthPage() {
 
               <button
                 type="submit"
-                disabled={loading || !password}
+                disabled={loading || !isPasswordValid(password)}
                 className="w-full py-3.5 text-white font-semibold rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   background: 'linear-gradient(135deg, #00C2FF 0%, #0A84FF 100%)',
@@ -649,6 +670,13 @@ export default function UnifiedAuthPage() {
               >
                 {loading ? 'Creating...' : 'Register'}
               </button>
+
+              {/* Password requirements hint */}
+              {password.length > 0 && !isPasswordValid(password) && (
+                <div className="mt-3 text-[11px] text-center" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                  Password needs: 8+ chars, uppercase, lowercase, number, special (!@#$...)
+                </div>
+              )}
             </form>
           )}
         </div>
