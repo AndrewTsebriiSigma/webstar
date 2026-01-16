@@ -29,7 +29,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   
   // Attachment states
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
-  const [attachmentType, setAttachmentType] = useState<'audio' | 'pdf' | null>(null);
+  const [attachmentType, setAttachmentType] = useState<'audio' | 'pdf' | 'photo' | null>(null);
   const [attachmentSwipeX, setAttachmentSwipeX] = useState(0);
   const [attachmentStartX, setAttachmentStartX] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -37,6 +37,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   const [isRemovingAttachment, setIsRemovingAttachment] = useState(false);
   const [existingAttachmentUrl, setExistingAttachmentUrl] = useState<string>('');
   const [showPdfPopup, setShowPdfPopup] = useState(false);
+  const [showPhotoPopup, setShowPhotoPopup] = useState(false);
   
   // Memoized blob URLs to prevent recreation on re-render
   const [attachmentBlobUrl, setAttachmentBlobUrl] = useState<string>('');
@@ -243,6 +244,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     setExistingAttachmentUrl('');
     setAttachmentBlobUrl('');
     setShowPdfPopup(false);
+    setShowPhotoPopup(false);
     setDescription('');
     setUploading(false);
     setUploadProgress(0);
@@ -381,6 +383,31 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     setAttachmentType('pdf');
     setAttachmentFileName(selectedFile.name.replace(/\.[^/.]+$/, ''));
     toast.success('PDF attachment added');
+    
+    // Reset input value to allow re-selecting the same file
+    e.target.value = '';
+  };
+
+  const handlePhotoAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    if (!selectedFile.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      e.target.value = ''; // Reset input
+      return;
+    }
+
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      toast.error('Image must be under 10MB');
+      e.target.value = ''; // Reset input
+      return;
+    }
+
+    setAttachmentFile(selectedFile);
+    setAttachmentType('photo');
+    setAttachmentFileName(selectedFile.name.replace(/\.[^/.]+$/, ''));
+    toast.success('Photo attachment added');
     
     // Reset input value to allow re-selecting the same file
     e.target.value = '';
@@ -1158,29 +1185,42 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                         onTouchEnd={handleSwipeEnd}
                         onClick={() => attachmentSwipeX > 0 && setAttachmentSwipeX(0)}
                       >
-                        {/* Album art / icon - cleaner style */}
-                        <div 
-                          className="flex items-center justify-center flex-shrink-0"
-                          style={{
-                            width: '36px',
-                            height: '36px',
-                            background: attachmentType === 'audio' 
-                              ? 'linear-gradient(145deg, #2D2D2D 0%, #1A1A1A 100%)'
-                              : 'linear-gradient(145deg, #2D2D2D 0%, #1A1A1A 100%)',
-                            borderRadius: '6px',
-                            border: '1px solid rgba(255,255,255,0.06)',
-                          }}
-                        >
-                          {attachmentType === 'audio' ? (
-                            <svg className="w-[18px] h-[18px]" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth={1.5} viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V4.5l-10.5 3v9.75M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z" />
-                            </svg>
-                          ) : (
-                            <svg className="w-[18px] h-[18px]" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth={1.5} viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                            </svg>
-                          )}
-                        </div>
+                        {/* Album art / icon / photo thumbnail - cleaner style */}
+                        {attachmentType === 'photo' ? (
+                          <img 
+                            src={attachmentBlobUrl || existingAttachmentUrl}
+                            alt="Photo attachment"
+                            className="flex-shrink-0"
+                            style={{
+                              width: '36px',
+                              height: '36px',
+                              borderRadius: '6px',
+                              objectFit: 'cover',
+                              border: '1px solid rgba(255,255,255,0.1)',
+                            }}
+                          />
+                        ) : (
+                          <div 
+                            className="flex items-center justify-center flex-shrink-0"
+                            style={{
+                              width: '36px',
+                              height: '36px',
+                              background: 'linear-gradient(145deg, #2D2D2D 0%, #1A1A1A 100%)',
+                              borderRadius: '6px',
+                              border: '1px solid rgba(255,255,255,0.06)',
+                            }}
+                          >
+                            {attachmentType === 'audio' ? (
+                              <svg className="w-[18px] h-[18px]" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth={1.5} viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V4.5l-10.5 3v9.75M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z" />
+                              </svg>
+                            ) : (
+                              <svg className="w-[18px] h-[18px]" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth={1.5} viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                              </svg>
+                            )}
+                          </div>
+                        )}
                         
                         {/* File name - Apple focus glow on wrapper like caption */}
                         <div 
@@ -1263,6 +1303,33 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                             onClick={(e) => { 
                               e.stopPropagation(); 
                               setShowPdfPopup(true);
+                            }}
+                            className="flex items-center justify-center"
+                            style={{
+                              width: '35px',
+                              height: '35px',
+                              minWidth: '35px',
+                              minHeight: '35px',
+                              maxWidth: '35px',
+                              maxHeight: '35px',
+                              background: 'rgba(255, 255, 255, 0.12)',
+                              borderRadius: '50%',
+                              flexShrink: 0,
+                            }}
+                          >
+                            <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="white" strokeWidth={2} viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          </button>
+                        )}
+
+                        {/* View button for Photo - opens in popup */}
+                        {attachmentType === 'photo' && (
+                          <button
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              setShowPhotoPopup(true);
                             }}
                             className="flex items-center justify-center"
                             style={{
@@ -1392,17 +1459,27 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 
                 {/* Right: Attachment icons (always visible, disabled when not applicable) */}
                 <div className="flex items-center" style={{ gap: '25px' }}>
-                  {/* Image icon - always disabled (just decorative) */}
-                  <svg 
-                    className="w-[18px] h-[18px]" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth={2} 
-                    viewBox="0 0 24 24"
-                    style={{ opacity: 0.3 }}
+                  {/* Photo attachment - only enabled for media posts */}
+                  <input
+                    type="file"
+                    id="photo-attachment-sticky"
+                    accept="image/*"
+                    onChange={handlePhotoAttachment}
+                    className="hidden"
+                    disabled={uploading || !canAddAudioAttachment || !!attachmentType}
+                  />
+                  <label
+                    htmlFor={canAddAudioAttachment && !attachmentType ? "photo-attachment-sticky" : undefined}
+                    className="transition"
+                    style={{ 
+                      opacity: (!canAddAudioAttachment || !!attachmentType) ? 0.3 : 1,
+                      cursor: (canAddAudioAttachment && !attachmentType) ? 'pointer' : 'default'
+                    }}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                  </svg>
+                    <svg className="w-[18px] h-[18px]" fill="none" stroke={attachmentType === 'photo' ? '#00C2FF' : 'currentColor'} strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                    </svg>
+                  </label>
 
                   {/* Audio attachment - only enabled for media posts */}
                   <input
@@ -1455,6 +1532,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
       {/* PDF Preview Popup */}
       {showPdfPopup && attachmentType === 'pdf' && (attachmentFile || existingAttachmentUrl) && (
         <div 
+          onClick={(e) => e.stopPropagation()}
           style={{
             position: 'fixed',
             top: 0,
@@ -1526,6 +1604,92 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 background: '#fff',
               }}
               title="PDF Preview"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Photo Preview Popup */}
+      {showPhotoPopup && attachmentType === 'photo' && (attachmentFile || existingAttachmentUrl) && (
+        <div 
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.95)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            zIndex: 60,
+            display: 'flex',
+            flexDirection: 'column',
+            animation: 'fadeIn 0.2s ease-out',
+          }}
+        >
+          {/* Header */}
+          <div 
+            style={{
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            }}
+          >
+            <h3 style={{ 
+              color: '#fff', 
+              fontSize: '17px', 
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+            }}>
+              <svg className="w-5 h-5" fill="none" stroke="#00C2FF" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+              </svg>
+              {attachmentFileName || 'Photo'}
+            </h3>
+            <button
+              onClick={() => setShowPhotoPopup(false)}
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                background: 'rgba(255, 255, 255, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background 0.2s',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="#fff" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Photo Viewer */}
+          <div style={{ 
+            flex: 1, 
+            overflow: 'hidden', 
+            padding: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <img
+              src={attachmentBlobUrl || existingAttachmentUrl}
+              alt="Photo preview"
+              style={{
+                maxWidth: '100%',
+                maxHeight: '100%',
+                objectFit: 'contain',
+                borderRadius: '12px',
+              }}
             />
           </div>
         </div>
