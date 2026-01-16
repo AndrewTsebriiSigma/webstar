@@ -35,8 +35,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
   const [isClosing, setIsClosing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   
-  // Add Content expandable state (like Post menu)
-  const [contentExpanded, setContentExpanded] = useState(false);
+  // Add Content popup state (mobile-friendly action sheet)
+  const [showContentPopup, setShowContentPopup] = useState(false);
 
   // Pre-fill form when editing an existing project
   useEffect(() => {
@@ -103,7 +103,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
     setSaving(false);
     setUploadingCover(false);
     setUploadProgress(0);
-    setContentExpanded(false);
+    setShowContentPopup(false);
     setShowAttachExistingModal(false);
     setProjectMedia([]);
     setSelectedPortfolioIds(new Set());
@@ -739,111 +739,44 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
               </div>
             </div>
 
-            {/* Add Content - Inline expandable like Post menu */}
-            <div
+            {/* Add Content - Button that opens action sheet popup */}
+            <button
+              onClick={() => setShowContentPopup(true)}
+              disabled={saving || uploadingCover}
+              className="w-full transition-all active:scale-[0.98]"
               style={{
+                padding: '12px 14px',
                 background: 'rgba(255, 255, 255, 0.02)',
                 border: '1px solid rgba(255, 255, 255, 0.06)',
                 borderRadius: '10px',
-                overflow: 'hidden'
+                opacity: (saving || uploadingCover) ? 0.5 : 1,
+                touchAction: 'manipulation'
               }}
             >
-              {/* Header - Collapsible */}
-              <button
-                onClick={() => setContentExpanded(!contentExpanded)}
-                disabled={saving || uploadingCover}
-                className="w-full transition-all duration-200 ease-out"
-                style={{ 
-                  padding: contentExpanded ? '8px 12px' : '12px',
-                  background: 'transparent',
-                  opacity: (saving || uploadingCover) ? 0.5 : 1
-                }}
-              >
-                {contentExpanded ? (
-                  // Shrunk header - just title like Post
-                  <div className="flex items-center justify-center">
-                    <span className="text-[15px] font-semibold text-white">Add Content</span>
-                  </div>
-                ) : (
-                  // Full button with icon + text - compact for mobile
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="flex items-center justify-center flex-shrink-0"
-                      style={{
-                        width: '36px',
-                        height: '36px',
-                        background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%)',
-                        borderRadius: '10px'
-                      }}
-                    >
-                      <PlusIcon className="w-4 h-4" style={{ color: '#A78BFA' }} />
-                    </div>
-                    <h3 className="text-[14px] font-semibold text-white">Add Content</h3>
-                  </div>
-                )}
-              </button>
-
-              {/* Divider - visible when expanded */}
-              {contentExpanded && (
-                <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.06)', margin: '0 12px' }} />
-              )}
-
-              {/* 2 Options - 2x1 grid with gradient blocks */}
-              <div 
-                className="transition-all duration-200 ease-out overflow-hidden"
-                style={{
-                  maxHeight: contentExpanded ? '100px' : '0',
-                  opacity: contentExpanded ? 1 : 0,
-                  padding: contentExpanded ? '8px 12px' : '0 12px'
-                }}
-              >
-                <div className="grid grid-cols-2 gap-2">
-                  {/* Attach Existing - darker gradient */}
-                  <button
-                    onClick={() => {
-                      setContentExpanded(false);
-                      setShowAttachExistingModal(true);
-                    }}
-                    className="flex flex-col items-center gap-1.5 p-2 rounded-[10px] transition-all duration-150"
-                    style={{ background: 'transparent' }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <div 
-                      className="w-11 h-11 rounded-[10px] flex items-center justify-center"
-                      style={{ background: 'linear-gradient(135deg, rgba(0, 80, 120, 0.8) 0%, rgba(0, 50, 80, 0.9) 100%)' }}
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="#00C2FF" strokeWidth={1.5} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-                      </svg>
-                    </div>
-                    <span className="text-[12px] font-medium text-white">Attach existing</span>
-                  </button>
-
-                  {/* Upload New - darker gradient */}
-                  <button
-                    onClick={() => {
-                      setContentExpanded(false);
-                      handleUploadNewMedia();
-                    }}
-                    className="flex flex-col items-center gap-1.5 p-2 rounded-[10px] transition-all duration-150"
-                    style={{ background: 'transparent' }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <div 
-                      className="w-11 h-11 rounded-[10px] flex items-center justify-center"
-                      style={{ background: 'linear-gradient(135deg, rgba(20, 90, 50, 0.8) 0%, rgba(10, 60, 35, 0.9) 100%)' }}
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="#30D158" strokeWidth={1.5} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                      </svg>
-                    </div>
-                    <span className="text-[12px] font-medium text-white">Upload new</span>
-                  </button>
+              <div className="flex items-center gap-3">
+                <div 
+                  className="flex items-center justify-center flex-shrink-0"
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%)',
+                    borderRadius: '10px'
+                  }}
+                >
+                  <PlusIcon className="w-4 h-4" style={{ color: '#A78BFA' }} />
                 </div>
+                <h3 className="text-[14px] font-semibold text-white text-left flex-1">Add Content</h3>
+                <svg 
+                  className="w-4 h-4 flex-shrink-0" 
+                  fill="none" 
+                  stroke="rgba(255,255,255,0.4)" 
+                  strokeWidth={2} 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
               </div>
-            </div>
+            </button>
 
             {/* Gallery Preview */}
             {projectMedia.length > 0 && (
@@ -996,6 +929,147 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
           </div>
         </div>
       </div>
+
+      {/* Add Content Action Sheet Popup */}
+      {showContentPopup && (
+        <div 
+          className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center"
+          style={{ 
+            background: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)'
+          }}
+          onClick={() => setShowContentPopup(false)}
+        >
+          <div 
+            className="w-full sm:w-auto"
+            style={{
+              maxWidth: 'min(340px, calc(100% - 16px))',
+              margin: '0 8px',
+              marginBottom: 'max(8px, env(safe-area-inset-bottom))',
+              background: 'rgba(28, 28, 30, 0.98)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '14px',
+              overflow: 'hidden',
+              animation: 'slideUp 0.2s ease-out'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div 
+              style={{
+                padding: '14px 16px 10px',
+                textAlign: 'center',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
+              }}
+            >
+              <h3 style={{ fontSize: '13px', fontWeight: '600', color: 'rgba(255, 255, 255, 0.5)', letterSpacing: '0.3px' }}>
+                ADD CONTENT
+              </h3>
+            </div>
+
+            {/* Options */}
+            <div style={{ padding: '8px' }}>
+              {/* Attach Existing */}
+              <button
+                onClick={() => {
+                  setShowContentPopup(false);
+                  setShowAttachExistingModal(true);
+                }}
+                className="w-full flex items-center gap-4 p-3 rounded-[10px] transition-all active:scale-[0.98]"
+                style={{ background: 'transparent', touchAction: 'manipulation' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <div 
+                  className="flex items-center justify-center flex-shrink-0"
+                  style={{
+                    width: '44px',
+                    height: '44px',
+                    background: 'linear-gradient(135deg, rgba(0, 122, 255, 0.25) 0%, rgba(0, 80, 180, 0.3) 100%)',
+                    borderRadius: '12px'
+                  }}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="#0A84FF" strokeWidth={1.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                  </svg>
+                </div>
+                <div className="flex-1 text-left">
+                  <p style={{ fontSize: '15px', fontWeight: '600', color: '#FFFFFF', marginBottom: '2px' }}>Attach Existing</p>
+                  <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)' }}>Add from your posts</p>
+                </div>
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
+              {/* Upload New */}
+              <button
+                onClick={() => {
+                  setShowContentPopup(false);
+                  handleUploadNewMedia();
+                }}
+                className="w-full flex items-center gap-4 p-3 rounded-[10px] transition-all active:scale-[0.98]"
+                style={{ background: 'transparent', touchAction: 'manipulation' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <div 
+                  className="flex items-center justify-center flex-shrink-0"
+                  style={{
+                    width: '44px',
+                    height: '44px',
+                    background: 'linear-gradient(135deg, rgba(48, 209, 88, 0.25) 0%, rgba(30, 150, 60, 0.3) 100%)',
+                    borderRadius: '12px'
+                  }}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="#30D158" strokeWidth={1.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  </svg>
+                </div>
+                <div className="flex-1 text-left">
+                  <p style={{ fontSize: '15px', fontWeight: '600', color: '#FFFFFF', marginBottom: '2px' }}>Upload New</p>
+                  <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)' }}>Photos or videos</p>
+                </div>
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Cancel Button */}
+            <div style={{ padding: '8px', borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+              <button
+                onClick={() => setShowContentPopup(false)}
+                className="w-full py-3 rounded-[10px] transition-all active:scale-[0.98]"
+                style={{ 
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  color: '#FF453A',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  touchAction: 'manipulation'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+
+          {/* Animation keyframes */}
+          <style jsx>{`
+            @keyframes slideUp {
+              from {
+                opacity: 0;
+                transform: translateY(20px);
+              }
+              to {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+          `}</style>
+        </div>
+      )}
 
       {/* Attach Existing Posts Sub-Modal */}
       {showAttachExistingModal && (
