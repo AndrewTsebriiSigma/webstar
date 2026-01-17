@@ -123,6 +123,13 @@ export const profileAPI = {
   likeProfile: (username: string) => api.post(`/api/profiles/${username}/like`),
   
   unlikeProfile: (username: string) => api.delete(`/api/profiles/${username}/like`),
+  
+  // Blocked users
+  getBlockedUsers: () => api.get('/api/profiles/blocked-users'),
+  
+  blockUser: (username: string) => api.post(`/api/profiles/${username}/block`),
+  
+  unblockUser: (username: string) => api.delete(`/api/profiles/${username}/unblock`),
 };
 
 // Portfolio API

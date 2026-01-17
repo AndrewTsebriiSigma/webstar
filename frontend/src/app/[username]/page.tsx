@@ -729,6 +729,66 @@ export default function ProfilePage({ params }: { params: { username: string } }
         onChange={(e) => handleProfileImageUpload(e, 'profile')}
       />
 
+      {/* Customize Mode Indicator Bar */}
+      {isOwnProfile && showCustomizePanel && (
+        <div 
+          style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 50,
+            background: 'linear-gradient(90deg, rgba(0, 194, 255, 0.15), rgba(123, 104, 238, 0.15))',
+            borderBottom: '1px solid rgba(0, 194, 255, 0.3)',
+            padding: '10px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            animation: 'slideDown 0.3s ease-out'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div 
+              style={{ 
+                width: '8px', 
+                height: '8px', 
+                borderRadius: '50%', 
+                background: '#00C2FF',
+                animation: 'pulse 2s infinite'
+              }} 
+            />
+            <span style={{ color: '#00C2FF', fontSize: '13px', fontWeight: 600 }}>
+              Customize Mode
+            </span>
+            <span style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '12px' }}>
+              Tap elements to edit
+            </span>
+          </div>
+          <button
+            onClick={() => {
+              saveProfileInfo();
+              setShowCustomizePanel(false);
+              toast.success('Changes saved!');
+            }}
+            style={{
+              background: 'linear-gradient(135deg, #00C2FF, #7B68EE)',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '6px 16px',
+              color: '#FFFFFF',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'transform 0.15s ease'
+            }}
+            onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
+            onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            Done
+          </button>
+        </div>
+      )}
+
       {/* Cover Image Area - webSTAR: 176px height */}
       <div className="relative">
         <div 

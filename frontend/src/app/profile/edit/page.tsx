@@ -190,7 +190,7 @@ export default function EditProfilePage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#111111' }}>
+    <div className="min-h-screen overflow-y-auto" style={{ background: '#111111' }}>
       {/* Header */}
       <header className="glass border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">

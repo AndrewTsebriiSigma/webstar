@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { XMarkIcon, ChevronRightIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/context/AuthContext';
-import { settingsAPI } from '@/lib/api';
+import { settingsAPI, profileAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 import Setup2FAModal from './Setup2FAModal';
 import Disable2FAModal from './Disable2FAModal';
@@ -386,11 +386,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [settings, setSettings] = useState({
     email: '',
     publicProfile: true,
-    blockedUsers: [] as string[],
+    blockedUsers: [] as { id: number; username: string; display_name: string | null; profile_picture: string | null; blocked_at: string }[],
     pushNotifications: true,
     emailNotifications: true,
     twoFactorEnabled: false,
   });
+  const [loadingBlockedUsers, setLoadingBlockedUsers] = useState(false);
+  const [unblockingUser, setUnblockingUser] = useState<string | null>(null);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem('userSettings');
@@ -402,6 +404,41 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       load2FAStatus();
     }
   }, [isOpen]);
+
+  // Load blocked users when section is opened
+  useEffect(() => {
+    if (activeSection === 'blocked') {
+      loadBlockedUsers();
+    }
+  }, [activeSection]);
+
+  const loadBlockedUsers = async () => {
+    setLoadingBlockedUsers(true);
+    try {
+      const response = await profileAPI.getBlockedUsers();
+      setSettings(prev => ({ ...prev, blockedUsers: response.data.blocked_users || [] }));
+    } catch (error) {
+      console.error('Failed to load blocked users:', error);
+    } finally {
+      setLoadingBlockedUsers(false);
+    }
+  };
+
+  const handleUnblock = async (username: string) => {
+    setUnblockingUser(username);
+    try {
+      await profileAPI.unblockUser(username);
+      setSettings(prev => ({
+        ...prev,
+        blockedUsers: prev.blockedUsers.filter(u => u.username !== username)
+      }));
+      toast.success(`Unblocked @${username}`);
+    } catch (error) {
+      toast.error('Failed to unblock user');
+    } finally {
+      setUnblockingUser(null);
+    }
+  };
 
   const load2FAStatus = async () => {
     setLoading2FAStatus(true);
@@ -609,14 +646,82 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 {activeSection === 'blocked' && (
                   <div>
                     <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#FFFFFF', marginBottom: '16px' }}>Blocked Users</h3>
-                    {settings.blockedUsers.length === 0 ? (
-                      <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>No blocked users</p>
+                    {loadingBlockedUsers ? (
+                      <div style={{ display: 'flex', justifyContent: 'center', padding: '24px' }}>
+                        <div style={{ width: '24px', height: '24px', border: '2px solid rgba(255,255,255,0.2)', borderTopColor: '#00C2FF', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                      </div>
+                    ) : settings.blockedUsers.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '32px 16px' }}>
+                        <svg style={{ width: '48px', height: '48px', margin: '0 auto 12px', opacity: 0.3 }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                        </svg>
+                        <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '14px' }}>No blocked users</p>
+                        <p style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '12px', marginTop: '4px' }}>Users you block won&apos;t be able to see your profile</p>
+                      </div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {settings.blockedUsers.map((user) => (
-                          <div key={user} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: 'rgba(255, 255, 255, 0.04)', borderRadius: '12px' }}>
-                            <span style={{ color: '#FFFFFF' }}>@{user}</span>
-                            <button style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }}>Unblock</button>
+                          <div 
+                            key={user.id} 
+                            style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'space-between', 
+                              padding: '12px 16px', 
+                              background: 'rgba(255, 255, 255, 0.04)', 
+                              borderRadius: '12px',
+                              border: '1px solid rgba(255, 255, 255, 0.06)'
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              {user.profile_picture ? (
+                                <img 
+                                  src={user.profile_picture} 
+                                  alt={user.username}
+                                  style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+                                />
+                              ) : (
+                                <div style={{ 
+                                  width: '40px', 
+                                  height: '40px', 
+                                  borderRadius: '50%', 
+                                  background: 'linear-gradient(135deg, #00C2FF, #7B68EE)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '16px',
+                                  fontWeight: 600,
+                                  color: '#FFFFFF'
+                                }}>
+                                  {(user.display_name || user.username).charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                              <div>
+                                <p style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 500 }}>
+                                  {user.display_name || user.username}
+                                </p>
+                                <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '12px' }}>
+                                  @{user.username}
+                                </p>
+                              </div>
+                            </div>
+                            <button 
+                              onClick={() => handleUnblock(user.username)}
+                              disabled={unblockingUser === user.username}
+                              style={{ 
+                                color: unblockingUser === user.username ? 'rgba(239, 68, 68, 0.5)' : '#EF4444', 
+                                background: 'rgba(239, 68, 68, 0.1)', 
+                                border: '1px solid rgba(239, 68, 68, 0.2)', 
+                                borderRadius: '8px',
+                                padding: '6px 12px',
+                                cursor: unblockingUser === user.username ? 'not-allowed' : 'pointer', 
+                                fontSize: '13px',
+                                fontWeight: 500,
+                                transition: 'all 0.15s ease'
+                              }}
+                            >
+                              {unblockingUser === user.username ? 'Unblocking...' : 'Unblock'}
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -625,16 +730,94 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 )}
 
                 {activeSection === 'terms' && (
-                  <div>
+                  <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '8px' }}>
                     <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#FFFFFF', marginBottom: '16px' }}>Terms of Service</h3>
-                    <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Terms of service content...</p>
+                    <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', lineHeight: '1.6' }}>
+                      <p style={{ marginBottom: '16px' }}>
+                        <strong style={{ color: '#FFFFFF' }}>Last updated:</strong> January 2026
+                      </p>
+                      
+                      <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#FFFFFF', marginBottom: '8px', marginTop: '20px' }}>1. Acceptance of Terms</h4>
+                      <p style={{ marginBottom: '12px' }}>
+                        By accessing and using WebSTAR, you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our service.
+                      </p>
+
+                      <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#FFFFFF', marginBottom: '8px', marginTop: '20px' }}>2. Description of Service</h4>
+                      <p style={{ marginBottom: '12px' }}>
+                        WebSTAR is a professional portfolio and creative showcase platform that enables users to create, share, and manage their creative work, connect with other professionals, and build their personal brand.
+                      </p>
+
+                      <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#FFFFFF', marginBottom: '8px', marginTop: '20px' }}>3. User Accounts</h4>
+                      <p style={{ marginBottom: '12px' }}>
+                        You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must notify us immediately of any unauthorized use.
+                      </p>
+
+                      <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#FFFFFF', marginBottom: '8px', marginTop: '20px' }}>4. User Content</h4>
+                      <p style={{ marginBottom: '12px' }}>
+                        You retain ownership of content you upload. By posting content, you grant WebSTAR a non-exclusive license to display, distribute, and promote your content within the platform.
+                      </p>
+
+                      <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#FFFFFF', marginBottom: '8px', marginTop: '20px' }}>5. Prohibited Conduct</h4>
+                      <p style={{ marginBottom: '12px' }}>
+                        Users may not upload illegal content, harass others, spam, impersonate others, or attempt to compromise platform security.
+                      </p>
+
+                      <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#FFFFFF', marginBottom: '8px', marginTop: '20px' }}>6. Termination</h4>
+                      <p style={{ marginBottom: '12px' }}>
+                        We reserve the right to suspend or terminate accounts that violate these terms or for any other reason at our discretion.
+                      </p>
+
+                      <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#FFFFFF', marginBottom: '8px', marginTop: '20px' }}>7. Contact</h4>
+                      <p style={{ marginBottom: '12px' }}>
+                        For questions about these terms, contact us at <span style={{ color: '#00C2FF' }}>legal@webstar.bio</span>
+                      </p>
+                    </div>
                   </div>
                 )}
 
                 {activeSection === 'privacy-policy' && (
-                  <div>
+                  <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '8px' }}>
                     <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#FFFFFF', marginBottom: '16px' }}>Privacy Policy</h3>
-                    <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Privacy policy content...</p>
+                    <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', lineHeight: '1.6' }}>
+                      <p style={{ marginBottom: '16px' }}>
+                        <strong style={{ color: '#FFFFFF' }}>Last updated:</strong> January 2026
+                      </p>
+                      
+                      <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#FFFFFF', marginBottom: '8px', marginTop: '20px' }}>1. Information We Collect</h4>
+                      <p style={{ marginBottom: '12px' }}>
+                        We collect information you provide directly, including your name, email, profile information, and content you upload. We also collect usage data to improve our services.
+                      </p>
+
+                      <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#FFFFFF', marginBottom: '8px', marginTop: '20px' }}>2. How We Use Your Information</h4>
+                      <p style={{ marginBottom: '12px' }}>
+                        We use your information to provide and improve our services, communicate with you, personalize your experience, and ensure platform security.
+                      </p>
+
+                      <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#FFFFFF', marginBottom: '8px', marginTop: '20px' }}>3. Information Sharing</h4>
+                      <p style={{ marginBottom: '12px' }}>
+                        We do not sell your personal information. We may share data with service providers who help us operate the platform, and when required by law.
+                      </p>
+
+                      <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#FFFFFF', marginBottom: '8px', marginTop: '20px' }}>4. Data Security</h4>
+                      <p style={{ marginBottom: '12px' }}>
+                        We implement industry-standard security measures to protect your data. However, no method of transmission over the internet is 100% secure.
+                      </p>
+
+                      <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#FFFFFF', marginBottom: '8px', marginTop: '20px' }}>5. Your Rights</h4>
+                      <p style={{ marginBottom: '12px' }}>
+                        You have the right to access, correct, or delete your personal data. You can manage your privacy settings in your account preferences.
+                      </p>
+
+                      <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#FFFFFF', marginBottom: '8px', marginTop: '20px' }}>6. Cookies</h4>
+                      <p style={{ marginBottom: '12px' }}>
+                        We use cookies and similar technologies to enhance your experience, analyze usage patterns, and provide personalized content.
+                      </p>
+
+                      <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#FFFFFF', marginBottom: '8px', marginTop: '20px' }}>7. Contact Us</h4>
+                      <p style={{ marginBottom: '12px' }}>
+                        For privacy-related inquiries, contact us at <span style={{ color: '#00C2FF' }}>privacy@webstar.bio</span>
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>

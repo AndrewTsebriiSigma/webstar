@@ -39,6 +39,9 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   const [showPdfPopup, setShowPdfPopup] = useState(false);
   const [showPhotoPopup, setShowPhotoPopup] = useState(false);
   
+  // Drag & drop state
+  const [isDragging, setIsDragging] = useState(false);
+  
   // Memoized blob URLs to prevent recreation on re-render
   const [attachmentBlobUrl, setAttachmentBlobUrl] = useState<string>('');
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string>(''); // For PDF file preview
@@ -72,7 +75,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
       setAttachmentSwipeX(Math.min(diff, 80));
     } else if (attachmentSwipeX > 0) {
       // Swiping right when delete is open - close it
-      setAttachmentSwipeX(Math.max(0, 70 + diff));
+      setAttachmentSwipeX(Math.max(0, 70 + diff)); 
     }
   };
 
@@ -89,6 +92,88 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   const handleDeleteTap = () => {
     removeAttachment();
     setAttachmentSwipeX(0);
+  };
+
+  // Drag & drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!uploading) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only set to false if leaving the actual drop zone
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    if (uploading) return;
+    
+    const droppedFile = e.dataTransfer.files[0];
+    if (!droppedFile) return;
+    
+    // Validate based on selected content type
+    if (selectedContentType === 'media') {
+      if (!droppedFile.type.startsWith('image/') && !droppedFile.type.startsWith('video/')) {
+        toast.error('Please drop an image or video file');
+        return;
+      }
+    } else if (selectedContentType === 'audio' && !droppedFile.type.startsWith('audio/')) {
+      toast.error('Please drop an audio file');
+      return;
+    } else if (selectedContentType === 'pdf' && droppedFile.type !== 'application/pdf') {
+      toast.error('Please drop a PDF file');
+      return;
+    }
+    
+    // Check file size
+    const isVideo = droppedFile.type.startsWith('video/');
+    const isAudio = droppedFile.type.startsWith('audio/');
+    const isPdf = droppedFile.type === 'application/pdf';
+    
+    const maxSize = isVideo ? 500 * 1024 * 1024 
+                  : isAudio ? 50 * 1024 * 1024 
+                  : isPdf ? 50 * 1024 * 1024
+                  : 10 * 1024 * 1024;
+    
+    if (droppedFile.size > maxSize) {
+      const sizeMB = isVideo ? '500MB' : isAudio ? '50MB' : isPdf ? '50MB' : '10MB';
+      toast.error(`File must be less than ${sizeMB}`);
+      return;
+    }
+    
+    // Set file and create preview
+    setFile(droppedFile);
+    
+    if (droppedFile.type.startsWith('image/') || droppedFile.type.startsWith('video/')) {
+      const objectUrl = URL.createObjectURL(droppedFile);
+      setPreview(objectUrl);
+      setIsVideoPreview(droppedFile.type.startsWith('video/'));
+      setIsPdfPreview(false);
+      setPdfPreviewUrl('');
+    } else if (droppedFile.type === 'application/pdf') {
+      const objectUrl = URL.createObjectURL(droppedFile);
+      setPdfPreviewUrl(objectUrl);
+      setIsPdfPreview(true);
+      setPreview('');
+      setIsVideoPreview(false);
+    } else {
+      setPreview('');
+      setIsVideoPreview(false);
+      setIsPdfPreview(false);
+      setPdfPreviewUrl('');
+    }
+    
+    toast.success('File added!');
   };
 
   // Play/pause audio preview
@@ -926,13 +1011,17 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
             >
               {selectedContentType !== 'text' ? (
                 <>
-                  {/* File Upload Area - Glass Card, tap closes delete */}
+                  {/* File Upload Area - Glass Card with Drag & Drop */}
                   <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
                     style={{
-                      background: 'rgba(255, 255, 255, 0.03)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      background: isDragging ? 'rgba(0, 194, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                      border: isDragging ? '2px dashed rgba(0, 194, 255, 0.5)' : '1px solid rgba(255, 255, 255, 0.08)',
                       borderRadius: '16px',
                       overflow: 'hidden',
+                      transition: 'all 0.2s ease',
                     }}
                     onClick={() => attachmentSwipeX > 0 && setAttachmentSwipeX(0)}
                   >
@@ -991,31 +1080,111 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                             </div>
                           </div>
                         ) : (
-                          <div className="w-full flex items-center justify-center" style={{ height: '250px', background: 'rgba(0,0,0,0.3)' }}>
-                            <div className="text-center" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                              {selectedContentType === 'audio' ? (
-                                <>
-                                  <svg className="w-16 h-16 mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                                  </svg>
-                                  <p className="text-[13px]">Audio File</p>
-                                </>
-                              ) : selectedContentType === 'pdf' ? (
-                                <>
-                                  <svg className="w-16 h-16 mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                  </svg>
-                                  <p className="text-[13px]">PDF Document</p>
-                                </>
+                          <div className="w-full flex items-center justify-center" style={{ height: '250px', background: 'linear-gradient(135deg, rgba(0,0,0,0.4), rgba(30,30,40,0.6))' }}>
+                            <div className="text-center" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                              {selectedContentType === 'audio' && file ? (
+                                <div className="flex flex-col items-center">
+                                  {/* Audio waveform visualization */}
+                                  <div className="flex items-end gap-[3px] mb-4" style={{ height: '48px' }}>
+                                    {[...Array(24)].map((_, i) => (
+                                      <div
+                                        key={i}
+                                        style={{
+                                          width: '4px',
+                                          height: `${Math.random() * 100}%`,
+                                          minHeight: '8px',
+                                          background: 'linear-gradient(180deg, #00C2FF, #7B68EE)',
+                                          borderRadius: '2px',
+                                          opacity: 0.8,
+                                        }}
+                                      />
+                                    ))}
+                                  </div>
+                                  {/* Play button */}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleAudioPlay();
+                                    }}
+                                    style={{
+                                      width: '56px',
+                                      height: '56px',
+                                      borderRadius: '50%',
+                                      background: 'linear-gradient(135deg, #00C2FF, #7B68EE)',
+                                      border: 'none',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      cursor: 'pointer',
+                                      boxShadow: '0 4px 20px rgba(0, 194, 255, 0.3)',
+                                      marginBottom: '12px'
+                                    }}
+                                  >
+                                    {isPlaying ? (
+                                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                                      </svg>
+                                    ) : (
+                                      <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M8 5v14l11-7z"/>
+                                      </svg>
+                                    )}
+                                  </button>
+                                  <p className="text-[13px] font-medium">{file?.name?.replace(/\.[^/.]+$/, '')}</p>
+                                  <p className="text-[11px] mt-1 opacity-60">{(file.size / (1024 * 1024)).toFixed(1)} MB</p>
+                                  {/* Hidden audio element for preview */}
+                                  {file && (
+                                    <audio
+                                      ref={audioRef}
+                                      src={URL.createObjectURL(file)}
+                                      onEnded={() => setIsPlaying(false)}
+                                      style={{ display: 'none' }}
+                                    />
+                                  )}
+                                </div>
+                              ) : selectedContentType === 'pdf' && file ? (
+                                <div className="flex flex-col items-center">
+                                  {/* PDF icon with gradient */}
+                                  <div 
+                                    style={{
+                                      width: '80px',
+                                      height: '100px',
+                                      background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1))',
+                                      border: '2px solid rgba(239, 68, 68, 0.4)',
+                                      borderRadius: '8px',
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      marginBottom: '12px',
+                                      position: 'relative'
+                                    }}
+                                  >
+                                    <div 
+                                      style={{
+                                        position: 'absolute',
+                                        top: '0',
+                                        right: '0',
+                                        width: '20px',
+                                        height: '20px',
+                                        background: 'rgba(239, 68, 68, 0.3)',
+                                        borderBottomLeftRadius: '8px'
+                                      }}
+                                    />
+                                    <span style={{ fontSize: '20px', fontWeight: 700, color: '#EF4444' }}>PDF</span>
+                                  </div>
+                                  <p className="text-[13px] font-medium max-w-[200px] truncate">{file?.name?.replace(/\.[^/.]+$/, '')}</p>
+                                  <p className="text-[11px] mt-1 opacity-60">{(file.size / (1024 * 1024)).toFixed(1)} MB</p>
+                                </div>
                               ) : (
                                 <>
                                   <svg className="w-16 h-16 mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                   </svg>
                                   <p className="text-[13px]">Media File</p>
+                                  <p className="text-[11px] mt-1 opacity-60">{file?.name}</p>
                                 </>
                               )}
-                              <p className="text-[11px] mt-1 opacity-60">{file?.name}</p>
                             </div>
                           </div>
                         )}
@@ -1048,15 +1217,21 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                         className="block w-full cursor-pointer transition"
                         style={{ height: '250px' }}
                       >
-                        <div className="flex flex-col items-center justify-center h-full" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                          <svg className="w-20 h-20 mb-3" fill="currentColor" viewBox="0 0 24 24" style={{ opacity: 0.6 }}>
+                        <div className="flex flex-col items-center justify-center h-full" style={{ color: isDragging ? 'rgba(0, 194, 255, 0.8)' : 'rgba(255,255,255,0.4)' }}>
+                          <svg className="w-20 h-20 mb-3" fill="currentColor" viewBox="0 0 24 24" style={{ opacity: isDragging ? 1 : 0.6, transform: isDragging ? 'scale(1.1)' : 'scale(1)', transition: 'all 0.2s ease' }}>
                             <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
                           </svg>
                           <p className="text-[14px] font-medium">
-                            {selectedContentType === 'media' ? 'Tap to upload photo or video' :
-                             selectedContentType === 'audio' ? 'Tap to upload audio' :
-                             selectedContentType === 'pdf' ? 'Tap to upload PDF' :
-                             'Tap to upload file'}
+                            {isDragging ? 'Drop file here!' :
+                             selectedContentType === 'media' ? 'Tap or drag photo/video' :
+                             selectedContentType === 'audio' ? 'Tap or drag audio file' :
+                             selectedContentType === 'pdf' ? 'Tap or drag PDF' :
+                             'Tap or drag file here'}
+                          </p>
+                          <p className="text-[11px] mt-1 opacity-60">
+                            {selectedContentType === 'media' ? 'Images up to 10MB, Videos up to 500MB' :
+                             selectedContentType === 'audio' ? 'Audio up to 50MB' :
+                             selectedContentType === 'pdf' ? 'PDF up to 50MB' : ''}
                           </p>
                         </div>
                         <input

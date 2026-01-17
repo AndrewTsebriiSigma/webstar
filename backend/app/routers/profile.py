@@ -7,7 +7,7 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import OperationalError, IntegrityError
 
 from app.db.base import get_session
-from app.db.models import User, Profile, ProfileLike, UserPoints, PortfolioItem, Project, Report
+from app.db.models import User, Profile, ProfileLike, UserPoints, PortfolioItem, Project, Report, BlockedUser
 from pydantic import BaseModel
 from app.deps.auth import get_current_user, get_current_user_optional
 from app.schemas.profile import ProfileUpdate, ProfileResponse
@@ -445,4 +445,109 @@ async def report_profile(
     session.commit()
     
     return {"message": "Report submitted successfully. Our team will review it."}
+
+
+# --- Blocked Users Endpoints ---
+
+@router.get("/blocked-users")
+async def get_blocked_users(
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    """Get list of users blocked by current user."""
+    blocked_entries = session.exec(
+        select(BlockedUser).where(BlockedUser.blocker_id == current_user.id)
+    ).all()
+    
+    blocked_users = []
+    for entry in blocked_entries:
+        user = session.exec(select(User).where(User.id == entry.blocked_id)).first()
+        if user:
+            profile = session.exec(select(Profile).where(Profile.user_id == user.id)).first()
+            blocked_users.append({
+                "id": user.id,
+                "username": user.username,
+                "display_name": profile.display_name if profile else user.full_name,
+                "profile_picture": profile.profile_picture if profile else None,
+                "blocked_at": entry.created_at.isoformat()
+            })
+    
+    return {"blocked_users": blocked_users}
+
+
+@router.post("/{username}/block")
+async def block_user(
+    username: str,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    """Block a user."""
+    # Find target user
+    target_user = session.exec(select(User).where(User.username == username)).first()
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Can't block yourself
+    if current_user.id == target_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot block yourself"
+        )
+    
+    # Check if already blocked
+    existing_block = session.exec(
+        select(BlockedUser).where(
+            BlockedUser.blocker_id == current_user.id,
+            BlockedUser.blocked_id == target_user.id
+        )
+    ).first()
+    
+    if existing_block:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User is already blocked"
+        )
+    
+    # Create block entry
+    block = BlockedUser(
+        blocker_id=current_user.id,
+        blocked_id=target_user.id
+    )
+    session.add(block)
+    session.commit()
+    
+    return {"message": f"Successfully blocked {username}"}
+
+
+@router.delete("/{username}/unblock")
+async def unblock_user(
+    username: str,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    """Unblock a user."""
+    # Find target user
+    target_user = session.exec(select(User).where(User.username == username)).first()
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Find block entry
+    block_entry = session.exec(
+        select(BlockedUser).where(
+            BlockedUser.blocker_id == current_user.id,
+            BlockedUser.blocked_id == target_user.id
+        )
+    ).first()
+    
+    if not block_entry:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User is not blocked"
+        )
+    
+    # Delete block entry
+    session.delete(block_entry)
+    session.commit()
+    
+    return {"message": f"Successfully unblocked {username}"}
 

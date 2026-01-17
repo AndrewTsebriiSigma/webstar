@@ -263,6 +263,16 @@ class PasswordResetToken(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+class BlockedUser(SQLModel, table=True):
+    """Blocked users relationship."""
+    __tablename__ = "blocked_users"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    blocker_id: int = Field(foreign_key="users.id", nullable=False, index=True)
+    blocked_id: int = Field(foreign_key="users.id", nullable=False, index=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
 class Report(SQLModel, table=True):
     """User reports for profiles/content moderation."""
     __tablename__ = "reports"
