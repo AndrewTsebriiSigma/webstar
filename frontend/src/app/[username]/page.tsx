@@ -95,6 +95,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [layoutMode, setLayoutMode] = useState<'uniform' | 'masonry'>('uniform');
   const [gridAspectRatio, setGridAspectRatio] = useState<'1x1' | '4x5' | '5x4' | '4x6' | '3x4' | '16x9' | '4x3'>('1x1'); // Global aspect ratio for grid mode
   
+  // Profile theme customization
+  type ProfileTheme = 'default' | 'monochrome';
+  const [profileTheme, setProfileTheme] = useState<ProfileTheme>('default');
+  
   // Size picker state for portfolio items
   type WidgetSize = '1x1' | '4x5' | '5x4' | '4x6' | '3x4' | '16x9' | '4x3';
   const [showSizePicker, setShowSizePicker] = useState(false);
@@ -131,12 +135,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
       const saved = localStorage.getItem(`portfolio_customization_${username}`);
       if (saved) {
         try {
-          const { gridColumns: gc, gridGap: gg, gridRadius: gr, layoutMode: lm, gridAspectRatio: gar } = JSON.parse(saved);
+          const { gridColumns: gc, gridGap: gg, gridRadius: gr, layoutMode: lm, gridAspectRatio: gar, theme: th } = JSON.parse(saved);
           if (gc) setGridColumns(gc);
           if (gg !== undefined) setGridGap(gg);
           if (gr !== undefined) setGridRadius(gr);
           if (lm) setLayoutMode(lm);
           if (gar) setGridAspectRatio(gar);
+          if (th) setProfileTheme(th);
         } catch (e) {
           // Invalid JSON, ignore
         }
@@ -152,10 +157,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
         gridGap,
         gridRadius,
         layoutMode,
-        gridAspectRatio
+        gridAspectRatio,
+        theme: profileTheme
       }));
     }
-  }, [gridColumns, gridGap, gridRadius, layoutMode, gridAspectRatio, isOwnProfile, username]);
+  }, [gridColumns, gridGap, gridRadius, layoutMode, gridAspectRatio, profileTheme, isOwnProfile, username]);
 
   useEffect(() => {
     loadProfile();
@@ -647,8 +653,23 @@ export default function ProfilePage({ params }: { params: { username: string } }
     );
   }
 
+  // Theme CSS variables
+  const themeStyles = profileTheme === 'monochrome' ? {
+    '--blue': '#FFFFFF',
+    '--blue-hover': '#E5E5E5',
+    '--blue-pressed': '#CCCCCC',
+    '--blue-10': 'rgba(255, 255, 255, 0.1)',
+    '--blue-20': 'rgba(255, 255, 255, 0.2)',
+  } as React.CSSProperties : {};
+
   return (
-    <div className="min-h-screen text-white" style={{ background: '#111111' }}>
+    <div 
+      className={`min-h-screen text-white ${profileTheme === 'monochrome' ? 'theme-monochrome' : ''}`} 
+      style={{ 
+        background: '#111111',
+        ...themeStyles
+      }}
+    >
       {/* Mobile Header - Animated on scroll, hidden in viewer mode */}
       {!viewerMode && (
         <header 
@@ -1915,6 +1936,76 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       }}
                       className="compact-slider"
                     />
+                  </div>
+                </div>
+                
+                {/* Row 3: Theme Toggle */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '34px' }}>
+                  <span style={{ 
+                    fontSize: '11px', 
+                    fontWeight: 600, 
+                    color: 'rgba(255, 255, 255, 0.4)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.3px',
+                    whiteSpace: 'nowrap'
+                  }}>Theme</span>
+                  
+                  {/* Theme Options */}
+                  <div style={{ display: 'flex', gap: '6px', flex: 1 }}>
+                    <button
+                      onClick={() => setProfileTheme('default')}
+                      style={{
+                        flex: 1,
+                        height: '32px',
+                        background: profileTheme === 'default' ? 'rgba(0, 194, 255, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+                        border: profileTheme === 'default' ? '1px solid #00C2FF' : '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '8px',
+                        color: profileTheme === 'default' ? '#00C2FF' : 'rgba(255, 255, 255, 0.5)',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <div style={{ 
+                        width: '12px', 
+                        height: '12px', 
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #00C2FF, #7B68EE)'
+                      }} />
+                      Color
+                    </button>
+                    <button
+                      onClick={() => setProfileTheme('monochrome')}
+                      style={{
+                        flex: 1,
+                        height: '32px',
+                        background: profileTheme === 'monochrome' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+                        border: profileTheme === 'monochrome' ? '1px solid rgba(255, 255, 255, 0.6)' : '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '8px',
+                        color: profileTheme === 'monochrome' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.5)',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <div style={{ 
+                        width: '12px', 
+                        height: '12px', 
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #FFFFFF, #888888)'
+                      }} />
+                      B&W
+                    </button>
                   </div>
                 </div>
               </div>

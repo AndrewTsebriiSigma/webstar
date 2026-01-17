@@ -1406,3 +1406,56 @@ button:focus-visible,
     transform: scale(0.98);
   }
 }
+
+/* ================================================================
+   Monochrome Theme - Black & White Profile Theme
+   ================================================================ */
+
+.theme-monochrome {
+  --blue: #FFFFFF;
+  --blue-hover: #E5E5E5;
+  --blue-pressed: #CCCCCC;
+  --blue-10: rgba(255, 255, 255, 0.1);
+  --blue-20: rgba(255, 255, 255, 0.2);
+}
+
+.theme-monochrome .text-cyan-400,
+.theme-monochrome .text-cyan-500 {
+  color: #FFFFFF !important;
+}
+
+.theme-monochrome .border-cyan-500,
+.theme-monochrome .border-cyan-400 {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.theme-monochrome .bg-cyan-500,
+.theme-monochrome .bg-cyan-400 {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.theme-monochrome .from-cyan-500,
+.theme-monochrome .from-cyan-600 {
+  --tw-gradient-from: rgba(255, 255, 255, 0.3) !important;
+}
+
+.theme-monochrome .to-blue-500,
+.theme-monochrome .to-blue-600 {
+  --tw-gradient-to: rgba(150, 150, 150, 0.3) !important;
+}
+
+/* Monochrome accent colors for various elements */
+.theme-monochrome .nav-btn:hover,
+.theme-monochrome .action-button:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.theme-monochrome .magic-editable {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.theme-monochrome .magic-editable:focus {
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15) !important;
+}

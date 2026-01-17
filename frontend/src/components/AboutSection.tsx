@@ -130,6 +130,75 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
     creative: true,
   });
 
+  // Section reordering via drag & drop
+  type SectionId = 'about' | 'experience' | 'skills' | 'connect';
+  const [sectionOrder, setSectionOrder] = useState<SectionId[]>(['about', 'experience', 'skills', 'connect']);
+  const [draggedSection, setDraggedSection] = useState<SectionId | null>(null);
+  const [dragOverSection, setDragOverSection] = useState<SectionId | null>(null);
+
+  // Load section order from localStorage
+  useEffect(() => {
+    const savedOrder = localStorage.getItem('about_section_order');
+    if (savedOrder) {
+      try {
+        const parsed = JSON.parse(savedOrder);
+        if (Array.isArray(parsed) && parsed.length === 4) {
+          setSectionOrder(parsed as SectionId[]);
+        }
+      } catch {
+        // Keep default order
+      }
+    }
+  }, []);
+
+  // Drag handlers for section reordering
+  const handleDragStart = (e: React.DragEvent, sectionId: SectionId) => {
+    setDraggedSection(sectionId);
+    e.dataTransfer.effectAllowed = 'move';
+    // Add visual feedback
+    const target = e.currentTarget as HTMLElement;
+    target.style.opacity = '0.5';
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    const target = e.currentTarget as HTMLElement;
+    target.style.opacity = '1';
+    setDraggedSection(null);
+    setDragOverSection(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, sectionId: SectionId) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (draggedSection && draggedSection !== sectionId) {
+      setDragOverSection(sectionId);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverSection(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetSectionId: SectionId) => {
+    e.preventDefault();
+    if (!draggedSection || draggedSection === targetSectionId) return;
+
+    const newOrder = [...sectionOrder];
+    const draggedIndex = newOrder.indexOf(draggedSection);
+    const targetIndex = newOrder.indexOf(targetSectionId);
+
+    // Swap the sections
+    newOrder[draggedIndex] = targetSectionId;
+    newOrder[targetIndex] = draggedSection;
+
+    setSectionOrder(newOrder);
+    localStorage.setItem('about_section_order', JSON.stringify(newOrder));
+    toast.success('Section order updated!');
+
+    setDraggedSection(null);
+    setDragOverSection(null);
+  };
+
   // Track if we've already initialized for this customize session
   const hasInitializedRef = useRef(false);
   const prevCustomizeModeRef = useRef(false);
@@ -592,12 +661,12 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
   // Experience CRUD
   const addExperience = async () => {
     const newExp: Experience = {
-      id: Date.now().toString() + Math.random(),
-      title: '',
-      company: '',
-      startDate: '',
-      endDate: '',
-      description: '',
+        id: Date.now().toString() + Math.random(),
+        title: '',
+        company: '',
+        startDate: '',
+        endDate: '',
+        description: '',
     };
     const updated = [...experiences, newExp];
     setExperiences(updated);
@@ -630,11 +699,11 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
       try {
         await profileAPI.updateMe({ experience: JSON.stringify(updatedExperiences) });
         // Don't call onUpdate() - it resets the form data!
-      } catch (error) {
+    } catch (error) {
         console.error('Failed to save experience:', error);
       } finally {
         setIsSavingExperience(false);
-      }
+    }
     }, 1500); // Increased to 1.5 seconds
   };
 
@@ -851,8 +920,210 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
   // Check if customize mode is active for editing
   const canEdit = isCustomizeMode && isOwnProfile;
 
+  // Section wrapper with drag functionality
+  const SectionWrapper = ({ 
+    sectionId, 
+    children 
+  }: { 
+    sectionId: SectionId; 
+    children: React.ReactNode;
+  }) => (
+    <div 
+      className="rounded-xl border relative"
+      draggable={canEdit}
+      onDragStart={(e) => canEdit && handleDragStart(e, sectionId)}
+      onDragEnd={handleDragEnd}
+      onDragOver={(e) => canEdit && handleDragOver(e, sectionId)}
+      onDragLeave={handleDragLeave}
+      onDrop={(e) => canEdit && handleDrop(e, sectionId)}
+        style={{
+          background: 'var(--bg-surface)',
+        borderColor: dragOverSection === sectionId 
+          ? 'rgba(0, 194, 255, 0.8)' 
+          : canEdit 
+            ? 'rgba(0, 194, 255, 0.3)' 
+            : 'var(--border)',
+          borderRadius: 'var(--radius-xl)',
+        transform: dragOverSection === sectionId ? 'scale(1.02)' : 'scale(1)',
+        transition: 'all 0.2s ease',
+        boxShadow: dragOverSection === sectionId ? '0 0 20px rgba(0, 194, 255, 0.3)' : 'none',
+      }}
+    >
+      {/* Drag Handle - only in customize mode */}
+      {canEdit && (
+        <div 
+          className="drag-handle"
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: '32px',
+            background: draggedSection === sectionId 
+              ? 'linear-gradient(90deg, rgba(0, 194, 255, 0.3) 0%, rgba(0, 194, 255, 0.15) 100%)'
+              : 'linear-gradient(90deg, rgba(0, 194, 255, 0.12) 0%, rgba(0, 194, 255, 0.04) 100%)',
+            borderRight: '1px solid rgba(0, 194, 255, 0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: draggedSection === sectionId ? 'rgba(0, 194, 255, 1)' : 'rgba(0, 194, 255, 0.7)',
+            cursor: 'grab',
+            borderTopLeftRadius: 'var(--radius-xl)',
+            borderBottomLeftRadius: 'var(--radius-xl)',
+          }}
+        >
+          <GripVerticalIcon size={16} strokeWidth={2.5} />
+        </div>
+      )}
+      {children}
+    </div>
+  );
+
+  // About Section Content
+  const AboutSectionContent = () => (
+    <div 
+      style={{ 
+        padding: 'var(--space-4)',
+        marginLeft: canEdit ? '32px' : '0',
+        transition: 'margin-left 0.2s ease',
+        }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 
+            className="font-semibold"
+            style={{ 
+              fontSize: '18px',
+              lineHeight: '24px',
+              fontWeight: '600',
+              color: 'var(--text-primary)'
+            }}
+          >
+            About
+          </h3>
+        {isSavingAbout && (
+          <span style={{ fontSize: '12px', color: 'var(--blue)' }}>Saving...</span>
+          )}
+        </div>
+
+      {canEdit ? (
+        // Editable mode
+          <div>
+            <textarea
+              value={aboutText}
+              onChange={(e) => setAboutText(e.target.value)}
+              maxLength={250}
+              rows={4}
+              placeholder={displayPlaceholder}
+            className="edit-field w-full resize-none transition"
+              style={{
+                padding: 'var(--space-3) var(--space-4)',
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '8px',
+                color: 'var(--text-primary)',
+              fontSize: '14px',
+                lineHeight: '22px',
+              }}
+              onFocus={(e) => {
+              e.target.style.borderColor = 'rgba(0, 194, 255, 0.4)';
+              e.target.style.background = 'rgba(255, 255, 255, 0.06)';
+              e.target.style.boxShadow = '0 0 0 3px rgba(0, 194, 255, 0.1)';
+              }}
+              onBlur={(e) => {
+              e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+              e.target.style.background = 'rgba(255, 255, 255, 0.04)';
+                e.target.style.boxShadow = 'none';
+              }}
+            />
+          <div style={{ marginTop: 'var(--space-2)', textAlign: 'right' }}>
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{aboutText.length}/250</span>
+          </div>
+        </div>
+      ) : (
+        // Display mode
+        <div>
+          {profile?.about ? (
+            <>
+              <p 
+                className="whitespace-pre-wrap"
+                style={{
+                  color: 'var(--text-secondary)',
+                  fontSize: '15px',
+                  lineHeight: '22px',
+                  marginBottom: 'var(--space-2)',
+                  wordBreak: 'break-word',
+                  overflowWrap: 'break-word',
+                  width: '100%',
+                }}
+              >
+                {profile.about.length > 150 && !showFullAbout
+                  ? profile.about.substring(0, 150) + '...'
+                  : profile.about}
+              </p>
+              {profile.about.length > 150 && (
+                <button 
+                  onClick={() => setShowFullAbout(!showFullAbout)}
+                  className="transition"
+                  style={{
+                    color: 'var(--blue)',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                  }}
+                >
+                  {showFullAbout ? 'Read less' : 'Read more'}
+                </button>
+              )}
+            </>
+          ) : (
+            // Animated placeholder for empty about
+            <div 
+                  style={{
+                padding: 'var(--space-4)',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px dashed rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+              }}
+            >
+              <p 
+                style={{ 
+                    fontSize: '15px',
+                  color: 'var(--text-secondary)',
+                  lineHeight: '22px',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
+                  opacity: 0.5
+                }}
+              >
+                {displayPlaceholder}
+                <span style={{ 
+                  display: 'inline-block',
+                  width: '2px',
+                  height: '14px',
+                  background: 'var(--blue)',
+                  marginLeft: '2px',
+                  animation: 'blink 1s infinite',
+                  verticalAlign: 'middle'
+                }} />
+              </p>
+              {isOwnProfile && (
+                <p style={{ 
+                  fontSize: '12px', 
+                  color: 'var(--text-tertiary)', 
+                  textAlign: 'center',
+                  marginTop: 'var(--space-3)',
+                  fontStyle: 'italic'
+                }}>
+                  Tap Customize to add your bio
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* CSS for blinking cursor animation */}
       <style jsx global>{`
         @keyframes blink {
@@ -860,13 +1131,25 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
           51%, 100% { opacity: 0; }
         }
       `}</style>
+      
       {/* About Section */}
       <div 
         className="rounded-xl border relative"
+        draggable={canEdit}
+        onDragStart={(e) => canEdit && handleDragStart(e, 'about')}
+        onDragEnd={handleDragEnd}
+        onDragOver={(e) => canEdit && handleDragOver(e, 'about')}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => canEdit && handleDrop(e, 'about')}
         style={{
+          order: sectionOrder.indexOf('about'),
           background: 'var(--bg-surface)',
-          borderColor: canEdit ? 'rgba(0, 194, 255, 0.3)' : 'var(--border)',
+          borderColor: dragOverSection === 'about' ? 'rgba(0, 194, 255, 0.8)' : canEdit ? 'rgba(0, 194, 255, 0.3)' : 'var(--border)',
           borderRadius: 'var(--radius-xl)',
+          transform: dragOverSection === 'about' ? 'scale(1.01)' : 'scale(1)',
+          transition: 'all 0.2s ease',
+          boxShadow: dragOverSection === 'about' ? '0 0 20px rgba(0, 194, 255, 0.3)' : 'none',
+          opacity: draggedSection === 'about' ? 0.5 : 1,
         }}
       >
         {/* Drag Handle - only in customize mode */}
@@ -899,95 +1182,95 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
             padding: 'var(--space-4)',
             marginLeft: canEdit ? '32px' : '0',
             transition: 'margin-left 0.2s ease',
-          }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 
-              className="font-semibold"
-              style={{ 
-                fontSize: '18px',
-                lineHeight: '24px',
-                fontWeight: '600',
-                color: 'var(--text-primary)'
-              }}
-            >
-              About
-            </h3>
+        }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 
+            className="font-semibold"
+            style={{ 
+              fontSize: '18px',
+              lineHeight: '24px',
+                    fontWeight: '600',
+              color: 'var(--text-primary)'
+            }}
+          >
+            About
+          </h3>
             {isSavingAbout && (
               <span style={{ fontSize: '12px', color: 'var(--blue)' }}>Saving...</span>
-            )}
-          </div>
+          )}
+              </div>
 
           {canEdit ? (
             // Editable mode
-            <div>
-              <textarea
-                value={aboutText}
-                onChange={(e) => setAboutText(e.target.value)}
-                maxLength={250}
-                rows={4}
-                placeholder={displayPlaceholder}
+          <div>
+            <textarea
+              value={aboutText}
+              onChange={(e) => setAboutText(e.target.value)}
+              maxLength={250}
+              rows={4}
+              placeholder={displayPlaceholder}
                 className="edit-field w-full resize-none transition"
-                style={{
-                  padding: 'var(--space-3) var(--space-4)',
+              style={{
+                padding: 'var(--space-3) var(--space-4)',
                   background: 'rgba(255, 255, 255, 0.04)',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
                   borderRadius: '8px',
-                  color: 'var(--text-primary)',
+                color: 'var(--text-primary)',
                   fontSize: '14px',
-                  lineHeight: '22px',
-                }}
-                onFocus={(e) => {
+                lineHeight: '22px',
+              }}
+              onFocus={(e) => {
                   e.target.style.borderColor = 'rgba(0, 194, 255, 0.4)';
                   e.target.style.background = 'rgba(255, 255, 255, 0.06)';
                   e.target.style.boxShadow = '0 0 0 3px rgba(0, 194, 255, 0.1)';
-                }}
-                onBlur={(e) => {
+              }}
+              onBlur={(e) => {
                   e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)';
                   e.target.style.background = 'rgba(255, 255, 255, 0.04)';
-                  e.target.style.boxShadow = 'none';
-                }}
-              />
+                e.target.style.boxShadow = 'none';
+              }}
+            />
               <div style={{ marginTop: 'var(--space-2)', textAlign: 'right' }}>
                 <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{aboutText.length}/250</span>
-              </div>
             </div>
-          ) : (
+          </div>
+        ) : (
             // Display mode
-            <div>
-              {profile?.about ? (
-                <>
-                  <p 
-                    className="whitespace-pre-wrap"
+          <div>
+            {profile?.about ? (
+              <>
+                <p 
+                  className="whitespace-pre-wrap"
+                  style={{
+                    color: 'var(--text-secondary)',
+                    fontSize: '15px',
+                    lineHeight: '22px',
+                    marginBottom: 'var(--space-2)',
+                    wordBreak: 'break-word',
+                    overflowWrap: 'break-word',
+                    width: '100%',
+                  }}
+                >
+                  {profile.about.length > 150 && !showFullAbout
+                    ? profile.about.substring(0, 150) + '...'
+                    : profile.about}
+                </p>
+                {profile.about.length > 150 && (
+                  <button 
+                    onClick={() => setShowFullAbout(!showFullAbout)}
+                    className="transition"
                     style={{
-                      color: 'var(--text-secondary)',
+                      color: 'var(--blue)',
                       fontSize: '15px',
-                      lineHeight: '22px',
-                      marginBottom: 'var(--space-2)',
-                      wordBreak: 'break-word',
-                      overflowWrap: 'break-word',
-                      width: '100%',
+                      fontWeight: '600',
                     }}
                   >
-                    {profile.about.length > 150 && !showFullAbout
-                      ? profile.about.substring(0, 150) + '...'
-                      : profile.about}
-                  </p>
-                  {profile.about.length > 150 && (
-                    <button 
-                      onClick={() => setShowFullAbout(!showFullAbout)}
-                      className="transition"
-                      style={{
-                        color: 'var(--blue)',
-                        fontSize: '15px',
-                        fontWeight: '600',
-                      }}
-                    >
-                      {showFullAbout ? 'Read less' : 'Read more'}
-                    </button>
-                  )}
-                </>
-              ) : (
+                    {showFullAbout ? 'Read less' : 'Read more'}
+                  </button>
+                )}
+              </>
+            ) : (
                 // Animated placeholder for empty about
                 <div 
                   style={{
@@ -1000,7 +1283,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                   <p 
                     style={{ 
                       fontSize: '15px', 
-                      color: 'var(--text-secondary)',
+                    color: 'var(--text-secondary)',
                       lineHeight: '22px',
                       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
                       opacity: 0.5
@@ -1027,9 +1310,9 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                     }}>
                       Tap Customize to add your bio
                     </p>
-                  )}
-                </div>
-              )}
+            )}
+          </div>
+        )}
             </div>
           )}
         </div>
@@ -1038,10 +1321,21 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
       {/* Experience Section */}
       <div 
         className="border relative"
+        draggable={canEdit}
+        onDragStart={(e) => canEdit && handleDragStart(e, 'experience')}
+        onDragEnd={handleDragEnd}
+        onDragOver={(e) => canEdit && handleDragOver(e, 'experience')}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => canEdit && handleDrop(e, 'experience')}
         style={{
+          order: sectionOrder.indexOf('experience'),
           background: 'var(--bg-surface)',
-          borderColor: canEdit ? 'rgba(0, 194, 255, 0.3)' : 'var(--border)',
+          borderColor: dragOverSection === 'experience' ? 'rgba(0, 194, 255, 0.8)' : canEdit ? 'rgba(0, 194, 255, 0.3)' : 'var(--border)',
           borderRadius: 'var(--radius-xl)',
+          transform: dragOverSection === 'experience' ? 'scale(1.01)' : 'scale(1)',
+          transition: 'all 0.2s ease',
+          boxShadow: dragOverSection === 'experience' ? '0 0 20px rgba(0, 194, 255, 0.3)' : 'none',
+          opacity: draggedSection === 'experience' ? 0.5 : 1,
         }}
       >
         {/* Drag Handle */}
@@ -1071,45 +1365,45 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
 
         <div 
           style={{ 
-            padding: 'var(--space-4)',
+          padding: 'var(--space-4)',
             marginLeft: canEdit ? '32px' : '0',
             transition: 'margin-left 0.2s ease',
-          }}
-        >
-          <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
-            <h3 
-              className="font-semibold"
-              style={{
-                fontSize: '18px',
-                lineHeight: '24px',
-                fontWeight: '600',
-                color: 'var(--text-primary)',
-              }}
-            >
-              Experience
-            </h3>
+        }}
+      >
+        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
+          <h3 
+            className="font-semibold"
+            style={{
+              fontSize: '18px',
+              lineHeight: '24px',
+              fontWeight: '600',
+              color: 'var(--text-primary)',
+            }}
+          >
+            Experience
+          </h3>
             {isSavingExperience && (
               <span style={{ fontSize: '12px', color: 'var(--blue)' }}>Saving...</span>
-            )}
-          </div>
+          )}
+        </div>
 
           {canEdit ? (
             // Editable mode
-            <div style={{ maxWidth: '336px', margin: '0 auto' }}>
+          <div style={{ maxWidth: '336px', margin: '0 auto' }}>
               {experiences.length > 0 && (
-                <div style={{ marginBottom: 'var(--space-4)' }}>
-                  {experiences.map((exp, index) => (
-                    <div 
-                      key={exp.id} 
+            <div style={{ marginBottom: 'var(--space-4)' }}>
+              {experiences.map((exp, index) => (
+                <div 
+                  key={exp.id} 
                       className="border relative"
-                      style={{
-                        padding: 'var(--space-4)',
-                        background: 'var(--bg-surface-strong)',
-                        borderRadius: 'var(--radius-xl)',
-                        borderColor: 'var(--border)',
-                        marginBottom: index < experiences.length - 1 ? 'var(--space-4)' : '0',
-                      }}
-                    >
+                  style={{
+                    padding: 'var(--space-4)',
+                    background: 'var(--bg-surface-strong)',
+                    borderRadius: 'var(--radius-xl)',
+                    borderColor: 'var(--border)',
+                    marginBottom: index < experiences.length - 1 ? 'var(--space-4)' : '0',
+                  }}
+                >
                       {/* Minus Badge - Delete button */}
                       <div 
                         className="minus-badge"
@@ -1133,82 +1427,82 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                         }}
                       >
                         <MinusIcon size={12} strokeWidth={3} />
-                      </div>
-                      
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                        <input
-                          type="text"
-                          placeholder="Job Title"
-                          value={exp.title}
-                          onChange={(e) => updateExperience(index, 'title', e.target.value)}
-                          maxLength={30}
-                          className="edit-field title-field w-full"
-                          style={{
-                            padding: '8px 12px',
-                            background: 'rgba(255, 255, 255, 0.04)',
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
-                            borderRadius: '8px',
-                            color: 'var(--text-primary)',
-                            fontSize: '14px',
-                          }}
-                        />
-                        <input
-                          type="text"
-                          placeholder="Company Name"
-                          value={exp.company}
-                          onChange={(e) => updateExperience(index, 'company', e.target.value)}
-                          maxLength={30}
-                          className="edit-field w-full"
-                          style={{
-                            padding: '8px 12px',
-                            background: 'rgba(255, 255, 255, 0.04)',
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
-                            borderRadius: '8px',
-                            color: 'var(--text-primary)',
-                            fontSize: '14px',
-                          }}
-                        />
-                        <div className="grid grid-cols-2" style={{ gap: 'var(--space-3)' }}>
-                          <div>
-                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--text-tertiary)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Start</label>
-                            <SimpleCalendar
-                              value={exp.startDate}
-                              onChange={(date) => updateExperience(index, 'startDate', date)}
-                              placeholder="Start"
-                            />
-                          </div>
-                          <div>
-                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--text-tertiary)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>End</label>
-                            <SimpleCalendar
-                              value={exp.endDate}
-                              onChange={(date) => updateExperience(index, 'endDate', date)}
-                              placeholder="Present"
-                            />
-                          </div>
-                        </div>
-                        <textarea
-                          placeholder="Description (optional)"
-                          value={exp.description}
-                          onChange={(e) => updateExperience(index, 'description', e.target.value)}
-                          rows={2}
-                          className="edit-field w-full resize-none"
-                          style={{
-                            padding: '8px 12px',
-                            background: 'rgba(255, 255, 255, 0.04)',
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
-                            borderRadius: '8px',
-                            color: 'var(--text-primary)',
-                            fontSize: '14px',
-                          }}
-                        />
-                      </div>
                     </div>
-                  ))}
-                </div>
+                      
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                      <input
+                        type="text"
+                          placeholder="Job Title"
+                        value={exp.title}
+                        onChange={(e) => updateExperience(index, 'title', e.target.value)}
+                        maxLength={30}
+                          className="edit-field title-field w-full"
+                        style={{
+                            padding: '8px 12px',
+                            background: 'rgba(255, 255, 255, 0.04)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            borderRadius: '8px',
+                          color: 'var(--text-primary)',
+                            fontSize: '14px',
+                        }}
+                      />
+                      <input
+                        type="text"
+                          placeholder="Company Name"
+                        value={exp.company}
+                        onChange={(e) => updateExperience(index, 'company', e.target.value)}
+                        maxLength={30}
+                          className="edit-field w-full"
+                        style={{
+                            padding: '8px 12px',
+                            background: 'rgba(255, 255, 255, 0.04)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            borderRadius: '8px',
+                          color: 'var(--text-primary)',
+                            fontSize: '14px',
+                        }}
+                      />
+                      <div className="grid grid-cols-2" style={{ gap: 'var(--space-3)' }}>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--text-tertiary)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Start</label>
+                          <SimpleCalendar
+                            value={exp.startDate}
+                            onChange={(date) => updateExperience(index, 'startDate', date)}
+                              placeholder="Start"
+                          />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--text-tertiary)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>End</label>
+                          <SimpleCalendar
+                            value={exp.endDate}
+                            onChange={(date) => updateExperience(index, 'endDate', date)}
+                              placeholder="Present"
+                          />
+                        </div>
+                      </div>
+                      <textarea
+                          placeholder="Description (optional)"
+                        value={exp.description}
+                        onChange={(e) => updateExperience(index, 'description', e.target.value)}
+                        rows={2}
+                          className="edit-field w-full resize-none"
+                        style={{
+                            padding: '8px 12px',
+                            background: 'rgba(255, 255, 255, 0.04)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            borderRadius: '8px',
+                          color: 'var(--text-primary)',
+                            fontSize: '14px',
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+            </div>
               )}
 
               {/* Add Card Button */}
-              <button 
+              <button
                 onClick={addExperience}
                 className="add-card w-full"
                 style={{
@@ -1229,42 +1523,42 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                 <PlusIcon className="w-4 h-4" />
                 Add Experience
               </button>
-            </div>
-          ) : (
+          </div>
+        ) : (
             // Display mode
-            <div style={{ maxWidth: '336px', margin: '0 auto' }}>
-              {displayExperiences.length > 0 ? (
-                <div className="relative" style={{ paddingLeft: '32px' }}>
-                  <div 
-                    className="absolute top-0 bottom-0 w-px" 
-                    style={{ left: '8px', background: 'var(--border)' }}
-                  ></div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-                    {displayExperiences.map((item, index) => (
-                      <div key={item.id || index} className="relative">
-                        <div 
-                          className="absolute top-0 rounded-full" 
-                          style={{ 
-                            left: '-28px', 
-                            marginTop: '2px',
-                            width: '8px',
-                            height: '8px',
-                            background: 'var(--blue)'
+          <div style={{ maxWidth: '336px', margin: '0 auto' }}>
+            {displayExperiences.length > 0 ? (
+              <div className="relative" style={{ paddingLeft: '32px' }}>
+                <div 
+                  className="absolute top-0 bottom-0 w-px" 
+                  style={{ left: '8px', background: 'var(--border)' }}
+                ></div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+                  {displayExperiences.map((item, index) => (
+                    <div key={item.id || index} className="relative">
+                      <div 
+                        className="absolute top-0 rounded-full" 
+                        style={{ 
+                          left: '-28px', 
+                          marginTop: '2px',
+                          width: '8px',
+                          height: '8px',
+                          background: 'var(--blue)'
+                        }}
+                      ></div>
+                      <div>
+                        <h4 
+                          className="font-semibold"
+                          style={{
+                            fontSize: '20px',
+                            lineHeight: '26px',
+                            color: 'var(--text-primary)',
+                            marginBottom: 'var(--space-2)',
                           }}
-                        ></div>
-                        <div>
-                          <h4 
-                            className="font-semibold"
-                            style={{
-                              fontSize: '20px',
-                              lineHeight: '26px',
-                              color: 'var(--text-primary)',
-                              marginBottom: 'var(--space-2)',
-                            }}
-                          >
+                        >
                             {item.title || 'Untitled Position'}
-                          </h4>
-                          <div className="flex items-center gap-2" style={{ marginBottom: 'var(--space-2)' }}>
+                        </h4>
+                        <div className="flex items-center gap-2" style={{ marginBottom: 'var(--space-2)' }}>
                             <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
                               {item.company || 'Company'}
                             </p>
@@ -1286,7 +1580,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
               ) : (
                 // Animated placeholder for empty experience - shows full example
                 <div 
-                  style={{
+                            style={{
                     padding: 'var(--space-4)',
                     background: 'rgba(255, 255, 255, 0.02)',
                     border: '1px dashed rgba(255, 255, 255, 0.1)',
@@ -1301,7 +1595,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                   }}>
                     {/* Timeline dot */}
                     <div 
-                      style={{ 
+                            style={{
                         width: '10px', 
                         height: '10px', 
                         borderRadius: '50%', 
@@ -1337,7 +1631,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                       
                       {/* Company Name */}
                       <div 
-                        style={{
+                            style={{
                           fontSize: '14px',
                           fontWeight: 500,
                           color: 'var(--blue)',
@@ -1352,7 +1646,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                       {/* Years */}
                       <div 
                         style={{ 
-                          fontSize: '12px', 
+                              fontSize: '12px',
                           color: 'var(--text-tertiary)',
                           marginBottom: '8px',
                           minHeight: '16px',
@@ -1368,13 +1662,13 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                           <line x1="3" y1="10" x2="21" y2="10"></line>
                         </svg>
                         {expYearsPlaceholder}
-                      </div>
+                        </div>
                       
                       {/* Description */}
                       <div 
-                        style={{ 
+                            style={{
                           fontSize: '13px', 
-                          color: 'var(--text-secondary)',
+                              color: 'var(--text-secondary)',
                           lineHeight: '1.5',
                           minHeight: '40px',
                           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
@@ -1393,22 +1687,33 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                       fontStyle: 'italic'
                     }}>
                       Tap Customize to add your experience
-                    </p>
-                  )}
-                </div>
+                          </p>
+                        )}
+                      </div>
               )}
-            </div>
+                        </div>
           )}
-        </div>
-      </div>
+                    </div>
+              </div>
 
       {/* Skills Section */}
       <div 
         className="border relative"
+        draggable={canEdit}
+        onDragStart={(e) => canEdit && handleDragStart(e, 'skills')}
+        onDragEnd={handleDragEnd}
+        onDragOver={(e) => canEdit && handleDragOver(e, 'skills')}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => canEdit && handleDrop(e, 'skills')}
         style={{
+          order: sectionOrder.indexOf('skills'),
           background: 'var(--bg-surface)',
-          borderColor: canEdit ? 'rgba(0, 194, 255, 0.3)' : 'var(--border)',
+          borderColor: dragOverSection === 'skills' ? 'rgba(0, 194, 255, 0.8)' : canEdit ? 'rgba(0, 194, 255, 0.3)' : 'var(--border)',
           borderRadius: 'var(--radius-xl)',
+          transform: dragOverSection === 'skills' ? 'scale(1.01)' : 'scale(1)',
+          transition: 'all 0.2s ease',
+          boxShadow: dragOverSection === 'skills' ? '0 0 20px rgba(0, 194, 255, 0.3)' : 'none',
+          opacity: draggedSection === 'skills' ? 0.5 : 1,
         }}
       >
         {/* Drag Handle */}
@@ -1436,36 +1741,36 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
           </div>
         )}
 
-        <div 
-          style={{ 
-            padding: 'var(--space-4)',
+      <div 
+        style={{
+          padding: 'var(--space-4)',
             marginLeft: canEdit ? '32px' : '0',
             transition: 'margin-left 0.2s ease',
-          }}
-        >
-          <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
-            <h3 
-              className="font-semibold"
-              style={{
-                fontSize: '18px',
-                lineHeight: '24px',
-                fontWeight: '600',
-                color: 'var(--text-primary)',
-              }}
-            >
-              Skills
-            </h3>
+        }}
+      >
+        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
+          <h3 
+            className="font-semibold"
+            style={{
+              fontSize: '18px',
+              lineHeight: '24px',
+              fontWeight: '600',
+              color: 'var(--text-primary)',
+            }}
+          >
+            Skills
+          </h3>
             {isSavingSkills && (
               <span style={{ fontSize: '12px', color: 'var(--blue)' }}>Saving...</span>
-            )}
-          </div>
+          )}
+        </div>
 
           {canEdit ? (
             // Editable mode
-            <div style={{ maxWidth: '336px', margin: '0 auto' }}>
-              {skills.length > 0 && (
-                <div style={{ marginBottom: 'var(--space-4)' }}>
-                  {skills.map((skill, index) => (
+          <div style={{ maxWidth: '336px', margin: '0 auto' }}>
+            {skills.length > 0 && (
+              <div style={{ marginBottom: 'var(--space-4)' }}>
+                {skills.map((skill, index) => (
                     <div 
                       key={index} 
                       className="relative"
@@ -1502,72 +1807,72 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                         <MinusIcon size={12} strokeWidth={3} />
                       </div>
                       
-                      <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-2)' }}>
-                        <span style={{ color: 'var(--text-primary)', fontSize: '15px', fontWeight: '600' }}>{skill.name}</span>
+                    <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-2)' }}>
+                      <span style={{ color: 'var(--text-primary)', fontSize: '15px', fontWeight: '600' }}>{skill.name}</span>
                         <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>{skill.level}%</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={skill.level}
-                        onChange={(e) => updateSkillLevel(index, parseInt(e.target.value))}
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={skill.level}
+                      onChange={(e) => updateSkillLevel(index, parseInt(e.target.value))}
                         className="w-full appearance-none cursor-pointer compact-slider"
-                        style={{
+                      style={{
                           height: '4px',
                           background: 'rgba(255, 255, 255, 0.08)',
                           borderRadius: '2px',
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
 
               {/* Add Skill Input */}
-              {skills.length < 6 && (
-                <div className="flex" style={{ gap: 'var(--space-2)', marginBottom: 'var(--space-4)' }}>
-                  <input
-                    type="text"
-                    value={newSkillName}
-                    onChange={(e) => setNewSkillName(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && addSkill()}
+            {skills.length < 6 && (
+              <div className="flex" style={{ gap: 'var(--space-2)', marginBottom: 'var(--space-4)' }}>
+                <input
+                  type="text"
+                  value={newSkillName}
+                  onChange={(e) => setNewSkillName(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && addSkill()}
                     placeholder="Add a skill"
                     className="edit-field flex-1"
-                    style={{
+                  style={{
                       padding: '8px 12px',
                       background: 'rgba(255, 255, 255, 0.04)',
                       border: '1px solid rgba(255, 255, 255, 0.08)',
                       borderRadius: '8px',
-                      color: 'var(--text-primary)',
+                    color: 'var(--text-primary)',
                       fontSize: '14px',
-                    }}
-                  />
-                  <button
-                    onClick={addSkill}
+                  }}
+                />
+                <button
+                  onClick={addSkill}
                     disabled={!newSkillName.trim()}
-                    style={{
+                  style={{
                       padding: '8px 16px',
                       background: newSkillName.trim() ? 'var(--blue)' : 'rgba(255, 255, 255, 0.04)',
-                      border: 'none',
+                    border: 'none',
                       borderRadius: '8px',
                       color: newSkillName.trim() ? 'white' : 'var(--text-tertiary)',
                       fontSize: '14px',
-                      fontWeight: '600',
+                    fontWeight: '600',
                       cursor: newSkillName.trim() ? 'pointer' : 'not-allowed',
-                    }}
-                  >
-                    Add
-                  </button>
-                </div>
-              )}
+                  }}
+                >
+                  Add
+                </button>
+              </div>
+            )}
 
               {/* Add Card placeholder if no skills */}
               {skills.length === 0 && (
-                <button 
+              <button
                   onClick={() => document.querySelector<HTMLInputElement>('.edit-field.flex-1')?.focus()}
                   className="add-card w-full"
-                  style={{
+                style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1578,46 +1883,46 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                     border: '1.5px dashed rgba(0, 194, 255, 0.3)',
                     color: 'var(--blue)',
                     fontSize: '14px',
-                    fontWeight: '600',
+                  fontWeight: '600',
                     cursor: 'pointer',
-                  }}
-                >
+                }}
+              >
                   <PlusIcon className="w-4 h-4" />
                   Add Skills
-                </button>
+              </button>
               )}
-            </div>
-          ) : (
+          </div>
+        ) : (
             // Display mode
-            <div style={{ maxWidth: '336px', margin: '0 auto' }}>
-              {displaySkills.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-                  {displaySkills.map((skill, index) => (
-                    <div key={index}>
-                      <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-2)' }}>
-                        <span style={{ color: 'var(--text-primary)', fontSize: '15px', fontWeight: '600' }}>{skill.name}</span>
-                      </div>
-                      <div 
-                        className="w-full rounded-full overflow-hidden"
-                        style={{
-                          height: '8px',
-                          background: 'var(--bg-surface-strong)',
-                        }}
-                      >
-                        <div
-                          className="h-full rounded-full transition-all"
-                          style={{ 
-                            width: `${skill.level}%`,
-                            background: 'linear-gradient(90deg, #00C2FF 0%, #0099CC 100%)',
-                            boxShadow: '0 0 8px rgba(0, 194, 255, 0.4)',
-                            transitionDuration: '500ms',
-                          }}
-                        />
-                      </div>
+          <div style={{ maxWidth: '336px', margin: '0 auto' }}>
+            {displaySkills.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+                {displaySkills.map((skill, index) => (
+                  <div key={index}>
+                    <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-2)' }}>
+                      <span style={{ color: 'var(--text-primary)', fontSize: '15px', fontWeight: '600' }}>{skill.name}</span>
                     </div>
-                  ))}
-                </div>
-              ) : (
+                    <div 
+                      className="w-full rounded-full overflow-hidden"
+                      style={{
+                        height: '8px',
+                        background: 'var(--bg-surface-strong)',
+                      }}
+                    >
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{ 
+                          width: `${skill.level}%`,
+                          background: 'linear-gradient(90deg, #00C2FF 0%, #0099CC 100%)',
+                          boxShadow: '0 0 8px rgba(0, 194, 255, 0.4)',
+                          transitionDuration: '500ms',
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
                 // Animated placeholder for empty skills
                 <div 
                   style={{
@@ -1638,7 +1943,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                         style={{ 
                           fontSize: '15px', 
                           fontWeight: 600, 
-                          color: 'var(--text-secondary)',
+                    color: 'var(--text-secondary)',
                           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
                         }}
                       >
@@ -1682,9 +1987,9 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                     }}>
                       Tap Customize to add your skills
                     </p>
-                  )}
-                </div>
-              )}
+            )}
+          </div>
+        )}
             </div>
           )}
         </div>
@@ -1693,10 +1998,21 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
       {/* Connect Section */}
       <div 
         className="border relative"
+        draggable={canEdit}
+        onDragStart={(e) => canEdit && handleDragStart(e, 'connect')}
+        onDragEnd={handleDragEnd}
+        onDragOver={(e) => canEdit && handleDragOver(e, 'connect')}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => canEdit && handleDrop(e, 'connect')}
         style={{
+          order: sectionOrder.indexOf('connect'),
           background: 'var(--bg-surface)',
-          borderColor: canEdit ? 'rgba(0, 194, 255, 0.3)' : 'var(--border)',
+          borderColor: dragOverSection === 'connect' ? 'rgba(0, 194, 255, 0.8)' : canEdit ? 'rgba(0, 194, 255, 0.3)' : 'var(--border)',
           borderRadius: 'var(--radius-xl)',
+          transform: dragOverSection === 'connect' ? 'scale(1.01)' : 'scale(1)',
+          transition: 'all 0.2s ease',
+          boxShadow: dragOverSection === 'connect' ? '0 0 20px rgba(0, 194, 255, 0.3)' : 'none',
+          opacity: draggedSection === 'connect' ? 0.5 : 1,
         }}
       >
         {/* Drag Handle */}
@@ -1726,27 +2042,27 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
 
         <div 
           style={{ 
-            padding: 'var(--space-4)',
+          padding: 'var(--space-4)',
             marginLeft: canEdit ? '32px' : '0',
             transition: 'margin-left 0.2s ease',
-          }}
-        >
-          <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
-            <h3 
-              className="font-semibold"
-              style={{
-                fontSize: '18px',
-                lineHeight: '24px',
-                fontWeight: '600',
-                color: 'var(--text-primary)',
-              }}
-            >
-              Connect
-            </h3>
+        }}
+      >
+        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
+          <h3 
+            className="font-semibold"
+            style={{
+              fontSize: '18px',
+              lineHeight: '24px',
+              fontWeight: '600',
+              color: 'var(--text-primary)',
+            }}
+          >
+            Connect
+          </h3>
             {canEdit && !showAddConnect && (
-              <button
-                onClick={() => setShowAddConnect(true)}
-                style={{
+            <button
+              onClick={() => setShowAddConnect(true)}
+              style={{
                   padding: '6px 12px',
                   background: 'rgba(0, 194, 255, 0.1)',
                   border: '1px solid rgba(0, 194, 255, 0.3)',
@@ -1757,74 +2073,74 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                 }}
               >
                 + Add
-              </button>
-            )}
-          </div>
+            </button>
+          )}
+        </div>
 
           {showAddConnect && canEdit ? (
-            <div style={{ maxWidth: '336px', margin: '0 auto', position: 'relative', minHeight: '300px' }}>
-              
+          <div style={{ maxWidth: '336px', margin: '0 auto', position: 'relative', minHeight: '300px' }}>
+            
               {/* Step 1: Platform Grid */}
-              <div
-                style={{
-                  opacity: selectedPlatformForLink ? 0 : 1,
-                  transform: selectedPlatformForLink ? 'scale(0.95)' : 'scale(1)',
-                  transition: 'all 200ms cubic-bezier(0.25, 0.8, 0.25, 1)',
-                  pointerEvents: selectedPlatformForLink ? 'none' : 'auto',
-                  position: selectedPlatformForLink ? 'absolute' : 'relative',
-                  inset: 0,
-                }}
-              >
-                {Object.entries(PLATFORM_CATEGORIES).map(([categoryKey, category]) => (
-                  <div key={categoryKey} style={{ marginBottom: 'var(--space-4)' }}>
-                    <button
-                      onClick={() => toggleCategory(categoryKey)}
-                      className="w-full flex items-center justify-between transition"
-                      style={{
-                        padding: 'var(--space-2) 0',
-                        color: 'var(--text-secondary)',
-                        fontSize: '11px',
-                        fontWeight: '700',
-                        letterSpacing: '0.8px',
-                        textAlign: 'left',
-                      }}
-                    >
-                      <span>{category.label}</span>
-                      <span style={{ 
-                        transform: expandedCategories[categoryKey] ? 'rotate(180deg)' : 'rotate(0deg)',
-                        transition: 'transform 200ms',
-                      }}>▼</span>
-                    </button>
+            <div
+              style={{
+                opacity: selectedPlatformForLink ? 0 : 1,
+                transform: selectedPlatformForLink ? 'scale(0.95)' : 'scale(1)',
+                transition: 'all 200ms cubic-bezier(0.25, 0.8, 0.25, 1)',
+                pointerEvents: selectedPlatformForLink ? 'none' : 'auto',
+                position: selectedPlatformForLink ? 'absolute' : 'relative',
+                inset: 0,
+              }}
+            >
+              {Object.entries(PLATFORM_CATEGORIES).map(([categoryKey, category]) => (
+                <div key={categoryKey} style={{ marginBottom: 'var(--space-4)' }}>
+                  <button
+                    onClick={() => toggleCategory(categoryKey)}
+                    className="w-full flex items-center justify-between transition"
+                    style={{
+                      padding: 'var(--space-2) 0',
+                      color: 'var(--text-secondary)',
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      letterSpacing: '0.8px',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <span>{category.label}</span>
+                    <span style={{ 
+                      transform: expandedCategories[categoryKey] ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 200ms',
+                    }}>▼</span>
+                  </button>
 
-                    {expandedCategories[categoryKey] && (
+                  {expandedCategories[categoryKey] && (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--space-3)' }}>
-                        {category.platforms.map((platform) => {
-                          const isConnected = savedLinks.hasOwnProperty(platform.id);
-                          return (
-                            <button
-                              key={platform.id}
-                              onClick={() => !isConnected && handlePlatformClick(platform.id)}
-                              disabled={isConnected}
-                              className="transition"
-                              style={{
-                                aspectRatio: '1',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                background: isConnected ? 'var(--bg-surface-strong)' : 'var(--bg-surface)',
-                                border: isConnected ? '2px solid var(--blue)' : '1px solid var(--border)',
-                                borderRadius: 'var(--radius-lg)',
-                                cursor: isConnected ? 'not-allowed' : 'pointer',
-                                opacity: isConnected ? 0.5 : 1,
-                                position: 'relative',
-                              }}
-                              title={platform.name}
+                      {category.platforms.map((platform) => {
+                        const isConnected = savedLinks.hasOwnProperty(platform.id);
+                        return (
+                          <button
+                            key={platform.id}
+                            onClick={() => !isConnected && handlePlatformClick(platform.id)}
+                            disabled={isConnected}
+                            className="transition"
+                            style={{
+                              aspectRatio: '1',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              background: isConnected ? 'var(--bg-surface-strong)' : 'var(--bg-surface)',
+                              border: isConnected ? '2px solid var(--blue)' : '1px solid var(--border)',
+                              borderRadius: 'var(--radius-lg)',
+                              cursor: isConnected ? 'not-allowed' : 'pointer',
+                              opacity: isConnected ? 0.5 : 1,
+                              position: 'relative',
+                            }}
+                            title={platform.name}
                             >
                               <div style={{ marginBottom: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                {renderPlatformIcon(platform.icon, 28)}
-                              </div>
-                              {isConnected && (
+                              {renderPlatformIcon(platform.icon, 28)}
+                            </div>
+                            {isConnected && (
                                 <div style={{
                                   position: 'absolute',
                                   top: '4px',
@@ -1838,153 +2154,153 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                                   justifyContent: 'center',
                                   fontSize: '10px',
                                 }}>✓</div>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
 
-                <button
+              <button
                   onClick={() => { setShowAddConnect(false); setSelectedPlatformForLink(null); setLinkUsername(''); }}
-                  className="w-full transition"
-                  style={{
-                    height: 'var(--height-primary-btn)',
-                    background: 'var(--bg-surface-strong)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 'var(--radius-md)',
-                    color: 'var(--text-primary)',
-                    fontSize: '15px',
-                    fontWeight: '600',
-                    marginTop: 'var(--space-4)',
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-
-              {/* Step 2: Username Input */}
-              <div
+                className="w-full transition"
                 style={{
-                  opacity: selectedPlatformForLink ? 1 : 0,
-                  transform: selectedPlatformForLink ? 'scale(1)' : 'scale(0.95)',
-                  transition: 'all 200ms cubic-bezier(0.25, 0.8, 0.25, 1)',
-                  pointerEvents: selectedPlatformForLink ? 'auto' : 'none',
-                  position: selectedPlatformForLink ? 'relative' : 'absolute',
-                  inset: 0,
+                  height: 'var(--height-primary-btn)',
+                  background: 'var(--bg-surface-strong)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-md)',
+                  color: 'var(--text-primary)',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  marginTop: 'var(--space-4)',
                 }}
               >
-                {selectedPlatformForLink && getPlatformDetails(selectedPlatformForLink) && (
+                Cancel
+              </button>
+            </div>
+
+              {/* Step 2: Username Input */}
+            <div
+              style={{
+                opacity: selectedPlatformForLink ? 1 : 0,
+                transform: selectedPlatformForLink ? 'scale(1)' : 'scale(0.95)',
+                transition: 'all 200ms cubic-bezier(0.25, 0.8, 0.25, 1)',
+                pointerEvents: selectedPlatformForLink ? 'auto' : 'none',
+                position: selectedPlatformForLink ? 'relative' : 'absolute',
+                inset: 0,
+              }}
+            >
+              {selectedPlatformForLink && getPlatformDetails(selectedPlatformForLink) && (
                   <div style={{ padding: 'var(--space-4)', background: 'var(--bg-surface-strong)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
                       <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-lg)', background: 'var(--bg-surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {renderPlatformIcon(getPlatformDetails(selectedPlatformForLink)!.icon, 32)}
+                      {renderPlatformIcon(getPlatformDetails(selectedPlatformForLink)!.icon, 32)}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '2px' }}>
+                        {getPlatformDetails(selectedPlatformForLink)!.name}
                       </div>
-                      <div>
-                        <div style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '2px' }}>
-                          {getPlatformDetails(selectedPlatformForLink)!.name}
-                        </div>
-                        <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                          {getPlatformDetails(selectedPlatformForLink)!.domain}
-                        </div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                        {getPlatformDetails(selectedPlatformForLink)!.domain}
                       </div>
                     </div>
+                  </div>
 
-                    <div style={{ marginBottom: 'var(--space-4)' }}>
-                      <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: 'var(--space-2)' }}>
-                        Enter your username
-                      </label>
-                      <input
-                        type="text"
-                        value={linkUsername}
-                        onChange={(e) => setLinkUsername(e.target.value)}
-                        placeholder="yourhandle"
-                        autoFocus
-                        onKeyPress={(e) => e.key === 'Enter' && savePlatformLink()}
+                  <div style={{ marginBottom: 'var(--space-4)' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: 'var(--space-2)' }}>
+                      Enter your username
+                    </label>
+                    <input
+                      type="text"
+                      value={linkUsername}
+                      onChange={(e) => setLinkUsername(e.target.value)}
+                      placeholder="yourhandle"
+                      autoFocus
+                      onKeyPress={(e) => e.key === 'Enter' && savePlatformLink()}
                         className="edit-field w-full"
-                        style={{
+                      style={{
                           padding: '8px 12px',
                           background: 'rgba(255, 255, 255, 0.04)',
                           border: '1px solid rgba(255, 255, 255, 0.08)',
                           borderRadius: '8px',
-                          color: 'var(--text-primary)',
+                        color: 'var(--text-primary)',
                           fontSize: '14px',
-                        }}
-                      />
-                    </div>
-
-                    <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                      <button
-                        onClick={() => { setSelectedPlatformForLink(null); setLinkUsername(''); }}
-                        className="flex-1 transition"
-                        style={{
-                          height: 'var(--height-primary-btn)',
-                          background: 'var(--bg-surface)',
-                          border: '1px solid var(--border)',
-                          borderRadius: 'var(--radius-md)',
-                          color: 'var(--text-primary)',
-                          fontSize: '15px',
-                          fontWeight: '600',
-                        }}
-                      >
-                        ← Back
-                      </button>
-                      <button
-                        onClick={savePlatformLink}
-                        disabled={!linkUsername.trim()}
-                        className="flex-1 transition"
-                        style={{
-                          height: 'var(--height-primary-btn)',
-                          background: linkUsername.trim() ? 'var(--blue)' : 'var(--bg-surface-strong)',
-                          border: 'none',
-                          borderRadius: 'var(--radius-md)',
-                          color: linkUsername.trim() ? 'white' : 'var(--text-secondary)',
-                          fontSize: '15px',
-                          fontWeight: '600',
-                          opacity: linkUsername.trim() ? 1 : 0.5,
-                          cursor: linkUsername.trim() ? 'pointer' : 'not-allowed',
-                        }}
-                      >
-                        Connect
-                      </button>
-                    </div>
+                      }}
+                    />
                   </div>
-                )}
-              </div>
+
+                  <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                    <button
+                        onClick={() => { setSelectedPlatformForLink(null); setLinkUsername(''); }}
+                      className="flex-1 transition"
+                      style={{
+                        height: 'var(--height-primary-btn)',
+                        background: 'var(--bg-surface)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 'var(--radius-md)',
+                        color: 'var(--text-primary)',
+                        fontSize: '15px',
+                        fontWeight: '600',
+                      }}
+                    >
+                      ← Back
+                    </button>
+                    <button
+                      onClick={savePlatformLink}
+                      disabled={!linkUsername.trim()}
+                      className="flex-1 transition"
+                      style={{
+                        height: 'var(--height-primary-btn)',
+                        background: linkUsername.trim() ? 'var(--blue)' : 'var(--bg-surface-strong)',
+                        border: 'none',
+                        borderRadius: 'var(--radius-md)',
+                        color: linkUsername.trim() ? 'white' : 'var(--text-secondary)',
+                        fontSize: '15px',
+                        fontWeight: '600',
+                        opacity: linkUsername.trim() ? 1 : 0.5,
+                        cursor: linkUsername.trim() ? 'pointer' : 'not-allowed',
+                      }}
+                    >
+                      Connect
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          ) : (
-            <div style={{ maxWidth: '336px', margin: '0 auto' }}>
-              {Object.keys(savedLinks).length > 0 ? (
+          </div>
+        ) : (
+          <div style={{ maxWidth: '336px', margin: '0 auto' }}>
+            {Object.keys(savedLinks).length > 0 ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--space-3)' }}>
-                  {Object.entries(savedLinks).map(([platformId, link]) => {
-                    const platformDetails = getPlatformDetails(platformId);
-                    if (!platformDetails) return null;
-                    
-                    return (
-                      <div key={platformId} className="relative group">
-                        <a
-                          href={`https://${link}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="transition"
-                          style={{
-                            aspectRatio: '1',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            background: 'var(--bg-surface-strong)',
-                            border: '2px solid var(--blue)',
-                            borderRadius: 'var(--radius-lg)',
-                            fontSize: '24px',
-                            boxShadow: '0 0 0 4px var(--blue-10)',
-                            position: 'relative',
-                          }}
-                          title={`${platformDetails.name}: ${link}`}
-                        >
-                          {renderPlatformIcon(platformDetails.icon, 28)}
+                {Object.entries(savedLinks).map(([platformId, link]) => {
+                  const platformDetails = getPlatformDetails(platformId);
+                  if (!platformDetails) return null;
+                  
+                  return (
+                    <div key={platformId} className="relative group">
+                      <a
+                        href={`https://${link}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="transition"
+                        style={{
+                          aspectRatio: '1',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: 'var(--bg-surface-strong)',
+                          border: '2px solid var(--blue)',
+                          borderRadius: 'var(--radius-lg)',
+                          fontSize: '24px',
+                          boxShadow: '0 0 0 4px var(--blue-10)',
+                          position: 'relative',
+                        }}
+                        title={`${platformDetails.name}: ${link}`}
+                      >
+                        {renderPlatformIcon(platformDetails.icon, 28)}
                           <div style={{
                             position: 'absolute',
                             top: '4px',
@@ -2004,34 +2320,34 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                         {/* Remove button - only in customize mode */}
                         {canEdit && (
                           <div
-                            onClick={() => removeConnect(platformId)}
+                          onClick={() => removeConnect(platformId)}
                             className="minus-badge"
-                            style={{
-                              position: 'absolute',
+                          style={{
+                            position: 'absolute',
                               top: '-6px',
                               left: '-6px',
                               width: '20px',
                               height: '20px',
-                              borderRadius: '50%',
+                            borderRadius: '50%',
                               background: 'rgba(255, 59, 48, 0.95)',
                               border: '2px solid var(--bg-primary)',
                               color: 'white',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
                               zIndex: 10,
                               boxShadow: '0 2px 8px rgba(255, 59, 48, 0.4)',
                             }}
                           >
                             <MinusIcon size={12} strokeWidth={3} />
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
                 // Animated placeholder for empty connect
                 <div 
                   style={{
@@ -2079,7 +2395,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                   <p 
                     style={{ 
                       fontSize: '13px', 
-                      color: 'var(--text-secondary)',
+                    color: 'var(--text-secondary)',
                       textAlign: 'center',
                       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
                       opacity: 0.6
@@ -2108,9 +2424,9 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                     </p>
                   )}
                 </div>
-              )}
-            </div>
-          )}
+            )}
+          </div>
+        )}
         </div>
       </div>
     </div>
