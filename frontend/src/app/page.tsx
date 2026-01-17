@@ -199,6 +199,297 @@ function HeroGlow() {
   );
 }
 
+// Video Marquee - macOS Dock magnification style
+function VideoMarquee() {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  
+  // Video cards with "Midnight Jewels" palette + placeholder videos
+  const videos = [
+    { id: 1, color: '#4ECDC4', src: 'https://assets.mixkit.co/videos/preview/mixkit-woman-modeling-in-front-of-the-camera-34483-large.mp4' },
+    { id: 2, color: '#7B68EE', src: 'https://assets.mixkit.co/videos/preview/mixkit-portrait-of-a-fashion-woman-with-silver-makeup-39875-large.mp4' },
+    { id: 3, color: '#DDA0DD', src: 'https://assets.mixkit.co/videos/preview/mixkit-young-woman-waving-her-hair-in-slow-motion-41170-large.mp4' },
+    { id: 4, color: '#E07A5F', src: 'https://assets.mixkit.co/videos/preview/mixkit-man-dancing-under-changing-lights-1240-large.mp4' },
+    { id: 5, color: '#45B7D1', src: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-1232-large.mp4' },
+  ];
+  const allVideos = [...videos, ...videos, ...videos];
+
+  // Golden ratio scale + z-index based on distance - magnified cards above edge fades (z-20)
+  const getScaleAndZ = (index: number) => {
+    if (hoveredIndex === null) return { scale: 1, zIndex: 1 };
+    const distance = Math.abs(index - hoveredIndex);
+    if (distance === 0) return { scale: 1.65, zIndex: 30 };  // Hovered - above edge fades
+    if (distance === 1) return { scale: 1.28, zIndex: 25 };  // Adjacent - above edge fades
+    if (distance === 2) return { scale: 1.1, zIndex: 15 };   // Next - below edge fades
+    return { scale: 1, zIndex: 1 };
+  };
+
+  const handleClick = (index: number) => {
+    setPlayingIndex(playingIndex === index ? null : index);
+  };
+
+  const handleSectionLeave = () => {
+    setHoveredIndex(null);
+    setPlayingIndex(null); // Reset play state when leaving
+  };
+
+  return (
+    <section 
+      className="relative pb-4 sm:pb-5"
+      style={{ background: 'transparent', overflow: 'visible', marginTop: '-20px', paddingTop: '28px' }}
+      onMouseLeave={handleSectionLeave}
+    >
+      {/* Edge fades - extended upward to cover magnified cards */}
+      <div 
+        className="absolute left-0 bottom-0 w-16 sm:w-24 z-20 pointer-events-none"
+        style={{ background: 'linear-gradient(to right, #08080C 0%, transparent 100%)', top: '-60px' }}
+      />
+      <div 
+        className="absolute right-0 bottom-0 w-16 sm:w-24 z-20 pointer-events-none"
+        style={{ background: 'linear-gradient(to left, #08080C 0%, transparent 100%)', top: '-60px' }}
+      />
+
+      {/* Marquee - pauses on hover */}
+      <div 
+        className="flex items-center gap-3 sm:gap-4"
+        style={{
+          animation: 'marqueeScroll 45s linear infinite',
+          animationPlayState: hoveredIndex !== null ? 'paused' : 'running',
+          width: 'max-content'
+        }}
+      >
+        {allVideos.map((video, index) => {
+          const { scale, zIndex } = getScaleAndZ(index);
+          const isPlaying = playingIndex === index;
+          const isHovered = hoveredIndex === index;
+          
+          return (
+            <div
+              key={`${video.id}-${index}`}
+              className="relative flex-shrink-0 cursor-pointer"
+              style={{
+                width: '75px',
+                aspectRatio: '9/16',
+                borderRadius: '10px',
+                overflow: 'hidden',
+                background: `linear-gradient(160deg, ${video.color}25 0%, ${video.color}08 100%)`,
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                transform: `scale(${scale}) translateZ(0)`,
+                transformOrigin: 'bottom center',
+                transition: 'transform 0.15s ease-out, z-index 0s',
+                zIndex: zIndex
+              }}
+              onMouseEnter={() => setHoveredIndex(index)}
+              onMouseLeave={() => setHoveredIndex(null)}
+              onClick={() => handleClick(index)}
+            >
+              {/* Background / Video */}
+              <div className="absolute inset-0">
+                {isPlaying && video.src ? (
+                  <video
+                    src={video.src}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div 
+                    className="w-full h-full"
+                    style={{
+                      background: `linear-gradient(180deg, ${video.color}30 0%, ${video.color}10 60%, rgba(0,0,0,0.4) 100%)`
+                    }}
+                  />
+                )}
+              </div>
+              
+              {/* Play/Pause icon - only on hover when NOT playing */}
+              <div 
+                className="absolute inset-0 flex items-center justify-center"
+                style={{
+                  opacity: isHovered && !isPlaying ? 1 : 0,
+                  transition: 'opacity 0.15s ease-out'
+                }}
+              >
+                <div 
+                  style={{
+                    width: scale > 1.4 ? '34px' : '24px',
+                    height: scale > 1.4 ? '34px' : '24px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.92)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                    transition: 'width 0.15s, height 0.15s'
+                  }}
+                >
+                  <svg width="10" height="12" viewBox="0 0 10 12" fill="none" style={{ marginLeft: '2px' }}>
+                    <path d="M9 6L1 11V1L9 6Z" fill="#0A0A0E"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <style jsx>{`
+        @keyframes marqueeScroll {
+          0% { transform: translate3d(0, 0, 0); }
+          100% { transform: translate3d(-33.333%, 0, 0); }
+        }
+      `}</style>
+    </section>
+  );
+}
+
+// Video Marquee Reverse - runs opposite direction
+function VideoMarqueeReverse() {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  
+  // Different set of videos for variety - "Midnight Jewels" palette
+  const videos = [
+    { id: 1, color: '#E07A5F', src: 'https://assets.mixkit.co/videos/preview/mixkit-woman-running-above-the-camera-on-a-mirror-32807-large.mp4' },
+    { id: 2, color: '#96CEB4', src: 'https://assets.mixkit.co/videos/preview/mixkit-curly-haired-model-looking-at-the-camera-42416-large.mp4' },
+    { id: 3, color: '#7B68EE', src: 'https://assets.mixkit.co/videos/preview/mixkit-putting-on-a-virtual-reality-glasses-42895-large.mp4' },
+    { id: 4, color: '#F7DC6F', src: 'https://assets.mixkit.co/videos/preview/mixkit-singer-performing-on-a-concert-4467-large.mp4' },
+    { id: 5, color: '#DDA0DD', src: 'https://assets.mixkit.co/videos/preview/mixkit-woman-looking-at-the-camera-smoking-42496-large.mp4' },
+  ];
+  const allVideos = [...videos, ...videos, ...videos];
+
+  const getScaleAndZ = (index: number) => {
+    if (hoveredIndex === null) return { scale: 1, zIndex: 1 };
+    const distance = Math.abs(index - hoveredIndex);
+    if (distance === 0) return { scale: 1.65, zIndex: 30 };
+    if (distance === 1) return { scale: 1.28, zIndex: 25 };
+    if (distance === 2) return { scale: 1.1, zIndex: 15 };
+    return { scale: 1, zIndex: 1 };
+  };
+
+  const handleClick = (index: number) => {
+    setPlayingIndex(playingIndex === index ? null : index);
+  };
+
+  const handleSectionLeave = () => {
+    setHoveredIndex(null);
+    setPlayingIndex(null);
+  };
+
+  return (
+    <section 
+      className="relative pb-4 sm:pb-5 pt-4 sm:pt-5"
+      style={{ background: 'transparent', overflow: 'visible' }}
+      onMouseLeave={handleSectionLeave}
+    >
+      {/* Edge fades */}
+      <div 
+        className="absolute left-0 bottom-0 w-16 sm:w-24 z-20 pointer-events-none"
+        style={{ background: 'linear-gradient(to right, #08080C 0%, transparent 100%)', top: '-60px' }}
+      />
+      <div 
+        className="absolute right-0 bottom-0 w-16 sm:w-24 z-20 pointer-events-none"
+        style={{ background: 'linear-gradient(to left, #08080C 0%, transparent 100%)', top: '-60px' }}
+      />
+
+      {/* Marquee - runs opposite direction */}
+      <div 
+        className="flex items-end gap-3 sm:gap-4"
+        style={{
+          animation: 'marqueeScrollReverse 45s linear infinite',
+          animationPlayState: hoveredIndex !== null ? 'paused' : 'running',
+          width: 'max-content'
+        }}
+      >
+        {allVideos.map((video, index) => {
+          const { scale, zIndex } = getScaleAndZ(index);
+          const isPlaying = playingIndex === index;
+          const isHovered = hoveredIndex === index;
+          
+          return (
+            <div
+              key={`${video.id}-${index}`}
+              className="relative flex-shrink-0 cursor-pointer"
+              style={{
+                width: '75px',
+                aspectRatio: '9/16',
+                borderRadius: '10px',
+                overflow: 'hidden',
+                background: `linear-gradient(160deg, ${video.color}25 0%, ${video.color}08 100%)`,
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                transform: `scale(${scale}) translateZ(0)`,
+                transformOrigin: 'bottom center',
+                transition: 'transform 0.15s ease-out, z-index 0s',
+                zIndex: zIndex
+              }}
+              onMouseEnter={() => setHoveredIndex(index)}
+              onMouseLeave={() => setHoveredIndex(null)}
+              onClick={() => handleClick(index)}
+            >
+              {/* Background / Video */}
+              <div className="absolute inset-0">
+                {isPlaying && video.src ? (
+                  <video
+                    src={video.src}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div 
+                    className="w-full h-full"
+                    style={{
+                      background: `linear-gradient(180deg, ${video.color}30 0%, ${video.color}10 60%, rgba(0,0,0,0.4) 100%)`
+                    }}
+                  />
+                )}
+              </div>
+              
+              {/* Play/Pause icon - only on hover when NOT playing */}
+              <div 
+                className="absolute inset-0 flex items-center justify-center"
+                style={{
+                  opacity: isHovered && !isPlaying ? 1 : 0,
+                  transition: 'opacity 0.15s ease-out'
+                }}
+              >
+                <div 
+                  style={{
+                    width: scale > 1.4 ? '34px' : '24px',
+                    height: scale > 1.4 ? '34px' : '24px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.92)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                    transition: 'width 0.15s, height 0.15s'
+                  }}
+                >
+                  <svg width="10" height="12" viewBox="0 0 10 12" fill="none" style={{ marginLeft: '2px' }}>
+                    <path d="M9 6L1 11V1L9 6Z" fill="#0A0A0E"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <style jsx>{`
+        @keyframes marqueeScrollReverse {
+          0% { transform: translate3d(-33.333%, 0, 0); }
+          100% { transform: translate3d(0, 0, 0); }
+        }
+      `}</style>
+    </section>
+  );
+}
+
 // Competitor Orbit - JARVIS Style with particles flowing to center
 function CompetitorOrbit() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -219,7 +510,7 @@ function CompetitorOrbit() {
   const handleMouseLeave = () => {
     setMouseOffset({ x: 0, y: 0 });
   };
-  
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -253,7 +544,7 @@ function CompetitorOrbit() {
         y: centerY() + Math.sin(angle) * distance,
         size: 1 + Math.random() * 1.5,
         alpha: 0.4 + Math.random() * 0.3,
-        speed: 0.4 + Math.random() * 0.4
+        speed: 0.2 + Math.random() * 0.2  // Slower movement
       });
     };
 
@@ -270,9 +561,9 @@ function CompetitorOrbit() {
         if (dist > 40) {
           p.x += (dx / dist) * p.speed;
           p.y += (dy / dist) * p.speed;
-          p.alpha -= 0.003;
+          p.alpha -= 0.0015;  // Slower fade
         } else {
-          p.alpha -= 0.03;
+          p.alpha -= 0.015;   // Slower fade
         }
 
         ctx.beginPath();
@@ -313,8 +604,51 @@ function CompetitorOrbit() {
   return (
     <section 
       className="relative overflow-hidden py-16 sm:py-24"
-      style={{ background: '#0A0A0E' }}
+      style={{ background: '#08080C' }}
     >
+      {/* Top fade - dark gradient from top */}
+      <div 
+        className="absolute inset-x-0 top-0 h-32 sm:h-40 pointer-events-none z-10"
+        style={{ 
+          background: 'linear-gradient(180deg, #08080C 0%, #08080C 40%, transparent 100%)'
+        }}
+      />
+      {/* Left vignette - stronger at top, fades toward middle */}
+      <div 
+        className="absolute left-0 top-0 w-32 sm:w-48 h-[60%] pointer-events-none z-10"
+        style={{ 
+          background: 'linear-gradient(to right, #08080C 0%, #08080C 30%, transparent 100%)'
+        }}
+      />
+      {/* Right vignette - stronger at top, fades toward middle */}
+      <div 
+        className="absolute right-0 top-0 w-32 sm:w-48 h-[60%] pointer-events-none z-10"
+        style={{ 
+          background: 'linear-gradient(to left, #08080C 0%, #08080C 30%, transparent 100%)'
+        }}
+      />
+      {/* Left vignette bottom - stronger, matching top */}
+      <div 
+        className="absolute left-0 bottom-0 w-32 sm:w-48 h-[60%] pointer-events-none z-10"
+        style={{ 
+          background: 'linear-gradient(to right, #08080C 0%, #08080C 30%, transparent 100%)'
+        }}
+      />
+      {/* Right vignette bottom - stronger, matching top */}
+      <div 
+        className="absolute right-0 bottom-0 w-32 sm:w-48 h-[60%] pointer-events-none z-10"
+        style={{ 
+          background: 'linear-gradient(to left, #08080C 0%, #08080C 30%, transparent 100%)'
+        }}
+      />
+      {/* Bottom fade - dark gradient from bottom */}
+      <div 
+        className="absolute inset-x-0 bottom-0 h-32 sm:h-40 pointer-events-none z-10"
+        style={{ 
+          background: 'linear-gradient(0deg, #08080C 0%, #08080C 40%, transparent 100%)'
+        }}
+      />
+      
       {/* Particle Canvas */}
       <canvas 
         ref={canvasRef}
@@ -335,15 +669,12 @@ function CompetitorOrbit() {
         }}
       />
 
-      <div className="relative z-10 max-w-4xl mx-auto px-4">
+      <div className="relative z-10 max-w-2xl mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16">
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3" style={{ color: '#fff' }}>
-            Everything flows to one place
+            Everything the industry asks of you — in one place.
           </h2>
-          <p className="text-xs sm:text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
-            Stop spreading your work across platforms that don't serve you
-          </p>
         </div>
 
         {/* Orbit Container - Larger for 12 icons */}
@@ -380,10 +711,10 @@ function CompetitorOrbit() {
             }}
           />
 
-          {/* Competitor Icons - Gentle sway, not full rotation */}
+          {/* Competitor Icons - Full orbit spin, icons counter-rotate to stay upright */}
           <div 
             className="absolute inset-0"
-            style={{ animation: 'orbitSway 12s ease-in-out infinite' }}
+            style={{ animation: 'orbitSpin 120s linear infinite', zIndex: 2 }}
           >
             {competitors.map((comp, i) => {
               const angleRad = (comp.angle * Math.PI) / 180;
@@ -401,28 +732,31 @@ function CompetitorOrbit() {
                     animation: `breathe${comp.breathe.toUpperCase()} ${comp.duration}s ease-in-out infinite`
                   }}
                 >
-                  {/* Counter-sway wrapper - keeps icon mostly upright */}
-                  <div style={{ animation: `iconSway${comp.breathe.toUpperCase()} ${15 + i * 3}s ease-in-out infinite` }}>
-                    {/* Competitor Icon - No hover effects */}
-                    <img 
-                      src={comp.icon} 
-                      alt=""
-                      className={`${sizeClasses[comp.size as keyof typeof sizeClasses]} object-contain`}
-                      style={{ 
-                        filter: 'grayscale(30%) brightness(0.8)',
-                        opacity: 0.85
-                      }}
-                    />
+                  {/* Counter-spin wrapper - keeps icon upright */}
+                  <div style={{ animation: 'orbitCounterSpin 120s linear infinite' }}>
+                    {/* Sway wrapper - gentle tilt */}
+                    <div style={{ animation: `iconSway${comp.breathe.toUpperCase()} ${15 + i * 3}s ease-in-out infinite` }}>
+                      {/* Competitor Icon */}
+                      <img 
+                        src={comp.icon} 
+                        alt=""
+                        className={`${sizeClasses[comp.size as keyof typeof sizeClasses]} object-contain`}
+                        style={{ 
+                          filter: 'grayscale(30%) brightness(0.8)',
+                          opacity: 0.85
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               );
             })}
           </div>
 
-          {/* Connecting Lines SVG - Sways with icons */}
+          {/* Connecting Lines SVG - Spins with orbit, behind icons */}
           <svg 
             className="absolute inset-0 w-full h-full pointer-events-none"
-            style={{ animation: 'orbitSway 12s ease-in-out infinite' }}
+            style={{ animation: 'orbitSpin 120s linear infinite', zIndex: 1 }}
           >
             {competitors.map((comp, i) => {
               const angleRad = (comp.angle * Math.PI) / 180;
@@ -511,8 +845,8 @@ function CompetitorOrbit() {
           to { transform: rotate(360deg); }
         }
         @keyframes orbitCounterSpin {
-          from { transform: translate(-50%, -50%) rotate(0deg); }
-          to { transform: translate(-50%, -50%) rotate(-360deg); }
+          from { transform: rotate(0deg); }
+          to { transform: rotate(-360deg); }
         }
         /* Icon sway animations - different timings for unsynchronized organic feel */
         @keyframes iconSwayA {
@@ -824,7 +1158,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen" style={{ background: '#0A0A0E' }}>
+    <div className="min-h-screen" style={{ background: '#08080C', overflowX: 'hidden' }}>
       
       {/* ===================== HERO ===================== */}
       <section 
@@ -847,7 +1181,7 @@ export default function Home() {
         {/* Navigation - Glassy with spring effects */}
         <nav className="relative z-20 px-3 sm:px-4 py-3 sm:py-4">
           <div 
-            className="max-w-5xl mx-auto px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl transition-all duration-300 ease-out hover:translate-y-[2px] hover:shadow-lg"
+            className="max-w-2xl mx-auto px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl transition-all duration-300 ease-out hover:translate-y-[2px] hover:shadow-lg"
             style={{
               background: 'rgba(15, 20, 30, 0.6)',
               backdropFilter: 'blur(16px)',
@@ -948,7 +1282,7 @@ export default function Home() {
           </div>
 
             <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 mt-3 sm:mt-4">
-              {['⚡ 5 Min', '🎨 All Formats', '🔗 One Link', '💼 Pro'].map((badge, i) => (
+              {['⚡ 5 Min', '🎨 All Formats', '🔗 One Link', '💼 Convert'].map((badge, i) => (
                 <span 
                   key={i} 
                   className="text-[9px] sm:text-[10px] px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full"
@@ -968,6 +1302,33 @@ export default function Home() {
                   </div>
       </section>
 
+      {/* ===================== VIDEO MARQUEE - Infinite Scroll ===================== */}
+      <VideoMarquee />
+
+      {/* ===================== STATEMENT SECTION ===================== */}
+      <section
+        className="relative py-20 sm:py-28 md:py-32 px-4"
+        style={{ background: '#08080C' }}
+      >
+        <div className="max-w-2xl mx-auto text-center">
+          <p 
+            className="text-2xl sm:text-3xl md:text-4xl lg:text-[42px] font-medium leading-[1.3] tracking-[-0.02em]"
+            style={{ 
+              color: 'rgba(255, 255, 255, 0.9)',
+              textWrap: 'balance' as const
+            }}
+          >
+            WebSTAR combines your portfolio, identity, and links into a single professional space.
+            <span 
+              className="block mt-4 sm:mt-5"
+              style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+            >
+              Set it up in five minutes, straight from your phone.
+            </span>
+          </p>
+        </div>
+      </section>
+
       {/* ===================== COMPETITOR ORBIT - JARVIS Style ===================== */}
       <CompetitorOrbit />
 
@@ -975,7 +1336,7 @@ export default function Home() {
       <section 
         id="space"
         className="relative scroll-mt-20"
-        style={{ background: '#0A0A0E' }}
+        style={{ background: '#08080C' }}
       >
         {/* Subtle ambient glow */}
         <div 
@@ -992,7 +1353,7 @@ export default function Home() {
         />
 
         <div className="relative z-10 py-12 sm:py-16 md:py-20 px-4">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-2xl mx-auto">
 
             <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 md:gap-6 items-start">
               
@@ -1037,7 +1398,7 @@ export default function Home() {
                       onKeyDown={(e) => { if (e.key === 'Enter') { setSelectedArchetype(i); setRotationProgress(0); progressRef.current = 0; } }}
                       className="group relative"
                       style={{ 
-                        padding: '8px 6px 8px 0',
+                        padding: '8px 6px 8px 8px',
                         cursor: 'pointer',
                         outline: 'none',
                         borderRadius: '0 6px 6px 0',
@@ -1047,32 +1408,31 @@ export default function Home() {
                         transition: 'background 0.3s ease'
                       }}
                     >
-                      <div className="flex items-stretch gap-2.5">
-                        {/* Vertical indicator bar with progress - full height of block */}
+                      {/* Progress bar - absolute, full height matching gradient */}
+                      <div 
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: '3px',
+                          background: 'rgba(255, 255, 255, 0.06)',
+                          overflow: 'hidden'
+                        }}
+                      >
                         <div 
                           style={{
-                            width: '3px',
-                            alignSelf: 'stretch',
-                            borderRadius: '0',
-                            background: 'rgba(255, 255, 255, 0.06)',
-                            flexShrink: 0,
-                            position: 'relative',
-                            overflow: 'hidden'
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: selectedArchetype === i ? `${rotationProgress}%` : '0%',
+                            background: 'linear-gradient(180deg, #00C2FF 0%, #0099CC 100%)',
+                            transition: 'none'
                           }}
-                        >
-                          {/* Progress fill - drops from top down */}
-                          <div 
-                            style={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              width: '100%',
-                              height: selectedArchetype === i ? `${rotationProgress}%` : '0%',
-                              background: 'linear-gradient(180deg, #00C2FF 0%, #0099CC 100%)',
-                              transition: 'none'
-                            }}
-                          />
-                  </div>
+                        />
+                      </div>
+                      <div className="flex items-stretch gap-2.5">
                         <div className="flex-1">
                           <span 
                             className="text-[14px] font-medium block"
@@ -1478,10 +1838,13 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ===================== VIDEO MARQUEE REVERSE - Opposite Direction ===================== */}
+      <VideoMarqueeReverse />
+
       {/* ===================== CTA - Clean Dark Section ===================== */}
       <section 
         className="relative overflow-hidden"
-        style={{ background: '#0A0A0E' }}
+        style={{ background: '#08080C' }}
       >
         <style jsx>{`
           @keyframes snitchFloat {
@@ -1515,7 +1878,7 @@ export default function Home() {
         <div className="relative z-10 py-8 sm:py-10 md:py-14 px-4">
           {/* Giant Frame - clean */}
           <div 
-            className="max-w-xl mx-auto relative overflow-hidden"
+            className="max-w-lg mx-auto relative overflow-hidden"
             style={{
               padding: '20px 20px',
               borderRadius: '16px',
@@ -1605,7 +1968,7 @@ export default function Home() {
       </section>
 
       {/* ===================== FOOTER - Ultra Compact ===================== */}
-      <footer style={{ background: '#0A0A0E' }}>
+      <footer style={{ background: '#08080C' }}>
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
           
           {/* Two rows - super tight, stacks on mobile */}
