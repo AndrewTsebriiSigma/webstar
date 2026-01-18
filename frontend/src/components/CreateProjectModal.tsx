@@ -753,18 +753,18 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                 touchAction: 'manipulation'
               }}
             >
-              <div className="flex items-center gap-3">
-                <div 
-                  className="flex items-center justify-center flex-shrink-0"
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%)',
-                    borderRadius: '10px'
-                  }}
-                >
-                  <PlusIcon className="w-4 h-4" style={{ color: '#A78BFA' }} />
-                </div>
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="flex items-center justify-center flex-shrink-0"
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%)',
+                        borderRadius: '10px'
+                      }}
+                    >
+                      <PlusIcon className="w-4 h-4" style={{ color: '#A78BFA' }} />
+                    </div>
                 <h3 className="text-[14px] font-semibold text-white text-left flex-1">Add Content</h3>
                 <svg 
                   className="w-4 h-4 flex-shrink-0" 
@@ -774,9 +774,9 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                   viewBox="0 0 24 24"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-            </button>
+                      </svg>
+                    </div>
+                  </button>
 
             {/* Gallery Preview */}
             {projectMedia.length > 0 && (

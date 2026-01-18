@@ -185,20 +185,38 @@ async def upload_media(
                 "video/ogg",
                 "application/octet-stream"
             ],
-            "audio": ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/mp4", "audio/x-m4a"],
+            "audio": [
+                "audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/mp4", 
+                "audio/x-m4a", "audio/m4a", "audio/aac", "audio/x-aac",
+                "audio/x-caf", "audio/aiff", "audio/x-aiff",  # iOS formats
+                "audio/webm", "audio/flac", "audio/x-flac",
+                "application/octet-stream"  # Fallback for iOS file picker
+            ],
             "pdf": ["application/pdf"]
         }
         
         # Check if content type is valid for the media type
         if file.content_type and file.content_type not in valid_types[media_type]:
+            file_ext = os.path.splitext(file.filename)[1].lower() if file.filename else ""
+            
             # If it's a video and has application/octet-stream, check file extension
             if media_type == "video" and file.content_type == "application/octet-stream":
-                file_ext = os.path.splitext(file.filename)[1].lower() if file.filename else ""
                 valid_video_exts = [".mp4", ".mov", ".avi", ".webm", ".mpeg", ".mpg", ".mkv"]
                 if file_ext not in valid_video_exts:
                     raise HTTPException(
                         status_code=400,
                         detail=f"Invalid video file extension: {file_ext}. Expected: {', '.join(valid_video_exts)}"
+                    )
+            # If it's audio and has application/octet-stream or unknown type, check file extension (iOS fix)
+            elif media_type == "audio":
+                valid_audio_exts = [".mp3", ".m4a", ".aac", ".wav", ".ogg", ".flac", ".caf", ".aiff", ".webm"]
+                if file_ext in valid_audio_exts:
+                    logger.info(f"Accepting audio file by extension: {file_ext} (MIME: {file.content_type})")
+                else:
+                    logger.warning(f"Invalid audio file: ext={file_ext}, mime={file.content_type}")
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Invalid audio file type. Supported formats: MP3, M4A, AAC, WAV, OGG, FLAC"
                     )
             else:
                 logger.warning(f"Invalid content type for {media_type}: {file.content_type}")

@@ -696,7 +696,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
     }
     experienceSaveTimeoutRef.current = setTimeout(async () => {
       setIsSavingExperience(true);
-      try {
+    try {
         await profileAPI.updateMe({ experience: JSON.stringify(updatedExperiences) });
         // Don't call onUpdate() - it resets the form data!
     } catch (error) {
@@ -928,7 +928,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
     sectionId: SectionId; 
     children: React.ReactNode;
   }) => (
-    <div 
+      <div 
       className="rounded-xl border relative"
       draggable={canEdit}
       onDragStart={(e) => canEdit && handleDragStart(e, sectionId)}
@@ -1192,8 +1192,8 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
               lineHeight: '24px',
                     fontWeight: '600',
               color: 'var(--text-primary)'
-            }}
-          >
+                  }}
+                >
             About
           </h3>
             {isSavingAbout && (
@@ -1585,8 +1585,8 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                     background: 'rgba(255, 255, 255, 0.02)',
                     border: '1px dashed rgba(255, 255, 255, 0.1)',
                     borderRadius: '12px',
-                  }}
-                >
+                            }}
+                          >
                   <div style={{ 
                     display: 'flex', 
                     alignItems: 'flex-start', 
@@ -1672,8 +1672,8 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                           lineHeight: '1.5',
                           minHeight: '40px',
                           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
-                        }}
-                      >
+                            }}
+                          >
                         {expDescPlaceholder}
                       </div>
                     </div>
@@ -1705,17 +1705,17 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
         onDragOver={(e) => canEdit && handleDragOver(e, 'skills')}
         onDragLeave={handleDragLeave}
         onDrop={(e) => canEdit && handleDrop(e, 'skills')}
-        style={{
+                  style={{
           order: sectionOrder.indexOf('skills'),
           background: 'var(--bg-surface)',
           borderColor: dragOverSection === 'skills' ? 'rgba(0, 194, 255, 0.8)' : canEdit ? 'rgba(0, 194, 255, 0.3)' : 'var(--border)',
-          borderRadius: 'var(--radius-xl)',
+                    borderRadius: 'var(--radius-xl)',
           transform: dragOverSection === 'skills' ? 'scale(1.01)' : 'scale(1)',
           transition: 'all 0.2s ease',
           boxShadow: dragOverSection === 'skills' ? '0 0 20px rgba(0, 194, 255, 0.3)' : 'none',
           opacity: draggedSection === 'skills' ? 0.5 : 1,
-        }}
-      >
+                  }}
+                >
         {/* Drag Handle */}
         {canEdit && (
           <div 
@@ -1945,8 +1945,8 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                           fontWeight: 600, 
                     color: 'var(--text-secondary)',
                           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
-                        }}
-                      >
+                  }}
+                >
                         {skillsPlaceholder}
                         <span style={{ 
                           display: 'inline-block',
@@ -2315,8 +2315,8 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                             fontSize: '10px',
                             color: 'white',
                           }}>✓</div>
-                        </a>
-                        
+                      </a>
+                      
                         {/* Remove button - only in customize mode */}
                         {canEdit && (
                           <div
@@ -2338,8 +2338,8 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                             cursor: 'pointer',
                               zIndex: 10,
                               boxShadow: '0 2px 8px rgba(255, 59, 48, 0.4)',
-                            }}
-                          >
+                          }}
+                        >
                             <MinusIcon size={12} strokeWidth={3} />
                           </div>
                       )}
@@ -2399,8 +2399,8 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                       textAlign: 'center',
                       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
                       opacity: 0.6
-                    }}
-                  >
+                  }}
+                >
                     {connectPlaceholder}
                     <span style={{ 
                       display: 'inline-block',

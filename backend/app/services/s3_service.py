@@ -159,7 +159,7 @@ class R2Service:
         except ClientError as e:
             logger.error(f"Failed to generate presigned URL: {str(e)}")
             return None
-    
+
     def file_exists(self, file_key: str) -> bool:
         """
         Check if a file exists in R2.

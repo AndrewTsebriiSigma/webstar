@@ -44,6 +44,13 @@ async def change_email(
     session: Session = Depends(get_session),
 ):
     """Change user email."""
+    # Check if user has a password (not OAuth-only)
+    if not current_user.hashed_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot change email for accounts created with Google Sign-In. Your email is managed by Google."
+        )
+    
     # Verify password
     if not verify_password(request.password, current_user.hashed_password):
         raise HTTPException(
@@ -74,6 +81,13 @@ async def change_password(
     session: Session = Depends(get_session),
 ):
     """Change user password."""
+    # Check if user has a password (not OAuth-only)
+    if not current_user.hashed_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot change password for accounts created with Google Sign-In. Please use Google to access your account."
+        )
+    
     # Verify current password
     if not verify_password(request.current_password, current_user.hashed_password):
         raise HTTPException(

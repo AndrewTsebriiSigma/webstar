@@ -184,8 +184,8 @@ export default function UnifiedAuthPage() {
           if (returnUrl) {
             sessionStorage.removeItem('returnAfterAuth');
             router.push(returnUrl);
-          } else {
-            router.push(`/${response.data.user.username}`);
+        } else {
+          router.push(`/${response.data.user.username}`);
           }
         }
       }
