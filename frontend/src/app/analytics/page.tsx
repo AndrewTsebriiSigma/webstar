@@ -19,6 +19,7 @@ interface GraphPoint {
   yPos: number;
   value: number;
   date: string;
+  index: number;
 }
 
 interface TooltipData {
@@ -35,6 +36,7 @@ export default function AnalyticsPage() {
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [loading, setLoading] = useState(true);
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
+  const [activeGraph, setActiveGraph] = useState<'views' | 'clicks' | null>(null);
   const [mediaCounts, setMediaCounts] = useState({
     photo: 0,
     video: 0,
@@ -87,7 +89,6 @@ export default function AnalyticsPage() {
   };
 
   const loadAnalytics = async () => {
-    // Check cache first (2 minute TTL for analytics)
     const cacheKey = 'analytics_daily';
     try {
       const cached = sessionStorage.getItem(cacheKey);
@@ -96,33 +97,27 @@ export default function AnalyticsPage() {
         const { data, timestamp } = JSON.parse(cached);
         const age = Date.now() - timestamp;
         
-        // Use cache if less than 2 minutes old
         if (age < 2 * 60 * 1000) {
           setDailyData(data);
           setLoading(false);
           return;
         }
       }
-    } catch (e) {
-      // Cache read failed, proceed with API call
-    }
+    } catch (e) {}
 
     try {
       const response = await analyticsAPI.getDailyAnalytics();
       setDailyData(response.data);
       
-      // Cache the data
       try {
         sessionStorage.setItem(cacheKey, JSON.stringify({
           data: response.data,
           timestamp: Date.now()
         }));
-      } catch (e) {
-        // Cache write failed (storage full), not critical
-      }
+      } catch (e) {}
     } catch (error) {
       console.error('Failed to load analytics:', error);
-      // Generate mock data for demo
+      // Generate mock data for demo - exactly 30 days
       const mockData: DailyData[] = [];
       const now = new Date();
       for (let i = 29; i >= 0; i--) {
@@ -146,6 +141,12 @@ export default function AnalyticsPage() {
     return num.toString();
   };
 
+  // Graph dimensions - adjusted to show pulsing dot
+  const GRAPH_WIDTH = 260; // Leave room for pulsing dot
+  const GRAPH_VIEWBOX_WIDTH = 280; // Total viewBox width
+  const GRAPH_HEIGHT = 64;
+  const GRAPH_PADDING_LEFT = 5;
+
   const prepareGraphData = (type: 'views' | 'clicks'): GraphPoint[] => {
     if (dailyData.length === 0) return [];
     
@@ -154,49 +155,170 @@ export default function AnalyticsPage() {
     const minValue = Math.min(...values);
     const range = maxValue - minValue || 1;
     
+    const dataLength = dailyData.length;
+    const pointSpacing = GRAPH_WIDTH / (dataLength - 1 || 1);
+    
     return dailyData.map((d, i) => {
       const value = type === 'views' ? d.profile_views : d.link_clicks;
       const normalized = (value - minValue) / range;
-      const yPos = 64 - (normalized * 54) - 5;
+      const yPos = GRAPH_HEIGHT - (normalized * 50) - 7;
       
       return {
-        x: (280 / 29) * i,
+        x: GRAPH_PADDING_LEFT + (pointSpacing * i),
         y: yPos,
         yPos,
         value,
-        date: d.date
+        date: d.date,
+        index: i
       };
     });
   };
 
   const handleGraphClick = (e: React.MouseEvent<SVGSVGElement>, type: 'views' | 'clicks') => {
+    e.stopPropagation();
     const graphRef = type === 'views' ? viewsGraphRef : clicksGraphRef;
-    if (!graphRef.current) return;
+    if (!graphRef.current || dailyData.length === 0) return;
     
     const rect = graphRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 280;
+    const clickX = ((e.clientX - rect.left) / rect.width) * GRAPH_VIEWBOX_WIDTH;
     const graphData = prepareGraphData(type);
     
-    const pointWidth = 280 / 29;
-    const index = Math.min(Math.max(Math.round(x / pointWidth), 0), graphData.length - 1);
+    if (graphData.length === 0) return;
     
-    if (index >= 0 && index < dailyData.length) {
-      const point = graphData[index];
-      const data = dailyData[index];
-      setTooltipData({
-        x: point.x,
-        y: point.yPos,
-        date: point.date,
-        profileViews: data.profile_views,
-        linkClicks: data.link_clicks
-      });
-    }
+    // Find nearest data point
+    let nearestIndex = 0;
+    let minDistance = Infinity;
+    
+    graphData.forEach((point, i) => {
+      const distance = Math.abs(clickX - point.x);
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestIndex = i;
+      }
+    });
+    
+    const point = graphData[nearestIndex];
+    const data = dailyData[nearestIndex];
+    
+    setActiveGraph(type);
+    setTooltipData({
+      x: point.x,
+      y: point.yPos,
+      date: point.date,
+      profileViews: data.profile_views,
+      linkClicks: data.link_clicks
+    });
+  };
+
+  const handleDataPointClick = (
+    e: React.MouseEvent<SVGCircleElement>, 
+    type: 'views' | 'clicks',
+    index: number
+  ) => {
+    e.stopPropagation();
+    const graphData = prepareGraphData(type);
+    const point = graphData[index];
+    const data = dailyData[index];
+    
+    setActiveGraph(type);
+    setTooltipData({
+      x: point.x,
+      y: point.yPos,
+      date: point.date,
+      profileViews: data.profile_views,
+      linkClicks: data.link_clicks
+    });
+  };
+
+  const clearTooltip = () => {
+    setTooltipData(null);
+    setActiveGraph(null);
   };
 
   const totalViews = dailyData.reduce((sum, d) => sum + d.profile_views, 0);
   const totalClicks = dailyData.reduce((sum, d) => sum + d.link_clicks, 0);
   const viewsToday = dailyData[dailyData.length - 1]?.profile_views || 0;
   const clicksToday = dailyData[dailyData.length - 1]?.link_clicks || 0;
+
+  // Content distribution data - 6 types in 2 rows of 3
+  const contentTypes = [
+    // Row 1
+    { 
+      key: 'photo', 
+      label: 'Photo', 
+      count: mediaCounts.photo, 
+      color: '#00C2FF',
+      gradient: 'linear-gradient(135deg, rgba(0, 80, 120, 0.8) 0%, rgba(0, 50, 80, 0.9) 100%)',
+      icon: (
+        <svg width="18" height="18" fill="none" stroke="#00C2FF" strokeWidth={1.5} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+        </svg>
+      )
+    },
+    { 
+      key: 'video', 
+      label: 'Video', 
+      count: mediaCounts.video, 
+      color: '#FF006B',
+      gradient: 'linear-gradient(135deg, rgba(140, 0, 60, 0.8) 0%, rgba(90, 0, 40, 0.9) 100%)',
+      icon: (
+        <svg width="18" height="18" fill="none" stroke="#FF006B" strokeWidth={1.5} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
+        </svg>
+      )
+    },
+    { 
+      key: 'audio', 
+      label: 'Audio', 
+      count: mediaCounts.audio, 
+      color: '#A78BFA',
+      gradient: 'linear-gradient(135deg, rgba(80, 50, 140, 0.8) 0%, rgba(50, 30, 90, 0.9) 100%)',
+      icon: (
+        <svg width="18" height="18" fill="none" stroke="#A78BFA" strokeWidth={1.5} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V4.5l-10.5 3v9.75M6 19.5a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" />
+        </svg>
+      )
+    },
+    // Row 2
+    { 
+      key: 'pdf', 
+      label: 'PDF', 
+      count: mediaCounts.pdf, 
+      color: '#22C55E',
+      gradient: 'linear-gradient(135deg, rgba(20, 90, 50, 0.8) 0%, rgba(10, 60, 35, 0.9) 100%)',
+      icon: (
+        <svg width="18" height="18" fill="none" stroke="#22C55E" strokeWidth={1.5} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+        </svg>
+      )
+    },
+    { 
+      key: 'memo', 
+      label: 'Memo', 
+      count: mediaCounts.text, 
+      color: '#FB923C',
+      gradient: 'linear-gradient(135deg, rgba(120, 60, 20, 0.8) 0%, rgba(80, 40, 15, 0.9) 100%)',
+      icon: (
+        <svg width="18" height="18" fill="none" stroke="#FB923C" strokeWidth={1.5} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+        </svg>
+      )
+    },
+    { 
+      key: 'projects', 
+      label: 'Projects', 
+      count: projectsCount, 
+      color: '#E879F9',
+      gradient: 'linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(236, 72, 153, 0.4) 100%)',
+      icon: (
+        <svg width="18" height="18" fill="none" stroke="#E879F9" strokeWidth={1.5} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 10.5v6m3-3H9m4.06-7.19l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+        </svg>
+      )
+    }
+  ];
+
+  const maxContentCount = Math.max(...contentTypes.map(t => t.count), 1);
 
   if (loading) {
     return (
@@ -209,8 +331,176 @@ export default function AnalyticsPage() {
   const viewsGraphData = prepareGraphData('views');
   const clicksGraphData = prepareGraphData('clicks');
 
+  const renderGraph = (
+    graphData: GraphPoint[], 
+    graphRef: React.RefObject<SVGSVGElement>,
+    type: 'views' | 'clicks',
+    color: string,
+    gridId: string,
+    gradientId: string
+  ) => (
+    <svg 
+      className="analytics-graph-enhanced" 
+      viewBox={`0 0 ${GRAPH_VIEWBOX_WIDTH} ${GRAPH_HEIGHT}`}
+      preserveAspectRatio="none" 
+      ref={graphRef} 
+      onClick={(e) => handleGraphClick(e, type)}
+      style={{ cursor: 'pointer', width: '100%', height: '100%', touchAction: 'none' }}
+    >
+      <defs>
+        <pattern id={gridId} width="9.33" height="9.33" patternUnits="userSpaceOnUse">
+          <rect x="0" y="0" width="9.33" height="9.33" fill="none" stroke={`${color}14`} strokeWidth="0.5"/>
+        </pattern>
+        
+        <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={color} stopOpacity="0.2"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0"/>
+        </linearGradient>
+      </defs>
+      
+      <rect width={GRAPH_VIEWBOX_WIDTH} height={GRAPH_HEIGHT} fill={`url(#${gridId})`}/>
+      
+      {graphData.length > 0 && (
+        <>
+          {/* Area fill */}
+          <path
+            d={`M ${graphData[0]?.x || 0},${graphData[0]?.yPos || 32} ${graphData.map((d) => `L ${d.x},${d.yPos}`).join(' ')} L ${graphData[graphData.length - 1]?.x || GRAPH_WIDTH},${GRAPH_HEIGHT} L ${GRAPH_PADDING_LEFT},${GRAPH_HEIGHT} Z`}
+            fill={`url(#${gradientId})`}
+          />
+          
+          {/* Main line */}
+          <path
+            d={`M ${graphData[0]?.x || 0},${graphData[0]?.yPos || 32} ${graphData.map((d) => `L ${d.x},${d.yPos}`).join(' ')}`}
+            fill="none"
+            stroke={color}
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity="0.95"
+          />
+          
+          {/* Visible small dots on line */}
+          {graphData.map((d, i) => (
+            <circle
+              key={`dot-${i}`}
+              cx={d.x}
+              cy={d.yPos}
+              r="2"
+              fill={color}
+              opacity="0.5"
+            />
+          ))}
+          
+          {/* Interactive data points - larger invisible hit area */}
+          {graphData.map((d, i) => (
+            <circle
+              key={`hitarea-${i}`}
+              cx={d.x}
+              cy={d.yPos}
+              r="12"
+              fill="transparent"
+              className="data-point"
+              style={{ cursor: 'pointer', pointerEvents: 'all' }}
+              onClick={(e) => handleDataPointClick(e, type, i)}
+              onTouchEnd={(e) => {
+                e.stopPropagation();
+                const data = dailyData[i];
+                setActiveGraph(type);
+                setTooltipData({
+                  x: d.x,
+                  y: d.yPos,
+                  date: d.date,
+                  profileViews: data.profile_views,
+                  linkClicks: data.link_clicks
+                });
+              }}
+            />
+          ))}
+          
+          {/* Pulsing dot for today (last data point) */}
+          <circle 
+            cx={graphData[graphData.length - 1]?.x || GRAPH_WIDTH} 
+            cy={graphData[graphData.length - 1]?.yPos || 32} 
+            r="4" 
+            fill={color}
+          >
+            <animate attributeName="r" values="4;6;4" dur="2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+          </circle>
+        </>
+      )}
+    </svg>
+  );
+
+  // Split content types into 2 rows
+  const row1 = contentTypes.slice(0, 3);
+  const row2 = contentTypes.slice(3, 6);
+
+  const renderCandle = (type: typeof contentTypes[0]) => {
+    const heightPercent = maxContentCount > 0 ? (type.count / maxContentCount) * 100 : 0;
+    const minBarHeight = type.count > 0 ? 15 : 5;
+    
+    return (
+      <div key={type.key} style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '4px',
+        height: '100%',
+        justifyContent: 'flex-end'
+      }}>
+        {/* Count above candle */}
+        <div style={{ 
+          fontSize: '13px', 
+          fontWeight: '700', 
+          color: type.color,
+          textShadow: `0 0 10px ${type.color}40`
+        }}>
+          {type.count}
+        </div>
+        
+        {/* Candle bar */}
+        <div style={{
+          width: '100%',
+          maxWidth: '32px',
+          height: `${Math.max(heightPercent, minBarHeight)}%`,
+          minHeight: `${minBarHeight}px`,
+          background: `linear-gradient(180deg, ${type.color}, ${type.color}50)`,
+          borderRadius: '4px 4px 2px 2px',
+          transition: 'height 0.3s ease',
+          boxShadow: `0 0 10px ${type.color}30`
+        }} />
+        
+        {/* Icon below candle */}
+        <div style={{
+          width: '32px',
+          height: '32px',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: type.gradient,
+          flexShrink: 0
+        }}>
+          {type.icon}
+        </div>
+        
+        {/* Label */}
+        <div style={{ 
+          fontSize: '9px', 
+          color: 'rgba(255, 255, 255, 0.6)',
+          fontWeight: '500',
+          textAlign: 'center'
+        }}>
+          {type.label}
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="min-h-screen" style={{ background: '#0B0B0C', color: '#F5F5F5' }}>
+    <div className="min-h-screen" style={{ background: '#0B0B0C', color: '#F5F5F5' }} onClick={clearTooltip}>
       {/* Header */}
       <div style={{
         position: 'sticky',
@@ -224,24 +514,23 @@ export default function AnalyticsPage() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
-            onClick={() => router.back()}
+            onClick={(e) => { e.stopPropagation(); router.back(); }}
             style={{
               width: '32px',
               height: '32px',
-              borderRadius: '8px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: 'rgba(255, 255, 255, 0.06)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              background: 'transparent',
+              border: 'none',
               color: '#F5F5F5',
               cursor: 'pointer',
-              transition: 'all 0.15s'
+              transition: 'opacity 0.15s'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.10)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
           >
-            <ArrowLeftIcon style={{ width: '18px', height: '18px' }} />
+            <ArrowLeftIcon style={{ width: '20px', height: '20px' }} />
           </button>
           <h1 style={{ fontSize: '20px', fontWeight: '700', margin: 0 }}>Analytics</h1>
         </div>
@@ -254,7 +543,7 @@ export default function AnalyticsPage() {
           {/* Total Views Card */}
           <div 
             className="analytics-card"
-            onClick={() => setTooltipData(null)}
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="analytics-split-container">
               {/* LEFT - Metrics */}
@@ -272,91 +561,32 @@ export default function AnalyticsPage() {
               {/* RIGHT - Graph */}
               <div className="analytics-right">
                 <div className="graph-container" style={{ position: 'relative' }}>
-                  <svg 
-                    className="analytics-graph-enhanced" 
-                    viewBox="0 0 280 64" 
-                    preserveAspectRatio="none" 
-                    ref={viewsGraphRef} 
-                    onClick={(e) => handleGraphClick(e, 'views')}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <defs>
-                      <pattern id="blueGridViews" width="9.33" height="9.33" patternUnits="userSpaceOnUse">
-                        <rect x="0" y="0" width="9.33" height="9.33" fill="none" stroke="rgba(0, 194, 255, 0.08)" strokeWidth="0.5"/>
-                      </pattern>
-                      
-                      <linearGradient id="areaGradientViews" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="#00C2FF" stopOpacity="0.2"/>
-                        <stop offset="100%" stopColor="#00C2FF" stopOpacity="0"/>
-                      </linearGradient>
-                    </defs>
-                    
-                    <rect width="280" height="64" fill="url(#blueGridViews)"/>
-                    
-                    {viewsGraphData.length > 0 && (
-                      <>
-                        <path
-                          d={`M 0,${viewsGraphData[0]?.yPos || 32} ${viewsGraphData.map((d) => `L ${d.x},${d.yPos}`).join(' ')} L 280,${viewsGraphData[viewsGraphData.length - 1]?.yPos || 32} L 280,64 L 0,64 Z`}
-                          fill="url(#areaGradientViews)"
-                        />
-                        
-                        <path
-                          d={`M 0,${viewsGraphData[0]?.yPos || 32} ${viewsGraphData.map((d) => `L ${d.x},${d.yPos}`).join(' ')} L 280,${viewsGraphData[viewsGraphData.length - 1]?.yPos || 32}`}
-                          fill="none"
-                          stroke="#00C2FF"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          opacity="0.95"
-                        />
-                        
-                        {viewsGraphData.map((d, i) => (
-                          <circle
-                            key={i}
-                            cx={d.x}
-                            cy={d.yPos}
-                            r="4"
-                            fill="#00C2FF"
-                            opacity="0"
-                            className="data-point"
-                            style={{ cursor: 'pointer' }}
-                          />
-                        ))}
-                        
-                        <circle 
-                          cx={280} 
-                          cy={viewsGraphData[viewsGraphData.length - 1]?.yPos || 32} 
-                          r="3.5" 
-                          fill="#00C2FF"
-                        >
-                          <animate attributeName="r" values="3.5;5;3.5" dur="2s" repeatCount="indefinite"/>
-                          <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
-                        </circle>
-                      </>
-                    )}
-                  </svg>
+                  {renderGraph(viewsGraphData, viewsGraphRef, 'views', '#00C2FF', 'blueGridViews', 'areaGradientViews')}
 
-                  {tooltipData && (
+                  {tooltipData && activeGraph === 'views' && (
                     <div 
                       className="analytics-tooltip-enhanced"
                       style={{
-                        left: `${Math.min(Math.max((tooltipData.x / 280) * 100, 15), 85)}%`,
-                        bottom: '70px'
+                        position: 'absolute',
+                        left: `${Math.min(Math.max((tooltipData.x / GRAPH_VIEWBOX_WIDTH) * 100, 15), 85)}%`,
+                        bottom: '70px',
+                        transform: 'translateX(-50%)',
+                        zIndex: 50
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setTooltipData(null);
+                        clearTooltip();
                       }}
                     >
                       <div className="tooltip-date-enhanced">{tooltipData.date}</div>
                       <div className="tooltip-row">
                         <span className="tooltip-dot" style={{ background: '#00C2FF' }}></span>
-                        <span className="tooltip-label">Profile Views:</span>
+                        <span className="tooltip-label">Views:</span>
                         <span className="tooltip-value">{tooltipData.profileViews.toLocaleString()}</span>
                       </div>
                       <div className="tooltip-row">
                         <span className="tooltip-dot" style={{ background: '#FF006B' }}></span>
-                        <span className="tooltip-label">Link Clicks:</span>
+                        <span className="tooltip-label">Clicks:</span>
                         <span className="tooltip-value">{tooltipData.linkClicks.toLocaleString()}</span>
                       </div>
                     </div>
@@ -369,7 +599,7 @@ export default function AnalyticsPage() {
           {/* Link Clicks Card */}
           <div 
             className="analytics-card"
-            onClick={() => setTooltipData(null)}
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="analytics-split-container">
               {/* LEFT - Metrics */}
@@ -387,216 +617,92 @@ export default function AnalyticsPage() {
               {/* RIGHT - Graph */}
               <div className="analytics-right">
                 <div className="graph-container" style={{ position: 'relative' }}>
-                  <svg 
-                    className="analytics-graph-enhanced" 
-                    viewBox="0 0 280 64" 
-                    preserveAspectRatio="none"
-                    ref={clicksGraphRef}
-                    onClick={(e) => handleGraphClick(e, 'clicks')}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <defs>
-                      <pattern id="pinkGrid" width="9.33" height="9.33" patternUnits="userSpaceOnUse">
-                        <rect x="0" y="0" width="9.33" height="9.33" fill="none" stroke="rgba(255, 0, 107, 0.08)" strokeWidth="0.5"/>
-                      </pattern>
-                      
-                      <linearGradient id="areaGradientClicks" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="#FF006B" stopOpacity="0.2"/>
-                        <stop offset="100%" stopColor="#FF006B" stopOpacity="0"/>
-                      </linearGradient>
-                    </defs>
-                    
-                    <rect width="280" height="64" fill="url(#pinkGrid)"/>
-                    
-                    {clicksGraphData.length > 0 && (
-                      <>
-                        <path
-                          d={`M 0,${clicksGraphData[0]?.yPos || 32} ${clicksGraphData.map((d) => `L ${d.x},${d.yPos}`).join(' ')} L 280,${clicksGraphData[clicksGraphData.length - 1]?.yPos || 32} L 280,64 L 0,64 Z`}
-                          fill="url(#areaGradientClicks)"
-                        />
-                        
-                        <path
-                          d={`M 0,${clicksGraphData[0]?.yPos || 32} ${clicksGraphData.map((d) => `L ${d.x},${d.yPos}`).join(' ')} L 280,${clicksGraphData[clicksGraphData.length - 1]?.yPos || 32}`}
-                          fill="none"
-                          stroke="#FF006B"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          opacity="0.95"
-                        />
-                        
-                        <circle 
-                          cx={280} 
-                          cy={clicksGraphData[clicksGraphData.length - 1]?.yPos || 32} 
-                          r="3.5" 
-                          fill="#FF006B"
-                        >
-                          <animate attributeName="r" values="3.5;5;3.5" dur="2s" repeatCount="indefinite"/>
-                          <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
-                        </circle>
-                      </>
-                    )}
-                  </svg>
+                  {renderGraph(clicksGraphData, clicksGraphRef, 'clicks', '#FF006B', 'pinkGrid', 'areaGradientClicks')}
+
+                  {tooltipData && activeGraph === 'clicks' && (
+                    <div 
+                      className="analytics-tooltip-enhanced"
+                      style={{
+                        position: 'absolute',
+                        left: `${Math.min(Math.max((tooltipData.x / GRAPH_VIEWBOX_WIDTH) * 100, 15), 85)}%`,
+                        bottom: '70px',
+                        transform: 'translateX(-50%)',
+                        zIndex: 50
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        clearTooltip();
+                      }}
+                    >
+                      <div className="tooltip-date-enhanced">{tooltipData.date}</div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-dot" style={{ background: '#00C2FF' }}></span>
+                        <span className="tooltip-label">Views:</span>
+                        <span className="tooltip-value">{tooltipData.profileViews.toLocaleString()}</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-dot" style={{ background: '#FF006B' }}></span>
+                        <span className="tooltip-label">Clicks:</span>
+                        <span className="tooltip-value">{tooltipData.linkClicks.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Media Content Squares */}
-          <div style={{ marginTop: '8px' }}>
+          {/* Content Distribution - 2 Rows x 3 Candles */}
+          <div style={{ marginTop: '16px' }}>
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px'
+              fontSize: '11px',
+              color: 'rgba(255, 255, 255, 0.5)',
+              marginBottom: '12px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
             }}>
-              {/* Photo */}
+              Content Distribution
+            </div>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              padding: '16px 12px',
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              borderRadius: '12px',
+            }}>
+              {/* Row 1 - Photo, Video, Audio */}
               <div style={{
-                padding: '16px',
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
-                borderRadius: '12px',
                 display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                height: '130px',
+                alignItems: 'flex-end'
               }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                  <polyline points="21 15 16 10 5 21"></polyline>
-                </svg>
-                <div style={{ fontSize: '20px', fontWeight: '700', color: '#F5F5F5' }}>
-                  {mediaCounts.photo}
-                </div>
-                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center' }}>
-                  Photos
-                </div>
+                {row1.map(renderCandle)}
               </div>
-
-              {/* Video */}
+              
+              {/* Divider */}
               <div style={{
-                padding: '16px',
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
-                borderRadius: '12px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF006B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="23 7 16 12 23 17 23 7"></polygon>
-                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-                </svg>
-                <div style={{ fontSize: '20px', fontWeight: '700', color: '#F5F5F5' }}>
-                  {mediaCounts.video}
-                </div>
-                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center' }}>
-                  Videos
-                </div>
-              </div>
-
-              {/* Audio */}
+                height: '1px',
+                background: 'rgba(255, 255, 255, 0.06)',
+                margin: '0 -4px'
+              }} />
+              
+              {/* Row 2 - PDF, Memo, Projects */}
               <div style={{
-                padding: '16px',
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
-                borderRadius: '12px',
                 display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                height: '130px',
+                alignItems: 'flex-end'
               }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#57BFF9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 18V5l12-2v13"></path>
-                  <circle cx="6" cy="18" r="3"></circle>
-                  <circle cx="18" cy="16" r="3"></circle>
-                </svg>
-                <div style={{ fontSize: '20px', fontWeight: '700', color: '#F5F5F5' }}>
-                  {mediaCounts.audio}
-                </div>
-                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center' }}>
-                  Audio
-                </div>
-              </div>
-
-              {/* PDF */}
-              <div style={{
-                padding: '16px',
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
-                borderRadius: '12px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFA500" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                  <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-                <div style={{ fontSize: '20px', fontWeight: '700', color: '#F5F5F5' }}>
-                  {mediaCounts.pdf}
-                </div>
-                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center' }}>
-                  PDFs
-                </div>
-              </div>
-
-              {/* Text/Memos */}
-          <div style={{
-            padding: '16px',
-            background: 'rgba(255, 255, 255, 0.02)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
-            borderRadius: '12px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '8px'
-          }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9B59B6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                </svg>
-                <div style={{ fontSize: '20px', fontWeight: '700', color: '#F5F5F5' }}>
-                  {mediaCounts.text}
-                </div>
-                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center' }}>
-                  Memos
-                </div>
-              </div>
-
-              {/* Projects */}
-              <div style={{
-                padding: '16px',
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
-                borderRadius: '12px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00D9FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                </svg>
-                <div style={{ fontSize: '20px', fontWeight: '700', color: '#F5F5F5' }}>
-                  {projectsCount}
-                </div>
-                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center' }}>
-                  Projects
-                </div>
+                {row2.map(renderCandle)}
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>
   );
 }
-
