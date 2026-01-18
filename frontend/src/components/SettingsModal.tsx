@@ -87,15 +87,17 @@ const GlassCard = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-// Change Email Section Component
+// Change Email Section Component - 2-Step Verification Flow
 const ChangeEmailSection = ({ onBack }: { onBack: () => void }) => {
+  const [step, setStep] = useState<'request' | 'verify'>('request');
   const [newEmail, setNewEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleRequestChange = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEmail || !password) return;
 
@@ -103,18 +105,38 @@ const ChangeEmailSection = ({ onBack }: { onBack: () => void }) => {
     setError('');
 
     try {
-      const response = await settingsAPI.changeEmail(newEmail, password);
+      const response = await settingsAPI.requestEmailChange(newEmail, password);
+      if (response.data) {
+        toast.success('Verification code sent to your new email!');
+        setStep('verify');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to request email change');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!verificationCode) return;
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await settingsAPI.verifyEmailChange(verificationCode);
       if (response.data) {
         setSuccess(true);
         toast.success('Email updated successfully!');
         // Update local storage
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        user.email = newEmail;
+        user.email = response.data.new_email || newEmail;
         localStorage.setItem('user', JSON.stringify(user));
         setTimeout(() => onBack(), 1500);
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to update email');
+      setError(err.response?.data?.detail || 'Invalid verification code');
     } finally {
       setLoading(false);
     }
@@ -135,6 +157,92 @@ const ChangeEmailSection = ({ onBack }: { onBack: () => void }) => {
     );
   }
 
+  // Step 2: Verify Code
+  if (step === 'verify') {
+    return (
+      <div>
+        <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#FFFFFF', marginBottom: '8px' }}>Verify New Email</h3>
+        <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '20px' }}>
+          We sent a 6-digit code to <span style={{ color: '#00C2FF' }}>{newEmail}</span>
+        </p>
+        
+        {error && (
+          <div className="mb-4 p-3 rounded-xl text-sm"
+            style={{ background: 'rgba(255, 69, 58, 0.1)', color: '#FF453A' }}
+          >
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleVerifyChange}>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '6px' }}>
+              Verification Code
+            </label>
+            <input
+              type="text"
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="000000"
+              maxLength={6}
+              style={{
+                width: '100%',
+                padding: '12px 14px',
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                borderRadius: '12px',
+                color: '#FFFFFF',
+                fontSize: '24px',
+                fontWeight: 600,
+                letterSpacing: '8px',
+                textAlign: 'center',
+                outline: 'none'
+              }}
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading || verificationCode.length !== 6}
+            style={{
+              width: '100%',
+              padding: '14px',
+              background: loading || verificationCode.length !== 6 ? 'rgba(255, 255, 255, 0.1)' : '#00C2FF',
+              borderRadius: '12px',
+              color: '#FFFFFF',
+              fontSize: '15px',
+              fontWeight: 600,
+              border: 'none',
+              cursor: loading || verificationCode.length !== 6 ? 'not-allowed' : 'pointer',
+              transition: 'background 0.2s'
+            }}
+          >
+            {loading ? 'Verifying...' : 'Verify & Update Email'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { setStep('request'); setError(''); setVerificationCode(''); }}
+            style={{
+              width: '100%',
+              padding: '12px',
+              background: 'transparent',
+              border: 'none',
+              color: 'rgba(255, 255, 255, 0.5)',
+              fontSize: '14px',
+              cursor: 'pointer',
+              marginTop: '12px'
+            }}
+          >
+            Use a different email
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  // Step 1: Request Email Change
   return (
     <div>
       <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#FFFFFF', marginBottom: '16px' }}>Change Email</h3>
@@ -147,7 +255,7 @@ const ChangeEmailSection = ({ onBack }: { onBack: () => void }) => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleRequestChange}>
         <div style={{ marginBottom: '12px' }}>
           <label style={{ display: 'block', fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '6px' }}>
             New Email
@@ -210,8 +318,12 @@ const ChangeEmailSection = ({ onBack }: { onBack: () => void }) => {
             transition: 'background 0.2s'
           }}
         >
-          {loading ? 'Updating...' : 'Update Email'}
+          {loading ? 'Sending code...' : 'Send Verification Code'}
         </button>
+        
+        <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)', marginTop: '12px', textAlign: 'center' }}>
+          A verification code will be sent to your new email address
+        </p>
       </form>
     </div>
   );

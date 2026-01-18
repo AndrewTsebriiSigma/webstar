@@ -239,9 +239,12 @@ export const settingsAPI = {
   disable2FA: (token: string) => 
     api.post('/api/settings/account/2fa/disable', { token }),
   
-  // Account settings
-  changeEmail: (newEmail: string, password: string) =>
-    api.post('/api/settings/account/change-email', { new_email: newEmail, password }),
+  // Account settings - 2-step email change with verification
+  requestEmailChange: (newEmail: string, password: string) =>
+    api.post('/api/settings/account/request-email-change', { new_email: newEmail, password }),
+  
+  verifyEmailChange: (code: string) =>
+    api.post('/api/settings/account/verify-email-change', { code }),
   
   changePassword: (currentPassword: string, newPassword: string) =>
     api.post('/api/settings/account/change-password', { 

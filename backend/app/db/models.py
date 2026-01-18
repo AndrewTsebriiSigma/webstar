@@ -273,6 +273,19 @@ class BlockedUser(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+class EmailChangeRequest(SQLModel, table=True):
+    """Email change verification requests for secure email updates."""
+    __tablename__ = "email_change_requests"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", nullable=False, index=True)
+    new_email: str = Field(nullable=False, index=True)
+    verification_code: str = Field(nullable=False)
+    expires_at: datetime = Field(nullable=False)
+    verified: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
 class Report(SQLModel, table=True):
     """User reports for profiles/content moderation."""
     __tablename__ = "reports"

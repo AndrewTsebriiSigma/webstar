@@ -199,9 +199,14 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     }
   };
 
-  // Determine if attachments are allowed (avoid duplicates)
-  const canAddAudioAttachment = selectedContentType === 'media'; // Only for media, not for audio
-  const canAddPdfAttachment = selectedContentType === 'media'; // Only for media
+  // Attachment availability logic:
+  // - Audio post → PDF attachment allowed, audio disabled  
+  // - PDF post → Audio attachment allowed, PDF disabled
+  // - Memo (text) → All attachments allowed (audio, PDF, photo)
+  // - Media (photo/video) → All attachments allowed
+  const canAddAudioAttachment = selectedContentType === 'text' || selectedContentType === 'media' || selectedContentType === 'pdf';
+  const canAddPdfAttachment = selectedContentType === 'text' || selectedContentType === 'media' || selectedContentType === 'audio';
+  const canAddPhotoAttachment = selectedContentType === 'text' || selectedContentType === 'media';
 
   // Sync state when initialContentType changes
   useEffect(() => {
@@ -1232,8 +1237,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           id="file-upload-edit"
                           accept={
                             selectedContentType === 'media' ? 'image/*,video/*' :
-                            selectedContentType === 'audio' ? 'audio/*' :
-                            selectedContentType === 'pdf' ? 'application/pdf' :
+                            selectedContentType === 'audio' ? 'audio/*,.mp3,.m4a,.aac,.wav,.ogg,.flac,.caf,.aiff' :
+                            selectedContentType === 'pdf' ? 'application/pdf,.pdf' :
                             'image/*,video/*'
                           }
                           onChange={handleFileSelect}
@@ -1269,8 +1274,8 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           id="file-upload"
                           accept={
                             selectedContentType === 'media' ? 'image/*,video/*' :
-                            selectedContentType === 'audio' ? 'audio/*' :
-                            selectedContentType === 'pdf' ? 'application/pdf' :
+                            selectedContentType === 'audio' ? 'audio/*,.mp3,.m4a,.aac,.wav,.ogg,.flac,.caf,.aiff' :
+                            selectedContentType === 'pdf' ? 'application/pdf,.pdf' :
                             'image/*,video/*'
                           }
                           onChange={handleFileSelect}
@@ -1671,14 +1676,14 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     accept="image/*"
                     onChange={handlePhotoAttachment}
                     className="hidden"
-                    disabled={uploading || !canAddAudioAttachment || !!attachmentType}
+                    disabled={uploading || !canAddPhotoAttachment || !!attachmentType}
                   />
                   <label
-                    htmlFor={canAddAudioAttachment && !attachmentType ? "photo-attachment-sticky" : undefined}
+                    htmlFor={canAddPhotoAttachment && !attachmentType ? "photo-attachment-sticky" : undefined}
                     className="transition"
                     style={{ 
-                      opacity: (!canAddAudioAttachment || !!attachmentType) ? 0.3 : 1,
-                      cursor: (canAddAudioAttachment && !attachmentType) ? 'pointer' : 'default'
+                      opacity: (!canAddPhotoAttachment || !!attachmentType) ? 0.3 : 1,
+                      cursor: (canAddPhotoAttachment && !attachmentType) ? 'pointer' : 'default'
                     }}
                   >
                     <svg className="w-[18px] h-[18px]" fill="none" stroke={attachmentType === 'photo' ? '#00C2FF' : 'currentColor'} strokeWidth={2} viewBox="0 0 24 24">
@@ -1690,7 +1695,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                   <input
                     type="file"
                     id="audio-attachment-sticky"
-                    accept="audio/*"
+                    accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.flac,.caf,.aiff"
                     onChange={handleAudioAttachment}
                     className="hidden"
                     disabled={uploading || !canAddAudioAttachment || attachmentType === 'pdf'}
