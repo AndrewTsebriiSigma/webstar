@@ -903,7 +903,7 @@ export default function ProjectDetailModal({
                 textAlign: 'center'
               }}
             >
-              <audio ref={audioRef} src={previewItem.media_url} />
+              <audio ref={audioRef} src={previewItem.media_url} loop />
               
               <div
                 style={{

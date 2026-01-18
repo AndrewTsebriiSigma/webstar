@@ -94,6 +94,7 @@ export default function PortfolioDetailModal({
               <audio
                 src={getContentUrl(item.content_url)}
                 controls
+                loop
                 className="w-full max-w-md"
               >
                 Your browser does not support the audio tag.

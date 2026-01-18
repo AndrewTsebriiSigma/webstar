@@ -232,16 +232,26 @@ export default function FeedModal({
           </button>
         </div>
 
-        {/* Post Counter */}
+        {/* Progress Bar (gradient fill as user scrolls) */}
         <div 
           style={{
-            fontSize: '13px',
-            fontWeight: 600,
-            color: 'rgba(255, 255, 255, 0.5)',
-            textAlign: 'center'
+            width: '100%',
+            height: '3px',
+            background: 'rgba(255, 255, 255, 0.08)',
+            borderRadius: '2px',
+            overflow: 'hidden',
+            marginTop: '4px'
           }}
         >
-          {currentIndex + 1} / {reversedPosts.length}
+          <div 
+            style={{
+              width: `${((currentIndex + 1) / reversedPosts.length) * 100}%`,
+              height: '100%',
+              background: 'linear-gradient(90deg, #00C2FF, #764BA2)',
+              borderRadius: '2px',
+              transition: 'width 0.3s ease-out'
+            }}
+          />
         </div>
       </div>
 
@@ -262,11 +272,10 @@ export default function FeedModal({
             data-index={index}
             className="feed-post-item"
             style={{
-              minHeight: '100vh',
               display: 'flex',
               flexDirection: 'column',
-              padding: '24px 16px',
-              borderBottom: index < reversedPosts.length - 1 ? '1px solid rgba(255, 255, 255, 0.05)' : 'none'
+              padding: '16px 16px 24px',
+              borderBottom: index < reversedPosts.length - 1 ? '1px solid rgba(255, 255, 255, 0.08)' : 'none'
             }}
           >
             {/* Content Display */}
@@ -382,11 +391,15 @@ function FeedPostContent({
           <div 
             style={{
               width: '100%',
-              aspectRatio: '4 / 5',
-              borderRadius: 'var(--radius-lg)',
+              maxHeight: '65vh',
+              borderRadius: '12px',
               overflow: 'hidden',
-              marginBottom: '16px',
-              position: 'relative'
+              marginBottom: '12px',
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(0, 0, 0, 0.2)'
             }}
           >
             {post.content_type === 'photo' && post.content_url ? (
@@ -397,8 +410,8 @@ function FeedPostContent({
                 alt={post.title || 'Post'}
                 style={{
                   width: '100%',
-                  height: '100%',
-                  objectFit: 'cover'
+                  maxHeight: '65vh',
+                  objectFit: 'contain'
                 }}
               />
             ) : post.content_type === 'video' && post.content_url ? (
@@ -414,8 +427,8 @@ function FeedPostContent({
                   onClick={handleVideoClick}
                   style={{
                     width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
+                    maxHeight: '65vh',
+                    objectFit: 'contain',
                     cursor: 'pointer'
                   }}
                 />
@@ -832,7 +845,11 @@ function FeedPostContent({
             {/* PDF Preview Modal */}
             {showPdfModal && post.content_url && (
               <div 
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Clicking backdrop closes PDF modal only
+                  setShowPdfModal(false);
+                }}
                 style={{
                   position: 'fixed',
                   top: 0,
@@ -847,13 +864,16 @@ function FeedPostContent({
                 }}
               >
                 {/* Header */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '16px 20px',
-                  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                }}>
+                <div 
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '16px 20px',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}
+                >
                   <h3 style={{
                     fontSize: '16px',
                     fontWeight: 600,
@@ -888,7 +908,10 @@ function FeedPostContent({
                 </div>
 
                 {/* PDF Viewer */}
-                <div style={{ flex: 1, overflow: 'hidden', padding: '20px' }}>
+                <div 
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ flex: 1, overflow: 'hidden', padding: '20px' }}
+                >
                   <iframe
                     src={pdfUrl}
                     style={{
@@ -918,15 +941,15 @@ function FeedPostContent({
 
       {/* Title & Description */}
       {(post.title || post.description) && (
-        <div style={{ marginBottom: '16px' }}>
+        <div style={{ marginBottom: '12px' }}>
           {post.title && (
             <h2 
               style={{
-                fontSize: '20px',
-                fontWeight: 700,
+                fontSize: '18px',
+                fontWeight: 600,
                 color: '#FFFFFF',
-                marginBottom: '8px',
-                letterSpacing: '-0.5px'
+                marginBottom: '6px',
+                letterSpacing: '-0.3px'
               }}
             >
               {post.title}
@@ -935,9 +958,9 @@ function FeedPostContent({
           {post.description && post.content_type !== 'text' && (
             <p 
               style={{
-                fontSize: '15px',
+                fontSize: '14px',
                 lineHeight: '1.5',
-                color: 'rgba(255, 255, 255, 0.7)'
+                color: 'rgba(255, 255, 255, 0.6)'
               }}
             >
               {post.description}
@@ -948,7 +971,7 @@ function FeedPostContent({
 
       {/* Attachments */}
       {post.attachment_url && post.attachment_type && (
-        <div style={{ marginTop: '16px' }}>
+        <div style={{ marginTop: '12px' }}>
           {post.attachment_type === 'audio' && (
             <div 
               style={{
@@ -997,6 +1020,7 @@ function FeedPostContent({
                 </div>
                 <audio 
                   controls 
+                  loop
                   style={{ 
                     width: '100%', 
                     height: '32px',
@@ -1083,7 +1107,11 @@ function FeedPostContent({
               {/* PDF Attachment Preview Modal */}
               {showAttachmentPdfModal && post.attachment_url && (
                 <div 
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Clicking backdrop closes attachment PDF modal only
+                    setShowAttachmentPdfModal(false);
+                  }}
                   style={{
                     position: 'fixed',
                     top: 0,
@@ -1098,13 +1126,16 @@ function FeedPostContent({
                   }}
                 >
                   {/* Header */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '16px 20px',
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                  }}>
+                  <div 
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '16px 20px',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                    }}
+                  >
                     <h3 style={{
                       fontSize: '16px',
                       fontWeight: 600,
@@ -1139,7 +1170,10 @@ function FeedPostContent({
                   </div>
 
                   {/* PDF Viewer */}
-                  <div style={{ flex: 1, overflow: 'hidden', padding: '20px' }}>
+                  <div 
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ flex: 1, overflow: 'hidden', padding: '20px' }}
+                  >
                     <iframe
                       src={post.attachment_url.startsWith('http') 
                         ? post.attachment_url 

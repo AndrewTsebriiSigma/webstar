@@ -328,7 +328,7 @@ export default function MiniPlayer({
           </button>
         </div>
 
-        <audio ref={audioRef} />
+        <audio ref={audioRef} loop />
       </div>
 
       {/* Mobile Player */}

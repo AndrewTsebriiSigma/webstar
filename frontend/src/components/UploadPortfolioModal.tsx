@@ -1843,7 +1843,11 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
       {/* PDF Preview Popup */}
       {showPdfPopup && attachmentType === 'pdf' && (attachmentFile || existingAttachmentUrl) && (
         <div 
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            // Clicking backdrop closes PDF popup only, not parent modal
+            setShowPdfPopup(false);
+          }}
           style={{
             position: 'fixed',
             top: 0,
@@ -1861,6 +1865,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
         >
           {/* Header */}
           <div 
+            onClick={(e) => e.stopPropagation()}
             style={{
               padding: '16px 20px',
               display: 'flex',
@@ -1904,7 +1909,10 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           </div>
 
           {/* PDF Viewer */}
-          <div style={{ flex: 1, overflow: 'hidden', padding: '20px' }}>
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{ flex: 1, overflow: 'hidden', padding: '20px' }}
+          >
             <iframe
               src={attachmentFile ? URL.createObjectURL(attachmentFile) : existingAttachmentUrl}
               style={{
@@ -1923,7 +1931,11 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
       {/* Photo Preview Popup */}
       {showPhotoPopup && attachmentType === 'photo' && (attachmentFile || existingAttachmentUrl) && (
         <div 
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            // Clicking backdrop closes Photo popup only, not parent modal
+            setShowPhotoPopup(false);
+          }}
           style={{
             position: 'fixed',
             top: 0,
@@ -1941,6 +1953,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
         >
           {/* Header */}
           <div 
+            onClick={(e) => e.stopPropagation()}
             style={{
               padding: '16px 20px',
               display: 'flex',
@@ -1984,14 +1997,17 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           </div>
 
           {/* Photo Viewer */}
-          <div style={{ 
-            flex: 1, 
-            overflow: 'hidden', 
-            padding: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{ 
+              flex: 1, 
+              overflow: 'hidden', 
+              padding: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <img
               src={attachmentBlobUrl || existingAttachmentUrl}
               alt="Photo preview"

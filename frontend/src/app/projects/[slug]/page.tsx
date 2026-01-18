@@ -529,6 +529,7 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
                   src={getMediaUrl(projectMedia[selectedMediaIndex].media_url)}
                   controls
                   autoPlay
+                  loop
                   style={{ width: '300px' }}
                 />
               </div>

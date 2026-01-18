@@ -536,7 +536,7 @@ function AudioDisplay({ item, isActive }: { item: PortfolioItem; isActive?: bool
       </div>
 
       {/* Hidden Audio Element */}
-      <audio ref={audioRef} src={audioUrl} />
+      <audio ref={audioRef} src={audioUrl} loop />
 
       <style jsx>{`
         @keyframes equalizerAnimation {
