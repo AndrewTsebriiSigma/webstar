@@ -2,10 +2,14 @@
 import smtplib
 import random
 import string
+import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 from app.core.config import settings
+
+# Setup proper logging for production visibility
+logger = logging.getLogger(__name__)
 
 
 def generate_verification_code() -> str:
@@ -99,14 +103,16 @@ If you didn't request this code, please ignore this email.
         msg.attach(MIMEText(html, 'html'))
 
         # Connect to Gmail SMTP
+        logger.info(f"Attempting to send verification email to {to_email}")
         with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
             server.starttls()
             server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
             server.sendmail(settings.SMTP_FROM_EMAIL, to_email, msg.as_string())
         
+        logger.info(f"Verification email sent successfully to {to_email}")
         return True
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        logger.error(f"Failed to send verification email to {to_email}: {str(e)}", exc_info=True)
         return False
 
 
@@ -208,12 +214,15 @@ If you didn't request this, please ignore this email. Your password will not be 
         msg.attach(MIMEText(html, 'html'))
 
         # Connect to Gmail SMTP
+        logger.info(f"Attempting to send password reset email to {to_email}")
+        logger.info(f"SMTP Config: host={settings.SMTP_HOST}, port={settings.SMTP_PORT}, user={settings.SMTP_USER}")
         with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
             server.starttls()
             server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
             server.sendmail(settings.SMTP_FROM_EMAIL, to_email, msg.as_string())
         
+        logger.info(f"Password reset email sent successfully to {to_email}")
         return True
     except Exception as e:
-        print(f"Failed to send password reset email: {e}")
+        logger.error(f"Failed to send password reset email to {to_email}: {str(e)}", exc_info=True)
         return False
