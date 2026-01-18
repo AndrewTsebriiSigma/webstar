@@ -14,6 +14,7 @@ interface AudioTrack {
   title: string;
   url: string;
   thumbnail?: string;
+  startTime?: number; // Resume position in seconds
 }
 
 interface MiniPlayerProps {
@@ -24,6 +25,8 @@ interface MiniPlayerProps {
   onThumbnailClick?: () => void;
   isMuted?: boolean;
   onMuteChange?: (muted: boolean) => void;
+  hidden?: boolean; // When true, only audio plays (no visible UI)
+  onPositionChange?: (trackId: number, position: number) => void; // Callback to report current position
 }
 
 export default function MiniPlayer({ 
@@ -33,13 +36,16 @@ export default function MiniPlayer({
   onPrevious,
   onThumbnailClick,
   isMuted = false,
-  onMuteChange
+  onMuteChange,
+  hidden = false,
+  onPositionChange
 }: MiniPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const lastTrackId = useRef<number | null>(null);
 
   // Sync muted state from props
   useEffect(() => {
@@ -48,13 +54,49 @@ export default function MiniPlayer({
     }
   }, [isMuted]);
 
+  // Track previous track for cleanup
+  const prevTrackRef = useRef<typeof track>(null);
+
+  // Save position when track changes or is cleared
   useEffect(() => {
+    // Save position of previous track before switching or clearing
+    if (prevTrackRef.current && audioRef.current && onPositionChange) {
+      // Only save if track is changing or being cleared
+      if (!track || track.id !== prevTrackRef.current.id) {
+        const currentTime = audioRef.current.currentTime;
+        if (currentTime > 0) {
+          onPositionChange(prevTrackRef.current.id, currentTime);
+        }
+      }
+    }
+    
+    prevTrackRef.current = track;
+    
     if (track && audioRef.current) {
+      lastTrackId.current = track.id;
       audioRef.current.src = track.url;
+      
+      // Set start time if resuming from saved position
+      if (track.startTime && track.startTime > 0) {
+        audioRef.current.currentTime = track.startTime;
+      }
+      
       audioRef.current.play();
       setIsPlaying(true);
     }
-  }, [track]);
+  }, [track, onPositionChange]);
+
+  // Cleanup: save position when component unmounts
+  useEffect(() => {
+    return () => {
+      if (audioRef.current && lastTrackId.current && onPositionChange) {
+        const currentTime = audioRef.current.currentTime;
+        if (currentTime > 0) {
+          onPositionChange(lastTrackId.current, currentTime);
+        }
+      }
+    };
+  }, [onPositionChange]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -118,6 +160,11 @@ export default function MiniPlayer({
   };
 
   if (!track) return null;
+
+  // When hidden, only render the audio element (no visible UI)
+  if (hidden) {
+    return <audio ref={audioRef} loop />;
+  }
 
   return (
     <>

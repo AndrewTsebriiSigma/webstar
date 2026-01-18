@@ -10,6 +10,7 @@ interface AudioTrack {
   title: string;
   url: string;
   thumbnail?: string;
+  startTime?: number; // Resume position in seconds
 }
 
 interface FeedModalProps {
@@ -20,7 +21,7 @@ interface FeedModalProps {
   profile?: Profile;
   currentAudioTrack?: AudioTrack | null;
   onAudioTrackChange?: (track: AudioTrack | null) => void;
-  onPlayInMiniPlayer?: (item: PortfolioItem) => void;
+  onPlayInMiniPlayer?: (item: PortfolioItem, showUI?: boolean, startTime?: number) => void;
   isMiniPlayerMuted?: boolean;
   onToggleMiniPlayerMute?: () => void;
 }
@@ -40,9 +41,25 @@ export default function FeedModal({
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
+  
+  // Track playback positions for resume functionality
+  const [playbackPositions, setPlaybackPositions] = useState<Record<number, number>>({});
 
   // Reverse posts order (newest first in feed)
   const reversedPosts = [...posts].reverse();
+  
+  // Handler to save playback position when scrolling away
+  const savePlaybackPosition = (postId: number, position: number) => {
+    setPlaybackPositions(prev => ({
+      ...prev,
+      [postId]: position
+    }));
+  };
+  
+  // Get saved playback position for a post
+  const getPlaybackPosition = (postId: number): number => {
+    return playbackPositions[postId] || 0;
+  };
 
   // Track if initial scroll has been done
   const hasScrolledToInitial = useRef(false);
@@ -292,20 +309,39 @@ export default function FeedModal({
                 onAudioClick={(audioPost) => {
                   // Handle audio click - set the track for mini player
                   if (onAudioTrackChange && audioPost.content_url) {
+                    const startTime = getPlaybackPosition(audioPost.id);
                     onAudioTrackChange({
                       id: audioPost.id,
                       title: audioPost.title || 'Audio Track',
                       url: audioPost.content_url.startsWith('http') 
                         ? audioPost.content_url 
                         : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${audioPost.content_url}`,
-                      thumbnail: audioPost.thumbnail_url || undefined
+                      thumbnail: audioPost.thumbnail_url || undefined,
+                      startTime: startTime
                     });
                   }
                 }}
-                onPlayInMiniPlayer={onPlayInMiniPlayer}
+                onPlayInMiniPlayer={(item, showUI, startTime) => {
+                  // For video, use FeedModal's locally saved position
+                  // For audio, let the page handle it (page tracks audio positions via MiniPlayer)
+                  if (item.content_type === 'video') {
+                    const videoPosition = getPlaybackPosition(item.id);
+                    onPlayInMiniPlayer?.(item, showUI, videoPosition > 0 ? videoPosition : startTime);
+                  } else {
+                    // Audio - don't override, let page use its own saved position
+                    onPlayInMiniPlayer?.(item, showUI, startTime);
+                  }
+                }}
                 currentPlayingTrackId={currentAudioTrack?.id}
                 isMiniPlayerMuted={isMiniPlayerMuted}
                 onToggleMiniPlayerMute={onToggleMiniPlayerMute}
+                onStopAudio={() => {
+                  // Save current audio position before stopping
+                  // The MiniPlayer will provide the current time via a callback
+                  onAudioTrackChange?.(null);
+                }}
+                savedPosition={getPlaybackPosition(post.id)}
+                onSavePosition={savePlaybackPosition}
               />
             </div>
           </div>
@@ -323,15 +359,21 @@ function FeedPostContent({
   onPlayInMiniPlayer,
   currentPlayingTrackId,
   isMiniPlayerMuted,
-  onToggleMiniPlayerMute
+  onToggleMiniPlayerMute,
+  onStopAudio,
+  savedPosition,
+  onSavePosition
 }: { 
   post: PortfolioItem;
   isActive: boolean;
   onAudioClick?: (post: PortfolioItem) => void;
-  onPlayInMiniPlayer?: (post: PortfolioItem) => void;
+  onPlayInMiniPlayer?: (post: PortfolioItem, showUI?: boolean, startTime?: number) => void;
   currentPlayingTrackId?: number;
   isMiniPlayerMuted?: boolean;
   onToggleMiniPlayerMute?: () => void;
+  onStopAudio?: (currentTime?: number) => void;
+  savedPosition?: number;
+  onSavePosition?: (postId: number, position: number) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -340,21 +382,39 @@ function FeedPostContent({
 
   // Check if this post is currently playing in mini-player
   const isCurrentlyPlaying = currentPlayingTrackId === post.id;
-  // Auto-play video when it becomes active (starts muted)
+  
+  // Auto-play video when it becomes active (starts muted), restore position
   useEffect(() => {
     if (post.content_type === 'video' && videoRef.current) {
       if (isActive) {
+        // Restore saved position if available
+        if (savedPosition && savedPosition > 0) {
+          videoRef.current.currentTime = savedPosition;
+        }
         videoRef.current.play().then(() => {
           setIsPlaying(true);
         }).catch(error => {
           console.log('Autoplay prevented:', error);
         });
       } else {
+        // Save current position before pausing
+        if (videoRef.current.currentTime > 0 && onSavePosition) {
+          onSavePosition(post.id, videoRef.current.currentTime);
+        }
         videoRef.current.pause();
         setIsPlaying(false);
       }
     }
-  }, [isActive, post.content_type]);
+  }, [isActive, post.content_type, savedPosition, onSavePosition, post.id]);
+
+  // Stop audio when scrolling away from this post (if this post's audio is playing)
+  // Also save the current position for resuming later
+  useEffect(() => {
+    if (!isActive && isCurrentlyPlaying && onStopAudio) {
+      // The onStopAudio callback will handle saving position
+      onStopAudio();
+    }
+  }, [isActive, isCurrentlyPlaying, onStopAudio]);
 
   const handleVideoClick = () => {
     if (videoRef.current) {
@@ -371,15 +431,21 @@ function FeedPostContent({
   const handleMiniPlayerClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onPlayInMiniPlayer) {
-      onPlayInMiniPlayer(post);
+      // Show mini player UI when "Add to player" is clicked
+      // Pass saved position to resume from where it left off
+      onPlayInMiniPlayer(post, true, savedPosition);
     }
   };
 
   const handleSoundToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Only toggle mute if this track is currently playing in mini-player
     if (isCurrentlyPlaying && onToggleMiniPlayerMute) {
+      // Track is playing - just toggle mute
       onToggleMiniPlayerMute();
+    } else if (onPlayInMiniPlayer) {
+      // Track not playing - play audio WITHOUT showing mini player UI
+      // Pass saved position to resume from where it left off
+      onPlayInMiniPlayer(post, false, savedPosition);
     }
   };
 
@@ -497,7 +563,7 @@ function FeedPostContent({
                       title={isMiniPlayerMuted ? 'Unmute' : 'Mute'}
                     >
                       {isMiniPlayerMuted ? (
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#FF6B6B">
                           <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
                         </svg>
                       ) : (
@@ -972,18 +1038,42 @@ function FeedPostContent({
       {/* Attachments */}
       {post.attachment_url && post.attachment_type && (
         <div style={{ marginTop: '12px' }}>
-          {post.attachment_type === 'audio' && (
+          {post.attachment_type === 'audio' && post.attachment_url && (
             <div 
+              onClick={() => {
+                // Play audio attachment in mini-player by creating a temporary audio item
+                if (onPlayInMiniPlayer && post.attachment_url) {
+                  // Create a modified post object with the attachment as main content
+                  const audioPost: PortfolioItem = {
+                    ...post,
+                    content_type: 'audio',
+                    content_url: post.attachment_url
+                  };
+                  // Show mini player UI when clicking audio attachment
+                  onPlayInMiniPlayer(audioPost, true);
+                }
+              }}
               style={{
-                padding: '16px',
+                padding: '12px 16px',
                 borderRadius: '12px',
                 background: 'rgba(10, 132, 255, 0.08)',
                 border: '1px solid rgba(10, 132, 255, 0.2)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px'
+                gap: '12px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(10, 132, 255, 0.15)';
+                e.currentTarget.style.transform = 'scale(1.02)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(10, 132, 255, 0.08)';
+                e.currentTarget.style.transform = 'scale(1)';
               }}
             >
+              {/* Music Icon Circle */}
               <div style={{
                 width: '40px',
                 height: '40px',
@@ -994,44 +1084,37 @@ function FeedPostContent({
                 justifyContent: 'center',
                 flexShrink: 0
               }}>
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#00C2FF"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 18V5l12-2v13" />
                   <circle cx="6" cy="18" r="3" />
                   <circle cx="18" cy="16" r="3" />
                 </svg>
               </div>
+              
+              {/* Title and Play hint */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: '#FFFFFF',
-                  marginBottom: '4px'
-                }}>
-                  Audio Attachment
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#FFFFFF' }}>
+                  {post.title || 'Audio Attachment'}
                 </div>
-                <audio 
-                  controls 
-                  loop
-                  style={{ 
-                    width: '100%', 
-                    height: '32px',
-                    outline: 'none'
-                  }}
-                  src={post.attachment_url.startsWith('http') 
-                    ? post.attachment_url 
-                    : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${post.attachment_url}`}
-                >
-                  Your browser does not support the audio element.
-                </audio>
+                <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)', marginTop: '2px' }}>
+                  Tap to play
+                </div>
+              </div>
+              
+              {/* Play Button */}
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: '#00C2FF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                  <polygon points="5,3 19,12 5,21" />
+                </svg>
               </div>
             </div>
           )}

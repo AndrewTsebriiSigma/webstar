@@ -16,7 +16,7 @@ interface ContentDisplayProps {
   onClick?: () => void;
   variant?: 'compact' | 'full'; // Add variant prop
   customRadius?: number; // Custom border radius from grid customization
-  onPlayInMiniPlayer?: (item: PortfolioItem) => void; // Callback to spawn mini-player
+  onPlayInMiniPlayer?: (item: PortfolioItem, showUI?: boolean) => void; // Callback to spawn mini-player
   currentPlayingTrackId?: number; // ID of currently playing track in mini-player
   isMiniPlayerMuted?: boolean; // Mute state of mini-player
   onToggleMiniPlayerMute?: () => void; // Callback to toggle mini-player mute
@@ -162,7 +162,7 @@ function AudioDisplayCompact({
 }: { 
   item: PortfolioItem; 
   onClick?: () => void;
-  onPlayInMiniPlayer?: (item: PortfolioItem) => void;
+  onPlayInMiniPlayer?: (item: PortfolioItem, showUI?: boolean) => void;
   currentPlayingTrackId?: number;
   isMiniPlayerMuted?: boolean;
   onToggleMiniPlayerMute?: () => void;
@@ -858,7 +858,7 @@ function VideoDisplay({
 }: { 
   item: PortfolioItem; 
   onClick?: () => void;
-  onPlayInMiniPlayer?: (item: PortfolioItem) => void;
+  onPlayInMiniPlayer?: (item: PortfolioItem, showUI?: boolean) => void;
   currentPlayingTrackId?: number;
   isMiniPlayerMuted?: boolean;
   onToggleMiniPlayerMute?: () => void;

@@ -83,7 +83,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [feedInitialPostId, setFeedInitialPostId] = useState<number | undefined>(undefined);
   const [currentAudioTrack, setCurrentAudioTrack] = useState<any>(null);
-  const [isMiniPlayerMuted, setIsMiniPlayerMuted] = useState(false);
+  const [isMiniPlayerMuted, setIsMiniPlayerMuted] = useState(true); // Default muted (red button)
+  const [showMiniPlayerUI, setShowMiniPlayerUI] = useState(false); // Hide mini player UI by default
+  const [audioPlaybackPositions, setAudioPlaybackPositions] = useState<Record<number, number>>({}); // Track audio positions for resume
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showProjectDetail, setShowProjectDetail] = useState(false);
   const [scrollY, setScrollY] = useState(0);
@@ -423,17 +425,36 @@ export default function ProfilePage({ params }: { params: { username: string } }
   };
 
   // Handle playing media in mini-player (for video/audio)
-  const handlePlayInMiniPlayer = (item: PortfolioItem) => {
+  // showUI: if true, shows the mini player UI; if false, just plays audio without UI
+  // startTime: optional position to resume from (in seconds)
+  const handlePlayInMiniPlayer = (item: PortfolioItem, showUI: boolean = true, startTime?: number) => {
     if (item.content_url) {
+      // Use provided startTime if > 0, otherwise check saved position
+      const resumeTime = (startTime !== undefined && startTime > 0) 
+        ? startTime 
+        : (audioPlaybackPositions[item.id] ?? 0);
+      
       setCurrentAudioTrack({
         id: item.id,
         title: item.title || (item.content_type === 'video' ? 'Video' : 'Audio Track'),
         url: item.content_url.startsWith('http') 
           ? item.content_url 
           : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`,
-        thumbnail: item.thumbnail_url || undefined
+        thumbnail: item.thumbnail_url || undefined,
+        startTime: resumeTime // Pass resume position to MiniPlayer
       });
+      setShowMiniPlayerUI(showUI);
+      // Unmute when playing
+      setIsMiniPlayerMuted(false);
     }
+  };
+  
+  // Callback to save audio position when track is paused/stopped
+  const handleAudioPositionChange = (trackId: number, position: number) => {
+    setAudioPlaybackPositions(prev => ({
+      ...prev,
+      [trackId]: position
+    }));
   };
 
   const loadProfile = async (forceRefresh = false) => {
@@ -1696,19 +1717,19 @@ export default function ProfilePage({ params }: { params: { username: string } }
         </div>
       </div>
 
-      {/* Action Buttons - Only visible in Customize Mode for owner */}
-      {isOwnProfile && showCustomizePanel && (
+      {/* Action Buttons - Visible when buttons exist OR in Customize Mode */}
+      {isOwnProfile && (actionButtons.length > 0 || showCustomizePanel) && (
       <div 
-        className="dashboard-actions-wrapper customize-active"
+        className={`dashboard-actions-wrapper ${showCustomizePanel ? 'customize-active' : ''}`}
                 style={{
           position: 'relative',
-          padding: '12px',
-          marginBottom: '20px',
-          marginLeft: '16px',
-          marginRight: '16px',
-          background: 'rgba(255, 255, 255, 0.02)',
-          border: '1px solid rgba(0, 194, 255, 0.25)',
-          borderRadius: '16px',
+          padding: showCustomizePanel ? '12px' : '0 16px',
+          marginBottom: showCustomizePanel ? '20px' : '12px',
+          marginLeft: showCustomizePanel ? '16px' : '0',
+          marginRight: showCustomizePanel ? '16px' : '0',
+          background: showCustomizePanel ? 'rgba(255, 255, 255, 0.02)' : 'transparent',
+          border: showCustomizePanel ? '1px solid rgba(0, 194, 255, 0.25)' : 'none',
+          borderRadius: showCustomizePanel ? '16px' : '0',
           transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
         }}
       >
@@ -2783,6 +2804,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
         <MiniPlayer
           track={currentAudioTrack}
           onClose={() => setCurrentAudioTrack(null)}
+          onPositionChange={handleAudioPositionChange}
           onThumbnailClick={() => {
             // Open feed modal at the current audio track
             setFeedInitialPostId(currentAudioTrack.id);
@@ -2820,6 +2842,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
           }}
           isMuted={isMiniPlayerMuted}
           onMuteChange={setIsMiniPlayerMuted}
+          hidden={!showMiniPlayerUI}
         />
       )}
 
