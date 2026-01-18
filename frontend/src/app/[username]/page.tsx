@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { profileAPI, portfolioAPI, projectsAPI, economyAPI, analyticsAPI } from '@/lib/api';
 import { Profile, PortfolioItem, Project, PointsBalance, ProfileMetrics } from '@/lib/types';
@@ -51,6 +51,7 @@ interface ActionButton {
 export default function ProfilePage({ params }: { params: { username: string } }) {
   const { username } = params;
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('portfolio');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -378,6 +379,25 @@ export default function ProfilePage({ params }: { params: { username: string } }
       toast.error('Failed to delete project');
     }
   };
+
+  // === HANDLE EDIT PROJECT FROM URL QUERY ===
+  useEffect(() => {
+    const editProjectId = searchParams.get('editProject');
+    
+    if (editProjectId && projects.length > 0 && !editingProject && !showProjectModal) {
+      const projectToEdit = projects.find(p => p.id === parseInt(editProjectId));
+      
+      if (projectToEdit) {
+        setEditingProject(projectToEdit);
+        setShowProjectModal(true);
+        
+        // Clean up the URL (remove query param) without triggering navigation
+        const url = new URL(window.location.href);
+        url.searchParams.delete('editProject');
+        window.history.replaceState({}, '', url.pathname);
+      }
+    }
+  }, [searchParams, projects, editingProject, showProjectModal]);
 
   // === LONG PRESS HANDLER FOR MOBILE ACTION MENU ===
   const handleLongPressStart = (e: React.TouchEvent, item: PortfolioItem) => {
@@ -1476,25 +1496,225 @@ export default function ProfilePage({ params }: { params: { username: string } }
         </div>
       )}
 
-      {/* Action Buttons - Editable in Customize Mode */}
+      {/* Theme Bar Pulse - Connects to dashboard strip with animation */}
       <div 
-        className={`dashboard-actions-wrapper ${isOwnProfile && showCustomizePanel ? 'customize-active' : ''}`}
+        className="theme-bar-pulse"
+        style={{ 
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          width: 'calc((100% - 32px) * 0.92)',
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          overflow: 'hidden',
+          boxSizing: 'border-box',
+          background: isOwnProfile && !viewerMode && showCustomizePanel ? 'rgba(255, 255, 255, 0.03)' : 'transparent',
+          borderLeft: isOwnProfile && !viewerMode && showCustomizePanel ? '1px solid rgba(0, 194, 255, 0.25)' : 'none',
+          borderRight: isOwnProfile && !viewerMode && showCustomizePanel ? '1px solid rgba(0, 194, 255, 0.25)' : 'none',
+          borderBottom: isOwnProfile && !viewerMode && showCustomizePanel ? '1px solid rgba(0, 194, 255, 0.25)' : 'none',
+          borderTop: 'none',
+          borderRadius: '0 0 16px 16px',
+          maxHeight: isOwnProfile && !viewerMode && showCustomizePanel ? '100px' : '0',
+          opacity: isOwnProfile && !viewerMode && showCustomizePanel ? 1 : 0,
+          marginTop: isOwnProfile && !viewerMode && showCustomizePanel ? '-8px' : '0',
+          marginBottom: isOwnProfile && !viewerMode && showCustomizePanel ? '16px' : '0',
+          padding: isOwnProfile && !viewerMode && showCustomizePanel ? '16px 12px 10px' : '0 12px',
+          backdropFilter: isOwnProfile && !viewerMode && showCustomizePanel ? 'blur(20px)' : 'none',
+          WebkitBackdropFilter: isOwnProfile && !viewerMode && showCustomizePanel ? 'blur(20px)' : 'none',
+          transition: 'max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin-top 0.3s ease, margin-bottom 0.3s ease, padding 0.3s ease, background 0.3s ease, border 0.3s ease'
+        }}
+      >
+        {/* Theme Options Row */}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', height: '32px' }}>
+          {/* Dark Button */}
+          <button
+            onClick={() => setProfileTheme('default')}
+            className="theme-btn-dark"
+            style={{
+              flex: 1,
+              height: '32px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '0 10px',
+              border: profileTheme === 'default' ? '1px solid #00C2FF' : '1px solid rgba(255, 255, 255, 0.08)',
+              background: profileTheme === 'default' ? 'rgba(0, 194, 255, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+              transition: 'all 0.15s ease'
+            }}
+            onMouseEnter={(e) => {
+              if (profileTheme !== 'default') {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (profileTheme !== 'default') {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+              }
+            }}
+            onMouseDown={(e) => { e.currentTarget.style.transform = 'scale(0.95)'; }}
+            onMouseUp={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+          >
+            {/* Moon Icon */}
+            <svg 
+              width="14" height="14" viewBox="0 0 24 24" fill="none" 
+              stroke={profileTheme === 'default' ? '#00C2FF' : 'rgba(255, 255, 255, 0.5)'} 
+              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              style={{ transition: 'stroke 0.15s ease' }}
+            >
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+            </svg>
+            <span style={{ 
+              fontSize: '13px', 
+              fontWeight: 600, 
+              letterSpacing: '-0.2px',
+              color: profileTheme === 'default' ? '#00C2FF' : 'rgba(255, 255, 255, 0.5)',
+              transition: 'color 0.15s ease'
+            }}>
+              Dark
+            </span>
+          </button>
+
+          {/* Light Button */}
+          <button
+            onClick={() => setProfileTheme('monochrome')}
+            className="theme-btn-light"
+            style={{
+              flex: 1,
+              height: '32px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '0 10px',
+              border: profileTheme === 'monochrome' ? '1px solid #00C2FF' : '1.5px solid rgba(255, 255, 255, 0.15)',
+              background: profileTheme === 'monochrome' ? 'rgba(0, 194, 255, 0.15)' : '#FFFFFF',
+              transition: 'all 0.15s ease'
+            }}
+            onMouseEnter={(e) => {
+              if (profileTheme !== 'monochrome') {
+                e.currentTarget.style.background = '#FAFAFA';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (profileTheme !== 'monochrome') {
+                e.currentTarget.style.background = '#FFFFFF';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+              }
+            }}
+            onMouseDown={(e) => { e.currentTarget.style.transform = 'scale(0.95)'; }}
+            onMouseUp={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+          >
+            {/* Sun Icon */}
+            <svg 
+              width="14" height="14" viewBox="0 0 24 24" fill="none" 
+              stroke={profileTheme === 'monochrome' ? '#00C2FF' : '#666'} 
+              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              style={{ transition: 'stroke 0.15s ease' }}
+            >
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2" />
+              <path d="M12 20v2" />
+              <path d="m4.93 4.93 1.41 1.41" />
+              <path d="m17.66 17.66 1.41 1.41" />
+              <path d="M2 12h2" />
+              <path d="M20 12h2" />
+              <path d="m6.34 17.66-1.41 1.41" />
+              <path d="m19.07 4.93-1.41 1.41" />
+            </svg>
+            <span style={{ 
+              fontSize: '13px', 
+              fontWeight: 600, 
+              letterSpacing: '-0.2px',
+              color: profileTheme === 'monochrome' ? '#00C2FF' : '#333',
+              transition: 'color 0.15s ease'
+            }}>
+              Light
+            </span>
+          </button>
+
+          {/* Custom Button (Disabled/Coming Soon) */}
+          <button
+            disabled
+            className="theme-btn-custom"
+            style={{
+              flex: '0 0 auto',
+              minWidth: '72px',
+              height: '32px',
+              borderRadius: '8px',
+              cursor: 'not-allowed',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '0 10px',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              background: 'rgba(255, 255, 255, 0.04)',
+              opacity: 0.4,
+              transition: 'all 0.15s ease'
+            }}
+          >
+            {/* Palette Icon */}
+            <svg 
+              width="14" height="14" viewBox="0 0 24 24" fill="none" 
+              stroke="rgba(255, 255, 255, 0.25)" 
+              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            >
+              <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+              <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+              <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+              <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
+            </svg>
+            <span style={{ 
+              fontSize: '13px', 
+              fontWeight: 600, 
+              letterSpacing: '-0.2px',
+              color: 'rgba(255, 255, 255, 0.25)'
+            }}>
+              Custom
+            </span>
+            <span style={{
+              fontSize: '8px',
+              fontWeight: 600,
+              color: 'rgba(255, 255, 255, 0.2)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.3px',
+              marginLeft: '2px'
+            }}>
+              Soon
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Action Buttons - Only visible in Customize Mode for owner */}
+      {isOwnProfile && showCustomizePanel && (
+      <div 
+        className="dashboard-actions-wrapper customize-active"
                 style={{
           position: 'relative',
-          padding: isOwnProfile && showCustomizePanel ? '12px' : '0 16px',
-          marginBottom: isOwnProfile && showCustomizePanel ? '20px' : '12px',
-          marginLeft: isOwnProfile && showCustomizePanel ? '16px' : '0',
-          marginRight: isOwnProfile && showCustomizePanel ? '16px' : '0',
-          background: isOwnProfile && showCustomizePanel ? 'rgba(255, 255, 255, 0.02)' : 'transparent',
-          border: isOwnProfile && showCustomizePanel ? '1px solid rgba(0, 194, 255, 0.25)' : 'none',
-          borderRadius: isOwnProfile && showCustomizePanel ? '16px' : '0',
+          padding: '12px',
+          marginBottom: '20px',
+          marginLeft: '16px',
+          marginRight: '16px',
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid rgba(0, 194, 255, 0.25)',
+          borderRadius: '16px',
           transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
         }}
       >
         {/* Action Buttons Row */}
         <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-          {isOwnProfile ? (
-            // Owner view - dynamic buttons (clickable in customize mode)
+            {/* Owner view - dynamic buttons (clickable in customize mode) */}
             <>
               {/* Empty state placeholder when no buttons and not in customize mode */}
               {actionButtons.length === 0 && !showCustomizePanel && (
@@ -1665,62 +1885,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 Copy Link
               </button>
             </>
-          ) : (
-            // Visitor view - Follow & Copy Link buttons
-            <>
-              <button 
-                onClick={() => {
-                  if (!user) {
-                    // Guest user - redirect to auth with return URL
-                    sessionStorage.setItem('returnAfterAuth', `/${username}`);
-                    router.push('/auth');
-                    return;
-                  }
-                  // TODO: Implement actual follow logic when backend is ready
-                  toast.success(`Following ${profile?.display_name || username}!`);
-                }}
-                className="flex-1 py-2 text-sm bg-cyan-500 hover:bg-cyan-600 rounded-xl font-semibold transition"
-              >
-                Follow
-              </button>
-              <button 
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
-                  toast.success('Profile link copied!');
-                }}
-                className="flex-1 py-2 text-sm rounded-xl font-semibold transition flex items-center justify-center gap-2"
-                style={{ 
-                  background: 'rgba(255, 255, 255, 0.06)', 
-                  border: '1px solid rgba(255, 255, 255, 0.1)' 
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                </svg>
-                Copy Link
-              </button>
-              <button 
-                onClick={() => {
-                  if (!user) {
-                    // Guest user - redirect to auth with return URL
-                    sessionStorage.setItem('returnAfterAuth', `/${username}`);
-                    router.push('/auth');
-                    return;
-                  }
-                  setShowReportModal(true);
-                }}
-                className="w-10 h-10 flex items-center justify-center rounded-xl transition"
-                style={{ 
-                  background: 'rgba(255, 255, 255, 0.05)', 
-                  border: '1px solid rgba(255, 255, 255, 0.1)' 
-                }}
-                title="Report profile"
-              >
-                <FlagIcon style={{ width: '18px', height: '18px', color: 'rgba(255, 255, 255, 0.5)' }} />
-              </button>
-            </>
-          )}
         </div>
 
         {/* Inline Button Editor - appears below when editing a button */}
@@ -1838,6 +2002,63 @@ export default function ProfilePage({ params }: { params: { username: string } }
           </div>
         )}
       </div>
+      )}
+
+      {/* Visitor Action Buttons - Always visible for non-owners */}
+      {!isOwnProfile && (
+        <div style={{ padding: '0 16px', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+            <button 
+              onClick={() => {
+                if (!user) {
+                  sessionStorage.setItem('returnAfterAuth', `/${username}`);
+                  router.push('/auth');
+                  return;
+                }
+                toast.success(`Following ${profile?.display_name || username}!`);
+              }}
+              className="flex-1 py-2 text-sm bg-cyan-500 hover:bg-cyan-600 rounded-xl font-semibold transition"
+            >
+              Follow
+            </button>
+            <button 
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                toast.success('Profile link copied!');
+              }}
+              className="flex-1 py-2 text-sm rounded-xl font-semibold transition flex items-center justify-center gap-2"
+              style={{ 
+                background: 'rgba(255, 255, 255, 0.06)', 
+                border: '1px solid rgba(255, 255, 255, 0.1)' 
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              </svg>
+              Copy Link
+            </button>
+            <button 
+              onClick={() => {
+                if (!user) {
+                  sessionStorage.setItem('returnAfterAuth', `/${username}`);
+                  router.push('/auth');
+                  return;
+                }
+                setShowReportModal(true);
+              }}
+              className="w-10 h-10 flex items-center justify-center rounded-xl transition"
+              style={{ 
+                background: 'rgba(255, 255, 255, 0.05)', 
+                border: '1px solid rgba(255, 255, 255, 0.1)' 
+              }}
+              title="Report profile"
+            >
+              <FlagIcon style={{ width: '18px', height: '18px', color: 'rgba(255, 255, 255, 0.5)' }} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div 
@@ -2061,76 +2282,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       }}
                       className="compact-slider"
                     />
-                  </div>
-                </div>
-                
-                {/* Row 3: Theme Toggle */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '34px' }}>
-                  <span style={{ 
-                    fontSize: '11px', 
-                    fontWeight: 600, 
-                    color: 'rgba(255, 255, 255, 0.4)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.3px',
-                    whiteSpace: 'nowrap'
-                  }}>Theme</span>
-                  
-                  {/* Theme Options */}
-                  <div style={{ display: 'flex', gap: '6px', flex: 1 }}>
-                    <button
-                      onClick={() => setProfileTheme('default')}
-                      style={{
-                        flex: 1,
-                        height: '32px',
-                        background: profileTheme === 'default' ? 'rgba(0, 194, 255, 0.15)' : 'rgba(255, 255, 255, 0.04)',
-                        border: profileTheme === 'default' ? '1px solid #00C2FF' : '1px solid rgba(255, 255, 255, 0.08)',
-                        borderRadius: '8px',
-                        color: profileTheme === 'default' ? '#00C2FF' : 'rgba(255, 255, 255, 0.5)',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      <div style={{ 
-                        width: '12px', 
-                        height: '12px', 
-                        borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #00C2FF, #7B68EE)'
-                      }} />
-                      Color
-                    </button>
-                    <button
-                      onClick={() => setProfileTheme('monochrome')}
-                      style={{
-                        flex: 1,
-                        height: '32px',
-                        background: profileTheme === 'monochrome' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.04)',
-                        border: profileTheme === 'monochrome' ? '1px solid rgba(255, 255, 255, 0.6)' : '1px solid rgba(255, 255, 255, 0.08)',
-                        borderRadius: '8px',
-                        color: profileTheme === 'monochrome' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.5)',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      <div style={{ 
-                        width: '12px', 
-                        height: '12px', 
-                        borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #FFFFFF, #888888)'
-                      }} />
-                      B&W
-                    </button>
                   </div>
                 </div>
               </div>

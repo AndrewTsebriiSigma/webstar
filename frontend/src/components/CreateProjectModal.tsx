@@ -40,16 +40,39 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
 
   // Pre-fill form when editing an existing project
   useEffect(() => {
-    if (editingProject && isOpen) {
-      setEditingProjectId(editingProject.id);
-      setTitle(editingProject.title || '');
-      setDescription(editingProject.description || '');
-      if (editingProject.cover_image) {
-        setCoverPreview(editingProject.cover_image);
+    const loadProjectData = async () => {
+      if (editingProject && isOpen) {
+        setEditingProjectId(editingProject.id);
+        setTitle(editingProject.title || '');
+        setDescription(editingProject.description || '');
+        if (editingProject.cover_image) {
+          setCoverPreview(editingProject.cover_image);
+        }
+        
+        // Load existing project media
+        try {
+          const mediaResponse = await projectsAPI.getProjectMedia(editingProject.id);
+          if (mediaResponse.data && mediaResponse.data.length > 0) {
+            // Transform media items to match the expected format
+            const mediaItems = mediaResponse.data.map((item: any) => ({
+              id: item.id,
+              media_url: item.media_url,
+              content_url: item.media_url,
+              content_type: item.media_type,
+              thumbnail_url: item.thumbnail_url,
+              title: '',
+            }));
+            setProjectMedia(mediaItems);
+          }
+        } catch (error) {
+          console.error('Failed to load project media:', error);
+        }
+      } else if (!editingProject) {
+        setEditingProjectId(null);
+        setProjectMedia([]);
       }
-    } else if (!editingProject) {
-      setEditingProjectId(null);
-    }
+    };
+    loadProjectData();
   }, [editingProject, isOpen]);
 
   // Load user's portfolio items
@@ -254,6 +277,24 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
           description: description.trim() || null,
           cover_image: coverUrl || null,
         });
+        setUploadProgress(80);
+
+        // Add newly added media (items without an existing id from the database)
+        const newMediaItems = projectMedia.filter(media => !media.id || media.isNew);
+        if (newMediaItems.length > 0) {
+          for (const media of newMediaItems) {
+            try {
+              await projectsAPI.addProjectMedia(editingProjectId, {
+                media_url: media.media_url || media.content_url,
+                media_type: media.content_type,
+                thumbnail_url: media.thumbnail_url || null
+              });
+            } catch (error) {
+              console.error('Failed to add media:', error);
+            }
+          }
+        }
+
         setUploadProgress(100);
         toast.success('Project updated! 🎉');
       } else {
@@ -383,7 +424,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
           setProjectMedia(prev => [...prev, {
             content_type: contentType,
             content_url: uploadResponse.data.url,
-            media_url: uploadResponse.data.url
+            media_url: uploadResponse.data.url,
+            isNew: true  // Mark as new so it gets saved when editing
           }]);
           toast.success(`${contentType === 'photo' ? 'Image' : 'Video'} added`);
         } catch (error) {
@@ -402,7 +444,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
       content_type: item.content_type,
       content_url: item.content_url,
       media_url: item.content_url,
-      portfolio_item_id: item.id
+      portfolio_item_id: item.id,
+      isNew: true  // Mark as new so it gets saved when editing
     }));
     setProjectMedia(prev => [...prev, ...newMedia]);
     setSelectedPortfolioIds(new Set());

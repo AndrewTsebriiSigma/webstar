@@ -322,25 +322,11 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
 
         {/* Project Info */}
         <div style={{ marginBottom: '24px' }}>
-          {/* PROJECT badge + Date on same row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+          {/* Date */}
+          <div style={{ marginBottom: '12px' }}>
             <div 
               style={{
-                display: 'inline-block',
-                padding: '4px 10px',
-                borderRadius: '8px',
-                background: 'rgba(139, 92, 246, 0.15)',
-                color: '#A78BFA',
-                fontSize: '11px',
-                fontWeight: 700,
-                letterSpacing: '0.5px'
-              }}
-            >
-              PROJECT
-            </div>
-            <div 
-              style={{
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
                 gap: '5px',
                 padding: '4px 10px',
