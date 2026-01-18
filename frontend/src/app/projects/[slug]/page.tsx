@@ -1,14 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { XMarkIcon, PlayIcon, MusicalNoteIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, PlayIcon, MusicalNoteIcon, ArrowLeftIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Project, ProjectMedia } from '@/lib/types';
 import { projectsAPI } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
+import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 export default function ProjectPage({ params }: { params: { slug: string } }) {
   const router = useRouter();
+  const { user } = useAuth();
   const { slug } = params;
   
   const [project, setProject] = useState<Project | null>(null);
@@ -16,9 +19,17 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState<number | null>(null);
+  
+  // Menu states
+  const [showMenu, setShowMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // Decode slug to get project title (replace hyphens with spaces)
   const projectTitle = decodeURIComponent(slug).replace(/-/g, ' ');
+  
+  // Check if current user owns this project
+  const isOwner = user && project && user.id === project.user_id;
 
   useEffect(() => {
     const loadProject = async () => {
@@ -55,8 +66,51 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
     loadProject();
   }, [slug]);
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMenu]);
+
   const handleBack = () => {
     router.back();
+  };
+
+  const handleEdit = () => {
+    setShowMenu(false);
+    // Navigate to edit or open edit modal
+    // For now, we'll redirect to the profile page where they can edit
+    if (project) {
+      // Store editing intent and redirect
+      sessionStorage.setItem('editProjectId', project.id.toString());
+      router.push(`/${user?.username}?editProject=${project.id}`);
+    }
+  };
+
+  const handleDeleteClick = () => {
+    setShowMenu(false);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!project) return;
+    
+    try {
+      await projectsAPI.deleteProject(project.id);
+      toast.success('Project deleted');
+      setShowDeleteConfirm(false);
+      router.back();
+    } catch (err) {
+      console.error('Failed to delete project:', err);
+      toast.error('Failed to delete project');
+    }
   };
 
   if (loading) {
@@ -140,6 +194,103 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
           <h1 style={{ fontSize: '17px', fontWeight: 600, color: '#FFF', flex: 1 }}>
             {project.title}
           </h1>
+          
+          {/* Three-dot menu (owner only) */}
+          {isOwner && (
+            <div ref={menuRef} style={{ position: 'relative' }}>
+              <button
+                onClick={() => setShowMenu(!showMenu)}
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  background: showMenu ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'background 150ms'
+                }}
+              >
+                <EllipsisVerticalIcon className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+              </button>
+
+              {/* Dropdown Menu */}
+              {showMenu && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    marginTop: '8px',
+                    background: 'rgba(30, 30, 30, 0.98)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                    overflow: 'hidden',
+                    minWidth: '140px',
+                    zIndex: 100
+                  }}
+                >
+                  <button
+                    onClick={handleEdit}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      background: 'transparent',
+                      border: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      cursor: 'pointer',
+                      color: '#FFFFFF',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      transition: 'background 150ms'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                    }}
+                  >
+                    <PencilIcon className="w-4 h-4" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={handleDeleteClick}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      background: 'transparent',
+                      border: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      cursor: 'pointer',
+                      color: '#FF453A',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      transition: 'background 150ms'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 69, 58, 0.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                    }}
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </header>
 
@@ -171,20 +322,43 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
 
         {/* Project Info */}
         <div style={{ marginBottom: '24px' }}>
-          <div 
-            style={{
-              display: 'inline-block',
-              padding: '4px 10px',
-              borderRadius: '8px',
-              background: 'rgba(139, 92, 246, 0.15)',
-              color: '#A78BFA',
-              fontSize: '11px',
-              fontWeight: 700,
-              letterSpacing: '0.5px',
-              marginBottom: '12px'
-            }}
-          >
-            PROJECT
+          {/* PROJECT badge + Date on same row */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div 
+              style={{
+                display: 'inline-block',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                background: 'rgba(139, 92, 246, 0.15)',
+                color: '#A78BFA',
+                fontSize: '11px',
+                fontWeight: 700,
+                letterSpacing: '0.5px'
+              }}
+            >
+              PROJECT
+            </div>
+            <div 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '4px 10px',
+                background: 'rgba(255, 255, 255, 0.04)',
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 255, 255, 0.08)'
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              <span style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(255,255,255,0.5)' }}>
+                {new Date(project.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+              </span>
+            </div>
           </div>
           
           <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#FFF', marginBottom: '12px' }}>
@@ -201,60 +375,6 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
               {project.description}
             </p>
           )}
-        </div>
-
-        {/* Stats - Clean pill design */}
-        <div 
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            marginBottom: '24px',
-            flexWrap: 'wrap'
-          }}
-        >
-          <div 
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 14px',
-              background: 'rgba(0, 194, 255, 0.1)',
-              borderRadius: '100px',
-              border: '1px solid rgba(0, 194, 255, 0.2)'
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" strokeWidth="2">
-              <rect x="3" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="3" width="7" height="7" rx="1" />
-              <rect x="3" y="14" width="7" height="7" rx="1" />
-              <rect x="14" y="14" width="7" height="7" rx="1" />
-            </svg>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: '#00C2FF' }}>
-              {projectMedia.length || project.media_count || 0} items
-            </span>
-          </div>
-          <div 
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 14px',
-              background: 'rgba(255, 255, 255, 0.04)',
-              borderRadius: '100px',
-              border: '1px solid rgba(255, 255, 255, 0.08)'
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-            </svg>
-            <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(255,255,255,0.6)' }}>
-              {new Date(project.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-            </span>
-          </div>
         </div>
 
         {/* Tags */}
@@ -286,7 +406,7 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
         {projectMedia.length > 0 && (
           <div>
             <div style={{ fontSize: '12px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.4)', marginBottom: '12px' }}>
-              Project Media
+              Gallery
             </div>
             <div 
               style={{
@@ -419,6 +539,102 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
                 style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: '12px', objectFit: 'contain' }}
               />
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center"
+          style={{
+            background: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            padding: '20px'
+          }}
+          onClick={() => setShowDeleteConfirm(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'rgba(30, 30, 30, 0.98)',
+              borderRadius: '16px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              padding: '24px',
+              maxWidth: '320px',
+              width: '100%',
+              textAlign: 'center'
+            }}
+          >
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                background: 'rgba(255, 69, 58, 0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px'
+              }}
+            >
+              <TrashIcon className="w-6 h-6" style={{ color: '#FF453A' }} />
+            </div>
+            <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#FFFFFF', marginBottom: '8px' }}>
+              Delete Project?
+            </h3>
+            <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '24px' }}>
+              This action cannot be undone. All media in this project will be permanently deleted.
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  background: 'transparent',
+                  color: '#FFFFFF',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'background 150ms'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: '#FF453A',
+                  color: '#FFFFFF',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'opacity 150ms'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = '0.85';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = '1';
+                }}
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -47,8 +47,36 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string>(''); // For PDF file preview
   const [isPdfPreview, setIsPdfPreview] = useState(false); // Track if preview is PDF
   
-  // Progress display - using uploadProgress directly (animation disabled for debugging)
-  const displayProgress = uploadProgress;
+  // Animated progress display with spring effect
+  const [displayProgress, setDisplayProgress] = useState(0);
+  const animationFrameRef = useRef<number | null>(null);
+  
+  // Spring animation for progress number
+  useEffect(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    
+    const animateProgress = () => {
+      setDisplayProgress(prev => {
+        const diff = uploadProgress - prev;
+        // Spring-like easing: faster when far, slower when close
+        const step = diff * 0.15;
+        if (Math.abs(diff) < 0.5) return uploadProgress;
+        return prev + step;
+      });
+      animationFrameRef.current = requestAnimationFrame(animateProgress);
+    };
+    
+    animationFrameRef.current = requestAnimationFrame(animateProgress);
+    
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [uploadProgress]);
+  
   const attachmentNameRef = useRef<HTMLInputElement>(null);
   
   const [description, setDescription] = useState('');
@@ -905,7 +933,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Upload overlay - circular progress with smooth animated percentage */}
+        {/* Upload overlay - continuous spinner with spring-animated percentage */}
         {uploading && (
           <div 
             className="absolute inset-0 z-20 flex flex-col items-center justify-center"
@@ -914,32 +942,93 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               borderRadius: '16px',
             }}
           >
-            <div className="relative">
-              {/* Circular progress - uses displayProgress for smooth animation */}
-              <div 
-                className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{
-                  background: `conic-gradient(#00C2FF ${displayProgress * 3.6}deg, rgba(255,255,255,0.08) 0deg)`,
-                  transition: 'background 0.1s ease-out',
+            <div className="relative" style={{ width: '80px', height: '80px' }}>
+              {/* Outer spinning ring - always rotates */}
+              <svg 
+                viewBox="0 0 80 80" 
+                style={{ 
+                  position: 'absolute',
+                  width: '100%',
+                  height: '100%',
+                  animation: 'spinContinuous 1.2s linear infinite'
                 }}
               >
-                <div 
-                  className="w-12 h-12 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(20, 20, 20, 1)' }}
-                >
-                  {displayProgress >= 85 ? (
-                    <svg className="w-5 h-5 text-cyan-400 animate-pulse" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
-                    </svg>
-                  ) : null}
-                </div>
+                <defs>
+                  <linearGradient id="spinnerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#00C2FF" stopOpacity="1"/>
+                    <stop offset="100%" stopColor="#00C2FF" stopOpacity="0"/>
+                  </linearGradient>
+                </defs>
+                <circle 
+                  cx="40" 
+                  cy="40" 
+                  r="35" 
+                  fill="none" 
+                  stroke="url(#spinnerGradient)"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeDasharray="180 220"
+                />
+              </svg>
+              
+              {/* Progress arc - fills based on progress */}
+              <svg 
+                viewBox="0 0 80 80" 
+                style={{ 
+                  position: 'absolute',
+                  width: '100%',
+                  height: '100%',
+                  transform: 'rotate(-90deg)'
+                }}
+              >
+                <circle 
+                  cx="40" 
+                  cy="40" 
+                  r="30" 
+                  fill="none" 
+                  stroke="rgba(255, 255, 255, 0.06)"
+                  strokeWidth="3"
+                />
+                <circle 
+                  cx="40" 
+                  cy="40" 
+                  r="30" 
+                  fill="none" 
+                  stroke="#00C2FF"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeDasharray={`${(Math.round(displayProgress) / 100) * 188.5} 188.5`}
+                  style={{ transition: 'stroke-dasharray 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+                />
+              </svg>
+              
+              {/* Center content */}
+              <div style={{
+                position: 'absolute',
+                inset: '15px',
+                borderRadius: '50%',
+                background: 'rgba(20, 20, 20, 1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                {displayProgress >= 85 ? (
+                  <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" style={{ animation: 'pulse 1.5s ease-in-out infinite' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                  </svg>
+                ) : null}
               </div>
             </div>
+            
+            {/* Animated percentage with spring effect */}
             <p 
-              className="mt-5 text-white/80 text-lg font-medium"
-              style={{ fontVariantNumeric: 'tabular-nums' }}
+              className="mt-5 text-white/80 text-2xl font-semibold"
+              style={{ 
+                fontVariantNumeric: 'tabular-nums',
+                transition: 'transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)'
+              }}
             >
-              {displayProgress}%
+              {Math.round(displayProgress)}%
             </p>
             <p 
               className="mt-2 text-white/40 text-sm"
@@ -957,6 +1046,18 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 This may take a moment for larger files
               </p>
             )}
+            
+            {/* CSS Animations */}
+            <style jsx>{`
+              @keyframes spinContinuous {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+              }
+              @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.4; }
+              }
+            `}</style>
           </div>
         )}
 

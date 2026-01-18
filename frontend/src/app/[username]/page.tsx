@@ -65,6 +65,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedPostType, setSelectedPostType] = useState<'media' | 'audio' | 'pdf' | 'text' | null>(null);
   const [showProjectModal, setShowProjectModal] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showEditAboutModal, setShowEditAboutModal] = useState(false);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
@@ -104,6 +105,16 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [showSizePicker, setShowSizePicker] = useState(false);
   const [selectedItemForResize, setSelectedItemForResize] = useState<PortfolioItem | null>(null);
   const [sizePickerPosition, setSizePickerPosition] = useState({ x: 0, y: 0 });
+  
+  // Drag & drop state for portfolio reordering
+  const [draggedItemId, setDraggedItemId] = useState<number | null>(null);
+  const [dragOverItemId, setDragOverItemId] = useState<number | null>(null);
+  const [isDraggingPortfolio, setIsDraggingPortfolio] = useState(false);
+  
+  // Action menu state (for mobile long-press / desktop hover)
+  const [showActionMenu, setShowActionMenu] = useState<number | null>(null);
+  const [actionMenuPosition, setActionMenuPosition] = useState({ x: 0, y: 0 });
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Action buttons customization state - empty by default, users add their own
   const [actionButtons, setActionButtons] = useState<ActionButton[]>([]);
@@ -275,6 +286,120 @@ export default function ProfilePage({ params }: { params: { username: string } }
     
     setShowSizePicker(false);
     setSelectedItemForResize(null);
+  };
+
+  // === DRAG & DROP HANDLERS FOR PORTFOLIO REORDERING ===
+  const handlePortfolioDragStart = (e: React.DragEvent, itemId: number) => {
+    if (!showCustomizePanel || !isOwnProfile) return;
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggedItemId(itemId);
+    setIsDraggingPortfolio(true);
+    // Add visual feedback
+    const target = e.currentTarget as HTMLElement;
+    target.style.opacity = '0.5';
+  };
+
+  const handlePortfolioDragEnd = (e: React.DragEvent) => {
+    const target = e.currentTarget as HTMLElement;
+    target.style.opacity = '1';
+    setDraggedItemId(null);
+    setDragOverItemId(null);
+    setIsDraggingPortfolio(false);
+  };
+
+  const handlePortfolioDragOver = (e: React.DragEvent, itemId: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (draggedItemId && draggedItemId !== itemId) {
+      setDragOverItemId(itemId);
+    }
+  };
+
+  const handlePortfolioDragLeave = () => {
+    setDragOverItemId(null);
+  };
+
+  const handlePortfolioDrop = async (e: React.DragEvent, targetItemId: number) => {
+    e.preventDefault();
+    if (!draggedItemId || draggedItemId === targetItemId) return;
+
+    // Find the actual indexes in portfolioItems array
+    const draggedIndex = portfolioItems.findIndex(item => item.id === draggedItemId);
+    const targetIndex = portfolioItems.findIndex(item => item.id === targetItemId);
+
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    // Create new array and swap the items at their positions
+    const newItems = [...portfolioItems];
+    [newItems[draggedIndex], newItems[targetIndex]] = [newItems[targetIndex], newItems[draggedIndex]];
+
+    // Update local state immediately for smooth UX
+    setPortfolioItems(newItems);
+    
+    toast.success('Position swapped!');
+    
+    // Clear drag state
+    setDraggedItemId(null);
+    setDragOverItemId(null);
+    setIsDraggingPortfolio(false);
+    
+    // TODO: Optionally save new order to backend
+    // await portfolioAPI.reorderItems(newItems.map(item => item.id));
+  };
+
+  // === DELETE PORTFOLIO ITEM ===
+  const handleDeleteItem = async (itemId: number) => {
+    try {
+      await portfolioAPI.deleteItem(itemId);
+      setPortfolioItems(prev => prev.filter(item => item.id !== itemId));
+      toast.success('Item deleted');
+      setShowActionMenu(null);
+    } catch (error) {
+      console.error('Failed to delete item:', error);
+      toast.error('Failed to delete item');
+    }
+  };
+
+  // === PROJECT HANDLERS ===
+  const handleEditProject = (project: Project) => {
+    setEditingProject(project);
+    setShowProjectDetail(false);
+    setSelectedProject(null);
+    setShowProjectModal(true);
+  };
+
+  const handleDeleteProject = async (projectId: number) => {
+    try {
+      await projectsAPI.deleteProject(projectId);
+      setProjects(prev => prev.filter(p => p.id !== projectId));
+      toast.success('Project deleted');
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+      toast.error('Failed to delete project');
+    }
+  };
+
+  // === LONG PRESS HANDLER FOR MOBILE ACTION MENU ===
+  const handleLongPressStart = (e: React.TouchEvent, item: PortfolioItem) => {
+    if (!showCustomizePanel || !isOwnProfile) return;
+    
+    const touch = e.touches[0];
+    longPressTimerRef.current = setTimeout(() => {
+      setShowActionMenu(item.id);
+      setActionMenuPosition({ 
+        x: Math.min(touch.clientX, window.innerWidth - 160),
+        y: Math.min(touch.clientY, window.innerHeight - 120)
+      });
+      // Haptic feedback if available
+      if (navigator.vibrate) navigator.vibrate(50);
+    }, 500);
+  };
+
+  const handleLongPressEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
   };
 
   // Handle playing media in mini-player (for video/audio)
@@ -2049,12 +2174,33 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   return (
                   <div 
                     key={item.id} 
-                      className={`portfolio-grid-item ${showCustomizePanel && isOwnProfile ? 'customize-mode' : ''} ${selectedItemForResize?.id === item.id ? 'selected-for-resize' : ''}`}
-                    onClick={() => {
-                        // Only open feed modal if not in customize mode or if click wasn't a right-click
-                        if (!showCustomizePanel) {
-                      setFeedInitialPostId(item.id);
-                      setShowFeedModal(true);
+                      className={`portfolio-grid-item ${showCustomizePanel && isOwnProfile ? 'customize-mode' : ''} ${selectedItemForResize?.id === item.id ? 'selected-for-resize' : ''} ${dragOverItemId === item.id ? 'drag-over' : ''}`}
+                      // Drag & drop handlers (customize mode only)
+                      draggable={showCustomizePanel && isOwnProfile}
+                      onDragStart={(e) => handlePortfolioDragStart(e, item.id)}
+                      onDragEnd={handlePortfolioDragEnd}
+                      onDragOver={(e) => handlePortfolioDragOver(e, item.id)}
+                      onDragLeave={handlePortfolioDragLeave}
+                      onDrop={(e) => handlePortfolioDrop(e, item.id)}
+                      // Touch handlers for mobile
+                      onTouchStart={(e) => handleLongPressStart(e, item)}
+                      onTouchEnd={handleLongPressEnd}
+                      onTouchMove={handleLongPressEnd}
+                    onClick={(e) => {
+                        if (showCustomizePanel && isOwnProfile) {
+                          // In customize mode: show size picker on click
+                          e.stopPropagation();
+                          setSelectedItemForResize(item);
+                          setShowSizePicker(true);
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setSizePickerPosition({ 
+                            x: Math.min(rect.left + rect.width / 2 - 90, window.innerWidth - 180), 
+                            y: Math.min(rect.bottom + 8, window.innerHeight - 200)
+                          });
+                        } else if (!showActionMenu) {
+                          // Normal mode: open feed modal
+                          setFeedInitialPostId(item.id);
+                          setShowFeedModal(true);
                         }
                       }}
                       onContextMenu={(e) => handleItemContextMenu(e, item)}
@@ -2067,13 +2213,18 @@ export default function ProfilePage({ params }: { params: { username: string } }
                         // Grid mode: use aspectRatio CSS for clean rendering
                         // Masonry mode: height controlled by gridRow span only
                         aspectRatio: layoutMode === 'uniform' ? displayRatio : undefined,
-                        cursor: showCustomizePanel && isOwnProfile ? 'context-menu' : 'pointer',
-                        transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                        cursor: showCustomizePanel && isOwnProfile ? 'grab' : 'pointer',
+                        // Spring animation for aspect ratio changes (Apple-style)
+                        transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s ease',
                         border: selectedItemForResize?.id === item.id 
                           ? '2px solid #00C2FF' 
-                          : showCustomizePanel && isOwnProfile 
-                            ? '1px solid rgba(0, 194, 255, 0.3)' 
-                            : 'none'
+                          : dragOverItemId === item.id
+                            ? '2px dashed #00C2FF'
+                            : showCustomizePanel && isOwnProfile 
+                              ? '1px solid rgba(0, 194, 255, 0.3)' 
+                              : 'none',
+                        transform: dragOverItemId === item.id ? 'scale(1.03)' : draggedItemId === item.id ? 'scale(0.95)' : 'scale(1)',
+                        boxShadow: dragOverItemId === item.id ? '0 0 20px rgba(0, 194, 255, 0.4)' : 'none'
                     }}
                   >
                     <ContentDisplay 
@@ -2087,25 +2238,34 @@ export default function ProfilePage({ params }: { params: { username: string } }
                         onToggleMiniPlayerMute={() => setIsMiniPlayerMuted(!isMiniPlayerMuted)}
                       />
                       
-                      {/* Customize mode corner indicators */}
+                      {/* Customize mode overlay - drag handle and size badge */}
                       {showCustomizePanel && isOwnProfile && (
                         <>
-                          <div className="customize-indicator" style={{ position: 'absolute', top: '6px', left: '6px', width: '8px', height: '8px', background: 'rgba(0, 194, 255, 0.6)', borderRadius: '50%', pointerEvents: 'none' }} />
-                          <div className="customize-indicator" style={{ position: 'absolute', top: '6px', right: '6px', width: '8px', height: '8px', background: 'rgba(0, 194, 255, 0.6)', borderRadius: '50%', pointerEvents: 'none' }} />
-                          <div className="customize-indicator" style={{ position: 'absolute', bottom: '6px', left: '6px', width: '8px', height: '8px', background: 'rgba(0, 194, 255, 0.6)', borderRadius: '50%', pointerEvents: 'none' }} />
-                          <div className="customize-indicator" style={{ position: 'absolute', bottom: '6px', right: '6px', width: '8px', height: '8px', background: 'rgba(0, 194, 255, 0.6)', borderRadius: '50%', pointerEvents: 'none' }} />
+                          {/* Drag handle indicator at top */}
+                          <div style={{
+                            position: 'absolute',
+                            top: '8px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            width: '40px',
+                            height: '4px',
+                            background: 'rgba(0, 194, 255, 0.6)',
+                            borderRadius: '2px',
+                            cursor: 'grab',
+                            pointerEvents: 'none'
+                          }} />
                           
                           {/* Size badge showing current aspect ratio */}
                           <div style={{
                             position: 'absolute',
-                            bottom: '6px',
+                            bottom: '8px',
                             left: '50%',
                             transform: 'translateX(-50%)',
                             background: 'rgba(0, 0, 0, 0.7)',
                             backdropFilter: 'blur(8px)',
-                            padding: '2px 8px',
-                            borderRadius: '10px',
-                            fontSize: '10px',
+                            padding: '4px 10px',
+                            borderRadius: '12px',
+                            fontSize: '11px',
                             fontWeight: 600,
                             color: '#00C2FF',
                             pointerEvents: 'none'
@@ -2389,8 +2549,15 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
       <CreateProjectModal
         isOpen={showProjectModal}
-        onClose={() => setShowProjectModal(false)}
-        onSuccess={() => loadProfile(true)}
+        onClose={() => {
+          setShowProjectModal(false);
+          setEditingProject(null);
+        }}
+        onSuccess={() => {
+          loadProfile(true);
+          setEditingProject(null);
+        }}
+        editingProject={editingProject}
       />
 
       <SettingsModal
@@ -2455,6 +2622,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
           setSelectedProject(null);
         }}
         project={selectedProject}
+        isOwnProfile={isOwnProfile}
+        onEdit={handleEditProject}
+        onDelete={handleDeleteProject}
       />
 
       {/* Mini Audio Player - Persistent at page level */}
@@ -2804,6 +2974,37 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 </svg>
               </button>
             </div>
+            
+            {/* Delete button - below size grid */}
+            <button
+              onClick={() => {
+                if (selectedItemForResize && confirm('Delete this item?')) {
+                  handleDeleteItem(selectedItemForResize.id);
+                  setShowSizePicker(false);
+                  setSelectedItemForResize(null);
+                }
+              }}
+              style={{
+                width: '100%',
+                marginTop: '8px',
+                padding: '10px',
+                background: 'rgba(255, 59, 48, 0.15)',
+                border: '1px solid rgba(255, 59, 48, 0.3)',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                color: '#FF3B30',
+                fontSize: '13px',
+                fontWeight: 500
+              }}
+            >
+              <TrashIcon className="w-4 h-4" />
+              Delete
+            </button>
           </div>
           
           {/* CSS Animation */}
@@ -2812,6 +3013,109 @@ export default function ProfilePage({ params }: { params: { username: string } }
               from {
                 opacity: 0;
                 transform: scale(0.9);
+              }
+              to {
+                opacity: 1;
+                transform: scale(1);
+              }
+            }
+          `}</style>
+        </>
+      )}
+
+      {/* Mobile Action Menu (Long Press) */}
+      {showActionMenu && (
+        <>
+          {/* Backdrop */}
+          <div 
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 998
+            }}
+            onClick={() => setShowActionMenu(null)}
+          />
+          
+          {/* Action Menu */}
+          <div 
+            style={{
+              position: 'fixed',
+              left: `${actionMenuPosition.x}px`,
+              top: `${actionMenuPosition.y}px`,
+              zIndex: 1000,
+              background: 'rgba(40, 40, 42, 0.98)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              borderRadius: '14px',
+              overflow: 'hidden',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+              minWidth: '140px',
+              animation: 'actionMenuPop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)'
+            }}
+          >
+            {/* Resize option */}
+            <button
+              onClick={() => {
+                const item = portfolioItems.find(p => p.id === showActionMenu);
+                if (item) {
+                  handleItemContextMenu({ preventDefault: () => {}, stopPropagation: () => {}, currentTarget: { getBoundingClientRect: () => ({ left: actionMenuPosition.x, bottom: actionMenuPosition.y }) } } as any, item);
+                }
+                setShowActionMenu(null);
+              }}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                background: 'transparent',
+                border: 'none',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                cursor: 'pointer',
+                color: 'white',
+                fontSize: '14px'
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" strokeWidth="2">
+                <path d="M21 21l-6-6m6 6v-4.8m0 4.8h-4.8"/>
+                <path d="M3 16.2V21h4.8"/>
+                <path d="M21 7.8V3h-4.8"/>
+                <path d="M3 3l6 6m-6-6v4.8M3 3h4.8"/>
+              </svg>
+              Resize
+            </button>
+            
+            {/* Delete option */}
+            <button
+              onClick={() => {
+                if (showActionMenu && confirm('Delete this item?')) {
+                  handleDeleteItem(showActionMenu);
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                background: 'transparent',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                cursor: 'pointer',
+                color: '#FF453A',
+                fontSize: '14px'
+              }}
+            >
+              <TrashIcon className="w-4 h-4" />
+              Delete
+            </button>
+          </div>
+          
+          <style jsx>{`
+            @keyframes actionMenuPop {
+              from {
+                opacity: 0;
+                transform: scale(0.8);
               }
               to {
                 opacity: 1;

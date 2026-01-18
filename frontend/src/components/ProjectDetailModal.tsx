@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { XMarkIcon, PlayIcon, MusicalNoteIcon } from '@heroicons/react/24/outline';
+import { useState, useEffect, useRef } from 'react';
+import { XMarkIcon, PlayIcon, MusicalNoteIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Project } from '@/lib/types';
 import { projectsAPI } from '@/lib/api';
 
@@ -9,17 +9,33 @@ interface ProjectDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   project: Project | null;
+  isOwnProfile?: boolean;
+  onEdit?: (project: Project) => void;
+  onDelete?: (projectId: number) => void;
 }
 
 export default function ProjectDetailModal({
   isOpen,
   onClose,
-  project
+  project,
+  isOwnProfile = false,
+  onEdit,
+  onDelete
 }: ProjectDetailModalProps) {
   const [projectMedia, setProjectMedia] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  
+  // Preview states
+  const [previewItem, setPreviewItem] = useState<any | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioProgress, setAudioProgress] = useState(0);
 
   useEffect(() => {
     if (isOpen) {
@@ -65,6 +81,91 @@ export default function ProjectDetailModal({
 
     loadProjectMedia();
   }, [project, isOpen]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMenu]);
+
+  // Handle audio progress
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    
+    const updateProgress = () => {
+      if (audio.duration) {
+        setAudioProgress((audio.currentTime / audio.duration) * 100);
+      }
+    };
+    
+    audio.addEventListener('timeupdate', updateProgress);
+    audio.addEventListener('ended', () => setIsPlaying(false));
+    
+    return () => {
+      audio.removeEventListener('timeupdate', updateProgress);
+      audio.removeEventListener('ended', () => setIsPlaying(false));
+    };
+  }, [previewItem]);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const handleEdit = () => {
+    setShowMenu(false);
+    if (project && onEdit) {
+      onEdit(project);
+    }
+  };
+
+  const handleDeleteClick = () => {
+    setShowMenu(false);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (project && onDelete) {
+      onDelete(project.id);
+      setShowDeleteConfirm(false);
+      handleClose();
+    }
+  };
+
+  const openPreview = (media: any) => {
+    setPreviewItem(media);
+    setShowPreview(true);
+    setIsPlaying(false);
+    setAudioProgress(0);
+  };
+
+  const closePreview = () => {
+    setShowPreview(false);
+    setPreviewItem(null);
+    setIsPlaying(false);
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+  };
+
+  const toggleAudio = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
 
   const handleClose = () => {
     setIsClosing(true);
@@ -149,6 +250,110 @@ export default function ProjectDetailModal({
         >
           {project.title}
         </h2>
+
+        {/* Three-dot menu (owner only) */}
+        {isOwnProfile && (
+          <div ref={menuRef} style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              style={{
+                width: '32px',
+                height: '32px',
+                background: 'transparent',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                flexShrink: 0,
+                transition: 'opacity 150ms',
+                opacity: 0.7
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.opacity = '1';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.opacity = '0.7';
+              }}
+            >
+              <EllipsisVerticalIcon className="w-[22px] h-[22px] text-white" />
+            </button>
+
+            {/* Dropdown Menu */}
+            {showMenu && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  marginTop: '8px',
+                  background: 'rgba(30, 30, 30, 0.98)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                  overflow: 'hidden',
+                  minWidth: '140px',
+                  zIndex: 100
+                }}
+              >
+                <button
+                  onClick={handleEdit}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: 'transparent',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    cursor: 'pointer',
+                    color: '#FFFFFF',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    transition: 'background 150ms'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  <PencilIcon className="w-4 h-4" />
+                  Edit
+                </button>
+                <button
+                  onClick={handleDeleteClick}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: 'transparent',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    cursor: 'pointer',
+                    color: '#FF453A',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    transition: 'background 150ms'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 69, 58, 0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  <TrashIcon className="w-4 h-4" />
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Scrollable Content - Full page, matching UploadPortfolioModal */}
@@ -202,6 +407,20 @@ export default function ProjectDetailModal({
               >
                 {project.title}
               </h1>
+            </div>
+            {/* Date - small, right corner */}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '12px',
+                right: '16px',
+                fontSize: '11px',
+                fontWeight: 500,
+                color: 'rgba(255, 255, 255, 0.5)',
+                letterSpacing: '0.2px'
+              }}
+            >
+              {formatDate(project.created_at)}
             </div>
           </div>
         )}
@@ -287,6 +506,7 @@ export default function ProjectDetailModal({
                 {projectMedia.map((media, index) => (
                   <div
                     key={media.id || index}
+                    onClick={() => openPreview(media)}
                     style={{
                       aspectRatio: '1 / 1',
                       borderRadius: '0',
@@ -498,6 +718,277 @@ export default function ProjectDetailModal({
           <div style={{ height: '40px' }} />
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 10000,
+            background: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+          onClick={() => setShowDeleteConfirm(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'rgba(30, 30, 30, 0.98)',
+              borderRadius: '16px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              padding: '24px',
+              maxWidth: '320px',
+              width: '100%',
+              textAlign: 'center'
+            }}
+          >
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                background: 'rgba(255, 69, 58, 0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px'
+              }}
+            >
+              <TrashIcon className="w-6 h-6" style={{ color: '#FF453A' }} />
+            </div>
+            <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#FFFFFF', marginBottom: '8px' }}>
+              Delete Project?
+            </h3>
+            <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '24px' }}>
+              This action cannot be undone. All media in this project will be permanently deleted.
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  background: 'transparent',
+                  color: '#FFFFFF',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'background 150ms'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: '#FF453A',
+                  color: '#FFFFFF',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'opacity 150ms'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = '0.85';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = '1';
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {showPreview && previewItem && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 10000,
+            background: 'rgba(0, 0, 0, 0.9)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          onClick={closePreview}
+        >
+          {/* Close button */}
+          <button
+            onClick={closePreview}
+            style={{
+              position: 'absolute',
+              top: '16px',
+              right: '16px',
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              zIndex: 10
+            }}
+          >
+            <XMarkIcon className="w-6 h-6 text-white" />
+          </button>
+
+          {/* Photo Preview */}
+          {previewItem.media_type === 'photo' && previewItem.media_url && (
+            <img
+              src={previewItem.media_url}
+              alt=""
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                maxWidth: '90vw',
+                maxHeight: '85vh',
+                objectFit: 'contain',
+                borderRadius: '8px'
+              }}
+            />
+          )}
+
+          {/* Video Preview */}
+          {previewItem.media_type === 'video' && previewItem.media_url && (
+            <video
+              src={previewItem.media_url}
+              controls
+              autoPlay
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                maxWidth: '90vw',
+                maxHeight: '85vh',
+                borderRadius: '8px',
+                background: '#000'
+              }}
+            />
+          )}
+
+          {/* Audio Preview */}
+          {previewItem.media_type === 'audio' && previewItem.media_url && (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: 'rgba(30, 30, 30, 0.95)',
+                borderRadius: '20px',
+                padding: '40px',
+                maxWidth: '400px',
+                width: '90vw',
+                textAlign: 'center'
+              }}
+            >
+              <audio ref={audioRef} src={previewItem.media_url} />
+              
+              <div
+                style={{
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #0A84FF, #00C2FF)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 24px',
+                  boxShadow: '0 8px 32px rgba(10, 132, 255, 0.4)',
+                  cursor: 'pointer',
+                  transition: 'transform 150ms'
+                }}
+                onClick={toggleAudio}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                {isPlaying ? (
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                    <rect x="6" y="4" width="4" height="16" rx="1" />
+                    <rect x="14" y="4" width="4" height="16" rx="1" />
+                  </svg>
+                ) : (
+                  <PlayIcon className="w-8 h-8 text-white" style={{ marginLeft: '4px' }} />
+                )}
+              </div>
+
+              <p style={{ fontSize: '16px', fontWeight: 600, color: '#FFFFFF', marginBottom: '16px' }}>
+                Audio Track
+              </p>
+
+              {/* Progress bar */}
+              <div
+                style={{
+                  width: '100%',
+                  height: '4px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '2px',
+                  overflow: 'hidden'
+                }}
+              >
+                <div
+                  style={{
+                    width: `${audioProgress}%`,
+                    height: '100%',
+                    background: 'linear-gradient(90deg, #0A84FF, #00C2FF)',
+                    transition: 'width 100ms ease'
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* PDF/Document Preview */}
+          {previewItem.media_type === 'document' && previewItem.media_url && (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: '90vw',
+                height: '85vh',
+                maxWidth: '900px',
+                background: '#FFFFFF',
+                borderRadius: '12px',
+                overflow: 'hidden'
+              }}
+            >
+              <iframe
+                src={previewItem.media_url}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 'none'
+                }}
+                title="Document Preview"
+              />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

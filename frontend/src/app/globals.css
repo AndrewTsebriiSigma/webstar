@@ -1461,3 +1461,150 @@ button:focus-visible,
   border-color: rgba(255, 255, 255, 0.6) !important;
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15) !important;
 }
+
+/* ===== Analytics Dashboard Styles ===== */
+
+/* Hide scrollbar for day selector */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Analytics card styles */
+.analytics-card {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+}
+
+.analytics-split-container {
+  display: flex;
+  align-items: stretch;
+  min-height: 80px;
+}
+
+.analytics-left {
+  flex: 0 0 40%;
+  max-width: 40%;
+}
+
+.analytics-right {
+  flex: 1;
+  min-width: 0;
+}
+
+.analytics-header-inline {
+  display: flex;
+  align-items: center;
+}
+
+.period-inline {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.analytics-main-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #F5F5F5;
+  line-height: 1.1;
+}
+
+.analytics-today-change {
+  font-size: 12px;
+  color: #4CAF50;
+  font-weight: 500;
+}
+
+.graph-container {
+  height: 64px;
+  position: relative;
+}
+
+.analytics-graph-enhanced {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.analytics-tooltip-enhanced {
+  position: absolute;
+  transform: translateX(-50%);
+  background: rgba(22, 22, 24, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 10px 14px;
+  z-index: 20;
+  backdrop-filter: blur(12px);
+  min-width: 140px;
+}
+
+.tooltip-date-enhanced {
+  font-size: 12px;
+  font-weight: 600;
+  color: #F5F5F5;
+  margin-bottom: 8px;
+}
+
+.tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.tooltip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.tooltip-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.tooltip-value {
+  font-size: 11px;
+  font-weight: 600;
+  color: #F5F5F5;
+  margin-left: auto;
+}
+
+/* Mobile responsive fixes for analytics */
+@media (max-width: 400px) {
+  .analytics-split-container {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .analytics-left,
+  .analytics-right {
+    flex: none;
+    max-width: 100%;
+    width: 100%;
+    padding-right: 0 !important;
+  }
+  
+  .analytics-main-value {
+    font-size: 28px;
+  }
+  
+  .graph-container {
+    height: 80px;
+  }
+}
+
+@media (max-width: 360px) {
+  .analytics-main-value {
+    font-size: 24px;
+  }
+}
