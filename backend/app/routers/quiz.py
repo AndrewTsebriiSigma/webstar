@@ -45,6 +45,40 @@ class QuizResultResponse(BaseModel):
     created_at: str
 
 
+# IMPORTANT: More specific routes must come BEFORE parameterized routes
+# to avoid route conflicts (e.g., /quizzes/results before /quizzes/{slug})
+
+@router.get("/quizzes/results", response_model=List[QuizResultResponse])
+async def get_user_quiz_results(
+    session: Session = Depends(get_session),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    """Get all quiz results for current user."""
+    if not current_user:
+        return []
+    
+    results = session.exec(
+        select(QuizResult)
+        .where(QuizResult.user_id == current_user.id)
+        .order_by(QuizResult.created_at.desc())
+    ).all()
+    
+    # Get quiz titles
+    response_list = []
+    for result in results:
+        quiz = session.exec(select(Quiz).where(Quiz.id == result.quiz_id)).first()
+        response_list.append(QuizResultResponse(
+            id=result.id,
+            quiz_id=result.quiz_id,
+            quiz_title=quiz.title if quiz else "Unknown Quiz",
+            total_score=result.total_score,
+            result_summary=result.result_summary,
+            created_at=result.created_at.isoformat()
+        ))
+    
+    return response_list
+
+
 @router.get("/quizzes/{slug}", response_model=QuizResponse)
 async def get_quiz(
     slug: str,
@@ -172,37 +206,6 @@ async def submit_quiz(
         "result_summary": result_summary,
         "message": "Quiz submitted successfully"
     }
-
-
-@router.get("/quizzes/results", response_model=List[QuizResultResponse])
-async def get_user_quiz_results(
-    session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user_optional)
-):
-    """Get all quiz results for current user."""
-    if not current_user:
-        return []
-    
-    results = session.exec(
-        select(QuizResult)
-        .where(QuizResult.user_id == current_user.id)
-        .order_by(QuizResult.created_at.desc())
-    ).all()
-    
-    # Get quiz titles
-    response_list = []
-    for result in results:
-        quiz = session.exec(select(Quiz).where(Quiz.id == result.quiz_id)).first()
-        response_list.append(QuizResultResponse(
-            id=result.id,
-            quiz_id=result.quiz_id,
-            quiz_title=quiz.title if quiz else "Unknown Quiz",
-            total_score=result.total_score,
-            result_summary=result.result_summary,
-            created_at=result.created_at.isoformat()
-        ))
-    
-    return response_list
 
 
 class TransferSessionRequest(BaseModel):
