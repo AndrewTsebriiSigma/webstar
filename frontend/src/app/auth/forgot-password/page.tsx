@@ -1,9 +1,94 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+
+// Matrix Rain Effect Component (same as auth page)
+function MatrixRain() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    const chars = '01アイウエオカキクケコサシスセソタチツテト10∆∇◊○●□■△▽☆★♦♢⬡⬢';
+    const charArray = chars.split('');
+    
+    const fontSize = 14;
+    const columns = Math.floor(canvas.width / fontSize);
+    
+    const drops: number[] = [];
+    for (let i = 0; i < columns; i++) {
+      drops[i] = Math.random() * -100;
+    }
+
+    const colors = [
+      'rgba(0, 194, 255, 0.9)',
+      'rgba(0, 194, 255, 0.7)',
+      'rgba(0, 126, 167, 0.8)',
+      'rgba(0, 255, 229, 0.6)',
+      'rgba(0, 194, 255, 0.4)',
+    ];
+
+    const draw = () => {
+      ctx.fillStyle = 'rgba(5, 5, 8, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.font = `${fontSize}px monospace`;
+
+      for (let i = 0; i < drops.length; i++) {
+        const char = charArray[Math.floor(Math.random() * charArray.length)];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const x = i * fontSize;
+        const y = drops[i] * fontSize;
+
+        if (Math.random() > 0.95) {
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = '#00C2FF';
+        } else {
+          ctx.shadowBlur = 0;
+        }
+
+        ctx.fillStyle = color;
+        ctx.fillText(char, x, y);
+        ctx.shadowBlur = 0;
+
+        if (y > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        
+        drops[i] += 0.5 + Math.random() * 0.5;
+      }
+    };
+
+    const interval = setInterval(draw, 50);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('resize', resizeCanvas);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 pointer-events-none"
+      style={{ opacity: 0.3 }}
+    />
+  );
+}
 
 function ForgotPasswordContent() {
   const router = useRouter();
@@ -33,7 +118,7 @@ function ForgotPasswordContent() {
       }
 
       setSent(true);
-      toast.success('Reset email sent!');
+      toast.success('Reset link sent!');
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
     } finally {
@@ -41,55 +126,126 @@ function ForgotPasswordContent() {
     }
   };
 
+  const handleResend = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || 'Failed to resend');
+      }
+
+      toast.success('Reset link sent again!');
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#0B0B0C' }}>
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block mb-6">
+    <div 
+      className="min-h-screen flex flex-col items-center px-4 relative overflow-hidden"
+      style={{ background: '#111111', paddingTop: '8vh' }}
+    >
+      {/* Deep Background Layer */}
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse at center, #1a1a1e 0%, #111114 100%)'
+        }}
+      />
+
+      {/* Matrix Rain Effect */}
+      <MatrixRain />
+
+      {/* Gradient Overlay */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle at 50% 40%, transparent 0%, rgba(10, 10, 12, 0.7) 100%)'
+        }}
+      />
+
+      {/* Subtle Vignette */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          boxShadow: 'inset 0 0 150px 50px rgba(0, 0, 0, 0.5)'
+        }}
+      />
+
+      {/* Main Content */}
+      <div className="max-w-md w-full relative z-10 animate-fade-in flex flex-col flex-1">
+        {/* Logo & Header */}
+        <div className="text-center">
+          <Link href="/" className="inline-flex flex-col items-center mb-24 relative group">
+            <div 
+              className="absolute inset-0 rounded-full blur-2xl opacity-60 group-hover:opacity-80 transition-opacity duration-500"
+              style={{ 
+                background: 'radial-gradient(circle, rgba(0, 194, 255, 0.4) 0%, transparent 70%)',
+                transform: 'scale(1.5)',
+                top: '-40px'
+              }}
+            />
             <img 
               src="/webstar-logo.png" 
               alt="WebSTAR" 
-              className="w-16 h-16 mx-auto"
+              className="w-20 h-20 relative z-10 transition-transform duration-300 group-hover:scale-105"
               style={{ filter: 'drop-shadow(0 0 20px rgba(0, 194, 255, 0.3))' }}
             />
+            <span 
+              className="text-xl font-bold tracking-widest mt-2 relative z-10"
+              style={{ 
+                color: '#00C2FF',
+                textShadow: '0 0 20px rgba(0, 194, 255, 0.4)'
+              }}
+            >
+              WebSTAR
+            </span>
           </Link>
         </div>
 
-        {/* Card */}
+        {/* Main Card */}
         <div 
-          className="rounded-3xl p-8"
-          style={{
+          className="glass rounded-2xl p-8 animate-slide-up"
+          style={{ 
             background: 'rgba(255, 255, 255, 0.03)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(20px)'
+            backdropFilter: 'blur(20px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
           }}
         >
+          {error && (
+            <div className="mb-4 p-3 rounded-xl text-sm text-center"
+              style={{ background: 'rgba(255, 69, 58, 0.1)', color: '#FF453A' }}
+            >
+              {error}
+            </div>
+          )}
+
           {!sent ? (
             <>
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" 
-                  style={{ background: 'rgba(0, 194, 255, 0.1)' }}>
-                  <svg className="w-8 h-8 text-[#00C2FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold mb-2" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+              {/* Title */}
+              <div className="text-center mb-8">
+                <h1 
+                  className="text-3xl font-bold mb-2"
+                  style={{ color: '#FFFFFF' }}
+                >
                   Forgot password?
-                </h2>
+                </h1>
                 <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                  No worries, we'll send you reset instructions.
+                  Enter your email to reset
                 </p>
               </div>
 
-              {error && (
-                <div className="mb-4 p-3 rounded-xl text-sm text-center"
-                  style={{ background: 'rgba(255, 69, 58, 0.1)', color: '#FF453A' }}
-                >
-                  {error}
-                </div>
-              )}
-
+              {/* Form */}
               <form onSubmit={handleSubmit}>
                 <div 
                   className="mb-4"
@@ -101,7 +257,7 @@ function ForgotPasswordContent() {
                 >
                   <input
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder="your@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full px-4 py-3 text-center"
@@ -126,37 +282,31 @@ function ForgotPasswordContent() {
                     boxShadow: '0 4px 20px rgba(0, 194, 255, 0.3)'
                   }}
                 >
-                  {loading ? 'Sending...' : 'Reset password'}
+                  {loading ? 'Sending...' : 'Reset'}
                 </button>
               </form>
             </>
           ) : (
             <>
-              {/* Success State */}
+              {/* Success State - Simplified */}
               <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" 
-                  style={{ background: 'rgba(52, 199, 89, 0.1)' }}>
-                  <svg className="w-8 h-8 text-[#34C759]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold mb-2" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
-                  Check your email
-                </h2>
+                <h1 
+                  className="text-3xl font-bold mb-2"
+                  style={{ color: '#FFFFFF' }}
+                >
+                  Check your inbox
+                </h1>
                 <p className="text-sm mb-6" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                  We sent a password reset link to<br />
-                  <span style={{ color: '#00C2FF' }}>{email}</span>
+                  Reset link sent to <span style={{ color: '#00C2FF' }}>{email}</span>
                 </p>
 
                 <button
-                  onClick={() => {
-                    setSent(false);
-                    setEmail('');
-                  }}
-                  className="text-sm font-medium transition hover:opacity-80"
-                  style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+                  onClick={handleResend}
+                  disabled={loading}
+                  className="text-sm transition hover:opacity-80 disabled:opacity-50"
+                  style={{ color: 'rgba(255, 255, 255, 0.4)' }}
                 >
-                  Didn't receive the email? <span style={{ color: '#00C2FF' }}>Click to resend</span>
+                  {loading ? 'Sending...' : 'Send again'}
                 </button>
               </div>
             </>
@@ -164,19 +314,54 @@ function ForgotPasswordContent() {
         </div>
 
         {/* Back link */}
-        <div className="text-center mt-6">
+        <div className="mt-4 text-center">
           <Link 
             href="/auth" 
-            className="text-sm transition hover:opacity-80 flex items-center justify-center gap-2"
-            style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+            className="text-sm transition hover:opacity-80"
+            style={{ color: 'rgba(255, 255, 255, 0.4)' }}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to login
+            ← Back
           </Link>
         </div>
+
+        {/* Footer - pushed down */}
+        <div className="mt-auto pt-16 text-center">
+          <div className="flex items-center justify-center gap-4 mb-2">
+            <Link href="/terms" className="text-[10px] transition hover:text-white" style={{ color: 'rgba(255, 255, 255, 0.25)' }}>
+              Terms
+            </Link>
+            <Link href="/privacy" className="text-[10px] transition hover:text-white" style={{ color: 'rgba(255, 255, 255, 0.25)' }}>
+              Privacy
+            </Link>
+          </div>
+          <p className="text-[10px]" style={{ color: 'rgba(255, 255, 255, 0.2)' }}>
+            WebSTAR. All rights reserved.
+          </p>
+        </div>
       </div>
+
+      <style jsx>{`
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slide-up {
+          from { 
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.5s ease-out;
+        }
+        .animate-slide-up {
+          animation: slide-up 0.5s ease-out 0.1s both;
+        }
+      `}</style>
     </div>
   );
 }
@@ -184,7 +369,7 @@ function ForgotPasswordContent() {
 export default function ForgotPasswordPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B0B0C' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#111111' }}>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
       </div>
     }>

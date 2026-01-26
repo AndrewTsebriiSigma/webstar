@@ -36,6 +36,76 @@ oauth.register(
 )
 
 
+# ============================================================
+# DEV ONLY: Magic email for instant login (skip verification)
+# Email: star@dev.local
+# ============================================================
+DEV_MAGIC_EMAIL = "star@dev.local"
+
+@router.post("/dev-login")
+async def dev_magic_login(
+    email: str = Body(..., embed=True),
+    session: Session = Depends(get_session)
+):
+    """DEV ONLY: Instant login with magic email. Skips verification and password."""
+    if settings.ENVIRONMENT != "development":
+        raise HTTPException(status_code=404, detail="Not found")
+    
+    if email.lower() != DEV_MAGIC_EMAIL:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid dev email"
+        )
+    
+    # Check if dev user exists
+    user = session.exec(select(User).where(func.lower(User.email) == DEV_MAGIC_EMAIL)).first()
+    
+    if not user:
+        # Create dev user
+        user = User(
+            email=DEV_MAGIC_EMAIL,
+            username="devstar",
+            hashed_password=get_password_hash("devpass123"),
+            is_active=True
+        )
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+        
+        # Create profile
+        profile = Profile(user_id=user.id, display_name="Dev User")
+        session.add(profile)
+        
+        # Create onboarding progress
+        onboarding = OnboardingProgress(user_id=user.id, current_step="complete", completed=True)
+        session.add(onboarding)
+        
+        # Create points
+        points = UserPoints(user_id=user.id, total_points=0, level=1)
+        session.add(points)
+        
+        session.commit()
+        print(f"✨ DEV MODE: Created dev user {DEV_MAGIC_EMAIL}")
+    else:
+        print(f"✨ DEV MODE: Logging in as {DEV_MAGIC_EMAIL}")
+    
+    # Generate tokens
+    access_token = create_access_token(data={"sub": str(user.id)})
+    refresh_token = create_refresh_token(data={"sub": str(user.id)})
+    
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "user": {
+            "id": str(user.id),
+            "email": user.email,
+            "username": user.username,
+            "is_active": user.is_active
+        }
+    }
+
+
 @router.get("/check-email/{email}")
 async def check_email_exists(email: str, session: Session = Depends(get_session)):
     """Check if email exists in the system (case-insensitive)."""
@@ -139,19 +209,22 @@ async def register(request: Request, user_data: UserRegister, session: Session =
     # Rate limit: 3 registrations per 10 minutes per IP
     rate_limiter.require_rate_limit(request, max_requests=3, window_seconds=600)
     
-    # Check if email has been verified
-    verification = session.exec(
-        select(EmailVerification).where(
-            (func.lower(EmailVerification.email) == func.lower(user_data.email)) &
-            (EmailVerification.verified == True)
-        )
-    ).first()
-    
-    if not verification:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email not verified. Please verify your email first."
-        )
+    # Check if email has been verified (skip in development mode)
+    if settings.ENVIRONMENT != "development":
+        verification = session.exec(
+            select(EmailVerification).where(
+                (func.lower(EmailVerification.email) == func.lower(user_data.email)) &
+                (EmailVerification.verified == True)
+            )
+        ).first()
+        
+        if not verification:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email not verified. Please verify your email first."
+            )
+    else:
+        print(f"⚠️  DEV MODE: Skipping email verification for {user_data.email}")
     
     # Check if email exists
     existing_user = session.exec(select(User).where(User.email == user_data.email)).first()

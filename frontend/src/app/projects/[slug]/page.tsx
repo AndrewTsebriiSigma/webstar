@@ -164,34 +164,34 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
 
   return (
     <div className="min-h-screen" style={{ background: '#111111' }}>
-      {/* Header */}
+      {/* Header - Matches Settings/Notifications style */}
       <header 
         className="sticky top-0 z-40"
         style={{
-          background: 'rgba(17, 17, 17, 0.95)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          background: '#0D0D0D',
           borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
         }}
       >
-        <div style={{ height: '55px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ height: '55px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
             onClick={handleBack}
             style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
-              background: 'rgba(255, 255, 255, 0.06)',
+              width: '28px',
+              height: '28px',
+              background: 'transparent',
               border: 'none',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              transition: 'opacity 0.15s'
             }}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
           >
-            <ArrowLeftIcon className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+            <ArrowLeftIcon style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.5)' }} />
           </button>
-          <h1 style={{ fontSize: '17px', fontWeight: 600, color: '#FFF', flex: 1 }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 600, color: '#FFFFFF', flex: 1 }}>
             {project.title}
           </h1>
           
@@ -201,19 +201,21 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
               <button
                 onClick={() => setShowMenu(!showMenu)}
                 style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  background: showMenu ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                  width: '28px',
+                  height: '28px',
+                  background: 'transparent',
                   border: 'none',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  transition: 'background 150ms'
+                  transition: 'opacity 0.15s',
+                  opacity: showMenu ? 1 : 0.5
                 }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = showMenu ? '1' : '0.5'}
               >
-                <EllipsisVerticalIcon className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                <EllipsisVerticalIcon style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.5)' }} />
               </button>
 
               {/* Dropdown Menu */}
@@ -296,7 +298,7 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
 
       {/* Content */}
       <div style={{ padding: '16px', maxWidth: '800px', margin: '0 auto' }}>
-        {/* Cover Image */}
+        {/* Cover Image with Date Badge */}
         {project.cover_image && (
           <div 
             style={{
@@ -305,7 +307,8 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
               borderRadius: '16px',
               overflow: 'hidden',
               marginBottom: '20px',
-              background: 'rgba(255, 255, 255, 0.03)'
+              background: 'rgba(255, 255, 255, 0.03)',
+              position: 'relative'
             }}
           >
             <img
@@ -317,25 +320,25 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
                 objectFit: 'cover'
               }}
             />
-          </div>
-        )}
-
-        {/* Project Info */}
-        <div style={{ marginBottom: '24px' }}>
-          {/* Date */}
-          <div style={{ marginBottom: '12px' }}>
+            
+            {/* Date Badge - ON the banner, transparent */}
             <div 
               style={{
+                position: 'absolute',
+                top: '12px',
+                right: '12px',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '5px',
-                padding: '4px 10px',
-                background: 'rgba(255, 255, 255, 0.04)',
+                padding: '5px 10px',
+                background: 'rgba(0, 0, 0, 0.15)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
                 borderRadius: '8px',
                 border: '1px solid rgba(255, 255, 255, 0.08)'
               }}
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2">
                 <rect x="3" y="4" width="18" height="18" rx="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
                 <line x1="8" y1="2" x2="8" y2="6" />
@@ -346,10 +349,21 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
               </span>
             </div>
           </div>
-          
-          <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#FFF', marginBottom: '12px' }}>
+        )}
+
+        {/* Project Info */}
+        <div style={{ marginBottom: '24px' }}>
+          {/* Title - PRIORITY, bigger and prominent */}
+          <h1 style={{ 
+            fontSize: '32px', 
+            fontWeight: 700, 
+            color: '#FFF', 
+            marginBottom: '16px',
+            letterSpacing: '-0.5px',
+            lineHeight: '1.2'
+          }}>
             {project.title}
-          </h2>
+          </h1>
           
           {project.description && (
             <p style={{ 

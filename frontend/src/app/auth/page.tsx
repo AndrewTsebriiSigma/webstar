@@ -122,6 +122,34 @@ export default function UnifiedAuthPage() {
     e.preventDefault();
     if (!email) return;
 
+    // DEV ONLY: Magic email for instant login
+    const DEV_MAGIC_EMAIL = 'star@dev.local';
+    if (email.toLowerCase() === DEV_MAGIC_EMAIL) {
+      setCheckingEmail(true);
+      try {
+        const devResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/auth/dev-login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        
+        if (devResponse.ok) {
+          const data = await devResponse.json();
+          localStorage.setItem('access_token', data.access_token);
+          if (data.refresh_token) {
+            localStorage.setItem('refresh_token', data.refresh_token);
+          }
+          localStorage.setItem('user', JSON.stringify(data.user));
+          router.push(`/${data.user.username}`);
+          return;
+        }
+      } catch (err) {
+        console.log('Dev login failed, falling through to normal flow');
+      } finally {
+        setCheckingEmail(false);
+      }
+    }
+
     // Validate email on submit
     if (!isValidEmail(email)) {
       validateEmail(email);
@@ -184,8 +212,8 @@ export default function UnifiedAuthPage() {
           if (returnUrl) {
             sessionStorage.removeItem('returnAfterAuth');
             router.push(returnUrl);
-        } else {
-          router.push(`/${response.data.user.username}`);
+          } else {
+            router.push(`/${response.data.user.username}`);
           }
         }
       }

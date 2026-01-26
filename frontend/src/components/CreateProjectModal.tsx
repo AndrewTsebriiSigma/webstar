@@ -459,49 +459,45 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
 
   return (
     <>
-      {/* Main Modal */}
+      {/* Backdrop */}
       <div 
-        className="fixed inset-0 z-50 flex items-start justify-center"
-        style={{ 
-          paddingTop: '5vh',
-          paddingBottom: '35vh',
-          background: 'rgba(0, 0, 0, 0.3)',
-          backdropFilter: 'blur(14px)',
-          WebkitBackdropFilter: 'blur(14px)',
-          opacity: isVisible ? 1 : 0,
-          transition: 'opacity 0.15s ease-out'
-        }}
+        className={`bottom-slider-backdrop ${isVisible ? 'entering' : 'exiting'}`}
         onClick={handleClose}
+      />
+      
+      {/* Bottom Slider Content */}
+      <div 
+        className={`bottom-slider-content ${isVisible ? 'entering' : 'exiting'}`}
+        onClick={(e) => e.stopPropagation()}
       >
+        {/* Drag Handle Indicator */}
         <div 
-          className="w-full max-w-md relative"
-          style={{
-            maxWidth: 'calc(100% - 24px)',
-            height: '75vh',
-            background: 'rgba(20, 20, 20, 0.85)',
-            border: '1px solid rgba(255, 255, 255, 0.05)',
-            borderRadius: '16px',
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            // Entrance & exit animation
-            transform: isVisible ? 'scale(1) translateY(0)' : 'scale(0.97) translateY(-10px)',
-            opacity: isVisible ? 1 : 0,
-            transition: 'transform 0.15s ease-out, opacity 0.15s ease-out',
-            transformOrigin: 'top center'
+          className="flex items-center justify-center flex-shrink-0"
+          style={{ 
+            padding: '12px 0 8px',
+            background: '#0D0D0D',
           }}
-          onClick={(e) => e.stopPropagation()}
         >
-          {/* Header - Fixed solid dark */}
           <div 
-            className="flex items-center justify-between flex-shrink-0"
-            style={{ 
-              height: '55px',
-              padding: '0 20px',
-              background: '#0D0D0D',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
+            style={{
+              width: '36px',
+              height: '5px',
+              background: 'rgba(255, 255, 255, 0.3)',
+              borderRadius: '999px'
             }}
-          >
+          />
+        </div>
+
+        {/* Header - Fixed solid dark */}
+        <div 
+          className="flex items-center justify-between flex-shrink-0"
+          style={{ 
+            height: '55px',
+            padding: '0 20px',
+            background: '#0D0D0D',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
+          }}
+        >
             <div className="flex items-center" style={{ gap: '20px' }}>
               <button
                 onClick={handleClose}
@@ -553,17 +549,18 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
             })()}
           </div>
 
-          {/* Scrollable Content Area */}
-          <div 
-            ref={scrollContainerRef}
-            className="flex-1 overflow-y-auto"
-            style={{ 
-              padding: '16px 10px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '16px'
-            }}
-          >
+        {/* Scrollable Content Area */}
+        <div 
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto"
+          style={{ 
+            padding: '16px 10px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+            paddingBottom: 'max(16px, env(safe-area-inset-bottom))'
+          }}
+        >
             {/* Cover Image Upload Area */}
             <div>
               {coverPreview ? (
@@ -871,105 +868,104 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
             )}
           </div>
 
-          {/* Upload Progress Overlay */}
-          {(saving || uploadingCover) && (
-            <div 
-              className="absolute inset-0 flex flex-col items-center justify-center z-20"
-              style={{ 
-                background: 'rgba(13, 13, 13, 0.95)',
-                backdropFilter: 'blur(10px)'
-              }}
-            >
-              {/* Circular progress */}
-              <div 
-                className="relative"
-                style={{ width: '80px', height: '80px' }}
-              >
-                <svg className="w-full h-full transform -rotate-90">
-                  <circle
-                    cx="40"
-                    cy="40"
-                    r="36"
-                    fill="none"
-                    stroke="rgba(255, 255, 255, 0.1)"
-                    strokeWidth="4"
-                  />
-                  <circle
-                    cx="40"
-                    cy="40"
-                    r="36"
-                    fill="none"
-                    stroke="#00C2FF"
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                    strokeDasharray={`${2 * Math.PI * 36}`}
-                    strokeDashoffset={`${2 * Math.PI * 36 * (1 - uploadProgress / 100)}`}
-                    style={{ transition: 'stroke-dashoffset 0.3s ease-out' }}
-                  />
-                </svg>
-                <div 
-                  className="absolute inset-0 flex items-center justify-center"
-                  style={{ fontSize: '18px', fontWeight: '600', color: '#FFFFFF' }}
-                >
-                  {uploadProgress}%
-                </div>
-              </div>
-              <p style={{ marginTop: '16px', fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>
-                {uploadingCover ? 'Uploading cover...' : 'Creating project...'}
-              </p>
-            </div>
-          )}
-
-          {/* Sticky Footer - Same as Post modal */}
+        {/* Upload Progress Overlay */}
+        {(saving || uploadingCover) && (
           <div 
-            className="relative flex-shrink-0"
-            style={{
-              background: 'transparent',
-              borderBottomLeftRadius: '16px',
-              borderBottomRightRadius: '16px',
-              padding: '12px 16px',
-              paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+            className="absolute inset-0 flex flex-col items-center justify-center z-20"
+            style={{ 
+              background: 'rgba(13, 13, 13, 0.95)',
+              backdropFilter: 'blur(10px)'
             }}
           >
-            {(() => {
-              const isEditing = !!editingProjectId;
-              const isDraftMode = defaultSaveAsDraft && !isEditing;
-              const secondaryAction = isDraftMode ? handleSubmit : handleSaveAsDraft;
-              const secondaryLabel = isDraftMode ? 'Publish instead' : 'Save as draft';
-              
-              return (
-                <div 
-                  className="flex items-center justify-between" 
-                  style={{ color: 'rgba(255,255,255,0.5)' }}
-                >
-                  {/* FEATURE_DISABLED: SAVE_AS_DRAFT
-                      Save as Draft button temporarily hidden for V1 release.
-                      Functionality preserved - can be re-enabled by uncommenting.
-                  */}
-                  {/* Secondary action button
-                  <button
-                    onClick={secondaryAction}
-                    disabled={saving || uploadingCover || !title.trim() || (isDraftMode && (!coverFile && !coverPreview))}
-                    className="flex items-center gap-2 transition disabled:opacity-40"
-                  >
-                    {isDraftMode ? (
-                      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                      </svg>
-                    ) : (
-                      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 3h11l5 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 3v5h8V3" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 14h10v7H7z" />
-                      </svg>
-                    )}
-                    <span className="text-[14px] font-medium">{secondaryLabel}</span>
-                  </button>
-                  END FEATURE_DISABLED: SAVE_AS_DRAFT */}
-                </div>
-              );
-            })()}
+            {/* Circular progress */}
+            <div 
+              className="relative"
+              style={{ width: '80px', height: '80px' }}
+            >
+              <svg className="w-full h-full transform -rotate-90">
+                <circle
+                  cx="40"
+                  cy="40"
+                  r="36"
+                  fill="none"
+                  stroke="rgba(255, 255, 255, 0.1)"
+                  strokeWidth="4"
+                />
+                <circle
+                  cx="40"
+                  cy="40"
+                  r="36"
+                  fill="none"
+                  stroke="#00C2FF"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 36}`}
+                  strokeDashoffset={`${2 * Math.PI * 36 * (1 - uploadProgress / 100)}`}
+                  style={{ transition: 'stroke-dashoffset 0.3s ease-out' }}
+                />
+              </svg>
+              <div 
+                className="absolute inset-0 flex items-center justify-center"
+                style={{ fontSize: '18px', fontWeight: '600', color: '#FFFFFF' }}
+              >
+                {uploadProgress}%
+              </div>
+            </div>
+            <p style={{ marginTop: '16px', fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>
+              {uploadingCover ? 'Uploading cover...' : 'Creating project...'}
+            </p>
           </div>
+        )}
+
+        {/* Sticky Footer - Same as Post modal */}
+        <div 
+          className="relative flex-shrink-0"
+          style={{
+            background: 'transparent',
+            borderBottomLeftRadius: '20px',
+            borderBottomRightRadius: '20px',
+            padding: '12px 16px',
+            paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+          }}
+        >
+          {(() => {
+            const isEditing = !!editingProjectId;
+            const isDraftMode = defaultSaveAsDraft && !isEditing;
+            const secondaryAction = isDraftMode ? handleSubmit : handleSaveAsDraft;
+            const secondaryLabel = isDraftMode ? 'Publish instead' : 'Save as draft';
+            
+            return (
+              <div 
+                className="flex items-center justify-between" 
+                style={{ color: 'rgba(255,255,255,0.5)' }}
+              >
+                {/* FEATURE_DISABLED: SAVE_AS_DRAFT
+                    Save as Draft button temporarily hidden for V1 release.
+                    Functionality preserved - can be re-enabled by uncommenting.
+                */}
+                {/* Secondary action button
+                <button
+                  onClick={secondaryAction}
+                  disabled={saving || uploadingCover || !title.trim() || (isDraftMode && (!coverFile && !coverPreview))}
+                  className="flex items-center gap-2 transition disabled:opacity-40"
+                >
+                  {isDraftMode ? (
+                    <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                  ) : (
+                    <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 3h11l5 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 3v5h8V3" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 14h10v7H7z" />
+                    </svg>
+                  )}
+                  <span className="text-[14px] font-medium">{secondaryLabel}</span>
+                </button>
+                END FEATURE_DISABLED: SAVE_AS_DRAFT */}
+              </div>
+            );
+          })()}
         </div>
       </div>
 
