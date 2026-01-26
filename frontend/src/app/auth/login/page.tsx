@@ -139,18 +139,10 @@ export default function LoginPage() {
   // Handle mobile keyboard scroll behavior
   useKeyboardScroll();
   
-  const [rememberMe, setRememberMe] = useState(() => {
-    // Check if user previously opted for remember me
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('remember_me') === 'true';
-    }
-    return false;
-  });
-
-  // Pre-fill email if user chose "Remember Me" previously
+  // Always pre-fill email if previously saved (permanent remember)
   useEffect(() => {
     const rememberedEmail = localStorage.getItem('remembered_email');
-    if (rememberedEmail && rememberMe) {
+    if (rememberedEmail) {
       setEmail(rememberedEmail);
     }
   }, []);
@@ -173,15 +165,8 @@ export default function LoginPage() {
           localStorage.setItem('refresh_token', data.refresh_token);
           localStorage.setItem('user', JSON.stringify(data.user));
           
-          // Save remember me preference
-          if (rememberMe) {
-            localStorage.setItem('remember_me', 'true');
-            // Store credentials hint for auto-fill (encrypted email only)
-            localStorage.setItem('remembered_email', email);
-          } else {
-            localStorage.removeItem('remember_me');
-            localStorage.removeItem('remembered_email');
-          }
+          // Always save email for permanent remember
+          localStorage.setItem('remembered_email', email);
           
           toast.success('Welcome back!');
           
@@ -220,14 +205,8 @@ export default function LoginPage() {
       localStorage.setItem('refresh_token', data.refresh_token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      // Save remember me preference for 2FA flow too
-      if (rememberMe) {
-        localStorage.setItem('remember_me', 'true');
-        localStorage.setItem('remembered_email', email);
-      } else {
-        localStorage.removeItem('remember_me');
-        localStorage.removeItem('remembered_email');
-      }
+      // Always save email for permanent remember
+      localStorage.setItem('remembered_email', email);
 
       toast.success('Welcome back!');
 
@@ -442,48 +421,6 @@ export default function LoginPage() {
                 </button>
               </div>
 
-              {/* Remember Me Checkbox */}
-              <div className="flex items-center justify-between">
-                <label 
-                  className="flex items-center gap-2 cursor-pointer select-none"
-                  style={{ color: 'rgba(255, 255, 255, 0.6)' }}
-                >
-                  <div
-                    onClick={() => setRememberMe(!rememberMe)}
-                    style={{
-                      width: '18px',
-                      height: '18px',
-                      borderRadius: '5px',
-                      border: rememberMe ? '1px solid #00C2FF' : '1px solid rgba(255, 255, 255, 0.2)',
-                      background: rememberMe ? 'rgba(0, 194, 255, 0.15)' : 'transparent',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'all 150ms ease',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {rememberMe && (
-                      <svg 
-                        width="12" 
-                        height="12" 
-                        viewBox="0 0 12 12" 
-                        fill="none"
-                      >
-                        <path 
-                          d="M2.5 6L5 8.5L9.5 4" 
-                          stroke="#00C2FF" 
-                          strokeWidth="1.5" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                  <span style={{ fontSize: '13px' }}>Remember me</span>
-                </label>
-              </div>
-
               <button
                 type="submit"
                 disabled={loading}
@@ -595,13 +532,14 @@ export default function LoginPage() {
                 />
               </div>
 
-              {/* Google Sign In */}
+              {/* Google Sign In - with frame/border */}
               <button
                 type="button"
                 onClick={() => {
                   window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/auth/google`;
                 }}
-                className="btn-secondary w-full flex items-center justify-center gap-3"
+                className="w-full py-3 px-4 border border-gray-700 hover:border-gray-600 text-white font-semibold rounded-xl transition flex items-center justify-center gap-3"
+                style={{ background: 'rgba(255, 255, 255, 0.05)' }}
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path
@@ -623,24 +561,26 @@ export default function LoginPage() {
                 </svg>
                 <span>Continue with Google</span>
               </button>
-
-              {/* Sign Up Link */}
-              <p 
-                className="mt-5 text-center text-sm"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                New here?{' '}
-                <Link 
-                  href="/auth/register" 
-                  className="font-semibold transition-colors hover:brightness-110"
-                  style={{ color: 'var(--blue)' }}
-                >
-                  Create your space
-                </Link>
-              </p>
             </>
           )}
         </div>
+
+        {/* Sign Up Link - OUTSIDE card, below frame */}
+        {step === 'credentials' && (
+          <p 
+            className="mt-5 text-center text-sm"
+            style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+          >
+            New here?{' '}
+            <Link 
+              href="/auth/register" 
+              className="font-semibold transition-colors hover:brightness-110"
+              style={{ color: '#00C2FF' }}
+            >
+              Create your space
+            </Link>
+          </p>
+        )}
 
         {step === '2fa' && (
           <div 

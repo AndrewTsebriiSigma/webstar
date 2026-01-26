@@ -131,40 +131,78 @@ export default function SimpleCalendar({ value, onChange, placeholder = 'Select 
   const days = getDaysInMonth(currentMonth);
 
   return (
-    <div className="relative" ref={calendarRef}>
+    <div className="relative calendar-wrapper" ref={calendarRef}>
       <input
         type="text"
         readOnly
         value={displayValue}
         placeholder={placeholder}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 cursor-pointer focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        style={{
+          width: '100%',
+          padding: '10px 12px',
+          fontSize: '14px',
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: isOpen ? '1px solid transparent' : '1px solid rgba(255, 255, 255, 0.06)',
+          borderRadius: '10px',
+          color: '#FFFFFF',
+          cursor: 'pointer',
+          outline: 'none',
+          boxShadow: isOpen ? '0 0 0 1px rgba(0, 194, 255, 0.3)' : 'none',
+          transition: 'all 0.2s ease',
+        }}
       />
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg p-4 shadow-lg z-50 min-w-[280px]">
+        <div 
+          className="absolute top-full left-0 mt-1 z-50 min-w-[280px]"
+          style={{
+            background: 'rgba(30, 30, 30, 0.98)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '12px',
+            padding: '16px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+            backdropFilter: 'blur(20px)',
+          }}
+        >
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={handlePrevMonth}
-              className="p-1 hover:bg-gray-700 rounded transition"
+              style={{
+                padding: '6px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+              }}
             >
-              <ChevronLeftIcon className="w-5 h-5 text-gray-400" />
+              <ChevronLeftIcon className="w-4 h-4" style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
             </button>
-            <h3 className="text-white font-semibold text-sm">
+            <h3 style={{ color: '#FFFFFF', fontWeight: '600', fontSize: '14px' }}>
               {MONTHS[currentMonth.getMonth()]} {currentMonth.getFullYear()}
             </h3>
             <button
               onClick={handleNextMonth}
-              className="p-1 hover:bg-gray-700 rounded transition"
+              style={{
+                padding: '6px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+              }}
             >
-              <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+              <ChevronRightIcon className="w-4 h-4" style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
             </button>
           </div>
 
           {/* Days of week */}
           <div className="grid grid-cols-7 gap-1 mb-2">
             {DAYS.map((day) => (
-              <div key={day} className="text-center text-xs text-gray-500 font-medium py-1">
+              <div 
+                key={day} 
+                className="text-center py-1"
+                style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', fontWeight: '500' }}
+              >
                 {day}
               </div>
             ))}
@@ -177,12 +215,28 @@ export default function SimpleCalendar({ value, onChange, placeholder = 'Select 
                 key={index}
                 onClick={() => day && handleDateClick(day)}
                 disabled={!day}
-                className={`
-                  w-9 h-9 text-sm rounded transition
-                  ${!day ? 'cursor-default' : 'hover:bg-gray-700 cursor-pointer'}
-                  ${isSelected(day) ? 'bg-blue-500 text-white font-semibold' : 'text-gray-300'}
-                  ${isToday(day) && !isSelected(day) ? 'border border-blue-500/50' : ''}
-                `}
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  fontSize: '13px',
+                  borderRadius: '8px',
+                  border: isToday(day) && !isSelected(day) ? '1px solid rgba(0, 194, 255, 0.4)' : 'none',
+                  background: isSelected(day) ? '#00C2FF' : 'transparent',
+                  color: isSelected(day) ? '#000' : day ? 'rgba(255, 255, 255, 0.8)' : 'transparent',
+                  fontWeight: isSelected(day) ? '600' : '400',
+                  cursor: day ? 'pointer' : 'default',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  if (day && !isSelected(day)) {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (day && !isSelected(day)) {
+                    e.currentTarget.style.background = 'transparent';
+                  }
+                }}
               >
                 {day}
               </button>
