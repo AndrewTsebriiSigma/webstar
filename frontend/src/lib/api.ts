@@ -198,6 +198,15 @@ export const analyticsAPI = {
   getDailyAnalytics: () => api.get('/api/analytics/daily'),
 };
 
+// Quiz API
+export const quizAPI = {
+  getQuiz: (slug: string) => api.get(`/api/quizzes/${slug}`),
+  submitQuiz: (data: { quiz_id: number; answers: Array<{question_id: number; answer_id: number}>; session_id?: string }) =>
+    api.post('/api/quizzes/submit', data),
+  getResults: () => api.get('/api/quizzes/results'),
+  transferSessionResults: (session_id: string) => api.post('/api/quizzes/transfer-session', { session_id }),
+};
+
 // Uploads API
 export const uploadsAPI = {
   uploadProfilePicture: (file: File) => {

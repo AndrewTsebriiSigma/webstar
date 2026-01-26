@@ -332,3 +332,60 @@ class AdminAction(SQLModel, table=True):
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+
+class Quiz(SQLModel, table=True):
+    """Quiz definition."""
+    __tablename__ = "quizzes"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    title: str = Field(nullable=False)
+    description: Optional[str] = None
+    slug: str = Field(unique=True, index=True, nullable=False)  # 'discover-hidden-skills'
+    
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class QuizQuestion(SQLModel, table=True):
+    """Quiz question."""
+    __tablename__ = "quiz_questions"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    quiz_id: int = Field(foreign_key="quizzes.id", nullable=False, index=True)
+    question_text: str = Field(nullable=False)
+    question_order: int = Field(nullable=False)  # Order within quiz
+    
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class QuizAnswer(SQLModel, table=True):
+    """Quiz answer option."""
+    __tablename__ = "quiz_answers"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    question_id: int = Field(foreign_key="quiz_questions.id", nullable=False, index=True)
+    answer_text: str = Field(nullable=False)
+    answer_order: int = Field(nullable=False)  # Order within question
+    score_value: int = Field(default=0)  # Score contribution for this answer
+    
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class QuizResult(SQLModel, table=True):
+    """User's quiz result."""
+    __tablename__ = "quiz_results"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[int] = Field(foreign_key="users.id", nullable=True, index=True)  # Nullable for anonymous users
+    quiz_id: int = Field(foreign_key="quizzes.id", nullable=False, index=True)
+    
+    # Store answers as JSON: [{"question_id": 1, "answer_id": 3}, ...]
+    answers_json: str = Field(nullable=False)
+    total_score: int = Field(nullable=False)
+    result_summary: Optional[str] = None  # Generated result text
+    
+    # Anonymous user tracking
+    session_id: Optional[str] = None  # For anonymous users before signup
+    
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+

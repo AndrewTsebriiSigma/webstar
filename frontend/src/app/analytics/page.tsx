@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { analyticsAPI } from '@/lib/api';
+import { analyticsAPI, quizAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import Link from 'next/link';
 
 interface DailyData {
   date: string;
@@ -45,6 +46,14 @@ export default function AnalyticsPage() {
     text: 0
   });
   const [projectsCount, setProjectsCount] = useState(0);
+  const [quizResults, setQuizResults] = useState<Array<{
+    id: number;
+    quiz_id: number;
+    quiz_title: string;
+    total_score: number;
+    result_summary: string | null;
+    created_at: string;
+  }>>([]);
   const viewsGraphRef = useRef<SVGSVGElement>(null);
   const clicksGraphRef = useRef<SVGSVGElement>(null);
 
@@ -56,7 +65,17 @@ export default function AnalyticsPage() {
     loadAnalytics();
     loadMediaCounts();
     loadProjectsCount();
+    loadQuizResults();
   }, [user]);
+
+  const loadQuizResults = async () => {
+    try {
+      const response = await quizAPI.getResults();
+      setQuizResults(response.data || []);
+    } catch (error) {
+      console.error('Failed to load quiz results:', error);
+    }
+  };
 
   const loadMediaCounts = async () => {
     try {
@@ -700,6 +719,127 @@ export default function AnalyticsPage() {
               </div>
             </div>
           </div>
+
+          {/* Quiz Results Section */}
+          {quizResults.length > 0 && (
+            <div style={{ marginTop: '16px' }}>
+              <div style={{
+                fontSize: '11px',
+                color: 'rgba(255, 255, 255, 0.5)',
+                marginBottom: '12px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                Quiz Results
+              </div>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                padding: '16px 12px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                borderRadius: '12px',
+              }}>
+                {quizResults.map((result) => (
+                  <div
+                    key={result.id}
+                    style={{
+                      padding: '12px',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(255, 255, 255, 0.05)'
+                    }}
+                  >
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      marginBottom: '8px'
+                    }}>
+                      <h3 style={{
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        color: '#fff',
+                        margin: 0
+                      }}>
+                        {result.quiz_title}
+                      </h3>
+                      <span style={{
+                        fontSize: '11px',
+                        color: 'rgba(255, 255, 255, 0.4)'
+                      }}>
+                        {new Date(result.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {result.result_summary && (
+                      <p style={{
+                        fontSize: '12px',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        lineHeight: '1.5',
+                        margin: 0,
+                        marginTop: '8px'
+                      }}>
+                        {result.result_summary}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* No Quiz Results - Show CTA */}
+          {quizResults.length === 0 && (
+            <div style={{ marginTop: '16px' }}>
+              <div style={{
+                fontSize: '11px',
+                color: 'rgba(255, 255, 255, 0.5)',
+                marginBottom: '12px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                Quiz Results
+              </div>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                padding: '16px 12px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                borderRadius: '12px',
+                textAlign: 'center'
+              }}>
+                <p style={{
+                  fontSize: '12px',
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  margin: 0,
+                  marginBottom: '8px'
+                }}>
+                  Take our quiz to discover your hidden skills
+                </p>
+                <Link
+                  href="/quiz"
+                  style={{
+                    display: 'inline-block',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    background: 'linear-gradient(180deg, rgba(0, 194, 255, 0.9) 0%, rgba(0, 160, 210, 0.95) 100%)',
+                    color: '#fff',
+                    textDecoration: 'none',
+                    transition: 'transform 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  Start Quiz
+                </Link>
+              </div>
+            </div>
+          )}
 
         </div>
       </div>

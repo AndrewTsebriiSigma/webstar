@@ -13,7 +13,7 @@ import time
 
 from app.core.config import settings
 from app.db.base import create_db_and_tables
-from app.routers import auth, onboarding, profile, portfolio, projects, economy, analytics, uploads, app_settings, diagnostics, admin, admin
+from app.routers import auth, onboarding, profile, portfolio, projects, economy, analytics, uploads, app_settings, diagnostics, admin, quiz
 from app.core.exception_handlers import (
     sqlalchemy_exception_handler,
     validation_exception_handler,
@@ -161,6 +161,7 @@ app.include_router(uploads.router, prefix="/api/uploads", tags=["uploads"])
 app.include_router(app_settings.router, prefix="/api/settings", tags=["settings"])
 app.include_router(diagnostics.router, prefix="/api/diagnostics", tags=["diagnostics"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
+app.include_router(quiz.router, prefix="/api", tags=["quiz"])
 
 
 @app.get("/health")

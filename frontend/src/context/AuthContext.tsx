@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, AuthResponse } from '@/lib/types';
-import { authAPI } from '@/lib/api';
+import { authAPI, quizAPI } from '@/lib/api';
 
 interface AuthContextType {
   user: User | null;
@@ -42,6 +42,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('user', JSON.stringify(data.user));
     
     setUser(data.user);
+
+    // Transfer quiz results if any
+    const sessionId = localStorage.getItem('quiz_session_id');
+    if (sessionId) {
+      try {
+        await quizAPI.transferSessionResults(sessionId);
+        localStorage.removeItem('quiz_session_id');
+        localStorage.removeItem('pending_quiz_result');
+      } catch (error) {
+        console.error('Failed to transfer quiz results:', error);
+      }
+    }
   };
 
   const register = async (email: string, username: string, password: string, fullName: string) => {
@@ -58,6 +70,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('user', JSON.stringify(data.user));
     
     setUser(data.user);
+
+    // Transfer quiz results if any
+    const sessionId = localStorage.getItem('quiz_session_id');
+    if (sessionId) {
+      try {
+        await quizAPI.transferSessionResults(sessionId);
+        localStorage.removeItem('quiz_session_id');
+        localStorage.removeItem('pending_quiz_result');
+      } catch (error) {
+        console.error('Failed to transfer quiz results:', error);
+      }
+    }
   };
 
   const googleLogin = async (token: string) => {
@@ -69,6 +93,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('user', JSON.stringify(data.user));
     
     setUser(data.user);
+
+    // Transfer quiz results if any
+    const sessionId = localStorage.getItem('quiz_session_id');
+    if (sessionId) {
+      try {
+        await quizAPI.transferSessionResults(sessionId);
+        localStorage.removeItem('quiz_session_id');
+        localStorage.removeItem('pending_quiz_result');
+      } catch (error) {
+        console.error('Failed to transfer quiz results:', error);
+      }
+    }
   };
 
   const logout = () => {

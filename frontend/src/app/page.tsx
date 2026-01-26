@@ -1841,6 +1841,43 @@ export default function Home() {
       {/* ===================== VIDEO MARQUEE REVERSE - Opposite Direction ===================== */}
       <VideoMarqueeReverse />
 
+      {/* ===================== QUIZ SECTION ===================== */}
+      <section 
+        className="relative overflow-hidden"
+        style={{ background: '#08080C' }}
+      >
+        <div className="relative z-10 py-12 sm:py-16 md:py-20 px-4">
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 
+              className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 tracking-tight"
+              style={{ color: '#FFFFFF' }}
+            >
+              Discover Your Hidden Skills
+            </h2>
+            <p 
+              className="text-sm sm:text-base mb-8 max-w-md mx-auto leading-relaxed"
+              style={{ color: 'rgba(255, 255, 255, 0.6)' }}
+            >
+              Take our quick assessment to uncover talents you didn't know you had. Get personalized insights about your unique strengths.
+            </p>
+            <Link
+              href="/quiz"
+              className="inline-flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base font-semibold rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+              style={{ 
+                background: 'linear-gradient(180deg, rgba(0, 194, 255, 0.9) 0%, rgba(0, 160, 210, 0.95) 100%)',
+                color: '#fff',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 8px rgba(0,0,0,0.35)'
+              }}
+            >
+              Start Quiz
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ===================== CTA - Clean Dark Section ===================== */}
       <section 
         className="relative overflow-hidden"
