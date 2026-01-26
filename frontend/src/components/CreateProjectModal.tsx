@@ -470,25 +470,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
         className={`bottom-slider-content ${isVisible ? 'entering' : 'exiting'}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Drag Handle Indicator */}
-        <div 
-          className="flex items-center justify-center flex-shrink-0"
-          style={{ 
-            padding: '12px 0 8px',
-            background: '#0D0D0D',
-          }}
-    >
-          <div 
-            style={{
-              width: '36px',
-              height: '5px',
-              background: 'rgba(255, 255, 255, 0.3)',
-              borderRadius: '999px'
-            }}
-          />
-        </div>
-
-        {/* Header - Fixed solid dark */}
+        {/* Header - Fixed solid dark (no drag handle for full-screen modal - Apple standard) */}
         <div 
           className="flex items-center justify-between flex-shrink-0"
           style={{ 
