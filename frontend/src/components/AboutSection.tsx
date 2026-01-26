@@ -840,18 +840,18 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
             style={{ 
               fontSize: '11px',
               lineHeight: '16px',
-              fontWeight: '600',
+                    fontWeight: '600',
               color: 'rgba(255, 255, 255, 0.5)',
               textTransform: 'uppercase',
               letterSpacing: '0.5px',
-            }}
-          >
+                  }}
+                >
             About
           </label>
-          {isSavingAbout && (
+            {isSavingAbout && (
             <span style={{ fontSize: '11px', color: 'var(--blue)' }}>Saving...</span>
           )}
-        </div>
+              </div>
 
           {canEdit ? (
             // Editable mode - matching Edit Post styling
@@ -866,13 +866,13 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                 transition: 'all 0.2s ease',
               }}
             >
-              <textarea
-                value={aboutText}
-                onChange={(e) => setAboutText(e.target.value)}
-                maxLength={250}
-                rows={4}
+            <textarea
+              value={aboutText}
+              onChange={(e) => setAboutText(e.target.value)}
+              maxLength={250}
+              rows={4}
                 placeholder="Tell us your incredible story..."
-                style={{
+              style={{
                   width: '100%',
                   padding: '12px 14px',
                   paddingBottom: '28px',
@@ -884,16 +884,16 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                   fontSize: '12px',
                   lineHeight: '1.5',
                   caretColor: '#00C2FF',
-                }}
-                onFocus={(e) => {
+              }}
+              onFocus={(e) => {
                   setAboutFocused(true);
                   const wrapper = e.target.closest('.about-input-wrapper') as HTMLElement;
                   if (wrapper) {
                     wrapper.style.boxShadow = '0 0 0 1px rgba(0, 194, 255, 0.3)';
                     wrapper.style.border = '1px solid transparent';
                   }
-                }}
-                onBlur={(e) => {
+              }}
+              onBlur={(e) => {
                   setAboutFocused(false);
                   const wrapper = e.target.closest('.about-input-wrapper') as HTMLElement;
                   if (wrapper) {
@@ -1052,7 +1052,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
           >
             Experience
           </label>
-          {isSavingExperience && (
+            {isSavingExperience && (
             <span style={{ fontSize: '11px', color: 'var(--blue)' }}>Saving...</span>
           )}
         </div>
@@ -1091,41 +1091,41 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                         wrapper.style.boxShadow = 'none';
                         wrapper.style.border = '1px solid rgba(255, 255, 255, 0.06)';
                       }
-                    }}
-                  >
-                    {/* Minus Badge - Delete button */}
-                    <div 
-                      className="minus-badge"
-                      onClick={() => removeExperience(index)}
-                      style={{
-                        position: 'absolute',
-                        top: '-6px',
-                        right: '-6px',
-                        width: '20px',
-                        height: '20px',
-                        borderRadius: '50%',
-                        background: 'rgba(255, 59, 48, 0.95)',
-                        border: '2px solid var(--bg-primary)',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        zIndex: 10,
-                        boxShadow: '0 2px 8px rgba(255, 59, 48, 0.4)',
-                      }}
-                    >
-                      <MinusIcon size={12} strokeWidth={3} />
+                  }}
+                >
+                      {/* Minus Badge - Delete button */}
+                      <div 
+                        className="minus-badge"
+                        onClick={() => removeExperience(index)}
+                        style={{
+                          position: 'absolute',
+                          top: '-6px',
+                          right: '-6px',
+                          width: '20px',
+                          height: '20px',
+                          borderRadius: '50%',
+                          background: 'rgba(255, 59, 48, 0.95)',
+                          border: '2px solid var(--bg-primary)',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          zIndex: 10,
+                          boxShadow: '0 2px 8px rgba(255, 59, 48, 0.4)',
+                        }}
+                      >
+                        <MinusIcon size={12} strokeWidth={3} />
                     </div>
-
+                      
                     {/* Role field - top */}
-                    <input
-                      type="text"
+                      <input
+                        type="text"
                       placeholder="Role*"
-                      value={exp.title}
-                      onChange={(e) => updateExperience(index, 'title', e.target.value)}
-                      maxLength={30}
-                      style={{
+                        value={exp.title}
+                        onChange={(e) => updateExperience(index, 'title', e.target.value)}
+                        maxLength={30}
+                        style={{
                         width: '100%',
                         padding: '12px 14px',
                         background: 'transparent',
@@ -1141,13 +1141,13 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                     <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.06)', margin: '0 14px' }} />
                     
                     {/* Company field */}
-                    <input
-                      type="text"
+                      <input
+                        type="text"
                       placeholder="Company"
-                      value={exp.company}
-                      onChange={(e) => updateExperience(index, 'company', e.target.value)}
-                      maxLength={30}
-                      style={{
+                        value={exp.company}
+                        onChange={(e) => updateExperience(index, 'company', e.target.value)}
+                        maxLength={30}
+                        style={{
                         width: '100%',
                         padding: '12px 14px',
                         background: 'transparent',
@@ -1156,8 +1156,8 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                         color: '#FFFFFF',
                         fontSize: '12px',
                         caretColor: '#00C2FF',
-                      }}
-                    />
+                        }}
+                      />
                   </div>
 
                   {/* Date unified block - simple dark style with horizontal divider */}
@@ -1176,7 +1176,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                   >
                     <input
                       type="text"
-                      placeholder="Start"
+                              placeholder="Start"
                       value={exp.startDate ? new Date(exp.startDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : ''}
                       readOnly
                       onClick={() => {
@@ -1217,8 +1217,8 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                         cursor: 'pointer',
                         textAlign: 'center',
                       }}
-                    />
-                  </div>
+                          />
+                        </div>
 
                   {/* Description - emotional CTA */}
                   <div
@@ -1232,13 +1232,13 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                       position: 'relative',
                     }}
                   >
-                    <textarea
+                      <textarea
                       placeholder="What changed because of you..."
-                      value={exp.description}
-                      onChange={(e) => updateExperience(index, 'description', e.target.value)}
+                        value={exp.description}
+                        onChange={(e) => updateExperience(index, 'description', e.target.value)}
                       maxLength={150}
-                      rows={2}
-                      style={{
+                        rows={2}
+                        style={{
                         width: '100%',
                         padding: '12px 14px',
                         paddingBottom: '24px',
@@ -1282,8 +1282,8 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                         {exp.description?.length || 0}/150
                       </span>
                     )}
+                    </div>
                   </div>
-                </div>
                 ))}
             </div>
               )}
@@ -1368,14 +1368,14 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
               ) : (
                 // Skeleton timeline card for empty experience - iOS style
                 <div 
-                  style={{
+                            style={{
                     padding: 'var(--space-4)',
                     background: 'rgba(255, 255, 255, 0.02)',
                     borderRadius: '12px',
                     maxWidth: '336px',
                     margin: '0 auto',
-                  }}
-                >
+                            }}
+                          >
                   <div style={{ 
                     display: 'flex', 
                     alignItems: 'flex-start', 
@@ -1384,7 +1384,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                     {/* Timeline dot - skeleton */}
                     <div 
                       className="skeleton-shimmer"
-                      style={{
+                            style={{
                         width: '10px', 
                         height: '10px', 
                         borderRadius: '50%', 
@@ -1409,10 +1409,10 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                         <SkeletonLine width="100%" height="10px" style={{ marginBottom: '6px' }} />
                         <SkeletonLine width="75%" height="10px" />
                       </div>
-                    </div>
-                  </div>
+                        </div>
+                      </div>
                   <CustomizeHint text="to show your journey" isOwnProfile={isOwnProfile} />
-                </div>
+                    </div>
               )}
                         </div>
           )}
@@ -1485,7 +1485,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
           >
             Skills
           </label>
-          {isSavingSkills && (
+            {isSavingSkills && (
             <span style={{ fontSize: '11px', color: 'var(--blue)' }}>Saving...</span>
           )}
         </div>
@@ -1550,17 +1550,17 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                         boxShadow: '0 0 8px rgba(0, 194, 255, 0.4)',
                         transition: 'width 0.1s ease',
                       }} />
-                      <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={skill.level}
-                        onChange={(e) => updateSkillLevel(index, parseInt(e.target.value))}
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={skill.level}
+                      onChange={(e) => updateSkillLevel(index, parseInt(e.target.value))}
                         onPointerDown={(e) => e.stopPropagation()}
                         onMouseDown={(e) => e.stopPropagation()}
                         onTouchStart={(e) => e.stopPropagation()}
                         className="w-full appearance-none cursor-pointer"
-                        style={{
+                      style={{
                           position: 'absolute',
                           top: 0,
                           left: 0,
@@ -1569,8 +1569,8 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                           background: 'transparent',
                           margin: 0,
                           zIndex: 2,
-                        }}
-                      />
+                      }}
+                    />
                     </div>
                   </div>
                 ))}
@@ -1625,7 +1625,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                 />
                 <button
                   onClick={addSkill}
-                  disabled={!newSkillName.trim()}
+                    disabled={!newSkillName.trim()}
                   className="transition-all active:scale-[0.98]"
                   style={{
                     padding: '0 20px',
@@ -1635,7 +1635,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                     color: newSkillName.trim() ? '#FFFFFF' : 'var(--text-tertiary)',
                     fontSize: '12px',
                     fontWeight: '600',
-                    cursor: newSkillName.trim() ? 'pointer' : 'not-allowed',
+                      cursor: newSkillName.trim() ? 'pointer' : 'not-allowed',
                   }}
                 >
                   Save
@@ -1652,20 +1652,20 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                 }}
                 className="add-card w-full transition-all active:scale-[0.98]"
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   gap: '6px',
                   height: '32px',
                   padding: '5px 12px',
                   borderRadius: '8px',
-                  background: 'rgba(0, 194, 255, 0.08)',
+                    background: 'rgba(0, 194, 255, 0.08)',
                   border: '1.5px dashed rgba(0, 194, 255, 0.6)',
-                  color: 'var(--blue)',
+                    color: 'var(--blue)',
                   fontSize: '12px',
                   fontWeight: '600',
                   letterSpacing: '0.5px',
-                  cursor: 'pointer',
+                    cursor: 'pointer',
                 }}
               >
                 <PlusIcon className="w-3.5 h-3.5" />
@@ -1723,7 +1723,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                   <SkeletonProgressBar labelWidth="60%" percent={55} />
                   
                   <CustomizeHint text="to show your superpowers" isOwnProfile={isOwnProfile} />
-          </div>
+                    </div>
         )}
             </div>
           )}
@@ -1796,7 +1796,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
           >
             Connect
           </label>
-          {canEdit && !showAddConnect && (
+            {canEdit && !showAddConnect && (
             <button
               onClick={() => setShowAddConnect(true)}
               style={{
@@ -1805,12 +1805,12 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                 background: 'rgba(0, 194, 255, 0.08)',
                 border: '1.5px dashed rgba(0, 194, 255, 0.6)',
                 borderRadius: '6px',
-                color: 'var(--blue)',
+                  color: 'var(--blue)',
                 fontSize: '11px',
-                fontWeight: '600',
-              }}
-            >
-              + Add
+                  fontWeight: '600',
+                }}
+              >
+                + Add
             </button>
           )}
         </div>
@@ -1896,7 +1896,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                   )}
                 </div>
               ))}
-              
+
               {/* Close picker button */}
               <button
                 onClick={() => setShowAddConnect(false)}
@@ -1924,8 +1924,8 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
               return (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '28px' }}>
                 {/* Icon that pops above the card */}
-                <div 
-                  style={{ 
+            <div
+              style={{
                     width: '52px', 
                     height: '52px', 
                     borderRadius: '50%', 
@@ -1940,7 +1940,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                   }}
                 >
                   {renderPlatformIcon(getPlatformDetails(selectedPlatformForLink)!.icon, 26)}
-                </div>
+                    </div>
 
                 {/* ONE unified card containing everything */}
                 <div
@@ -1981,7 +1981,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                       }}
                     >
                       <MinusIcon size={12} strokeWidth={3} />
-                    </div>
+                      </div>
                   )}
                   
                   {/* Card content - compact */}
@@ -2009,9 +2009,9 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                       style={{
                         width: '100%',
                         padding: '10px 12px',
-                        background: 'rgba(255, 255, 255, 0.04)',
+                          background: 'rgba(255, 255, 255, 0.04)',
                         border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '8px',
+                          borderRadius: '8px',
                         outline: 'none',
                         color: '#FFFFFF',
                         fontSize: '13px',
@@ -2028,48 +2028,48 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                       }}
                     />
                   </div>
-                  
+
                   {/* Save/Link up button - attached to card bottom */}
-                  <button
+                    <button
                     onClick={savePlatformLink}
                     disabled={!linkUsername.trim()}
                     className="transition-all active:scale-[0.98] w-full"
-                    style={{
+                      style={{
                       height: '42px',
                       background: linkUsername.trim() ? '#00C2FF' : 'rgba(255, 255, 255, 0.06)',
                       border: 'none',
                       borderRadius: '0 0 16px 16px',
                       color: linkUsername.trim() ? '#FFFFFF' : 'var(--text-tertiary)',
-                      fontSize: '15px',
-                      fontWeight: '600',
+                        fontSize: '15px',
+                        fontWeight: '600',
                       cursor: linkUsername.trim() ? 'pointer' : 'not-allowed',
-                    }}
-                  >
+                      }}
+                    >
                     {isEditing ? 'Save' : 'Link up'}
-                  </button>
+                    </button>
                 </div>
                 
                 {/* Back link - outside the card */}
-                <button
+                    <button
                   onClick={() => { 
                     setShowAddConnect(false); 
                     setSelectedPlatformForLink(null); 
                     setLinkUsername(''); 
                   }}
                   className="transition"
-                  style={{
+                      style={{
                     marginTop: '10px',
                     padding: '6px 12px',
                     background: 'transparent',
-                    border: 'none',
+                        border: 'none',
                     color: 'var(--text-tertiary)',
                     fontSize: '12px',
                     fontWeight: '500',
-                  }}
-                >
+                      }}
+                    >
                   ← Back
-                </button>
-              </div>
+                    </button>
+                  </div>
               );
             })()}
           </div>
@@ -2106,22 +2106,22 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                           {renderPlatformIcon(platformDetails.icon, 36)}
                         </div>
                       ) : (
-                        <a
-                          href={`https://${link}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="transition"
-                          style={{
-                            aspectRatio: '1',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            background: 'var(--bg-surface-strong)',
+                      <a
+                        href={`https://${link}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="transition"
+                        style={{
+                          aspectRatio: '1',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: 'var(--bg-surface-strong)',
                             border: '1px solid var(--border)',
-                            borderRadius: 'var(--radius-lg)',
-                          }}
-                          title={`${platformDetails.name}: ${link}`}
-                        >
+                          borderRadius: 'var(--radius-lg)',
+                        }}
+                        title={`${platformDetails.name}: ${link}`}
+                      >
                           {renderPlatformIcon(platformDetails.icon, 36)}
                         </a>
                       )}
@@ -2170,18 +2170,18 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                         color: 'var(--text-tertiary)',
                         textAlign: 'center',
                         marginTop: 'var(--space-2)',
-                        display: 'flex',
-                        alignItems: 'center',
+                          display: 'flex',
+                          alignItems: 'center',
                         justifyContent: 'center',
                         gap: '4px',
                         opacity: 0.6
-                      }}
-                    >
+                        }}
+                      >
                       <span style={{ fontStyle: 'italic' }}>tap</span>
-                      <img 
+                        <img 
                         src="/palette.svg" 
-                        alt="" 
-                        style={{ 
+                          alt="" 
+                          style={{ 
                           width: '12px', 
                           height: '12px', 
                           filter: 'invert(1) opacity(0.5)'
@@ -2210,19 +2210,19 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                       </span>
                     </p>
                   ) : (
-                    <p 
-                      style={{ 
-                        fontSize: '13px', 
-                        color: 'var(--text-secondary)',
-                        textAlign: 'center',
+                  <p 
+                    style={{ 
+                      fontSize: '13px', 
+                    color: 'var(--text-secondary)',
+                      textAlign: 'center',
                         opacity: 0.6,
                         marginTop: 'var(--space-2)',
-                      }}
-                    >
+                  }}
+                >
                       Link up your{' '}
                       <span 
                         style={{ 
-                          display: 'inline-block',
+                      display: 'inline-block',
                           width: '70px',
                           textAlign: 'left',
                         }}
@@ -2233,7 +2233,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                             display: 'inline-block',
                             color: 'rgba(0, 194, 255, 0.8)',
                             fontWeight: 600,
-                            fontSize: '12px',
+                      fontSize: '12px', 
                             animation: 'cubeFlip 0.5s ease-out'
                           }}
                         >

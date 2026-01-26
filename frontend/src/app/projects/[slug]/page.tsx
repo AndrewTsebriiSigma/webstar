@@ -320,7 +320,7 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
                 objectFit: 'cover'
               }}
             />
-            
+
             {/* Date Badge - ON the banner, transparent */}
             <div 
               style={{

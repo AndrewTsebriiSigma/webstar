@@ -138,9 +138,9 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
       setIsClosing(true);
       setIsVisible(false);
       setTimeout(() => {
-        handleReset();
+      handleReset();
         setIsClosing(false);
-        onClose();
+      onClose();
       }, 150);
     }
   };
@@ -182,7 +182,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
         const newValue = value.substring(0, start) + '  ' + value.substring(end);
         setDescription(newValue);
         setTimeout(() => {
-          textarea.selectionStart = textarea.selectionEnd = start + 2;
+        textarea.selectionStart = textarea.selectionEnd = start + 2;
         }, 0);
       }
     } else if (e.key === 'Enter') {
@@ -299,36 +299,36 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
         toast.success('Project updated! 🎉');
       } else {
         // Create new project (published, not draft)
-        const projectResponse = await projectsAPI.createProject({
-          title: title.trim(),
-          description: description.trim() || null,
-          cover_image: coverUrl || null,
-          tags: null,
-          tools: null,
-          project_url: null,
+      const projectResponse = await projectsAPI.createProject({
+        title: title.trim(),
+        description: description.trim() || null,
+        cover_image: coverUrl || null,
+        tags: null,
+        tools: null,
+        project_url: null,
           is_draft: false,
-        });
+      });
 
-        const projectId = projectResponse.data.id;
+      const projectId = projectResponse.data.id;
         setUploadProgress(80);
 
-        // Add project media
-        if (projectMedia.length > 0) {
-          for (const media of projectMedia) {
-            try {
-              await projectsAPI.addProjectMedia(projectId, {
-                media_url: media.media_url || media.content_url,
-                media_type: media.content_type,
-                thumbnail_url: media.thumbnail_url || null
-              });
-            } catch (error) {
-              console.error('Failed to add media:', error);
-            }
+      // Add project media
+      if (projectMedia.length > 0) {
+        for (const media of projectMedia) {
+          try {
+            await projectsAPI.addProjectMedia(projectId, {
+              media_url: media.media_url || media.content_url,
+              media_type: media.content_type,
+              thumbnail_url: media.thumbnail_url || null
+            });
+          } catch (error) {
+            console.error('Failed to add media:', error);
           }
         }
+      }
 
         setUploadProgress(100);
-        toast.success('Project created! 🎉');
+      toast.success('Project created! 🎉');
       }
       
       handleReset();
@@ -460,7 +460,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
   return (
     <>
       {/* Backdrop */}
-      <div 
+    <div 
         className={`bottom-slider-backdrop ${isVisible ? 'entering' : 'exiting'}`}
         onClick={handleClose}
       />
@@ -477,7 +477,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
             padding: '12px 0 8px',
             background: '#0D0D0D',
           }}
-        >
+    >
           <div 
             style={{
               width: '36px',
@@ -499,18 +499,18 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
           }}
         >
             <div className="flex items-center" style={{ gap: '20px' }}>
-              <button
-                onClick={handleClose}
-                disabled={saving || uploadingCover}
+          <button
+            onClick={handleClose}
+            disabled={saving || uploadingCover}
                 className="flex items-center justify-center transition-opacity"
                 style={{ 
                   width: '32px', 
                   height: '32px',
                   opacity: (saving || uploadingCover) ? 0.5 : 1
                 }}
-              >
+          >
                 <XMarkIcon className="w-6 h-6" style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
-              </button>
+          </button>
               <h2 
                 className="font-semibold text-white"
                 style={{ fontSize: '17px' }}
@@ -531,7 +531,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                   : (isDraftMode ? 'Save Draft' : 'Publish');
               
               return (
-                <button
+          <button
                   onClick={primaryAction}
                   disabled={isDisabled}
                   className="publish-btn text-[14px] font-semibold rounded-[8px] transition-all"
@@ -544,10 +544,10 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                   }}
                 >
                   {buttonLabel}
-                </button>
+          </button>
               );
             })()}
-          </div>
+        </div>
 
         {/* Scrollable Content Area */}
         <div 
@@ -561,19 +561,19 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
             paddingBottom: 'max(16px, env(safe-area-inset-bottom))'
           }}
         >
-            {/* Cover Image Upload Area */}
-            <div>
-              {coverPreview ? (
+          {/* Cover Image Upload Area */}
+          <div>
+            {coverPreview ? (
                 <div className="relative" style={{ borderRadius: '12px', overflow: 'hidden' }}>
-                  <img
-                    src={coverPreview}
-                    alt="Cover preview"
+                <img
+                  src={coverPreview}
+                  alt="Cover preview"
                     className="w-full object-cover"
                     style={{ maxHeight: '200px' }}
-                  />
-                  {!saving && !uploadingCover && (
-                    <label
-                      htmlFor="cover-upload-edit"
+                />
+                {!saving && !uploadingCover && (
+                  <label
+                    htmlFor="cover-upload-edit"
                       className="absolute transition-all"
                       style={{
                         top: '8px',
@@ -588,22 +588,22 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                         cursor: 'pointer',
                         border: '1px solid rgba(255, 255, 255, 0.1)'
                       }}
-                    >
-                      Change
-                    </label>
-                  )}
-                  <input
-                    type="file"
-                    id="cover-upload-edit"
-                    accept="image/*"
-                    onChange={handleCoverSelect}
-                    className="hidden"
-                    disabled={saving || uploadingCover}
-                  />
-                </div>
-              ) : (
-                <label
-                  htmlFor="cover-upload"
+                  >
+                    Change
+                  </label>
+                )}
+                <input
+                  type="file"
+                  id="cover-upload-edit"
+                  accept="image/*"
+                  onChange={handleCoverSelect}
+                  className="hidden"
+                  disabled={saving || uploadingCover}
+                />
+              </div>
+            ) : (
+              <label
+                htmlFor="cover-upload"
                   className="block w-full transition-all cursor-pointer"
                   style={{
                     height: '160px',
@@ -619,7 +619,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                     e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
                     e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
                   }}
-                >
+              >
                   <div className="flex flex-col items-center justify-center h-full">
                     <svg 
                       className="mb-3" 
@@ -629,21 +629,21 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                       viewBox="0 0 24 24"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
+                  </svg>
                     <p style={{ fontSize: '14px', fontWeight: '500', color: 'rgba(255, 255, 255, 0.5)' }}>
                       Add cover image
                     </p>
-                  </div>
-                  <input
-                    type="file"
-                    id="cover-upload"
-                    accept="image/*"
-                    onChange={handleCoverSelect}
-                    className="hidden"
-                  />
-                </label>
-              )}
-            </div>
+                </div>
+                <input
+                  type="file"
+                  id="cover-upload"
+                  accept="image/*"
+                  onChange={handleCoverSelect}
+                  className="hidden"
+                />
+              </label>
+            )}
+          </div>
 
             {/* Title + Description - Unified block like Post modal */}
             <div
@@ -660,7 +660,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
               <div style={{ position: 'relative' }}>
                 <textarea
                   ref={titleTextareaRef}
-                  value={title}
+              value={title}
                   onChange={(e) => {
                     if (e.target.value.length <= 44) {
                       setTitle(e.target.value);
@@ -703,8 +703,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                     maxHeight: '56px',
                     overflow: 'hidden'
                   }}
-                  disabled={saving || uploadingCover}
-                />
+              disabled={saving || uploadingCover}
+            />
                 <span 
                   style={{ 
                     position: 'absolute', 
@@ -716,23 +716,23 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                 >
                   {title.length}/44
                 </span>
-              </div>
-              
+          </div>
+
               {/* Divider */}
               <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.06)', margin: '0 14px' }} />
               
               {/* Description Input - with character count inside */}
               <div style={{ position: 'relative' }}>
-                <textarea
-                  ref={textareaRef}
+            <textarea
+              ref={textareaRef}
                   placeholder="Add a description..."
-                  value={description}
+              value={description}
                   onChange={(e) => {
                     if (e.target.value.length <= 280) {
                       setDescription(e.target.value);
                     }
                   }}
-                  onKeyDown={handleTextareaKeyDown}
+              onKeyDown={handleTextareaKeyDown}
                   onFocus={(e) => {
                     handleInputFocus(textareaRef);
                     const wrapper = e.currentTarget.closest('.project-input-wrapper') as HTMLElement;
@@ -763,8 +763,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                     caretColor: '#00C2FF',
                     lineHeight: '1.5'
                   }}
-                  disabled={saving || uploadingCover}
-                />
+              disabled={saving || uploadingCover}
+            />
                 <span 
                   style={{ 
                     position: 'absolute', 
@@ -776,13 +776,13 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                 >
                   {description.length}/280
                 </span>
-              </div>
             </div>
+          </div>
 
             {/* Add Content - Button that opens action sheet popup */}
-            <button
+          <button
               onClick={() => setShowContentPopup(true)}
-              disabled={saving || uploadingCover}
+            disabled={saving || uploadingCover}
               className="w-full transition-all active:scale-[0.98]"
               style={{
                 padding: '12px 14px',
@@ -802,7 +802,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                         background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%)',
                         borderRadius: '10px'
                       }}
-                    >
+          >
                       <PlusIcon className="w-4 h-4" style={{ color: '#A78BFA' }} />
                     </div>
                 <h3 className="text-[14px] font-semibold text-white text-left flex-1">Add Content</h3>
@@ -816,35 +816,35 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                       </svg>
                     </div>
-                  </button>
+          </button>
 
             {/* Gallery Preview */}
-            {projectMedia.length > 0 && (
-              <div>
+          {projectMedia.length > 0 && (
+            <div>
                 <h4 style={{ fontSize: '13px', fontWeight: '600', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '10px' }}>
-                  Gallery ({projectMedia.length})
-                </h4>
-                <div className="grid grid-cols-3 gap-2">
+                Gallery ({projectMedia.length})
+              </h4>
+              <div className="grid grid-cols-3 gap-2">
                   {projectMedia.map((media, index) => (
-                    <div
-                      key={index}
+                  <div
+                    key={index}
                       className="aspect-square relative group"
                       style={{ borderRadius: '8px', overflow: 'hidden', background: 'rgba(255, 255, 255, 0.05)' }}
-                    >
-                      {media.content_type === 'photo' && media.content_url && (
-                        <img
-                          src={media.content_url}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                      {media.content_type === 'video' && (
+                  >
+                    {media.content_type === 'photo' && media.content_url && (
+                      <img
+                        src={media.content_url}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                    {media.content_type === 'video' && (
                         <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(0, 0, 0, 0.3)' }}>
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="white" opacity="0.8">
-                            <path d="M8 5v14l11-7z"/>
-                          </svg>
-                        </div>
-                      )}
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="white" opacity="0.8">
+                          <path d="M8 5v14l11-7z"/>
+                        </svg>
+                      </div>
+                    )}
                       {/* Remove button on hover */}
                       <button
                         onClick={() => removeMediaItem(index)}
@@ -861,15 +861,15 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                       >
                         <XMarkIcon className="w-3 h-3 text-white" />
                       </button>
-                    </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
+          )}
           </div>
 
         {/* Upload Progress Overlay */}
-        {(saving || uploadingCover) && (
+          {(saving || uploadingCover) && (
           <div 
             className="absolute inset-0 flex flex-col items-center justify-center z-20"
             style={{ 
@@ -912,10 +912,10 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
               </div>
             </div>
             <p style={{ marginTop: '16px', fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>
-              {uploadingCover ? 'Uploading cover...' : 'Creating project...'}
-            </p>
-          </div>
-        )}
+                {uploadingCover ? 'Uploading cover...' : 'Creating project...'}
+              </p>
+            </div>
+          )}
 
         {/* Sticky Footer - Same as Post modal */}
         <div 
@@ -944,7 +944,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                     Functionality preserved - can be re-enabled by uncommenting.
                 */}
                 {/* Secondary action button
-                <button
+          <button
                   onClick={secondaryAction}
                   disabled={saving || uploadingCover || !title.trim() || (isDraftMode && (!coverFile && !coverPreview))}
                   className="flex items-center gap-2 transition disabled:opacity-40"
@@ -961,7 +961,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                     </svg>
                   )}
                   <span className="text-[14px] font-medium">{secondaryLabel}</span>
-                </button>
+          </button>
                 END FEATURE_DISABLED: SAVE_AS_DRAFT */}
               </div>
             );
@@ -1091,7 +1091,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
               >
                 Cancel
               </button>
-            </div>
+          </div>
           </div>
 
           {/* Animation keyframes */}
@@ -1122,8 +1122,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
             WebkitBackdropFilter: 'blur(14px)'
           }}
           onClick={() => setShowAttachExistingModal(false)}
-        >
-          <div 
+      >
+        <div 
             className="w-full"
             style={{
               maxWidth: 'min(500px, calc(100% - 24px))',
@@ -1135,9 +1135,9 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
               display: 'flex',
               flexDirection: 'column'
             }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
             <div 
               className="flex items-center justify-between flex-shrink-0"
               style={{ 
@@ -1171,49 +1171,49 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
               >
                 Add ({selectedPortfolioIds.size})
               </button>
-            </div>
+          </div>
 
-            {/* Portfolio Grid */}
+          {/* Portfolio Grid */}
             <div className="flex-1 overflow-y-auto" style={{ padding: '12px' }}>
-              {portfolioItems.length > 0 ? (
+            {portfolioItems.length > 0 ? (
                 <div className="grid grid-cols-3 gap-2">
-                  {portfolioItems.map((item) => {
-                    const isSelected = selectedPortfolioIds.has(item.id);
-                    return (
-                      <div
-                        key={item.id}
-                        onClick={() => {
-                          setSelectedPortfolioIds(prev => {
-                            const newSet = new Set(prev);
-                            if (newSet.has(item.id)) {
-                              newSet.delete(item.id);
-                            } else {
-                              newSet.add(item.id);
-                            }
-                            return newSet;
-                          });
-                        }}
+                {portfolioItems.map((item) => {
+                  const isSelected = selectedPortfolioIds.has(item.id);
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => {
+                        setSelectedPortfolioIds(prev => {
+                          const newSet = new Set(prev);
+                          if (newSet.has(item.id)) {
+                            newSet.delete(item.id);
+                          } else {
+                            newSet.add(item.id);
+                          }
+                          return newSet;
+                        });
+                      }}
                         className="aspect-square cursor-pointer relative"
                         style={{
                           borderRadius: '8px',
                           overflow: 'hidden',
                           border: isSelected ? '2px solid #00C2FF' : '2px solid transparent'
                         }}
-                      >
-                        {item.content_type === 'photo' && item.content_url && (
-                          <img
-                            src={item.content_url}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
-                        )}
-                        {item.content_type === 'video' && item.content_url && (
-                          <video
-                            src={item.content_url}
-                            className="w-full h-full object-cover"
-                          />
-                        )}
-                        {isSelected && (
+                    >
+                      {item.content_type === 'photo' && item.content_url && (
+                        <img
+                          src={item.content_url}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                      {item.content_type === 'video' && item.content_url && (
+                        <video
+                          src={item.content_url}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                      {isSelected && (
                           <div 
                             className="absolute inset-0 flex items-center justify-center"
                             style={{ background: 'rgba(0, 194, 255, 0.3)' }}
@@ -1228,16 +1228,16 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                               }}
                             >
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="#000">
-                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                              </svg>
-                            </div>
+                              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
                 <div className="flex flex-col items-center justify-center h-full" style={{ minHeight: '200px' }}>
                   <svg 
                     className="mb-3" 
@@ -1249,11 +1249,11 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                   </svg>
                   <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>No posts to attach</p>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
+      </div>
       )}
     </>
   );
