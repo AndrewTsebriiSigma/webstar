@@ -102,6 +102,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
   // Profile theme customization
   type ProfileTheme = 'default' | 'monochrome';
   const [profileTheme, setProfileTheme] = useState<ProfileTheme>('default');
+  const [showThemeCustomization, setShowThemeCustomization] = useState(false);
   
   // Size picker state for portfolio items
   type WidgetSize = '1x1' | '4x5' | '5x4' | '4x6' | '3x4' | '16x9' | '4x3';
@@ -176,6 +177,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
       }));
     }
   }, [gridColumns, gridGap, gridRadius, layoutMode, gridAspectRatio, profileTheme, isOwnProfile, username]);
+
+  // Reset theme customization when customize panel closes
+  useEffect(() => {
+    if (!showCustomizePanel) {
+      setShowThemeCustomization(false);
+    }
+  }, [showCustomizePanel]);
 
   useEffect(() => {
     loadProfile();
@@ -507,7 +515,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
       let pointsData = null;
       let metricsData = null;
       let totalViewsData = 0;
-      
+
       if (isOwnProfile) {
         const [pointsRes, metricsRes, dailyRes] = await Promise.allSettled([
           economyAPI.getPoints(),
@@ -830,7 +838,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
   return (
     <div 
-      className={`min-h-screen text-white ${profileTheme === 'monochrome' ? 'theme-monochrome' : ''}`} 
+      className={`min-h-screen text-white ${profileTheme === 'monochrome' ? 'theme-monochrome' : ''} ${isOwnProfile && showCustomizePanel ? 'customize-mode' : ''}`} 
       style={{ 
         background: '#111111',
         ...themeStyles
@@ -916,74 +924,23 @@ export default function ProfilePage({ params }: { params: { username: string } }
         onChange={(e) => handleProfileImageUpload(e, 'profile')}
       />
 
-      {/* Customize Mode Indicator Bar */}
-      {isOwnProfile && showCustomizePanel && (
-        <div 
-          style={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 50,
-            background: 'linear-gradient(90deg, rgba(0, 194, 255, 0.15), rgba(123, 104, 238, 0.15))',
-            borderBottom: '1px solid rgba(0, 194, 255, 0.3)',
-            padding: '10px 20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            animation: 'slideDown 0.3s ease-out'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div 
-              style={{ 
-                width: '8px', 
-                height: '8px', 
-                borderRadius: '50%', 
-                background: '#00C2FF',
-                animation: 'pulse 2s infinite'
-              }} 
-            />
-            <span style={{ color: '#00C2FF', fontSize: '13px', fontWeight: 600 }}>
-              Customize Mode
-            </span>
-            <span style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '12px' }}>
-              Tap elements to edit
-            </span>
-          </div>
-          <button
-            onClick={() => {
-              saveProfileInfo();
-              setShowCustomizePanel(false);
-              toast.success('Changes saved!');
-            }}
-            style={{
-              background: 'linear-gradient(135deg, #00C2FF, #7B68EE)',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '6px 16px',
-              color: '#FFFFFF',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'transform 0.15s ease'
-            }}
-            onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
-            onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
-          >
-            Done
-          </button>
-        </div>
-      )}
+      {/* Customize Mode - No intrusive bar, just visual hints via CSS classes */}
 
       {/* Cover Image Area - webSTAR: 176px height */}
       <div className="relative">
         <div 
-          className={`h-40 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 relative overflow-hidden ${isOwnProfile && showCustomizePanel ? 'magic-editable-container' : ''}`}
+          className={`h-40 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 relative overflow-hidden ${isOwnProfile && showCustomizePanel ? 'banner-editable' : ''}`}
           style={{
-            cursor: isOwnProfile && showCustomizePanel ? 'pointer' : 'default'
+            cursor: isOwnProfile && showCustomizePanel ? 'pointer' : 'default',
+            position: 'relative',
+            zIndex: 1
           }}
-          onClick={() => {
+          onClick={(e) => {
+            // Only trigger if NOT clicking a button
+            const target = e.target as HTMLElement;
+            if (target.closest('.banner-action-btn')) {
+              return; // Button handles its own click
+            }
             if (isOwnProfile && showCustomizePanel && !isUploadingBanner) {
               bannerInputRef.current?.click();
             }
@@ -994,47 +951,28 @@ export default function ProfilePage({ params }: { params: { username: string } }
               src={profile.banner_image}
               alt="Profile banner"
               className="w-full h-full object-cover"
+              style={{ pointerEvents: 'none' }}
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-600/30 via-blue-500/20 to-purple-600/30" />
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-600/30 via-blue-500/20 to-purple-600/30" style={{ pointerEvents: 'none' }} />
           )}
           
-          {/* Banner upload overlay - shows in customize mode */}
-          {isOwnProfile && showCustomizePanel && (
+          {/* Banner upload indicator - subtle camera icon only when uploading */}
+          {isOwnProfile && showCustomizePanel && isUploadingBanner && (
             <div 
-              className="absolute inset-0 flex items-center justify-center transition-all duration-300"
+              className="absolute inset-0 flex items-center justify-center"
               style={{
-                background: 'rgba(0, 0, 0, 0.5)',
+                background: 'rgba(0, 0, 0, 0.4)',
                 pointerEvents: 'none',
-                borderBottom: '3px solid #57BFF9',
-                boxShadow: 'inset 0 0 30px rgba(87, 191, 249, 0.2)'
               }}
             >
-              {isUploadingBanner ? (
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#57BFF9]"></div>
-              ) : (
-                <div className="flex flex-col items-center gap-2" style={{ color: '#57BFF9' }}>
-                  <div 
-                    className="rounded-full p-3"
-                    style={{ 
-                      background: 'rgba(87, 191, 249, 0.15)', 
-                      border: '2px solid #57BFF9',
-                      animation: 'magicShimmer 2s infinite ease-in-out'
-                    }}
-                  >
-                    <CameraIcon className="w-8 h-8" />
-                  </div>
-                  <span style={{ fontSize: '14px', fontWeight: 600, textShadow: '0 0 10px rgba(87, 191, 249, 0.5)' }}>
-                    Click to Change Banner
-                  </span>
-                </div>
-              )}
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00C2FF]"></div>
             </div>
           )}
           
           {/* Viewer Mode & Settings - Bigger buttons - Always on top */}
           {isOwnProfile && (
-            <div className="absolute top-4 left-4 right-4 flex justify-between" style={{ zIndex: 10 }}>
+            <div className="absolute top-4 left-4 right-4 flex justify-between" style={{ zIndex: 10, pointerEvents: 'none' }}>
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
@@ -1049,7 +987,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
                   color: 'rgba(255, 255, 255, 0.85)',
-                  transition: 'all 150ms cubic-bezier(0.22, 0.61, 0.36, 1)'
+                  transition: 'all 150ms cubic-bezier(0.22, 0.61, 0.36, 1)',
+                  pointerEvents: 'auto'
                 }}
                 onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
                 onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
@@ -1060,41 +999,46 @@ export default function ProfilePage({ params }: { params: { username: string } }
               </button>
               {/* Hide settings gear icon in viewer mode */}
               {!viewerMode && (
-                <button 
+              <button 
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowSettingsModal(true);
                   }}
                   className="banner-action-btn flex items-center justify-center"
-                  style={{ 
+                style={{ 
                     width: '37px',
                     height: '37px',
                     borderRadius: '50%',
                     background: 'rgba(0, 0, 0, 0.35)',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
                     color: 'rgba(255, 255, 255, 0.85)',
-                    transition: 'all 150ms cubic-bezier(0.22, 0.61, 0.36, 1)'
-                  }}
-                  onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
-                  onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                  title="Settings"
-                >
+                  transition: 'all 150ms cubic-bezier(0.22, 0.61, 0.36, 1)',
+                  pointerEvents: 'auto'
+                }}
+                onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
+                onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                title="Settings"
+              >
                   <Cog6ToothIcon className="w-[20px] h-[20px]" />
-                </button>
+              </button>
               )}
             </div>
           )}
         </div>
 
         {/* Avatar - 166px, 2/3 banner overlap (110px) */}
-        <div className="relative px-4 -mt-[110px]">
+        <div className="relative px-4 -mt-[110px]" style={{ zIndex: 2 }}>
           <div className="flex items-center justify-center">
             <div 
               className="relative"
               style={{
-                cursor: isOwnProfile && showCustomizePanel ? 'pointer' : 'default'
+                cursor: isOwnProfile && showCustomizePanel ? 'pointer' : 'default',
+                width: '150px',
+                height: '150px',
+                borderRadius: '50%',
+                background: '#111111'
               }}
               onClick={() => {
                 if (isOwnProfile && showCustomizePanel && !isUploadingProfilePic) {
@@ -1103,211 +1047,276 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
             >
             {profile.profile_picture ? (
-              <img
-                src={profile.profile_picture}
-                alt={profile.display_name || username}
-                  className={`w-[150px] h-[150px] rounded-full object-cover ${isOwnProfile && showCustomizePanel ? 'magic-editable' : ''}`}
+              <div
+                className={`w-[150px] h-[150px] rounded-full overflow-hidden ${isOwnProfile && showCustomizePanel ? 'avatar-editable' : ''}`}
                 style={{
                   border: '6px solid #111111',
-                  boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
+                  boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)',
+                  background: '#111111'
                 }}
-              />
+              >
+                <img
+                  src={profile.profile_picture}
+                  alt={profile.display_name || username}
+                  className="w-full h-full object-cover"
+                  style={{ display: 'block' }}
+                />
+              </div>
             ) : (
-                <div className={`w-[150px] h-[150px] rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-4xl font-bold ${isOwnProfile && showCustomizePanel ? 'magic-editable' : ''}`}
+              <div 
+                className={`w-[150px] h-[150px] rounded-full flex items-center justify-center text-white text-4xl font-bold ${isOwnProfile && showCustomizePanel ? 'avatar-editable' : ''}`}
                 style={{
                   border: '6px solid #111111',
-                  boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)'
+                  boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)',
+                  background: 'linear-gradient(135deg, #06b6d4 0%, #2563eb 100%)'
                 }}
               >
                 {(profile.display_name || username).charAt(0).toUpperCase()}
               </div>
-              )}
+            )}
               
-              {/* Profile picture upload overlay */}
-              {isOwnProfile && showCustomizePanel && (
-                <div 
-                  className="absolute inset-0 rounded-full flex items-center justify-center"
-                  style={{
-                    background: 'rgba(0, 0, 0, 0.5)',
-                    pointerEvents: 'none'
-                  }}
-                >
-                  {isUploadingProfilePic ? (
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                  ) : (
-                    <CameraIcon className="w-10 h-10" style={{ color: '#57BFF9' }} />
-                  )}
-                </div>
-              )}
+            {/* Profile picture upload overlay - only show when uploading */}
+            {isOwnProfile && showCustomizePanel && isUploadingProfilePic && (
+              <div 
+                className="absolute inset-0 rounded-full flex items-center justify-center"
+                style={{
+                  background: 'rgba(0, 0, 0, 0.5)',
+                  pointerEvents: 'none'
+                }}
+              >
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00C2FF]"></div>
+              </div>
+            )}
             </div>
           </div>
         </div>
       </div>
 
       {/* Profile Info - Compact design */}
-      <div className="profile-info" style={{ padding: viewerMode ? '0 24px 12px' : '0 24px 12px', textAlign: 'center' }}>
+      <div className="profile-info" style={{ padding: '0 24px 12px', textAlign: 'center' }}>
         {/* Name + Badge - Centered together as unit */}
         <div className="flex items-center justify-center pt-2" style={{ marginBottom: '14px' }}>
           <div className="inline-flex items-center gap-1.5">
-            {isOwnProfile && showCustomizePanel ? (
-              <input
-                type="text"
-                value={editedName}
-                onChange={(e) => setEditedName(e.target.value)}
-                onBlur={handleProfileFieldBlur}
-                placeholder="Your name"
-                className="text-xl font-bold text-center magic-editable"
+            <span className="relative inline-block">
+              {isOwnProfile && showCustomizePanel && (
+                <div className="sparkle-field">
+                  <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+                  <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+                  <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+                  <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+                </div>
+              )}
+              <h1 
+                contentEditable={isOwnProfile && showCustomizePanel}
+                suppressContentEditableWarning
+                onFocus={(e) => {
+                  if (isOwnProfile && showCustomizePanel) {
+                    // Mac folder rename: select all text on focus
+                    const selection = window.getSelection();
+                    const range = document.createRange();
+                    range.selectNodeContents(e.currentTarget);
+                    selection?.removeAllRanges();
+                    selection?.addRange(range);
+                  }
+                }}
+                onBlur={(e) => {
+                  if (isOwnProfile && showCustomizePanel) {
+                    setEditedName(e.currentTarget.textContent || '');
+                    handleProfileFieldBlur();
+                  }
+                }}
+                className="text-xl font-bold" 
                 style={{ 
                   color: 'rgba(245, 245, 245, 0.95)', 
                   letterSpacing: '-0.2px',
-                  background: 'transparent',
-                  borderRadius: '8px',
-                  padding: '4px 12px',
-                  minWidth: '120px',
-                  maxWidth: '250px'
+                  outline: 'none',
+                  cursor: isOwnProfile && showCustomizePanel ? 'text' : 'default'
                 }}
-              />
-            ) : (
-            <h1 className="text-xl font-bold" style={{ color: 'rgba(245, 245, 245, 0.95)', letterSpacing: '-0.2px' }}>
-              {profile.display_name || username}
-            </h1>
-            )}
-            {profile.expertise_badge && (
+              >
+                {isOwnProfile && showCustomizePanel ? editedName : (profile.display_name || username)}
+          </h1>
+            </span>
+          {profile.expertise_badge && (
               <CheckBadgeIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" style={{ marginTop: '-1px' }} />
-            )}
+          )}
           </div>
         </div>
         
-        {/* Bio - 10px gap */}
-        {isOwnProfile && showCustomizePanel ? (
-          <textarea
-            value={editedBio}
-            onChange={(e) => setEditedBio(e.target.value)}
-            onBlur={handleProfileFieldBlur}
-            placeholder="Write your bio..."
-            rows={2}
-            className="text-sm px-2 w-full magic-editable"
-            style={{ 
-              color: 'rgba(255, 255, 255, 0.75)',
-              fontSize: '15px',
-              lineHeight: '1.4',
-              marginBottom: '8px',
-              background: 'transparent',
-              borderRadius: '8px',
-              padding: '8px 12px',
-              resize: 'none',
-              textAlign: 'center'
-            }}
-          />
-        ) : (
-        <p className="text-sm px-2" style={{ 
+        {/* Bio */}
+        <div className="px-2" style={{ marginBottom: '8px' }}>
+          <span className="relative inline-block">
+            {isOwnProfile && showCustomizePanel && (
+              <div className="sparkle-field">
+                <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+                <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+                <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+                <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+              </div>
+            )}
+            <p 
+              contentEditable={isOwnProfile && showCustomizePanel}
+              suppressContentEditableWarning
+              onFocus={(e) => {
+                if (isOwnProfile && showCustomizePanel) {
+                  // Mac folder rename: select all text on focus
+                  const selection = window.getSelection();
+                  const range = document.createRange();
+                  range.selectNodeContents(e.currentTarget);
+                  selection?.removeAllRanges();
+                  selection?.addRange(range);
+                }
+              }}
+              onBlur={(e) => {
+                if (isOwnProfile && showCustomizePanel) {
+                  setEditedBio(e.currentTarget.textContent || '');
+                  handleProfileFieldBlur();
+                }
+              }}
+              style={{ 
           color: 'rgba(255, 255, 255, 0.75)',
           fontSize: '15px',
           lineHeight: '1.4',
-          opacity: 0.9,
-          marginBottom: '8px'
-        }}>
-          {profile.bio || 'Make original the only standard.'}
-        </p>
-        )}
+                opacity: 0.9,
+                outline: 'none',
+                cursor: isOwnProfile && showCustomizePanel ? 'text' : 'default'
+              }}
+            >
+              {isOwnProfile && showCustomizePanel ? editedBio : (profile.bio || 'Make original the only standard.')}
+            </p>
+          </span>
+        </div>
 
         {/* Location & Role - 14px to dashboard */}
         <div className="flex items-center justify-center gap-2 flex-wrap px-2" style={{ marginBottom: '14px' }}>
           <div className="flex items-center gap-1 relative" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
             <MapPinIcon className="w-3.5 h-3.5 flex-shrink-0" />
-            {isOwnProfile && showCustomizePanel ? (
-              <div className="relative">
-                <input
-                  type="text"
-                  value={editedLocation}
-                  onChange={(e) => {
-                    setEditedLocation(e.target.value);
-                    searchLocation(e.target.value);
+            <span className="relative">
+              {isOwnProfile && showCustomizePanel && (
+                <div className="sparkle-field" style={{ top: '-4px', left: '-6px', right: '-6px', bottom: '-4px' }}>
+                  <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+                  <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+                  <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+                  <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+                </div>
+              )}
+              <span
+                contentEditable={isOwnProfile && showCustomizePanel}
+                suppressContentEditableWarning
+                onInput={(e) => {
+                  if (isOwnProfile && showCustomizePanel) {
+                    const text = e.currentTarget.textContent || '';
+                    // Only update for search, don't re-render text content
+                    searchLocation(text);
+                  }
+                }}
+                onFocus={(e) => {
+                  if (isOwnProfile && showCustomizePanel) {
+                    // Mac folder rename: select all text on focus
+                    const selection = window.getSelection();
+                    const range = document.createRange();
+                    range.selectNodeContents(e.currentTarget);
+                    selection?.removeAllRanges();
+                    selection?.addRange(range);
+                    if (locationSuggestions.length > 0) {
+                      setShowLocationDropdown(true);
+                    }
+                  }
+                }}
+                onBlur={(e) => {
+                  // Save the location value on blur
+                  if (isOwnProfile && showCustomizePanel) {
+                    setEditedLocation(e.currentTarget.textContent || '');
+                  }
+                  setTimeout(() => setShowLocationDropdown(false), 200);
+                  handleProfileFieldBlur();
+                }}
+                style={{ 
+                  outline: 'none',
+                  cursor: isOwnProfile && showCustomizePanel ? 'text' : 'default'
+                }}
+              >
+                {isOwnProfile && showCustomizePanel ? (editedLocation || profile.location || 'Paris, France') : (profile.location || 'Paris, France')}
+              </span>
+              {/* Location dropdown */}
+              {isOwnProfile && showCustomizePanel && showLocationDropdown && locationSuggestions.length > 0 && (
+                <div 
+                  className="absolute left-0 mt-1 rounded-lg overflow-hidden shadow-xl"
+                  style={{
+                    background: 'rgba(20, 25, 35, 0.98)',
+                    border: '1px solid rgba(87, 191, 249, 0.3)',
+                    backdropFilter: 'blur(20px)',
+                    zIndex: 100,
+                    width: 'calc(100vw - 48px)',
+                    maxWidth: '320px',
+                    top: '100%'
                   }}
-                  onFocus={() => {
-                    if (locationSuggestions.length > 0) setShowLocationDropdown(true);
-                  }}
-                  onBlur={() => {
-                    // Delay to allow click on dropdown
-                    setTimeout(() => setShowLocationDropdown(false), 200);
-                  }}
-                  placeholder="Search location..."
-                  className="magic-editable"
-                  style={{ 
-                    color: 'rgba(255, 255, 255, 0.75)',
-                    fontSize: '13px',
-                    background: 'transparent',
-                    borderRadius: '6px',
-                    padding: '2px 8px',
-                    minWidth: '150px'
-                  }}
-                />
-                {/* Location dropdown */}
-                {showLocationDropdown && locationSuggestions.length > 0 && (
-                  <div 
-                    className="absolute left-0 mt-1 rounded-lg overflow-hidden shadow-xl"
-                    style={{
-                      background: 'rgba(20, 25, 35, 0.98)',
-                      border: '1px solid rgba(87, 191, 249, 0.3)',
-                      backdropFilter: 'blur(20px)',
-                      zIndex: 100,
-                      minWidth: '280px',
-                      top: '100%'
-                    }}
-                  >
-                    {locationSuggestions.map((suggestion) => (
-                      <button
-                        key={suggestion.id}
-                        type="button"
-                        onClick={() => handleLocationSelect(suggestion.place_name)}
-                        className="w-full text-left px-3 py-2 transition-all duration-150 hover:bg-[#57BFF9]/20"
-                        style={{
-                          color: 'rgba(255, 255, 255, 0.9)',
-                          fontSize: '13px',
-                          borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
-                        }}
-                      >
-                        <span className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-[#57BFF9] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          <span className="truncate">{suggestion.place_name}</span>
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-            <span>{profile.location || 'Paris, France'}</span>
-            )}
+                >
+                  {locationSuggestions.map((suggestion) => (
+                    <button
+                      key={suggestion.id}
+                      type="button"
+                      onClick={() => handleLocationSelect(suggestion.place_name)}
+                      className="w-full text-left px-3 py-2 transition-all duration-150 hover:bg-[#57BFF9]/20"
+                      style={{
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        fontSize: '13px',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+                      }}
+                    >
+                      <span className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-[#57BFF9] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span className="truncate">{suggestion.place_name}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </span>
           </div>
           
           <div style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '12px', opacity: 0.5 }}>•</div>
           
-          <div className="flex items-center gap-1" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
+          <div className="flex items-center gap-1 relative" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
             <BriefcaseIcon className="w-3.5 h-3.5 flex-shrink-0" />
-            {isOwnProfile && showCustomizePanel ? (
-              <input
-                type="text"
-                value={editedRole}
-                onChange={(e) => setEditedRole(e.target.value)}
-                onBlur={handleProfileFieldBlur}
-                placeholder="Role"
-                className="magic-editable"
-                style={{ 
-                  color: 'rgba(255, 255, 255, 0.75)',
-                  fontSize: '13px',
-                  background: 'transparent',
-                  borderRadius: '6px',
-                  padding: '2px 8px',
-                  width: '100px'
+            <span className="relative">
+              {isOwnProfile && showCustomizePanel && (
+                <div className="sparkle-field" style={{ top: '-4px', left: '-6px', right: '-6px', bottom: '-4px' }}>
+                  <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+                  <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+                  <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+                  <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+                </div>
+              )}
+              <span
+                contentEditable={isOwnProfile && showCustomizePanel}
+                suppressContentEditableWarning
+                onFocus={(e) => {
+                  if (isOwnProfile && showCustomizePanel) {
+                    // Mac folder rename: select all text on focus
+                    const selection = window.getSelection();
+                    const range = document.createRange();
+                    range.selectNodeContents(e.currentTarget);
+                    selection?.removeAllRanges();
+                    selection?.addRange(range);
+                  }
                 }}
-              />
-            ) : (
-            <span>{profile.role || 'Creator'}</span>
-            )}
+                onBlur={(e) => {
+                  if (isOwnProfile && showCustomizePanel) {
+                    setEditedRole(e.currentTarget.textContent || '');
+                    handleProfileFieldBlur();
+                  }
+                }}
+                style={{ 
+                  outline: 'none',
+                  cursor: isOwnProfile && showCustomizePanel ? 'text' : 'default'
+                }}
+              >
+                {isOwnProfile && showCustomizePanel ? editedRole : (profile.role || 'Creator')}
+              </span>
+            </span>
           </div>
         </div>
       </div>
@@ -1317,7 +1326,12 @@ export default function ProfilePage({ params }: { params: { username: string } }
         <div 
           ref={dashboardRef}
           className="dashboard-strip"
-          onClick={() => router.push('/analytics')}
+          onClick={() => {
+            if (!showCustomizePanel) {
+              router.push('/analytics');
+            }
+            // If customize mode, do nothing (no visual change)
+          }}
           style={{ 
             display: 'flex',
             alignItems: 'center',
@@ -1326,18 +1340,21 @@ export default function ProfilePage({ params }: { params: { username: string } }
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
-            borderRadius: '16px',
-            cursor: 'pointer',
+            borderBottom: showCustomizePanel ? 'none' : '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: showCustomizePanel ? 'none' : '0 4px 16px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+            borderRadius: showCustomizePanel ? '16px 16px 0 0' : '16px',
+            cursor: showCustomizePanel ? 'default' : 'pointer',
             transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
             padding: '10px 16px 10px 24px',
-            margin: '0 16px 8px',
+            margin: showCustomizePanel ? '0 16px 0' : '0 16px 8px',
             width: 'calc(100% - 32px)',
             height: '60px'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-            e.currentTarget.style.transform = 'scale(1.01)';
+            if (!showCustomizePanel) {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+              e.currentTarget.style.transform = 'scale(1.01)';
+            }
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
@@ -1517,37 +1534,82 @@ export default function ProfilePage({ params }: { params: { username: string } }
         </div>
       )}
 
-      {/* Theme Bar Pulse - Connects to dashboard strip with animation */}
-      <div 
-        className="theme-bar-pulse"
-        style={{ 
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px',
-          width: 'calc((100% - 32px) * 0.92)',
-          marginLeft: 'auto',
-          marginRight: 'auto',
-          overflow: 'hidden',
-          boxSizing: 'border-box',
-          background: isOwnProfile && !viewerMode && showCustomizePanel ? 'rgba(255, 255, 255, 0.03)' : 'transparent',
-          borderLeft: isOwnProfile && !viewerMode && showCustomizePanel ? '1px solid rgba(0, 194, 255, 0.25)' : 'none',
-          borderRight: isOwnProfile && !viewerMode && showCustomizePanel ? '1px solid rgba(0, 194, 255, 0.25)' : 'none',
-          borderBottom: isOwnProfile && !viewerMode && showCustomizePanel ? '1px solid rgba(0, 194, 255, 0.25)' : 'none',
-          borderTop: 'none',
-          borderRadius: '0 0 16px 16px',
-          maxHeight: isOwnProfile && !viewerMode && showCustomizePanel ? '100px' : '0',
-          opacity: isOwnProfile && !viewerMode && showCustomizePanel ? 1 : 0,
-          marginTop: isOwnProfile && !viewerMode && showCustomizePanel ? '-8px' : '0',
-          marginBottom: isOwnProfile && !viewerMode && showCustomizePanel ? '16px' : '0',
-          padding: isOwnProfile && !viewerMode && showCustomizePanel ? '16px 12px 10px' : '0 12px',
-          backdropFilter: isOwnProfile && !viewerMode && showCustomizePanel ? 'blur(20px)' : 'none',
-          WebkitBackdropFilter: isOwnProfile && !viewerMode && showCustomizePanel ? 'blur(20px)' : 'none',
-          transition: 'max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin-top 0.3s ease, margin-bottom 0.3s ease, padding 0.3s ease, background 0.3s ease, border 0.3s ease'
-        }}
-      >
-        {/* Theme Options Row */}
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', height: '32px' }}>
+      {/* Theme Customization - Connected to Dashboard */}
+      {isOwnProfile && !viewerMode && showCustomizePanel && (
+        <div 
+          className="theme-bar-pulse"
+          style={{ 
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            width: 'calc(100% - 32px)',
+            margin: '0 16px',
+            marginBottom: '16px',
+            overflow: 'hidden',
+            boxSizing: 'border-box',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}
+        >
+          {/* Toggle Button - Thin strip connecting to dashboard, blue text */}
+          <button
+            onClick={() => setShowThemeCustomization(!showThemeCustomization)}
+            style={{
+              width: '100%',
+              height: '28px',
+              borderRadius: showThemeCustomization ? '0' : '0 0 16px 16px',
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderTop: 'none',
+              color: '#00C2FF',
+              fontSize: '11px',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '0 16px',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+            }}
+          >
+            <span>Theme</span>
+            <svg 
+              width="10" height="10" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="#00C2FF" 
+              strokeWidth="2.5"
+              style={{ 
+                transform: showThemeCustomization ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s ease'
+              }}
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+          
+          {/* Theme Options - Collapsible */}
+          <div style={{ 
+            maxHeight: showThemeCustomization ? '70px' : '0',
+            opacity: showThemeCustomization ? 1 : 0,
+            overflow: 'hidden',
+            transition: 'max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease',
+            background: 'rgba(255, 255, 255, 0.03)',
+            borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRight: '1px solid rgba(255, 255, 255, 0.1)',
+            borderBottom: showThemeCustomization ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+            borderRadius: '0 0 16px 16px',
+            padding: showThemeCustomization ? '12px 12px 10px' : '0 12px',
+            backdropFilter: 'blur(20px)',
+          }}>
+            {/* Theme Options Row */}
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', height: '32px' }}>
           {/* Dark Button */}
           <button
             onClick={() => setProfileTheme('default')}
@@ -1714,22 +1776,19 @@ export default function ProfilePage({ params }: { params: { username: string } }
               Soon
             </span>
           </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Action Buttons - Visible when buttons exist OR in Customize Mode */}
       {isOwnProfile && (actionButtons.length > 0 || showCustomizePanel) && (
       <div 
-        className={`dashboard-actions-wrapper ${showCustomizePanel ? 'customize-active' : ''}`}
-                style={{
+        className="dashboard-actions-wrapper"
+        style={{
           position: 'relative',
-          padding: showCustomizePanel ? '12px' : '0 16px',
-          marginBottom: showCustomizePanel ? '20px' : '12px',
-          marginLeft: showCustomizePanel ? '16px' : '0',
-          marginRight: showCustomizePanel ? '16px' : '0',
-          background: showCustomizePanel ? 'rgba(255, 255, 255, 0.02)' : 'transparent',
-          border: showCustomizePanel ? '1px solid rgba(0, 194, 255, 0.25)' : 'none',
-          borderRadius: showCustomizePanel ? '16px' : '0',
+          padding: '0 16px',
+          marginBottom: '12px',
           transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
         }}
       >
@@ -2040,8 +2099,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }}
               className="flex-1 py-2 text-sm bg-cyan-500 hover:bg-cyan-600 rounded-xl font-semibold transition"
             >
-              Follow
-            </button>
+                Follow
+              </button>
             <button 
               onClick={() => {
                 navigator.clipboard.writeText(window.location.href);
@@ -2058,7 +2117,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
               </svg>
               Copy Link
-            </button>
+              </button>
             <button 
               onClick={() => {
                 if (!user) {
@@ -2077,8 +2136,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
             >
               <FlagIcon style={{ width: '18px', height: '18px', color: 'rgba(255, 255, 255, 0.5)' }} />
             </button>
-          </div>
         </div>
+      </div>
       )}
 
       {/* Tabs */}
@@ -2371,8 +2430,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
                           });
                         } else if (!showActionMenu) {
                           // Normal mode: open feed modal
-                          setFeedInitialPostId(item.id);
-                          setShowFeedModal(true);
+                      setFeedInitialPostId(item.id);
+                      setShowFeedModal(true);
                         }
                       }}
                       onContextMenu={(e) => handleItemContextMenu(e, item)}
@@ -2537,9 +2596,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
                     {/* Image Container with Badge - 4:3 aspect ratio */}
                     <div style={{ position: 'relative', aspectRatio: '4 / 3' }}>
                       {project.cover_image ? (
-                        <img
-                          src={project.cover_image}
-                          alt={project.title}
+                      <img
+                        src={project.cover_image}
+                        alt={project.title}
                           style={{
                             width: '100%',
                             height: '100%',
@@ -2565,9 +2624,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       
                       {/* Item Count Badge - smaller, better anchored */}
                       {project.media_count > 0 && (
-                        <div 
-                          style={{
-                            position: 'absolute',
+                    <div 
+                      style={{
+                        position: 'absolute',
                             top: '8px',
                             right: '8px',
                             minWidth: '24px',
@@ -2581,11 +2640,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
                             padding: '0 6px',
                             fontSize: '12px',
                             fontWeight: '600',
-                            color: '#FFFFFF'
-                          }}
-                        >
+                        color: '#FFFFFF'
+                      }}
+                    >
                           {project.media_count}
-                        </div>
+                      </div>
                       )}
                     </div>
                     
