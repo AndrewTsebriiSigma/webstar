@@ -7,6 +7,17 @@ const config: Config = {
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    // ================================================================
+    // RESPONSIVE BREAKPOINTS - Mobile First System
+    // ================================================================
+    screens: {
+      'xs': '375px',    // Small phones (iPhone SE)
+      'sm': '640px',    // Large phones / small tablets
+      'md': '768px',    // Tablets (iPad Mini)
+      'lg': '1024px',   // Desktop / Laptops
+      'xl': '1280px',   // Large desktop
+      '2xl': '1536px',  // Ultra-wide displays
+    },
     extend: {
       colors: {
         // CREATOR OS - Electric Blue (Primary Accent)
@@ -122,6 +133,19 @@ const config: Config = {
       width: {
         'container': '420px',
         'container-lg': '480px',
+        'container-tablet': '580px',
+        'container-desktop': '720px',
+        'container-wide': '900px',
+      },
+      maxWidth: {
+        'content-narrow': '420px',
+        'content-default': '540px',
+        'content-wide': '720px',
+        'content-xl': '960px',
+        'content-2xl': '1140px',
+      },
+      minHeight: {
+        'screen-safe': '100dvh',
       },
       height: {
         'topbar': '56px',

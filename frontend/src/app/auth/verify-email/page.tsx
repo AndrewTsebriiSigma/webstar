@@ -214,8 +214,8 @@ function VerifyEmailContent() {
 
   return (
     <div 
-      className="min-h-screen flex flex-col items-center px-4 relative overflow-hidden"
-      style={{ background: '#111111', paddingTop: '8vh' }}
+      className="min-h-screen min-h-screen-safe flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden"
+      style={{ background: '#111111' }}
     >
       {/* Deep Background Layer */}
       <div 
@@ -245,10 +245,10 @@ function VerifyEmailContent() {
       />
 
       {/* Main Content */}
-      <div className="max-w-md w-full relative z-10 animate-fade-in flex flex-col flex-1">
-        {/* Logo & Header - mb-24 same as auth page */}
+      <div className="w-full relative z-10 animate-fade-in flex flex-col" style={{ maxWidth: 'min(460px, calc(100% - 32px))' }}>
+        {/* Logo & Header */}
         <div className="text-center">
-          <Link href="/" className="inline-flex flex-col items-center mb-24 relative group">
+          <Link href="/" className="inline-flex flex-col items-center mb-8 sm:mb-12 relative group">
             <div 
               className="absolute inset-0 rounded-full blur-2xl opacity-60 group-hover:opacity-80 transition-opacity duration-500"
               style={{ 
@@ -324,7 +324,7 @@ function VerifyEmailContent() {
         {/* Main Card */}
         <div 
           className="glass rounded-2xl p-8 animate-slide-up"
-          style={{ 
+          style={{
             background: 'rgba(255, 255, 255, 0.03)',
             backdropFilter: 'blur(20px) saturate(180%)',
             WebkitBackdropFilter: 'blur(20px) saturate(180%)',
@@ -408,14 +408,14 @@ function VerifyEmailContent() {
         </div>
 
         {/* Footer - pushed down */}
-        <div className="mt-auto pt-16 text-center">
+        <div className="mt-8 text-center">
           <div className="flex items-center justify-center gap-4 mb-2">
             <Link href="/terms" className="text-[10px] transition hover:text-white" style={{ color: 'rgba(255, 255, 255, 0.25)' }}>
               Terms
             </Link>
             <Link href="/privacy" className="text-[10px] transition hover:text-white" style={{ color: 'rgba(255, 255, 255, 0.25)' }}>
               Privacy
-            </Link>
+          </Link>
           </div>
           <p className="text-[10px]" style={{ color: 'rgba(255, 255, 255, 0.2)' }}>
             WebSTAR. All rights reserved.

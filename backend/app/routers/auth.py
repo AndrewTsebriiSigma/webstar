@@ -217,7 +217,7 @@ async def register(request: Request, user_data: UserRegister, session: Session =
                 (EmailVerification.verified == True)
             )
         ).first()
-        
+    
         if not verification:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

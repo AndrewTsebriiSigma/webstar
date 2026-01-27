@@ -178,7 +178,7 @@ export default function RegisterPage() {
 
   return (
     <div 
-      className="min-h-screen flex flex-col items-center px-4 relative overflow-hidden"
+      className="min-h-screen min-h-screen-safe flex flex-col items-center px-4 sm:px-6 lg:px-8 relative overflow-hidden"
       style={{ background: '#111111', paddingTop: '8vh' }}
     >
       {/* Deep Background Layer */}
@@ -214,7 +214,7 @@ export default function RegisterPage() {
       />
 
       {/* Main Content */}
-      <div className="max-w-md w-full relative z-10 animate-fade-in">
+      <div className="w-full max-w-[420px] sm:max-w-[460px] relative z-10 animate-fade-in">
         {/* Logo & Header */}
         <div className="text-center">
           <Link href="/" className="inline-flex flex-col items-center mb-12 relative group">

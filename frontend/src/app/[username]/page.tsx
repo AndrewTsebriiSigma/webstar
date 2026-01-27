@@ -838,12 +838,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
   return (
     <div 
-      className={`min-h-screen text-white ${profileTheme === 'monochrome' ? 'theme-monochrome' : ''} ${isOwnProfile && showCustomizePanel ? 'customize-mode' : ''}`} 
+      className={`min-h-screen min-h-screen-safe text-white ${profileTheme === 'monochrome' ? 'theme-monochrome' : ''} ${isOwnProfile && showCustomizePanel ? 'customize-mode' : ''}`} 
       style={{ 
         background: '#111111',
         ...themeStyles
       }}
     >
+      {/* Responsive wrapper for centered content on larger screens */}
+      <div className="w-full max-w-content-default mx-auto lg:max-w-content-wide xl:max-w-content-xl">
       {/* Mobile Header - Animated on scroll, hidden in viewer mode */}
       {!viewerMode && (
         <header 
@@ -926,10 +928,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
       {/* Customize Mode - No intrusive bar, just visual hints via CSS classes */}
 
-      {/* Cover Image Area - webSTAR: 176px height */}
+      {/* Cover Image Area - Responsive height */}
       <div className="relative">
         <div 
-          className={`h-40 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 relative overflow-hidden ${isOwnProfile && showCustomizePanel ? 'banner-editable' : ''}`}
+          className={`h-40 sm:h-48 lg:h-56 xl:h-64 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 relative overflow-hidden ${isOwnProfile && showCustomizePanel ? 'banner-editable' : ''}`}
           style={{
             cursor: isOwnProfile && showCustomizePanel ? 'pointer' : 'default',
             position: 'relative',
@@ -1028,15 +1030,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
           )}
         </div>
 
-        {/* Avatar - 166px, 2/3 banner overlap (110px) */}
-        <div className="relative px-4 -mt-[110px]" style={{ zIndex: 2 }}>
+        {/* Avatar - Responsive size with banner overlap */}
+        <div className="relative px-4 -mt-[90px] sm:-mt-[100px] lg:-mt-[110px]" style={{ zIndex: 2 }}>
           <div className="flex items-center justify-center">
             <div 
-              className="relative"
+              className="relative w-[120px] h-[120px] sm:w-[140px] sm:h-[140px] lg:w-[150px] lg:h-[150px]"
               style={{
                 cursor: isOwnProfile && showCustomizePanel ? 'pointer' : 'default',
-                width: '150px',
-                height: '150px',
                 borderRadius: '50%',
                 background: '#111111'
               }}
@@ -1048,9 +1048,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
             >
             {profile.profile_picture ? (
               <div
-                className={`w-[150px] h-[150px] rounded-full overflow-hidden ${isOwnProfile && showCustomizePanel ? 'avatar-editable' : ''}`}
+                className={`w-full h-full rounded-full overflow-hidden ${isOwnProfile && showCustomizePanel ? 'avatar-editable' : ''}`}
                 style={{
-                  border: '6px solid #111111',
+                  border: '5px solid #111111',
                   boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)',
                   background: '#111111'
                 }}
@@ -1064,9 +1064,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
               </div>
             ) : (
               <div 
-                className={`w-[150px] h-[150px] rounded-full flex items-center justify-center text-white text-4xl font-bold ${isOwnProfile && showCustomizePanel ? 'avatar-editable' : ''}`}
+                className={`w-full h-full rounded-full flex items-center justify-center text-white text-3xl sm:text-4xl font-bold ${isOwnProfile && showCustomizePanel ? 'avatar-editable' : ''}`}
                 style={{
-                  border: '6px solid #111111',
+                  border: '5px solid #111111',
                   boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)',
                   background: 'linear-gradient(135deg, #06b6d4 0%, #2563eb 100%)'
                 }}
@@ -2751,8 +2751,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
           </div>
         </div>
       )}
+      
+      </div>{/* End responsive wrapper */}
 
-      {/* Modals */}
+      {/* Modals - Outside responsive wrapper for full-screen behavior */}
       <CreateContentModal
         isOpen={showCreateContentModal}
         onClose={() => {

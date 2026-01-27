@@ -94,7 +94,9 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#0B0B0C' }}>
+    <div className="min-h-screen min-h-screen-safe" style={{ background: '#0B0B0C' }}>
+      {/* Responsive container for admin */}
+      <div className="w-full max-w-content-wide lg:max-w-content-xl xl:max-w-content-2xl mx-auto">
       {/* Header */}
       <div style={{ 
         background: 'rgba(255, 255, 255, 0.02)', 
@@ -235,6 +237,7 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+      </div>{/* End responsive container */}
     </div>
   );
 }

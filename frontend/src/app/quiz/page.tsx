@@ -310,7 +310,7 @@ export default function QuizPage() {
 
   return (
     <div 
-      className="min-h-screen flex flex-col items-center px-4 py-8 relative overflow-hidden"
+      className="min-h-screen min-h-screen-safe flex flex-col items-center px-4 sm:px-6 py-6 sm:py-8 relative overflow-hidden"
       style={{ background: 'radial-gradient(ellipse at center, #0B0B0C 0%, #050506 100%)' }}
     >
       <FloatingOrbs />

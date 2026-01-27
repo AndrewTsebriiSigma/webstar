@@ -519,7 +519,9 @@ export default function AnalyticsPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: '#0B0B0C', color: '#F5F5F5' }} onClick={clearTooltip}>
+    <div className="min-h-screen min-h-screen-safe" style={{ background: '#0B0B0C', color: '#F5F5F5' }} onClick={clearTooltip}>
+      {/* Responsive container */}
+      <div className="w-full max-w-content-wide lg:max-w-content-xl xl:max-w-content-2xl mx-auto">
       {/* Header */}
       <div style={{
         position: 'sticky',
@@ -843,6 +845,7 @@ export default function AnalyticsPage() {
 
         </div>
       </div>
+      </div>{/* End responsive container */}
     </div>
   );
 }

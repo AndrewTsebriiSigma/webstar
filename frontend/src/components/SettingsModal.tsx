@@ -602,17 +602,22 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   return (
     <>
-      {/* Glass Overlay */}
+      {/* Glass Overlay - Responsive: full-screen on mobile, centered dialog on desktop */}
       <div 
-        className="fixed inset-0 z-50"
+        className="fixed inset-0 z-50 flex items-center justify-center"
         style={{ 
           background: 'rgba(17, 17, 17, 0.92)',
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)'
         }}
+        onClick={(e) => e.target === e.currentTarget && onClose()}
       >
-        {/* Full screen container */}
-        <div className="w-full h-full flex flex-col" style={{ background: 'transparent' }}>
+        {/* Container - Full screen mobile, max-width dialog desktop */}
+        <div 
+          className="w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-[500px] sm:rounded-2xl flex flex-col" 
+          style={{ background: '#0D0D0D' }}
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Header - 55px */}
           <div 
             className="flex items-center justify-between flex-shrink-0"
@@ -629,8 +634,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </button>
           </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto" style={{ padding: '24px 16px' }}>
+          {/* Content - Responsive padding */}
+          <div className="flex-1 overflow-y-auto" style={{ padding: '20px 16px' }}>
             {activeSection === null ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 {/* ACCOUNT Section */}

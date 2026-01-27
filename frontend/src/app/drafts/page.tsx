@@ -493,7 +493,9 @@ export default function DraftsPage() {
   const totalItems = sortedDrafts.length + filteredProjects.length;
 
   return (
-    <div className="min-h-screen" style={{ background: '#111111', color: '#F5F5F5' }}>
+    <div className="min-h-screen min-h-screen-safe" style={{ background: '#111111', color: '#F5F5F5' }}>
+      {/* Responsive container */}
+      <div className="w-full max-w-content-wide lg:max-w-content-xl mx-auto">
       {/* Studio Header - with counter beside title */}
       <header 
         className="sticky top-0"
@@ -820,8 +822,9 @@ export default function DraftsPage() {
         ) : null}
         </div>
       </div>
+      </div>{/* End responsive container */}
 
-      {/* Modals */}
+      {/* Modals - Outside responsive container */}
       <CreateContentModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}

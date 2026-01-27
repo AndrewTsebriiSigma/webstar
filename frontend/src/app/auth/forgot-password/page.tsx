@@ -150,8 +150,8 @@ function ForgotPasswordContent() {
 
   return (
     <div 
-      className="min-h-screen flex flex-col items-center px-4 relative overflow-hidden"
-      style={{ background: '#111111', paddingTop: '8vh' }}
+      className="min-h-screen min-h-screen-safe flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden"
+      style={{ background: '#111111' }}
     >
       {/* Deep Background Layer */}
       <div 
@@ -181,10 +181,10 @@ function ForgotPasswordContent() {
       />
 
       {/* Main Content */}
-      <div className="max-w-md w-full relative z-10 animate-fade-in flex flex-col flex-1">
+      <div className="w-full relative z-10 animate-fade-in flex flex-col" style={{ maxWidth: 'min(460px, calc(100% - 32px))' }}>
         {/* Logo & Header */}
         <div className="text-center">
-          <Link href="/" className="inline-flex flex-col items-center mb-24 relative group">
+          <Link href="/" className="inline-flex flex-col items-center mb-8 sm:mb-12 relative group">
             <div 
               className="absolute inset-0 rounded-full blur-2xl opacity-60 group-hover:opacity-80 transition-opacity duration-500"
               style={{ 
@@ -214,7 +214,7 @@ function ForgotPasswordContent() {
         {/* Main Card */}
         <div 
           className="glass rounded-2xl p-8 animate-slide-up"
-          style={{ 
+          style={{
             background: 'rgba(255, 255, 255, 0.03)',
             backdropFilter: 'blur(20px) saturate(180%)',
             WebkitBackdropFilter: 'blur(20px) saturate(180%)',
@@ -222,13 +222,13 @@ function ForgotPasswordContent() {
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
           }}
         >
-          {error && (
-            <div className="mb-4 p-3 rounded-xl text-sm text-center"
-              style={{ background: 'rgba(255, 69, 58, 0.1)', color: '#FF453A' }}
-            >
-              {error}
-            </div>
-          )}
+              {error && (
+                <div className="mb-4 p-3 rounded-xl text-sm text-center"
+                  style={{ background: 'rgba(255, 69, 58, 0.1)', color: '#FF453A' }}
+                >
+                  {error}
+                </div>
+              )}
 
           {!sent ? (
             <>
@@ -324,8 +324,8 @@ function ForgotPasswordContent() {
           </Link>
         </div>
 
-        {/* Footer - pushed down */}
-        <div className="mt-auto pt-16 text-center">
+        {/* Footer */}
+        <div className="mt-8 text-center">
           <div className="flex items-center justify-center gap-4 mb-2">
             <Link href="/terms" className="text-[10px] transition hover:text-white" style={{ color: 'rgba(255, 255, 255, 0.25)' }}>
               Terms
