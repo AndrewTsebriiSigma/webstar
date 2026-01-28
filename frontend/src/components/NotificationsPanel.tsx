@@ -20,10 +20,18 @@ interface NotificationsPanelProps {
 export default function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Animation states
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
+      requestAnimationFrame(() => setIsVisible(true));
       fetchNotifications();
+    } else {
+      setIsVisible(false);
+      setIsClosing(false);
     }
   }, [isOpen]);
 
@@ -92,7 +100,17 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
     }
   };
 
-  if (!isOpen) return null;
+  // Animated close handler
+  const handleClose = () => {
+    setIsClosing(true);
+    setIsVisible(false);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose();
+    }, 300);
+  };
+
+  if (!isOpen && !isClosing) return null;
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -108,39 +126,58 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50"
-      style={{ 
-        background: 'rgba(17, 17, 17, 0.92)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)'
-      }}
-    >
-      <div className="w-full h-full flex flex-col" style={{ background: 'transparent' }}>
-        {/* Header - 55px */}
+    <>
+      {/* Backdrop with animation */}
+      <div 
+        className={`bottom-slider-backdrop ${isVisible ? 'entering' : 'exiting'}`}
+        onClick={handleClose}
+      />
+      
+      {/* Bottom Slider Content with animation */}
+      <div className={`bottom-slider-content ${isVisible ? 'entering' : 'exiting'}`}>
+        {/* Header - 55px with close on LEFT, title CENTERED */}
         <div 
-          className="flex items-center justify-between flex-shrink-0"
+          className="flex items-center flex-shrink-0"
           style={{ 
             height: '55px',
             padding: '0 16px',
-            background: '#0D0D0D',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
+            background: 'rgba(20, 20, 20, 0.8)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            position: 'relative'
           }}
         >
-          <div className="flex items-center gap-2">
-            <span style={{ fontSize: '20px', fontWeight: 600, color: '#FFFFFF' }}>Notifications</span>
+          {/* Close button - absolute left */}
+          <button 
+            onClick={handleClose} 
+            className="flex items-center justify-center hover:opacity-70 transition-opacity" 
+            style={{ 
+              position: 'absolute',
+              left: '16px',
+              width: '32px', 
+              height: '32px',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              borderRadius: '8px'
+            }}
+          >
+            <XMarkIcon style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.6)' }} />
+          </button>
+          
+          {/* Title - centered with badge */}
+          <div className="flex items-center gap-2 mx-auto">
+            <span style={{ fontSize: '17px', fontWeight: 600, color: '#FFFFFF' }}>Notifications</span>
             {notifications.filter(n => n.unread).length > 0 && (
               <span style={{ padding: '2px 8px', background: '#00C2FF', borderRadius: '999px', fontSize: '11px', fontWeight: 700, color: '#FFFFFF' }}>
                 {notifications.filter(n => n.unread).length}
               </span>
             )}
           </div>
-          <button onClick={onClose} className="flex items-center justify-center hover:opacity-70 transition-opacity" style={{ width: '28px', height: '28px' }}>
-            <XMarkIcon style={{ width: '24px', height: '24px', color: 'rgba(255, 255, 255, 0.5)' }} />
-          </button>
         </div>
 
-        {/* Notifications List - divider style */}
+        {/* Notifications List - scrollable content */}
         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div 
@@ -195,6 +232,6 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }

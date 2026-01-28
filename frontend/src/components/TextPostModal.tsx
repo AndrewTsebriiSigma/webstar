@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { portfolioAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { XMarkIcon } from '@heroicons/react/24/outline';
@@ -15,8 +15,19 @@ export default function TextPostModal({ isOpen, onClose, onSuccess }: TextPostMo
   const [textContent, setTextContent] = useState('');
   const [title, setTitle] = useState('');
   const [posting, setPosting] = useState(false);
+  
+  // Animation states
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen) {
+      requestAnimationFrame(() => setIsVisible(true));
+    } else {
+      setIsVisible(false);
+      setIsClosing(false);
+    }
+  }, [isOpen]);
 
   const handleReset = () => {
     setTextContent('');
@@ -26,10 +37,17 @@ export default function TextPostModal({ isOpen, onClose, onSuccess }: TextPostMo
 
   const handleClose = () => {
     if (!posting) {
-      handleReset();
-      onClose();
+      setIsClosing(true);
+      setIsVisible(false);
+      setTimeout(() => {
+        handleReset();
+        setIsClosing(false);
+        onClose();
+      }, 300);
     }
   };
+
+  if (!isOpen && !isClosing) return null;
 
   const handleSubmit = async () => {
     if (!textContent.trim()) {
@@ -70,53 +88,43 @@ export default function TextPostModal({ isOpen, onClose, onSuccess }: TextPostMo
   const isOverLimit = charCount > charLimit;
 
   return (
-    <div
-      className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      style={{ background: 'rgba(11, 11, 12, 0.9)' }}
-    >
+    <>
+      {/* Backdrop with animation */}
       <div 
-        className="rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto border"
-        style={{
-          background: 'rgba(22, 22, 24, 0.95)',
-          borderColor: 'rgba(255, 255, 255, 0.12)',
-          backdropFilter: 'blur(20px)'
-        }}
+        className={`bottom-slider-backdrop ${isVisible ? 'entering' : 'exiting'}`}
+        onClick={handleClose}
+      />
+      
+      {/* Bottom Slider Content with animation */}
+      <div 
+        className={`bottom-slider-content ${isVisible ? 'entering' : 'exiting'}`}
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
+        {/* Header - 55px consistent */}
         <div 
-          className="flex items-center justify-between p-6 border-b"
-          style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}
+          className="flex items-center justify-between flex-shrink-0"
+          style={{ 
+            height: '55px',
+            padding: '0 16px',
+            background: 'rgba(20, 20, 20, 0.8)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+          }}
         >
-          <h2 
-            className="text-xl font-semibold"
-            style={{ 
-              color: '#FFFFFF',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
-            }}
-          >
-            Create Text Post
-          </h2>
+          <span style={{ fontSize: '17px', fontWeight: 600, color: '#FFFFFF' }}>Create Text Post</span>
           <button
             onClick={handleClose}
             disabled={posting}
-            className="p-2 rounded-full transition-all"
-            style={{
-              background: 'rgba(255, 255, 255, 0.06)',
-              color: 'rgba(255, 255, 255, 0.6)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-            }}
+            className="flex items-center justify-center hover:opacity-70 transition-opacity"
+            style={{ width: '28px', height: '28px' }}
           >
-            <XMarkIcon className="w-5 h-5" />
+            <XMarkIcon style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.6)' }} />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-5">
+        {/* Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-5">
           {/* Title Input (Optional) */}
           <div>
             <label 
@@ -250,8 +258,11 @@ export default function TextPostModal({ isOpen, onClose, onSuccess }: TextPostMo
 
         {/* Footer */}
         <div 
-          className="p-6 border-t flex items-center justify-between"
-          style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}
+          className="flex-shrink-0 p-4 border-t flex items-center justify-between"
+          style={{ 
+            borderColor: 'rgba(255, 255, 255, 0.08)',
+            paddingBottom: 'max(16px, env(safe-area-inset-bottom))'
+          }}
         >
           <button
             onClick={handleClose}
@@ -259,14 +270,7 @@ export default function TextPostModal({ isOpen, onClose, onSuccess }: TextPostMo
             className="px-5 py-2.5 rounded-xl font-medium transition-all text-sm"
             style={{
               background: 'rgba(255, 255, 255, 0.06)',
-              color: 'rgba(255, 255, 255, 0.8)',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+              color: 'rgba(255, 255, 255, 0.8)'
             }}
           >
             Cancel
@@ -278,31 +282,16 @@ export default function TextPostModal({ isOpen, onClose, onSuccess }: TextPostMo
             className="px-6 py-2.5 rounded-xl font-semibold transition-all text-sm disabled:opacity-40 disabled:cursor-not-allowed"
             style={{
               background: posting || !textContent.trim() || isOverLimit 
-                ? 'rgba(10, 132, 255, 0.4)' 
-                : '#0A84FF',
-              color: '#FFFFFF',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
-            }}
-            onMouseEnter={(e) => {
-              if (!posting && textContent.trim() && !isOverLimit) {
-                e.currentTarget.style.background = '#0066CC';
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(10, 132, 255, 0.3)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!posting && textContent.trim() && !isOverLimit) {
-                e.currentTarget.style.background = '#0A84FF';
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
-              }
+                ? 'rgba(0, 194, 255, 0.4)' 
+                : '#00C2FF',
+              color: '#FFFFFF'
             }}
           >
             {posting ? 'Publishing...' : 'Publish Post'}
           </button>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

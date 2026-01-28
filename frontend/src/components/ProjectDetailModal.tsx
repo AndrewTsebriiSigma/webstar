@@ -176,39 +176,37 @@ export default function ProjectDetailModal({
     }, 200);
   };
 
-  if (!isOpen || !project) return null;
+  if ((!isOpen && !isClosing) || !project) return null;
 
   return (
-    <div 
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 9999,
-        background: 'rgba(0, 0, 0, 0.3)',
-        backdropFilter: 'blur(14px)',
-        WebkitBackdropFilter: 'blur(14px)',
-        display: 'flex',
-        flexDirection: 'column',
-        opacity: isVisible ? 1 : 0,
-        transition: 'opacity 0.2s ease-out'
-      }}
-    >
-      {/* Header - Full width, no roundings */}
+    <>
+      {/* Backdrop with animation */}
       <div 
-        style={{
-          height: '55px',
-          minHeight: '55px',
-          background: 'rgba(13, 13, 13, 0.95)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 16px',
-          gap: '14px',
-          flexShrink: 0
-        }}
+        className={`bottom-slider-backdrop ${isVisible ? 'entering' : 'exiting'}`}
+        onClick={handleClose}
+      />
+      
+      {/* Bottom Slider Content with animation */}
+      <div 
+        className={`bottom-slider-content ${isVisible ? 'entering' : 'exiting'}`}
+        onClick={(e) => e.stopPropagation()}
       >
+        {/* Header - 55px consistent */}
+        <div 
+          style={{
+            height: '55px',
+            minHeight: '55px',
+            background: 'rgba(20, 20, 20, 0.8)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0 16px',
+            gap: '14px',
+            flexShrink: 0
+          }}
+        >
         {/* Left: Just X Icon - No circle */}
         <button
           onClick={handleClose}
@@ -989,6 +987,7 @@ export default function ProjectDetailModal({
           )}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

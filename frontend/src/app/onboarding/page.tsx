@@ -329,8 +329,8 @@ export default function OnboardingPage() {
     return (
       <div 
         className="flex flex-col items-center mb-6 p-5 rounded-2xl"
-        style={{
-          background: 'rgba(255, 255, 255, 0.03)',
+      style={{
+        background: 'rgba(255, 255, 255, 0.03)',
           backdropFilter: 'blur(20px)',
           border: '1px solid rgba(255, 255, 255, 0.06)'
         }}
@@ -386,8 +386,8 @@ export default function OnboardingPage() {
             }}
           >
             {formData.headline}
-          </p>
-        )}
+            </p>
+          )}
         
         {/* Location + Role - shows placeholders when empty to signal purpose */}
         {(showLocation || showRole) && (
@@ -402,7 +402,7 @@ export default function OnboardingPage() {
               >
                 <MapPinIcon className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>{formData.location ? formData.location.split(',')[0] : 'Location'}</span>
-              </div>
+        </div>
             )}
             
             {showRole && showLocation && (
@@ -412,19 +412,19 @@ export default function OnboardingPage() {
             {showRole && (
               <div 
                 className="flex items-center gap-1" 
-                style={{ 
+              style={{ 
                   color: formData.role ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.3)', 
                   fontSize: '13px' 
-                }}
+              }}
               >
                 <BriefcaseIcon className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>{formData.role || 'Role'}</span>
-              </div>
-            )}
           </div>
-        )}
-      </div>
-    );
+            )}
+        </div>
+      )}
+    </div>
+  );
   };
 
   // Finale Screen
@@ -471,12 +471,21 @@ export default function OnboardingPage() {
           {!error && (
             <>
               <div 
-                className="text-7xl mb-6 transition-transform duration-300"
-                style={{ 
+                className="mb-6 transition-transform duration-300 flex justify-center"
+                  style={{ 
                   filter: 'drop-shadow(0 0 30px rgba(0, 194, 255, 0.5))'
                 }}
               >
-                {finaleLineIndex === 3 ? '✨' : hourglassEmoji}
+                {finaleLineIndex === 3 ? (
+                  <img 
+                    src="/webstar-logo.png" 
+                    alt="WebSTAR" 
+                    className="w-24 h-24 transition-transform duration-300"
+                    style={{ filter: 'drop-shadow(0 0 30px rgba(0, 194, 255, 0.5))' }}
+                  />
+                ) : (
+                  <span className="text-7xl">{hourglassEmoji}</span>
+                )}
               </div>
               
               {/* Typing text BELOW */}
@@ -495,7 +504,7 @@ export default function OnboardingPage() {
                     }}
                   />
                 </p>
-              </div>
+                </div>
             </>
           )}
         </div>
@@ -559,7 +568,7 @@ export default function OnboardingPage() {
                       setTimeout(() => setStep(2), 300);
                     }}
                     className="p-4 rounded-xl transition"
-                    style={{
+                style={{
                       background: formData.archetype === talent.id 
                         ? 'rgba(0, 194, 255, 0.15)' 
                         : 'rgba(255, 255, 255, 0.02)',
@@ -679,7 +688,7 @@ export default function OnboardingPage() {
                       }}
                     >
                       {locationSuggestions.map((suggestion) => (
-                        <button
+                  <button
                           key={suggestion.id}
                           type="button"
                           onMouseDown={(e) => {
@@ -687,7 +696,7 @@ export default function OnboardingPage() {
                             handleLocationSelect(suggestion.place_name);
                           }}
                           className="w-full text-left px-4 py-3 transition-all duration-150 hover:bg-[#00C2FF]/20"
-                          style={{
+                    style={{
                             color: 'rgba(255, 255, 255, 0.9)',
                             fontSize: '14px',
                             borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
@@ -699,11 +708,11 @@ export default function OnboardingPage() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                             <span className="truncate">{suggestion.place_name}</span>
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                    </span>
+                  </button>
+                ))}
+              </div>
+          )}
                 </div>
               </InputWrapper>
 
@@ -779,7 +788,7 @@ export default function OnboardingPage() {
               {formData.role && (
                 <div 
                   className="mt-6 pt-6 transition-all duration-300"
-                  style={{ 
+                style={{
                     borderTop: '1px solid rgba(255, 255, 255, 0.05)',
                     animation: 'slideIn 0.3s ease-out'
                   }}
@@ -789,15 +798,15 @@ export default function OnboardingPage() {
                   </p>
                   
                   <div className="px-2 relative">
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      step="1"
-                      value={formData.expertise}
-                      onChange={(e) => setFormData(prev => ({ ...prev, expertise: parseInt(e.target.value) }))}
-                      className="w-full h-2 rounded-full appearance-none cursor-pointer"
-                      style={{
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={formData.expertise}
+                  onChange={(e) => setFormData(prev => ({ ...prev, expertise: parseInt(e.target.value) }))}
+                  className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                  style={{
                         background: `linear-gradient(to right, 
                           hsl(200, ${60 + (formData.expertise * 0.4)}%, ${25 + (formData.expertise * 0.35)}%) ${formData.expertise}%, 
                           rgba(255,255,255,0.06) ${formData.expertise}%)`
@@ -826,8 +835,8 @@ export default function OnboardingPage() {
                         />
                       );
                     })()}
-                  </div>
                 </div>
+              </div>
               )}
 
               <button
@@ -859,7 +868,7 @@ export default function OnboardingPage() {
                   <textarea
                     placeholder="Your one-liner..."
                     value={formData.headline}
-                    onChange={(e) => {
+                  onChange={(e) => {
                       if (e.target.value.length <= 70) {
                         setFormData(prev => ({ ...prev, headline: e.target.value }));
                       }
@@ -867,15 +876,15 @@ export default function OnboardingPage() {
                     onFocus={() => setHeadlineFocused(true)}
                     onBlur={() => setHeadlineFocused(false)}
                     className="w-full px-5 py-4 text-lg resize-none"
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      outline: 'none',
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
                       color: 'rgba(255, 255, 255, 0.95)',
                       minHeight: '80px',
                       textAlign: 'left'
-                    }}
-                    autoFocus
+                  }}
+                  autoFocus
                     maxLength={70}
                     rows={2}
                   />
@@ -885,21 +894,21 @@ export default function OnboardingPage() {
                     style={{ color: 'rgba(255, 255, 255, 0.3)' }}
                   >
                     {formData.headline.length}/70
-                  </span>
-                </div>
+                        </span>
+                  </div>
               </InputWrapper>
 
-              <button
-                onClick={() => setStep(6)}
+                <button
+                  onClick={() => setStep(6)}
                 className="w-full mt-4 py-4 font-semibold rounded-xl transition"
-                style={{
-                  background: 'linear-gradient(135deg, #00C2FF 0%, #0099CC 100%)',
-                  color: '#FFF',
-                  border: 'none'
-                }}
-              >
-                Continue
-              </button>
+                  style={{
+                    background: 'linear-gradient(135deg, #00C2FF 0%, #0099CC 100%)',
+                    color: '#FFF',
+                    border: 'none'
+                  }}
+                >
+                  Continue
+                </button>
             </>
           )}
 
@@ -914,60 +923,60 @@ export default function OnboardingPage() {
 
               <InputWrapper focused={usernameFocused}>
                 <div className="flex items-center overflow-hidden">
-                  <span 
-                    className="px-4 py-4 text-sm"
-                    style={{ 
-                      color: 'rgba(255, 255, 255, 0.4)',
-                      borderRight: '1px solid rgba(255, 255, 255, 0.05)'
-                    }}
-                  >
+                <span 
+                  className="px-4 py-4 text-sm"
+                  style={{ 
+                    color: 'rgba(255, 255, 255, 0.4)',
+                    borderRight: '1px solid rgba(255, 255, 255, 0.05)'
+                  }}
+                >
                     webstar.bio/
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="username"
-                    value={formData.username}
-                    onChange={(e) => {
-                      const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                </span>
+                <input
+                  type="text"
+                  placeholder="username"
+                  value={formData.username}
+                  onChange={(e) => {
+                    const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
                       if (value.length <= 15) {
-                        setFormData(prev => ({ ...prev, username: value }));
+                    setFormData(prev => ({ ...prev, username: value }));
                       }
-                    }}
+                  }}
                     onFocus={() => setUsernameFocused(true)}
                     onBlur={() => setUsernameFocused(false)}
-                    className="flex-1 px-4 py-4"
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      outline: 'none',
-                      color: 'rgba(255, 255, 255, 0.95)'
-                    }}
-                    autoFocus
+                  className="flex-1 px-4 py-4"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: 'rgba(255, 255, 255, 0.95)'
+                  }}
+                  autoFocus
                     maxLength={15}
-                  />
-                  {checkingUsername && (
+                />
+                {checkingUsername && (
                     <div className="pr-3">
-                      <div 
-                        className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"
-                        style={{ borderColor: '#00C2FF', borderTopColor: 'transparent' }}
-                      />
-                    </div>
-                  )}
-                  {!checkingUsername && usernameAvailable === true && (
+                    <div 
+                      className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"
+                      style={{ borderColor: '#00C2FF', borderTopColor: 'transparent' }}
+                    />
+                  </div>
+                )}
+                {!checkingUsername && usernameAvailable === true && (
                     <div className="pr-3">
-                      <svg className="w-5 h-5" fill="#30D158" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  )}
-                  {!checkingUsername && usernameAvailable === false && (
+                    <svg className="w-5 h-5" fill="#30D158" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+                {!checkingUsername && usernameAvailable === false && (
                     <div className="pr-3">
-                      <svg className="w-5 h-5" fill="#FF453A" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
+                    <svg className="w-5 h-5" fill="#FF453A" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+              </div>
               </InputWrapper>
 
               <button

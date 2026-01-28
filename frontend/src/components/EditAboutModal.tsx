@@ -34,6 +34,10 @@ export default function EditAboutModal({ isOpen, onClose, onSuccess, currentData
   const [activeSection, setActiveSection] = useState('about');
   const [saving, setSaving] = useState(false);
   
+  // Animation states
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  
   const [aboutText, setAboutText] = useState('');
   const [skills, setSkills] = useState<Skill[]>([]);
   const [newSkillName, setNewSkillName] = useState('');
@@ -49,6 +53,7 @@ export default function EditAboutModal({ isOpen, onClose, onSuccess, currentData
 
   useEffect(() => {
     if (isOpen) {
+      requestAnimationFrame(() => setIsVisible(true));
       // Load current data
       setAboutText(currentData.about || '');
       
@@ -70,10 +75,23 @@ export default function EditAboutModal({ isOpen, onClose, onSuccess, currentData
         youtube: '',
         twitter: '',
       });
+    } else {
+      setIsVisible(false);
+      setIsClosing(false);
     }
   }, [isOpen, currentData]);
 
-  if (!isOpen) return null;
+  // Animated close handler
+  const handleClose = () => {
+    setIsClosing(true);
+    setIsVisible(false);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose();
+    }, 300);
+  };
+
+  if (!isOpen && !isClosing) return null;
 
   const addSkill = () => {
     if (!newSkillName.trim()) return;
@@ -148,24 +166,42 @@ export default function EditAboutModal({ isOpen, onClose, onSuccess, currentData
   };
 
   return (
-    <div 
-      className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      style={{ background: 'rgba(17, 17, 17, 0.8)' }}
-    >
-      <div className="bg-gray-900 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden border border-gray-800">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-800">
-          <h2 className="text-2xl font-bold text-white">Edit Profile</h2>
+    <>
+      {/* Backdrop with animation */}
+      <div 
+        className={`bottom-slider-backdrop ${isVisible ? 'entering' : 'exiting'}`}
+        onClick={handleClose}
+      />
+      
+      {/* Bottom Slider Content with animation */}
+      <div 
+        className={`bottom-slider-content ${isVisible ? 'entering' : 'exiting'}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header - 55px consistent */}
+        <div 
+          className="flex items-center justify-between flex-shrink-0"
+          style={{ 
+            height: '55px',
+            padding: '0 16px',
+            background: 'rgba(20, 20, 20, 0.8)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+          }}
+        >
+          <span style={{ fontSize: '17px', fontWeight: 600, color: '#FFFFFF' }}>Edit Profile</span>
           <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-800 rounded-lg transition"
+            onClick={handleClose}
+            className="flex items-center justify-center hover:opacity-70 transition-opacity"
+            style={{ width: '28px', height: '28px' }}
           >
-            <XMarkIcon className="w-6 h-6 text-gray-400" />
+            <XMarkIcon style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.6)' }} />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-800 overflow-x-auto">
+        <div className="flex flex-shrink-0 overflow-x-auto" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
           {['About', 'Experience', 'Skills', 'Connect'].map((tab) => (
             <button
               key={tab}
@@ -184,8 +220,8 @@ export default function EditAboutModal({ isOpen, onClose, onSuccess, currentData
           ))}
         </div>
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+        {/* Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-4">
           {/* About Section */}
           {activeSection === 'about' && (
             <div>
@@ -379,24 +415,38 @@ export default function EditAboutModal({ isOpen, onClose, onSuccess, currentData
         </div>
 
         {/* Footer */}
-        <div className="flex gap-4 p-6 border-t border-gray-800">
+        <div 
+          className="flex-shrink-0 flex gap-3 p-4"
+          style={{ 
+            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+            paddingBottom: 'max(16px, env(safe-area-inset-bottom))'
+          }}
+        >
           <button
-            onClick={handleSave}
+            onClick={handleClose}
             disabled={saving}
-            className="flex-1 px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
-          <button
-            onClick={onClose}
-            disabled={saving}
-            className="px-6 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-white"
+            className="px-5 py-2.5 rounded-xl font-medium transition-all text-sm"
+            style={{
+              background: 'rgba(255, 255, 255, 0.06)',
+              color: 'rgba(255, 255, 255, 0.8)'
+            }}
           >
             Cancel
           </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex-1 px-6 py-2.5 rounded-xl font-semibold transition-all text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{
+              background: saving ? 'rgba(0, 194, 255, 0.4)' : '#00C2FF',
+              color: '#FFFFFF'
+            }}
+          >
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

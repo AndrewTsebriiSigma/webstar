@@ -17,6 +17,10 @@ export default function Setup2FAModal({ isOpen, onClose, onSuccess }: Setup2FAMo
   const [secret, setSecret] = useState<string>('');
   const [verificationCode, setVerificationCode] = useState<string>('');
   const [verifying, setVerifying] = useState(false);
+  
+  // Animation states
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   const initiate2FA = async () => {
     try {
@@ -54,14 +58,14 @@ export default function Setup2FAModal({ isOpen, onClose, onSuccess }: Setup2FAMo
 
   // Initialize when modal opens
   useEffect(() => {
-    if (isOpen && step === 'loading') {
-      initiate2FA();
-    }
-  }, [isOpen]);
-
-  // Reset state when modal closes
-  useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      requestAnimationFrame(() => setIsVisible(true));
+      if (step === 'loading') {
+        initiate2FA();
+      }
+    } else {
+      setIsVisible(false);
+      setIsClosing(false);
       setStep('loading');
       setVerificationCode('');
       setQrCode('');
@@ -69,32 +73,55 @@ export default function Setup2FAModal({ isOpen, onClose, onSuccess }: Setup2FAMo
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  // Animated close handler
+  const handleClose = () => {
+    setIsClosing(true);
+    setIsVisible(false);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose();
+    }, 300);
+  };
+
+  if (!isOpen && !isClosing) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
+    <>
+      {/* Backdrop with animation */}
       <div 
-        className="absolute inset-0 backdrop-blur-sm"
-        style={{ background: 'rgba(17, 17, 17, 0.7)' }}
-        onClick={onClose}
+        className={`bottom-slider-backdrop ${isVisible ? 'entering' : 'exiting'}`}
+        onClick={handleClose}
       />
-
-      {/* Modal */}
-      <div className="relative bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-800">
-        {/* Header */}
-        <div className="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">Enable Two-Factor Authentication</h2>
+      
+      {/* Bottom Slider Content with animation */}
+      <div 
+        className={`bottom-slider-content ${isVisible ? 'entering' : 'exiting'}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header - 55px consistent */}
+        <div 
+          className="flex items-center justify-between flex-shrink-0"
+          style={{ 
+            height: '55px',
+            padding: '0 16px',
+            background: 'rgba(20, 20, 20, 0.8)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+          }}
+        >
+          <span style={{ fontSize: '17px', fontWeight: 600, color: '#FFFFFF' }}>Enable 2FA</span>
           <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-800 rounded-lg transition"
+            onClick={handleClose}
+            className="flex items-center justify-center hover:opacity-70 transition-opacity"
+            style={{ width: '28px', height: '28px' }}
           >
-            <XMarkIcon className="w-6 h-6 text-gray-400" />
+            <XMarkIcon style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.6)' }} />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
+        {/* Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-4">
           {step === 'loading' && (
             <div className="text-center py-8">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-700 border-t-cyan-500 mb-4"></div>
@@ -176,18 +203,26 @@ export default function Setup2FAModal({ isOpen, onClose, onSuccess }: Setup2FAMo
         </div>
 
         {/* Info Footer */}
-        <div className="bg-gray-800/50 px-6 py-4 border-t border-gray-800">
+        <div 
+          className="flex-shrink-0"
+          style={{ 
+            padding: '16px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+            background: 'rgba(255, 255, 255, 0.02)',
+            paddingBottom: 'max(16px, env(safe-area-inset-bottom))'
+          }}
+        >
           <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="#00C2FF">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-gray-400 text-sm">
-              Two-factor authentication adds an extra layer of security to your account by requiring a code from your phone in addition to your password.
+            <p style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', lineHeight: '1.4' }}>
+              Two-factor authentication adds an extra layer of security to your account.
             </p>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

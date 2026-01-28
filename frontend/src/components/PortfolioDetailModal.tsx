@@ -28,14 +28,43 @@ export default function PortfolioDetailModal({
 }: PortfolioDetailModalProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  
+  // Animation states
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
-    if (item && isOpen) {
-      // Could load like/save status from API if implemented
+    if (isOpen) {
+      requestAnimationFrame(() => setIsVisible(true));
+      // Lock body scroll
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+    } else {
+      setIsVisible(false);
+      setIsClosing(false);
     }
-  }, [item, isOpen]);
+    
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      const scrollY = document.body.style.top;
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+    };
+  }, [isOpen]);
 
-  if (!isOpen || !item) return null;
+  const handleClose = () => {
+    setIsClosing(true);
+    setIsVisible(false);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose();
+    }, 300);
+  };
+
+  if ((!isOpen && !isClosing) || !item) return null;
 
   const handleShare = () => {
     const url = `${window.location.origin}/${authorUsername}`;
@@ -55,17 +84,50 @@ export default function PortfolioDetailModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm p-4"
-      style={{ background: 'rgba(17, 17, 17, 0.9)' }}
-      onClick={onClose}
-    >
-      <div
-        className="bg-[#161618] rounded-3xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col md:flex-row border border-gray-800"
+    <>
+      {/* Backdrop with animation */}
+      <div 
+        className={`bottom-slider-backdrop ${isVisible ? 'entering' : 'exiting'}`}
+        onClick={handleClose}
+      />
+      
+      {/* Bottom Slider Content with animation */}
+      <div 
+        className={`bottom-slider-content ${isVisible ? 'entering' : 'exiting'}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Left: Media Content */}
-        <div className="md:w-2/3 flex items-center justify-center p-4 md:p-8" style={{ background: '#111111' }}>
+        {/* Header - 55px consistent */}
+        <div 
+          style={{
+            height: '55px',
+            minHeight: '55px',
+            background: 'rgba(20, 20, 20, 0.8)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 16px',
+            flexShrink: 0
+          }}
+        >
+          <span style={{ fontSize: '17px', fontWeight: 600, color: '#FFFFFF' }}>
+            {item.title || 'Post'}
+          </span>
+          <button
+            onClick={handleClose}
+            className="flex items-center justify-center hover:opacity-70 transition-opacity"
+            style={{ width: '28px', height: '28px' }}
+          >
+            <XMarkIcon style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.6)' }} />
+          </button>
+        </div>
+
+        {/* Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Media Content */}
+          <div className="flex items-center justify-center p-4" style={{ background: '#111111' }}>
           {item.content_type === 'photo' && item.content_url && (
             <img
               src={getContentUrl(item.content_url)}
@@ -120,98 +182,91 @@ export default function PortfolioDetailModal({
               )}
             </div>
           )}
+          </div>
+
+          {/* Author Info */}
+          <div className="p-4 flex items-center gap-3 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+            {authorProfilePicture ? (
+              <img
+                src={authorProfilePicture}
+                alt={authorDisplayName}
+                className="w-10 h-10 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold">
+                {authorDisplayName.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div>
+              <a
+                href={`/${authorUsername}`}
+                style={{ fontSize: '14px', fontWeight: 600, color: '#FFFFFF' }}
+              >
+                {authorDisplayName}
+              </a>
+              <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)' }}>@{authorUsername}</p>
+            </div>
+          </div>
+
+          {/* Description */}
+          {item.description && (
+            <div className="p-4" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', lineHeight: '1.5' }}>{item.description}</p>
+              {item.created_at && (
+                <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)', marginTop: '12px' }}>
+                  {formatDate(item.created_at)}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Right: Details */}
-        <div className="md:w-1/3 flex flex-col bg-[#161618]">
-          {/* Header */}
-          <div className="p-6 border-b border-gray-800 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {authorProfilePicture ? (
-                <img
-                  src={authorProfilePicture}
-                  alt={authorDisplayName}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-lg font-bold">
-                  {authorDisplayName.charAt(0).toUpperCase()}
-                </div>
-              )}
-              <div>
-                <a
-                  href={`/${authorUsername}`}
-                  className="font-semibold text-white hover:text-cyan-400 transition"
-                >
-                  {authorDisplayName}
-                </a>
-                <p className="text-xs text-gray-500">@{authorUsername}</p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-800 rounded-lg transition"
-            >
-              <XMarkIcon className="w-6 h-6 text-gray-400" />
-            </button>
-          </div>
-
-          {/* Title & Description */}
-          <div className="p-6 border-b border-gray-800 flex-1 overflow-y-auto">
-            {item.title && (
-              <h2 className="text-2xl font-bold text-white mb-4">{item.title}</h2>
+        {/* Actions Footer */}
+        <div 
+          className="flex-shrink-0 flex items-center justify-around"
+          style={{ 
+            padding: '16px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+            paddingBottom: 'max(16px, env(safe-area-inset-bottom))'
+          }}
+        >
+          <button
+            onClick={() => setIsLiked(!isLiked)}
+            className="flex flex-col items-center gap-1 transition"
+            style={{ color: isLiked ? '#FF453A' : 'rgba(255, 255, 255, 0.5)' }}
+          >
+            {isLiked ? (
+              <HeartSolidIcon className="w-6 h-6" />
+            ) : (
+              <HeartIcon className="w-6 h-6" />
             )}
-            {item.description && (
-              <p className="text-gray-300 leading-relaxed whitespace-pre-wrap mb-4">{item.description}</p>
+            <span style={{ fontSize: '11px', fontWeight: 500 }}>Like</span>
+          </button>
+          
+          <button
+            onClick={() => setIsSaved(!isSaved)}
+            className="flex flex-col items-center gap-1 transition"
+            style={{ color: isSaved ? '#00C2FF' : 'rgba(255, 255, 255, 0.5)' }}
+          >
+            {isSaved ? (
+              <BookmarkSolidIcon className="w-6 h-6" />
+            ) : (
+              <BookmarkIcon className="w-6 h-6" />
             )}
-            {item.created_at && (
-              <p className="text-xs text-gray-500 mt-4">
-                {formatDate(item.created_at)}
-              </p>
-            )}
-          </div>
+            <span style={{ fontSize: '11px', fontWeight: 500 }}>Save</span>
+          </button>
 
-          {/* Actions */}
-          <div className="p-6 border-t border-gray-800 flex items-center justify-around">
-            <button
-              onClick={() => setIsLiked(!isLiked)}
-              className={`flex flex-col items-center gap-2 transition ${
-                isLiked ? 'text-red-500' : 'text-gray-400 hover:text-red-400'
-              }`}
-            >
-              {isLiked ? (
-                <HeartSolidIcon className="w-7 h-7" />
-              ) : (
-                <HeartIcon className="w-7 h-7" />
-              )}
-              <span className="text-xs font-medium">Like</span>
-            </button>
-            
-            <button
-              onClick={() => setIsSaved(!isSaved)}
-              className={`flex flex-col items-center gap-2 transition ${
-                isSaved ? 'text-cyan-500' : 'text-gray-400 hover:text-cyan-400'
-              }`}
-            >
-              {isSaved ? (
-                <BookmarkSolidIcon className="w-7 h-7" />
-              ) : (
-                <BookmarkIcon className="w-7 h-7" />
-              )}
-              <span className="text-xs font-medium">Save</span>
-            </button>
-
-            <button
-              onClick={handleShare}
-              className="flex flex-col items-center gap-2 text-gray-400 hover:text-cyan-400 transition"
-            >
-              <ShareIcon className="w-7 h-7" />
-              <span className="text-xs font-medium">Share</span>
-            </button>
-          </div>
+          <button
+            onClick={handleShare}
+            className="flex flex-col items-center gap-1 transition"
+            style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+          >
+            <ShareIcon className="w-6 h-6" />
+            <span style={{ fontSize: '11px', fontWeight: 500 }}>Share</span>
+          </button>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

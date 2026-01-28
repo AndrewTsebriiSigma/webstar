@@ -495,6 +495,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [show2FASetup, setShow2FASetup] = useState(false);
   const [show2FADisable, setShow2FADisable] = useState(false);
   const [loading2FAStatus, setLoading2FAStatus] = useState(false);
+  
+  // Animation states
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  
   const [settings, setSettings] = useState({
     email: '',
     publicProfile: true,
@@ -506,16 +511,24 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [loadingBlockedUsers, setLoadingBlockedUsers] = useState(false);
   const [unblockingUser, setUnblockingUser] = useState<string | null>(null);
 
+  // Animation effect - trigger entrance animation
+  useEffect(() => {
+    if (isOpen) {
+      requestAnimationFrame(() => setIsVisible(true));
+      load2FAStatus();
+    } else {
+      setIsVisible(false);
+      setIsClosing(false);
+    }
+  }, [isOpen]);
+  
   useEffect(() => {
     const savedSettings = localStorage.getItem('userSettings');
     if (savedSettings) {
       const parsed = JSON.parse(savedSettings);
       setSettings((prev) => ({ ...prev, ...parsed }));
     }
-    if (isOpen) {
-      load2FAStatus();
-    }
-  }, [isOpen]);
+  }, []);
 
   // Load blocked users when section is opened
   useEffect(() => {
@@ -591,7 +604,18 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     load2FAStatus();
   };
 
-  if (!isOpen) return null;
+  // Animated close handler
+  const handleClose = () => {
+    setIsClosing(true);
+    setIsVisible(false);
+    setTimeout(() => {
+      setIsClosing(false);
+      setActiveSection(null);
+      onClose();
+    }, 300);
+  };
+
+  if (!isOpen && !isClosing) return null;
 
   // Icons
   const AccountIcon = <svg style={{ width: '16px', height: '16px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>;
@@ -602,40 +626,37 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   return (
     <>
-      {/* Glass Overlay - Responsive: full-screen on mobile, centered dialog on desktop */}
+      {/* Backdrop with animation */}
       <div 
-        className="fixed inset-0 z-50 flex items-center justify-center"
-        style={{ 
-          background: 'rgba(17, 17, 17, 0.92)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)'
-        }}
-        onClick={(e) => e.target === e.currentTarget && onClose()}
+        className={`bottom-slider-backdrop ${isVisible ? 'entering' : 'exiting'}`}
+        onClick={handleClose}
+      />
+      
+      {/* Bottom Slider Content with animation */}
+      <div 
+        className={`bottom-slider-content ${isVisible ? 'entering' : 'exiting'}`}
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Container - Full screen mobile, max-width dialog desktop */}
+        {/* Header - 55px */}
         <div 
-          className="w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-[500px] sm:rounded-2xl flex flex-col" 
-          style={{ background: '#0D0D0D' }}
-          onClick={(e) => e.stopPropagation()}
+          className="flex items-center justify-between flex-shrink-0"
+          style={{ 
+            height: '55px',
+            padding: '0 16px',
+            background: 'rgba(20, 20, 20, 0.8)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+          }}
         >
-          {/* Header - 55px */}
-          <div 
-            className="flex items-center justify-between flex-shrink-0"
-            style={{ 
-              height: '55px',
-              padding: '0 16px',
-              background: '#0D0D0D',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
-            }}
-          >
-            <span style={{ fontSize: '20px', fontWeight: 600, color: '#FFFFFF' }}>Settings</span>
-            <button onClick={onClose} className="flex items-center justify-center hover:opacity-70 transition-opacity" style={{ width: '28px', height: '28px' }}>
-              <XMarkIcon style={{ width: '24px', height: '24px', color: 'rgba(255, 255, 255, 0.5)' }} />
-            </button>
-          </div>
+          <span style={{ fontSize: '17px', fontWeight: 600, color: '#FFFFFF' }}>Settings</span>
+          <button onClick={handleClose} className="flex items-center justify-center hover:opacity-70 transition-opacity" style={{ width: '28px', height: '28px' }}>
+            <XMarkIcon style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.6)' }} />
+          </button>
+        </div>
 
-          {/* Content - Responsive padding */}
-          <div className="flex-1 overflow-y-auto" style={{ padding: '20px 16px' }}>
+        {/* Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto" style={{ padding: '20px 16px' }}>
             {activeSection === null ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 {/* ACCOUNT Section */}
@@ -941,7 +962,6 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             )}
           </div>
         </div>
-      </div>
 
       {/* 2FA Modals */}
       <Setup2FAModal 

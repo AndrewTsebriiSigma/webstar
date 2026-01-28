@@ -42,6 +42,10 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   // Drag & drop state
   const [isDragging, setIsDragging] = useState(false);
   
+  // Bottom slider animation states
+  const [isClosing, setIsClosing] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  
   // Memoized blob URLs to prevent recreation on re-render
   const [attachmentBlobUrl, setAttachmentBlobUrl] = useState<string>('');
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string>(''); // For PDF file preview
@@ -306,10 +310,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
       setAttachmentBlobUrl('');
     }
   }, [attachmentFile]);
-
-  // Animation states
-  const [isClosing, setIsClosing] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
 
   // Lock body scroll when modal is open - Safari mobile fix
   useEffect(() => {
@@ -901,36 +901,17 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-start justify-center"
-      style={{
-        background: 'rgba(0, 0, 0, 0.3)',
-        backdropFilter: 'blur(14px)',
-        WebkitBackdropFilter: 'blur(14px)',
-        paddingTop: '5vh',
-        paddingBottom: '45vh',
-        // Fade animation
-        opacity: isVisible ? 1 : 0,
-        transition: 'opacity 0.15s ease-out',
-      }}
-      onClick={handleClose}
-    >
-      {/* Centered floating popup - 85% solid card with flex layout */}
+    <>
+      {/* Backdrop */}
+      <div 
+        className={`bottom-slider-backdrop ${isVisible ? 'entering' : 'exiting'}`}
+        onClick={handleClose}
+      />
+      
+      {/* Bottom Slider Content */}
       <div 
         ref={scrollContainerRef}
-        className="w-full relative flex flex-col"
-        style={{
-          maxWidth: 'calc(100% - 24px)',
-          height: '75vh',
-          background: 'rgba(20, 20, 20, 0.85)',
-          borderRadius: '16px',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
-          // Scale + slide animation
-          transform: isVisible ? 'scale(1) translateY(0)' : 'scale(0.98) translateY(8px)',
-          opacity: isVisible ? 1 : 0,
-          transition: 'transform 0.15s ease-out, opacity 0.15s ease-out',
-        }}
+        className={`bottom-slider-content ${isVisible ? 'entering' : 'exiting'}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Upload overlay - continuous spinner with spring-animated percentage */}
@@ -1061,13 +1042,15 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           </div>
         )}
 
-        {/* Header - solid dark, vertically centered */}
+        {/* Header - semi-transparent with subtle blur for glassy effect */}
         <div 
           className="flex items-center justify-between sticky top-0 z-10"
           style={{
             height: '55px',
-            background: '#0D0D0D',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+            background: 'rgba(20, 20, 20, 0.8)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
             borderTopLeftRadius: '16px',
             borderTopRightRadius: '16px',
             padding: '0 20px',
@@ -1134,10 +1117,11 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               className="flex-1 overflow-y-auto"
               style={{ 
                 padding: '16px 10px',
-                background: 'transparent',
+                paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '10px',
+                justifyContent: 'flex-start', // Keep content at top, not spread out
               }}
               onClick={() => {
                 if (attachmentSwipeX > 0) {
@@ -1720,19 +1704,15 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 </>
               )}
 
-            </div>
-            
-            {/* Sticky Footer - Draft toolbar, transparent to match content area */}
-            <div 
-              className="relative"
-              style={{
-                background: 'transparent',
-                borderBottomLeftRadius: '16px',
-                borderBottomRightRadius: '16px',
-                padding: '12px 16px',
-                paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
-              }}
-            >
+              {/* Attachment toolbar - flows with content */}
+              <div 
+                className="relative"
+                style={{
+                  background: 'transparent',
+                  padding: '12px 6px',
+                  marginTop: '8px',
+                }}
+              >
               
               <div 
                 className="flex items-center justify-between" 
@@ -1837,8 +1817,9 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                   </label>
                 </div>
               </div>
+              </div>
             </div>
-      </div>
+          </div>
 
       {/* PDF Preview Popup */}
       {showPdfPopup && attachmentType === 'pdf' && (attachmentFile || existingAttachmentUrl) && (
@@ -2021,6 +2002,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

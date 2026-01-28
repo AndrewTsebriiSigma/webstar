@@ -1034,7 +1034,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
         <div className="relative px-4 -mt-[90px] sm:-mt-[100px] lg:-mt-[110px]" style={{ zIndex: 2 }}>
           <div className="flex items-center justify-center">
             <div 
-              className="relative w-[120px] h-[120px] sm:w-[140px] sm:h-[140px] lg:w-[150px] lg:h-[150px]"
+              className="relative w-[150px] h-[150px]"
               style={{
                 cursor: isOwnProfile && showCustomizePanel ? 'pointer' : 'default',
                 borderRadius: '50%',
@@ -1055,16 +1055,16 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   background: '#111111'
                 }}
               >
-                <img
-                  src={profile.profile_picture}
-                  alt={profile.display_name || username}
+              <img
+                src={profile.profile_picture}
+                alt={profile.display_name || username}
                   className="w-full h-full object-cover"
                   style={{ display: 'block' }}
                 />
               </div>
             ) : (
               <div 
-                className={`w-full h-full rounded-full flex items-center justify-center text-white text-3xl sm:text-4xl font-bold ${isOwnProfile && showCustomizePanel ? 'avatar-editable' : ''}`}
+                className={`w-full h-full rounded-full flex items-center justify-center text-white text-4xl font-bold ${isOwnProfile && showCustomizePanel ? 'avatar-editable' : ''}`}
                 style={{
                   border: '5px solid #111111',
                   boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)',
@@ -1095,7 +1095,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Profile Info - Compact design */}
       <div className="profile-info" style={{ padding: '0 24px 12px', textAlign: 'center' }}>
         {/* Name + Badge - Centered together as unit */}
-        <div className="flex items-center justify-center pt-2" style={{ marginBottom: '14px' }}>
+        <div className="flex items-center justify-center pt-2" style={{ marginBottom: '8px' }}>
           <div className="inline-flex items-center gap-1.5">
             <span className="relative inline-block">
               {isOwnProfile && showCustomizePanel && (
@@ -1142,49 +1142,77 @@ export default function ProfilePage({ params }: { params: { username: string } }
           </div>
         </div>
         
-        {/* Bio */}
-        <div className="px-2" style={{ marginBottom: '8px' }}>
-          <span className="relative inline-block">
-            {isOwnProfile && showCustomizePanel && (
-              <div className="sparkle-field">
-                <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
-                <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
-                <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
-                <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
-              </div>
-            )}
-            <p 
-              contentEditable={isOwnProfile && showCustomizePanel}
-              suppressContentEditableWarning
-              onFocus={(e) => {
-                if (isOwnProfile && showCustomizePanel) {
-                  // Mac folder rename: select all text on focus
-                  const selection = window.getSelection();
-                  const range = document.createRange();
-                  range.selectNodeContents(e.currentTarget);
-                  selection?.removeAllRanges();
-                  selection?.addRange(range);
-                }
-              }}
-              onBlur={(e) => {
-                if (isOwnProfile && showCustomizePanel) {
-                  setEditedBio(e.currentTarget.textContent || '');
-                  handleProfileFieldBlur();
-                }
-              }}
+        {/* Bio/Headline - only show if bio exists OR in customize mode */}
+        {(profile.bio || (isOwnProfile && showCustomizePanel)) && (
+          <div className="flex justify-center px-4" style={{ marginBottom: '16px' }}>
+            <div 
+              className="w-full"
               style={{ 
-          color: 'rgba(255, 255, 255, 0.75)',
-          fontSize: '15px',
-          lineHeight: '1.4',
-                opacity: 0.9,
-                outline: 'none',
-                cursor: isOwnProfile && showCustomizePanel ? 'text' : 'default'
+                maxWidth: '320px',
+                borderBottom: isOwnProfile && showCustomizePanel ? '1px solid rgba(255, 255, 255, 0.08)' : 'none',
+                paddingBottom: isOwnProfile && showCustomizePanel ? '6px' : '0'
               }}
             >
-              {isOwnProfile && showCustomizePanel ? editedBio : (profile.bio || 'Make original the only standard.')}
-            </p>
-          </span>
-        </div>
+              <div className="flex items-end justify-between gap-3">
+                <span className="relative flex-1">
+                  {isOwnProfile && showCustomizePanel && (
+                    <div className="sparkle-field">
+                      <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+                      <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+                      <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+                      <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
+                    </div>
+                  )}
+                  <p 
+                    contentEditable={isOwnProfile && showCustomizePanel}
+                    suppressContentEditableWarning
+                    data-placeholder="Add headline..."
+                    onFocus={(e) => {
+                      if (isOwnProfile && showCustomizePanel) {
+                        const selection = window.getSelection();
+                        const range = document.createRange();
+                        range.selectNodeContents(e.currentTarget);
+                        selection?.removeAllRanges();
+                        selection?.addRange(range);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      if (isOwnProfile && showCustomizePanel) {
+                        const text = (e.currentTarget.textContent || '').slice(0, 70);
+                        setEditedBio(text);
+                        handleProfileFieldBlur();
+                      }
+                    }}
+                    style={{ 
+          color: 'rgba(255, 255, 255, 0.75)',
+          fontSize: '15px',
+                      lineHeight: '1.5',
+                      outline: 'none',
+                      cursor: isOwnProfile && showCustomizePanel ? 'text' : 'default',
+                      textAlign: isOwnProfile && showCustomizePanel ? 'left' : 'center',
+                      wordWrap: 'break-word',
+                      overflowWrap: 'break-word'
+                    }}
+                    className={isOwnProfile && showCustomizePanel && !editedBio ? 'bio-editable' : ''}
+                  >
+                    {isOwnProfile && showCustomizePanel ? editedBio : profile.bio}
+                  </p>
+                </span>
+                {isOwnProfile && showCustomizePanel && (
+                  <span 
+                    className="text-xs flex-shrink-0"
+                    style={{ 
+                      color: 'rgba(255, 255, 255, 0.35)',
+                      marginBottom: '2px'
+                    }}
+                  >
+                    {(editedBio || '').length}/70
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Location & Role - 14px to dashboard */}
         <div className="flex items-center justify-center gap-2 flex-wrap px-2" style={{ marginBottom: '14px' }}>
@@ -2143,7 +2171,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
       {/* Tabs */}
       <div 
         className="z-30 backdrop-blur-md border-b border-gray-800"
-        style={{ background: 'rgba(17, 17, 17, 0.9)', marginTop: '28px' }}
+        style={{ background: '#111111', marginTop: '20px' }}
       >
         <div className="flex relative">
           {/* Sliding indicator - solid color */}
@@ -2751,7 +2779,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
           </div>
         </div>
       )}
-      
+
       </div>{/* End responsive wrapper */}
 
       {/* Modals - Outside responsive wrapper for full-screen behavior */}
@@ -3360,6 +3388,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
           `}</style>
         </>
       )}
+      
     </div>
   );
 }

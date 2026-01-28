@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { XMarkIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import { settingsAPI } from '@/lib/api';
@@ -14,6 +14,20 @@ interface Disable2FAModalProps {
 export default function Disable2FAModal({ isOpen, onClose, onSuccess }: Disable2FAModalProps) {
   const [verificationCode, setVerificationCode] = useState<string>('');
   const [disabling, setDisabling] = useState(false);
+  
+  // Animation states
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  
+  useEffect(() => {
+    if (isOpen) {
+      requestAnimationFrame(() => setIsVisible(true));
+    } else {
+      setIsVisible(false);
+      setIsClosing(false);
+      setVerificationCode('');
+    }
+  }, [isOpen]);
 
   const disable2FA = async () => {
     if (verificationCode.length !== 6) {
@@ -36,39 +50,57 @@ export default function Disable2FAModal({ isOpen, onClose, onSuccess }: Disable2
   };
 
   const handleClose = () => {
-    setVerificationCode('');
-    onClose();
+    setIsClosing(true);
+    setIsVisible(false);
+    setTimeout(() => {
+      setIsClosing(false);
+      setVerificationCode('');
+      onClose();
+    }, 300);
   };
 
-  if (!isOpen) return null;
+  if (!isOpen && !isClosing) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
+    <>
+      {/* Backdrop with animation */}
       <div 
-        className="absolute inset-0 backdrop-blur-sm"
-        style={{ background: 'rgba(17, 17, 17, 0.7)' }}
+        className={`bottom-slider-backdrop ${isVisible ? 'entering' : 'exiting'}`}
         onClick={handleClose}
       />
-
-      {/* Modal */}
-      <div className="relative bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-red-800/50">
-        {/* Header */}
-        <div className="bg-red-900/20 border-b border-red-800/50 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <ExclamationTriangleIcon className="w-6 h-6 text-red-400" />
-            <h2 className="text-xl font-bold text-white">Disable Two-Factor Authentication</h2>
+      
+      {/* Bottom Slider Content with animation */}
+      <div 
+        className={`bottom-slider-content ${isVisible ? 'entering' : 'exiting'}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header - 55px consistent */}
+        <div 
+          className="flex items-center justify-between flex-shrink-0"
+          style={{ 
+            height: '55px',
+            padding: '0 16px',
+            background: 'rgba(20, 20, 20, 0.8)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(255, 100, 100, 0.2)'
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <ExclamationTriangleIcon style={{ width: '20px', height: '20px', color: '#FF453A' }} />
+            <span style={{ fontSize: '17px', fontWeight: 600, color: '#FFFFFF' }}>Disable 2FA</span>
           </div>
           <button
             onClick={handleClose}
-            className="p-2 hover:bg-gray-800 rounded-lg transition"
+            className="flex items-center justify-center hover:opacity-70 transition-opacity"
+            style={{ width: '28px', height: '28px' }}
           >
-            <XMarkIcon className="w-6 h-6 text-gray-400" />
+            <XMarkIcon style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.6)' }} />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6">
+        {/* Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {/* Warning */}
           <div className="bg-red-900/20 border border-red-800/50 rounded-xl p-4">
             <div className="flex items-start gap-3">
@@ -102,27 +134,41 @@ export default function Disable2FAModal({ isOpen, onClose, onSuccess }: Disable2
               autoFocus
             />
           </div>
+        </div>
 
-          {/* Actions */}
-          <div className="flex gap-3">
-            <button
-              onClick={handleClose}
-              className="flex-1 py-3 bg-gray-800 hover:bg-gray-750 text-white font-semibold rounded-xl transition"
-              disabled={disabling}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={disable2FA}
-              disabled={verificationCode.length !== 6 || disabling}
-              className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {disabling ? 'Disabling...' : 'Disable 2FA'}
-            </button>
-          </div>
+        {/* Actions Footer */}
+        <div 
+          className="flex-shrink-0 flex gap-3 p-4"
+          style={{ 
+            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+            paddingBottom: 'max(16px, env(safe-area-inset-bottom))'
+          }}
+        >
+          <button
+            onClick={handleClose}
+            disabled={disabling}
+            className="px-5 py-2.5 rounded-xl font-medium transition-all text-sm"
+            style={{
+              background: 'rgba(255, 255, 255, 0.06)',
+              color: 'rgba(255, 255, 255, 0.8)'
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={disable2FA}
+            disabled={verificationCode.length !== 6 || disabling}
+            className="flex-1 px-6 py-2.5 rounded-xl font-semibold transition-all text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{
+              background: disabling ? 'rgba(255, 69, 58, 0.4)' : '#FF453A',
+              color: '#FFFFFF'
+            }}
+          >
+            {disabling ? 'Disabling...' : 'Disable 2FA'}
+          </button>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

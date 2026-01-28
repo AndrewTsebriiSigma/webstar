@@ -42,6 +42,10 @@ export default function FeedModal({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   
+  // Animation states
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  
   // Track playback positions for resume functionality
   const [playbackPositions, setPlaybackPositions] = useState<Record<number, number>>({});
 
@@ -87,10 +91,14 @@ export default function FeedModal({
   }, [isOpen, initialPostId]);
 
   useEffect(() => {
-    if (!isOpen) return;
-
-    // Prevent body scroll when modal is open
-    document.body.style.overflow = 'hidden';
+    if (isOpen) {
+      requestAnimationFrame(() => setIsVisible(true));
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    } else {
+      setIsVisible(false);
+      setIsClosing(false);
+    }
     
     return () => {
       document.body.style.overflow = '';
@@ -121,35 +129,51 @@ export default function FeedModal({
     };
   }, [isOpen]); // Only re-run when modal opens/closes
 
-  if (!isOpen) return null;
+  // Animated close handler
+  const handleClose = () => {
+    setIsClosing(true);
+    setIsVisible(false);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose();
+    }, 300);
+  };
+
+  if (!isOpen && !isClosing) return null;
 
   const currentPost = reversedPosts[currentIndex];
 
   return (
-    <div 
-      className="feed-modal-overlay"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 9999,
-        background: '#111111',
-        display: 'flex',
-        flexDirection: 'column'
-      }}
-    >
-      {/* Header with Profile */}
+    <>
+      {/* Backdrop with animation */}
       <div 
+        className={`bottom-slider-backdrop ${isVisible ? 'entering' : 'exiting'}`}
+        onClick={handleClose}
+      />
+      
+      {/* Feed Content with animation */}
+      <div 
+        className={`bottom-slider-content ${isVisible ? 'entering' : 'exiting'}`}
+        onClick={(e) => e.stopPropagation()}
         style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 100,
-          background: 'rgba(17, 17, 17, 0.95)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          padding: '12px 16px'
+          display: 'flex',
+          flexDirection: 'column'
         }}
       >
+        {/* Header with Profile */}
+        <div 
+          style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 100,
+            background: 'rgba(20, 20, 20, 0.8)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            padding: '12px 16px',
+            flexShrink: 0
+          }}
+        >
         {/* Profile Header with Close Button */}
         <div 
           style={{
@@ -222,30 +246,11 @@ export default function FeedModal({
 
           {/* Close Button */}
           <button
-            onClick={onClose}
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'all 150ms',
-              flexShrink: 0
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
+            onClick={handleClose}
+            className="flex items-center justify-center hover:opacity-70 transition-opacity"
+            style={{ width: '28px', height: '28px' }}
           >
-            <XMarkIcon className="w-5 h-5 text-white" />
+            <XMarkIcon style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.6)' }} />
           </button>
         </div>
 
@@ -346,8 +351,9 @@ export default function FeedModal({
             </div>
           </div>
         ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
