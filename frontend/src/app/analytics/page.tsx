@@ -1550,7 +1550,7 @@ export default function AnalyticsPage() {
                 if (!result?.result_summary) return null;
                 
                 const color = expandedQuiz === 'hidden-skills' ? '0, 194, 255' : expandedQuiz === 'brand-strategy' ? '102, 126, 234' : '255, 0, 107';
-                const completedDate = result.completed_at ? new Date(result.completed_at) : new Date();
+                const completedDate = result.created_at ? new Date(result.created_at) : new Date();
                 const dateStr = completedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                 
                 return (
