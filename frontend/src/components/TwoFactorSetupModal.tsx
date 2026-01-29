@@ -177,6 +177,7 @@ export default function TwoFactorSetupModal({
               />
             </div>
           </div>
+        </div>
 
         {/* Actions Footer */}
         <div 
