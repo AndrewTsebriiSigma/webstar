@@ -181,7 +181,13 @@ export default function LoginPage() {
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error.response?.data?.detail || 'Login failed');
+      const errorDetail = error.response?.data?.detail;
+      const errorMessage = typeof errorDetail === 'string' ? errorDetail : (errorDetail?.message || 'Login failed');
+      if (error.response?.status === 429) {
+        toast.error(errorMessage || 'Too many requests. Please wait a moment and try again.');
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -217,7 +223,9 @@ export default function LoginPage() {
       }
     } catch (error: any) {
       console.error('2FA verification error:', error);
-      toast.error(error.response?.data?.detail || 'Invalid 2FA code');
+      const errorDetail = error.response?.data?.detail;
+      const errorMessage = typeof errorDetail === 'string' ? errorDetail : (errorDetail?.message || 'Invalid 2FA code');
+      toast.error(errorMessage);
       setTotpCode('');
     } finally {
       setLoading(false);

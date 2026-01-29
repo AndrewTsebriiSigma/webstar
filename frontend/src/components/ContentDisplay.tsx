@@ -151,7 +151,7 @@ function PhotoDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => 
   );
 }
 
-// Audio Display Component - Compact for Grid
+// Audio Display Component - Compact for Grid (Preview - No Controls)
 function AudioDisplayCompact({ 
   item, 
   onClick,
@@ -169,21 +169,6 @@ function AudioDisplayCompact({
 }) {
   // Check if this item is currently playing in mini-player
   const isCurrentlyPlaying = currentPlayingTrackId === item.id;
-
-  const handleMiniPlayerClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onPlayInMiniPlayer) {
-      onPlayInMiniPlayer(item);
-    }
-  };
-
-  const handleSoundToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    // Only toggle mute if this track is currently playing in mini-player
-    if (isCurrentlyPlaying && onToggleMiniPlayerMute) {
-      onToggleMiniPlayerMute();
-    }
-  };
 
   return (
     <div 
@@ -213,32 +198,32 @@ function AudioDisplayCompact({
         e.currentTarget.style.boxShadow = 'none';
       }}
     >
-      {/* Background Equalizer Pattern */}
+      {/* Animated Equalizer Bars - Always visible */}
       <div style={{
-        position: 'absolute',
-        inset: 0,
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-end',
         justifyContent: 'center',
         gap: '4px',
-        opacity: 0.08,
-        pointerEvents: 'none'
+        height: '50px',
+        zIndex: 1
       }}>
-        {[...Array(12)].map((_, i) => (
+        {[...Array(5)].map((_, i) => (
           <div
             key={i}
             style={{
-              width: '3px',
-              height: `${30 + (i % 3) * 20}%`,
+              width: '4px',
+              height: `${20 + (i % 3) * 20}%`,
               background: 'linear-gradient(to top, #0A84FF, #00C2FF)',
-              borderRadius: '2px'
+              borderRadius: '2px',
+              animation: `equalizerAnimation ${0.6 + i * 0.15}s ease-in-out infinite alternate`,
+              transformOrigin: 'bottom'
             }}
           />
         ))}
       </div>
 
-      {/* Play Icon - Clickable to start mini-player */}
-      <div 
+      {/* Single Play Button - Clickable to start mini-player */}
+      <button
         onClick={(e) => {
           e.stopPropagation();
           if (onPlayInMiniPlayer) {
@@ -246,10 +231,11 @@ function AudioDisplayCompact({
           }
         }}
         style={{
-        width: '64px',
-        height: '64px',
+          width: '56px',
+          height: '56px',
         borderRadius: '50%',
           background: isCurrentlyPlaying ? '#00C2FF' : '#0A84FF',
+          border: 'none',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -258,16 +244,24 @@ function AudioDisplayCompact({
           cursor: 'pointer',
           transition: 'all 150ms'
         }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.1)';
+          e.currentTarget.style.boxShadow = '0 10px 28px rgba(0, 194, 255, 0.5)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.boxShadow = isCurrentlyPlaying ? '0 8px 24px rgba(0, 194, 255, 0.4)' : '0 8px 24px rgba(10, 132, 255, 0.3)';
+        }}
       >
         {isCurrentlyPlaying ? (
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
             <rect x="6" y="4" width="4" height="16" rx="1" />
             <rect x="14" y="4" width="4" height="16" rx="1" />
           </svg>
         ) : (
-        <PlayIcon className="w-8 h-8" style={{ color: '#FFFFFF', marginLeft: '3px' }} />
+          <PlayIcon className="w-7 h-7" style={{ color: '#FFFFFF', marginLeft: '3px' }} />
         )}
-      </div>
+      </button>
 
       {/* Track Title - Display file name if available */}
       <div style={{
@@ -320,6 +314,23 @@ function AudioDisplayCompact({
           <span style={{ fontSize: '10px', fontWeight: 600, color: '#00C2FF' }}>Playing</span>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes equalizerAnimation {
+          0% { 
+            height: 20%;
+            opacity: 0.6;
+          }
+          50% {
+            height: 60%;
+            opacity: 1;
+          }
+          100% { 
+            height: 85%;
+            opacity: 0.8;
+          }
+        }
+      `}</style>
     </div>
   );
 }
@@ -584,7 +595,8 @@ function TextDisplayCompact({ item, onClick }: { item: PortfolioItem; onClick?: 
         transition: 'all 180ms cubic-bezier(0.25, 0.8, 0.25, 1)',
         position: 'relative',
         overflow: 'hidden',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        minHeight: '100%'
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-4px)';
@@ -654,21 +666,7 @@ function TextDisplayCompact({ item, onClick }: { item: PortfolioItem; onClick?: 
         </div>
       )}
       
-      {/* "Read more" indicator - FIXED positioning */}
-      {displayText.length > 60 && (
-        <div style={{
-          fontSize: '10px',
-          color: 'rgba(10, 132, 255, 0.8)',
-          textAlign: 'center',
-          fontWeight: 600,
-          position: 'relative',
-          zIndex: 1,
-          marginTop: 'auto',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
-        }}>
-          Read more →
-        </div>
-      )}
+      {/* "Read more" indicator removed for memos/text posts */}
     </div>
   );
 }

@@ -5,6 +5,19 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import { PortfolioItem, Profile } from '@/lib/types';
 import ContentDisplay from './ContentDisplay';
 
+// Platform detection utility
+const detectPlatform = () => {
+  if (typeof window === 'undefined') return 'desktop';
+  
+  const userAgent = window.navigator.userAgent.toLowerCase();
+  const isIOS = /iphone|ipad|ipod/.test(userAgent);
+  const isAndroid = /android/.test(userAgent);
+  
+  if (isIOS) return 'ios';
+  if (isAndroid) return 'android';
+  return 'desktop';
+};
+
 interface AudioTrack {
   id: number;
   title: string;
@@ -48,6 +61,14 @@ export default function FeedModal({
   
   // Track playback positions for resume functionality
   const [playbackPositions, setPlaybackPositions] = useState<Record<number, number>>({});
+  
+  // Platform detection for PDF viewer
+  const [platform, setPlatform] = useState<'ios' | 'android' | 'desktop'>('desktop');
+  
+  // Detect platform on mount
+  useEffect(() => {
+    setPlatform(detectPlatform());
+  }, []);
 
   // Reverse posts order (newest first in feed)
   const reversedPosts = [...posts].reverse();
@@ -311,6 +332,7 @@ export default function FeedModal({
               <FeedPostContent 
                 post={post} 
                 isActive={index === currentIndex}
+                platform={platform}
                 onAudioClick={(audioPost) => {
                   // Handle audio click - set the track for mini player
                   if (onAudioTrackChange && audioPost.content_url) {
@@ -368,7 +390,8 @@ function FeedPostContent({
   onToggleMiniPlayerMute,
   onStopAudio,
   savedPosition,
-  onSavePosition
+  onSavePosition,
+  platform
 }: { 
   post: PortfolioItem;
   isActive: boolean;
@@ -380,11 +403,13 @@ function FeedPostContent({
   onStopAudio?: (currentTime?: number) => void;
   savedPosition?: number;
   onSavePosition?: (postId: number, position: number) => void;
+  platform: 'ios' | 'android' | 'desktop';
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [showAttachmentPdfModal, setShowAttachmentPdfModal] = useState(false);
+  const [showPhotoAttachmentModal, setShowPhotoAttachmentModal] = useState(false);
 
   // Check if this post is currently playing in mini-player
   const isCurrentlyPlaying = currentPlayingTrackId === post.id;
@@ -919,7 +944,7 @@ function FeedPostContent({
               <div 
                 onClick={(e) => {
                   e.stopPropagation();
-                  // Clicking backdrop closes PDF modal only
+                  // Clicking backdrop closes PDF modal only, not parent modal
                   setShowPdfModal(false);
                 }}
                 style={{
@@ -928,7 +953,7 @@ function FeedPostContent({
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  zIndex: 100,
+                  zIndex: 1000,
                   background: 'rgba(0, 0, 0, 0.95)',
                   backdropFilter: 'blur(20px)',
                   display: 'flex',
@@ -960,7 +985,10 @@ function FeedPostContent({
                     {post.title || 'Document'}
                   </h3>
                   <button
-                    onClick={() => setShowPdfModal(false)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowPdfModal(false);
+                    }}
                     style={{
                       width: '32px',
                       height: '32px',
@@ -982,19 +1010,106 @@ function FeedPostContent({
                 {/* PDF Viewer */}
                 <div 
                   onClick={(e) => e.stopPropagation()}
-                  style={{ flex: 1, overflow: 'hidden', padding: '20px' }}
+                  style={{ 
+                    flex: 1, 
+                    overflow: platform === 'desktop' ? 'auto' : 'hidden', 
+                    padding: '20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
                 >
+                  {platform === 'ios' || platform === 'android' ? (
+                    // Mobile: Use native PDF viewer
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '20px',
+                      padding: '40px 20px'
+                    }}>
+                      <div style={{
+                        width: '80px',
+                        height: '80px',
+                        borderRadius: '50%',
+                        background: 'rgba(0, 194, 255, 0.15)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginBottom: '10px'
+                      }}>
+                        <svg className="w-10 h-10" fill="none" stroke="#00C2FF" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                        </svg>
+                      </div>
+                      <p style={{
+                        fontSize: '16px',
+                        fontWeight: 600,
+                        color: '#FFFFFF',
+                        textAlign: 'center',
+                        marginBottom: '8px'
+                      }}>
+                        {post.title || 'PDF Document'}
+                      </p>
+                      <p style={{
+                        fontSize: '14px',
+                        color: 'rgba(255, 255, 255, 0.6)',
+                        textAlign: 'center',
+                        marginBottom: '24px'
+                      }}>
+                        Tap to open in {platform === 'ios' ? 'Safari' : 'Chrome'} viewer
+                      </p>
+                      <a
+                        href={pdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          padding: '14px 32px',
+                          borderRadius: '20px',
+                          background: '#00C2FF',
+                          color: '#000000',
+                          fontWeight: 600,
+                          fontSize: '15px',
+                          textDecoration: 'none',
+                          display: 'inline-block',
+                          transition: 'all 150ms',
+                          cursor: 'pointer'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#33D1FF';
+                          e.currentTarget.style.transform = 'scale(1.05)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#00C2FF';
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Open in native viewer - will navigate away, but that's expected for native viewers
+                        }}
+                      >
+                        Open PDF
+                      </a>
+                    </div>
+                  ) : (
+                    // Desktop: Use scrollable iframe
                   <iframe
-                    src={pdfUrl}
+                      src={`${pdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
                     style={{
                       width: '100%',
                       height: '100%',
+                        minHeight: '600px',
                       border: 'none',
                       borderRadius: '12px',
                       background: '#FFFFFF',
                     }}
                     title="PDF Document"
                   />
+                  )}
                 </div>
               </div>
             )}
@@ -1046,29 +1161,20 @@ function FeedPostContent({
         <div style={{ marginTop: '12px' }}>
           {post.attachment_type === 'audio' && post.attachment_url && (
             <div 
-              onClick={() => {
-                // Play audio attachment in mini-player by creating a temporary audio item
-                if (onPlayInMiniPlayer && post.attachment_url) {
-                  // Create a modified post object with the attachment as main content
-                  const audioPost: PortfolioItem = {
-                    ...post,
-                    content_type: 'audio',
-                    content_url: post.attachment_url
-                  };
-                  // Show mini player UI when clicking audio attachment
-                  onPlayInMiniPlayer(audioPost, true);
-                }
-              }}
               style={{
-                padding: '12px 16px',
+                padding: '16px',
                 borderRadius: '12px',
                 background: 'rgba(10, 132, 255, 0.08)',
                 border: '1px solid rgba(10, 132, 255, 0.2)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px',
+                justifyContent: 'center',
+                gap: '16px',
                 cursor: 'pointer',
-                transition: 'all 0.15s ease'
+                transition: 'all 0.15s ease',
+                position: 'relative',
+                overflow: 'hidden',
+                minHeight: '80px'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'rgba(10, 132, 255, 0.15)';
@@ -1079,50 +1185,261 @@ function FeedPostContent({
                 e.currentTarget.style.transform = 'scale(1)';
               }}
             >
-              {/* Music Icon Circle */}
+              {/* Animated Equalizer Bars */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-end',
+                justifyContent: 'center',
+                gap: '4px',
+                height: '40px',
+                flexShrink: 0
+              }}>
+                {[...Array(5)].map((_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      width: '4px',
+                      height: `${20 + (i % 3) * 15}%`,
+                      background: 'linear-gradient(to top, #0A84FF, #00C2FF)',
+                      borderRadius: '2px',
+                      animation: `equalizerAnimation ${0.6 + i * 0.15}s ease-in-out infinite alternate`,
+                      transformOrigin: 'bottom'
+                    }}
+                  />
+                ))}
+              </div>
+              
+              {/* Title */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#FFFFFF', textAlign: 'center' }}>
+                  {post.title || 'Audio Attachment'}
+                </div>
+              </div>
+              
+              {/* Single Play Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                if (onPlayInMiniPlayer && post.attachment_url) {
+                  const audioPost: PortfolioItem = {
+                    ...post,
+                    content_type: 'audio',
+                    content_url: post.attachment_url
+                  };
+                  onPlayInMiniPlayer(audioPost, true);
+                }
+              }}
+              style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  background: '#00C2FF',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  transition: 'all 150ms',
+                  boxShadow: '0 4px 12px rgba(0, 194, 255, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                  e.currentTarget.style.background = '#33D1FF';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 194, 255, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.background = '#00C2FF';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 194, 255, 0.3)';
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                  <polygon points="5,3 19,12 5,21" />
+                </svg>
+              </button>
+
+              <style jsx>{`
+                @keyframes equalizerAnimation {
+                  0% { 
+                    height: 20%;
+                    opacity: 0.6;
+                  }
+                  50% {
+                    height: 60%;
+                    opacity: 1;
+                  }
+                  100% { 
+                    height: 85%;
+                    opacity: 0.8;
+                  }
+                }
+              `}</style>
+            </div>
+          )}
+          
+          {post.attachment_type === 'photo' && post.attachment_url && (
+            <>
+              <div 
+                onClick={() => setShowPhotoAttachmentModal(true)}
+                style={{
+                  padding: '16px',
+                borderRadius: '12px',
+                  background: 'rgba(0, 194, 255, 0.08)',
+                  border: '1px solid rgba(0, 194, 255, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 194, 255, 0.15)';
+                e.currentTarget.style.transform = 'scale(1.02)';
+              }}
+              onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 194, 255, 0.08)';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+            >
               <div style={{
                 width: '40px',
                 height: '40px',
-                borderRadius: '50%',
-                background: 'rgba(10, 132, 255, 0.2)',
+                  borderRadius: '8px',
+                  background: 'rgba(0, 194, 255, 0.2)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                flexShrink: 0
+                  flexShrink: 0,
+                  overflow: 'hidden'
               }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 18V5l12-2v13" />
-                  <circle cx="6" cy="18" r="3" />
-                  <circle cx="18" cy="16" r="3" />
-                </svg>
+                  <img
+                    src={post.attachment_url.startsWith('http') 
+                      ? post.attachment_url 
+                      : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${post.attachment_url}`}
+                    alt="Photo attachment"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                  />
               </div>
-              
-              {/* Title and Play hint */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: '#FFFFFF' }}>
-                  {post.title || 'Audio Attachment'}
+                  <div style={{
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: '#FFFFFF',
+                    marginBottom: '4px'
+                  }}>
+                    Photo Attachment
                 </div>
-                <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)', marginTop: '2px' }}>
-                  Tap to play
+                  <div style={{
+                    fontSize: '13px',
+                    color: '#00C2FF',
+                    fontWeight: 600
+                  }}>
+                    Tap to preview →
+                  </div>
                 </div>
               </div>
               
-              {/* Play Button */}
-              <div style={{
-                width: '36px',
-                height: '36px',
+              {/* Photo Attachment Preview Modal */}
+              {showPhotoAttachmentModal && post.attachment_url && (
+                <div 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Clicking backdrop closes photo attachment modal only, not parent modal
+                    setShowPhotoAttachmentModal(false);
+                  }}
+                  style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    zIndex: 1000,
+                    background: 'rgba(0, 0, 0, 0.95)',
+                    backdropFilter: 'blur(20px)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  {/* Header */}
+                  <div 
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '16px 20px',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                    }}
+                  >
+                    <h3 style={{
+                      fontSize: '16px',
+                      fontWeight: 600,
+                      color: '#FFFFFF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                    }}>
+                      <svg className="w-5 h-5" fill="none" stroke="#00C2FF" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                      </svg>
+                      Photo Attachment
+                    </h3>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowPhotoAttachmentModal(false);
+                      }}
+                      style={{
+                        width: '32px',
+                        height: '32px',
                 borderRadius: '50%',
-                background: '#00C2FF',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        border: 'none',
+                        cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                flexShrink: 0
-              }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-                  <polygon points="5,3 19,12 5,21" />
+                      }}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="#FFFFFF" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
+                    </button>
+                  </div>
+
+                  {/* Photo Viewer */}
+                  <div 
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ 
+                      flex: 1, 
+                      overflow: 'auto', 
+                      padding: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <img
+                      src={post.attachment_url.startsWith('http') 
+                        ? post.attachment_url 
+                        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${post.attachment_url}`}
+                      alt="Photo attachment preview"
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: '100%',
+                        objectFit: 'contain',
+                        borderRadius: '12px'
+                      }}
+                    />
               </div>
             </div>
+              )}
+            </>
           )}
           
           {post.attachment_type === 'pdf' && (
@@ -1171,7 +1488,10 @@ function FeedPostContent({
                     PDF Document
                   </div>
                   <button
-                    onClick={() => setShowAttachmentPdfModal(true)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowAttachmentPdfModal(true);
+                    }}
                     style={{
                       fontSize: '13px',
                       color: '#EF4444',
@@ -1198,7 +1518,7 @@ function FeedPostContent({
                 <div 
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Clicking backdrop closes attachment PDF modal only
+                    // Clicking backdrop closes attachment PDF modal only, not parent modal
                     setShowAttachmentPdfModal(false);
                   }}
                   style={{
@@ -1207,7 +1527,7 @@ function FeedPostContent({
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    zIndex: 100,
+                    zIndex: 1000,
                     background: 'rgba(0, 0, 0, 0.95)',
                     backdropFilter: 'blur(20px)',
                     display: 'flex',
@@ -1239,7 +1559,10 @@ function FeedPostContent({
                       PDF Attachment
                     </h3>
                     <button
-                      onClick={() => setShowAttachmentPdfModal(false)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowAttachmentPdfModal(false);
+                      }}
                       style={{
                         width: '32px',
                         height: '32px',
@@ -1261,21 +1584,110 @@ function FeedPostContent({
                   {/* PDF Viewer */}
                   <div 
                     onClick={(e) => e.stopPropagation()}
-                    style={{ flex: 1, overflow: 'hidden', padding: '20px' }}
+                    style={{ 
+                      flex: 1, 
+                      overflow: platform === 'desktop' ? 'auto' : 'hidden', 
+                      padding: '20px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
                   >
-                    <iframe
-                      src={post.attachment_url.startsWith('http') 
+                    {platform === 'ios' || platform === 'android' ? (
+                      // Mobile: Use native PDF viewer
+                      <div style={{
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '20px',
+                        padding: '40px 20px'
+                      }}>
+                        <div style={{
+                          width: '80px',
+                          height: '80px',
+                          borderRadius: '50%',
+                          background: 'rgba(239, 68, 68, 0.15)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginBottom: '10px'
+                        }}>
+                          <svg className="w-10 h-10" fill="none" stroke="#EF4444" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                          </svg>
+                        </div>
+                        <p style={{
+                          fontSize: '16px',
+                          fontWeight: 600,
+                          color: '#FFFFFF',
+                          textAlign: 'center',
+                          marginBottom: '8px'
+                        }}>
+                          PDF Attachment
+                        </p>
+                        <p style={{
+                          fontSize: '14px',
+                          color: 'rgba(255, 255, 255, 0.6)',
+                          textAlign: 'center',
+                          marginBottom: '24px'
+                        }}>
+                          Tap to open in {platform === 'ios' ? 'Safari' : 'Chrome'} viewer
+                        </p>
+                        <a
+                          href={post.attachment_url.startsWith('http') 
                         ? post.attachment_url 
                         : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${post.attachment_url}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            padding: '14px 32px',
+                            borderRadius: '20px',
+                            background: '#EF4444',
+                            color: '#FFFFFF',
+                            fontWeight: 600,
+                            fontSize: '15px',
+                            textDecoration: 'none',
+                            display: 'inline-block',
+                            transition: 'all 150ms',
+                            cursor: 'pointer'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#F87171';
+                            e.currentTarget.style.transform = 'scale(1.05)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#EF4444';
+                            e.currentTarget.style.transform = 'scale(1)';
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Open in native viewer
+                          }}
+                        >
+                          Open PDF
+                        </a>
+                      </div>
+                    ) : (
+                      // Desktop: Use scrollable iframe
+                      <iframe
+                        src={`${post.attachment_url.startsWith('http') 
+                          ? post.attachment_url 
+                          : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${post.attachment_url}`}#toolbar=1&navpanes=1&scrollbar=1`}
                       style={{
                         width: '100%',
                         height: '100%',
+                          minHeight: '600px',
                         border: 'none',
                         borderRadius: '12px',
                         background: '#FFFFFF',
                       }}
                       title="PDF Attachment"
                     />
+                    )}
                   </div>
                 </div>
               )}

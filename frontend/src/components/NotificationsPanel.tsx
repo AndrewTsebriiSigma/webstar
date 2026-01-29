@@ -9,6 +9,7 @@ interface Notification {
   type: 'view' | 'update' | 'system' | 'welcome';
   title: string;
   time: string;
+  timestamp?: Date; // Optional timestamp for proper formatting
   unread: boolean;
 }
 
@@ -35,6 +36,30 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
     }
   }, [isOpen]);
 
+  // Format time like Telegram/iOS: "today at 12:29", "yesterday at 14:30", "Jan 15 at 10:00"
+  const formatNotificationTime = (date: Date): string => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const notificationDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    
+    if (notificationDate.getTime() === today.getTime()) {
+      return `today at ${timeStr}`;
+    } else if (notificationDate.getTime() === yesterday.getTime()) {
+      return `yesterday at ${timeStr}`;
+    } else {
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const month = monthNames[date.getMonth()];
+      const day = date.getDate();
+      return `${month} ${day} at ${timeStr}`;
+    }
+  };
+
   const fetchNotifications = async () => {
     setLoading(true);
     try {
@@ -45,54 +70,82 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
       ]);
 
       const newNotifications: Notification[] = [];
+      const now = new Date();
+
+      // Debug: Log API responses
+      if (profileRes.status === 'rejected') {
+        console.error('Profile analytics API failed:', profileRes.reason);
+      }
+      if (dailyRes.status === 'rejected') {
+        console.error('Daily analytics API failed:', dailyRes.reason);
+      }
 
       // Add view notifications from analytics
-      if (dailyRes.status === 'fulfilled') {
+      if (dailyRes.status === 'fulfilled' && dailyRes.value?.data) {
         const dailyData = dailyRes.value.data;
-        const totalViews = dailyData.reduce((sum: number, d: { profile_views: number }) => sum + d.profile_views, 0);
-        const todayViews = dailyData[dailyData.length - 1]?.profile_views || 0;
+        
+        // Debug: Log daily data structure
+        console.log('Daily analytics data:', dailyData);
+        
+        // Ensure dailyData is an array
+        if (Array.isArray(dailyData) && dailyData.length > 0) {
+          const totalViews = dailyData.reduce((sum: number, d: { profile_views?: number }) => {
+            return sum + (d.profile_views || 0);
+          }, 0);
+          
+          // Get today's views (last item in array should be today)
+          const todayData = dailyData[dailyData.length - 1];
+          const todayViews = todayData?.profile_views || 0;
 
-        if (todayViews > 0) {
-          newNotifications.push({
-            id: 'today-views',
-            type: 'view',
-            title: `${todayViews} profile view${todayViews > 1 ? 's' : ''} today`,
-            time: 'Today',
-            unread: true
-          });
-        }
+          console.log('Total views:', totalViews, 'Today views:', todayViews);
 
-        if (totalViews > 0) {
-          newNotifications.push({
-            id: 'total-views',
-            type: 'view',
-            title: `${totalViews} total profile views`,
-            time: 'All time',
-            unread: false
-          });
+          if (todayViews > 0) {
+            // Use current time for "today" notification
+            const notificationTime = new Date();
+            newNotifications.push({
+              id: 'today-views',
+              type: 'view',
+              title: `${todayViews} profile view${todayViews > 1 ? 's' : ''} today`,
+              time: formatNotificationTime(notificationTime),
+              timestamp: notificationTime,
+              unread: true
+            });
+          }
+
+          // Don't show "all time" notification - it's redundant with today's notification
+          // If user wants to see total views, they can check analytics
+        } else {
+          console.warn('Daily analytics data is not an array or is empty:', dailyData);
         }
+      } else {
+        console.warn('Daily analytics request failed or returned no data');
       }
 
       // Add welcome notification if no activity
       if (newNotifications.length === 0) {
+        const welcomeTime = new Date();
         newNotifications.push({
           id: 'welcome',
           type: 'welcome',
           title: 'Welcome to WebSTAR! Start sharing your work.',
-          time: 'Now',
+          time: formatNotificationTime(welcomeTime),
+          timestamp: welcomeTime,
           unread: true
         });
       }
 
+      console.log('Final notifications:', newNotifications);
       setNotifications(newNotifications);
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
       // Fallback notification
+      const fallbackTime = new Date();
       setNotifications([{
         id: 'fallback',
         type: 'system',
         title: 'You\'re all caught up!',
-        time: 'Now',
+        time: formatNotificationTime(fallbackTime),
+        timestamp: fallbackTime,
         unread: false
       }]);
     } finally {
@@ -134,7 +187,7 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
       />
       
       {/* Bottom Slider Content with animation */}
-      <div className={`bottom-slider-content ${isVisible ? 'entering' : 'exiting'}`}>
+      <div className={`bottom-slider-content bottom-slider-content-full-width ${isVisible ? 'entering' : 'exiting'}`}>
         {/* Header - 55px with close on LEFT, title CENTERED */}
         <div 
           className="flex items-center flex-shrink-0"

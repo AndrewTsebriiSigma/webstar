@@ -22,16 +22,19 @@ export default function CreateContentModal({
   const [postExpanded, setPostExpanded] = useState(defaultPostExpanded);
   const [isClosing, setIsClosing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [selectedPostType, setSelectedPostType] = useState<'media' | 'audio' | 'pdf' | 'text' | null>(null);
 
   // Entrance animation + reset postExpanded based on prop
   useEffect(() => {
     if (isOpen) {
       setPostExpanded(defaultPostExpanded);
+      setSelectedPostType(null); // Reset selection when modal opens
       // Small delay for entrance animation
       requestAnimationFrame(() => setIsVisible(true));
     } else {
       setIsVisible(false);
       setIsClosing(false);
+      setSelectedPostType(null); // Reset selection when modal closes
     }
   }, [isOpen, defaultPostExpanded]);
 
@@ -102,12 +105,14 @@ export default function CreateContentModal({
   };
 
   const handleTypeSelect = (type: 'media' | 'audio' | 'pdf' | 'text') => {
+    setSelectedPostType(type);
     setIsClosing(true);
     setIsVisible(false);
     setTimeout(() => {
       onSelectPost(type);
       setPostExpanded(false);
       setIsClosing(false);
+      setSelectedPostType(null); // Reset after closing
       onClose();
     }, 150);
   };
@@ -127,7 +132,7 @@ export default function CreateContentModal({
       onClick={handleClose}
     >
       <div 
-        className="absolute left-3 right-3"
+        className={`create-content-dropdown ${isVisible ? 'entering' : 'exiting'}`}
         style={{
           top: `${dropdownTop}px`,
           background: 'rgba(18, 18, 18, 0.95)',
@@ -136,11 +141,7 @@ export default function CreateContentModal({
           border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '16px',
           overflow: 'hidden',
-          // Entrance & exit animation - subtle scale + fade
-          transform: isVisible ? 'scale(1) translateY(0)' : 'scale(0.97) translateY(-6px)',
-          opacity: isVisible ? 1 : 0,
-          transition: 'transform 0.15s ease-out, opacity 0.15s ease-out',
-          transformOrigin: 'top center'
+          opacity: isVisible ? 1 : 0
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -195,24 +196,49 @@ export default function CreateContentModal({
           }}
         >
           <div className="grid grid-cols-4 gap-1">
-            {postTypes.map((item) => (
+            {postTypes.map((item) => {
+              const isSelected = selectedPostType === item.type;
+              return (
               <button
                 key={item.type}
                 onClick={() => handleTypeSelect(item.type)}
                 className="flex flex-col items-center gap-1.5 p-1.5 rounded-[10px] transition-all duration-150"
-                style={{ background: 'transparent' }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  style={{ 
+                    background: isSelected ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                    border: isSelected ? `1px solid ${item.color}40` : '1px solid transparent'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.background = 'transparent';
+                    }
+                  }}
               >
                 <div 
-                  className="w-12 h-12 rounded-[10px] flex items-center justify-center"
-                  style={{ background: item.gradient }}
+                    className="w-12 h-12 rounded-[10px] flex items-center justify-center transition-all duration-150"
+                    style={{ 
+                      background: isSelected ? item.gradient : item.gradient,
+                      transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                      boxShadow: isSelected ? `0 4px 12px ${item.color}40` : 'none'
+                    }}
                 >
                   <span style={{ color: item.color }}>{item.icon}</span>
                 </div>
-                <span className="text-[12px] font-medium text-white">{item.label}</span>
+                  <span 
+                    className="text-[12px] font-medium transition-colors duration-150"
+                    style={{ 
+                      color: isSelected ? item.color : '#FFFFFF'
+                    }}
+                  >
+                    {item.label}
+                  </span>
               </button>
-            ))}
+              );
+            })}
           </div>
         </div>
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { PlusIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, XMarkIcon, ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { profileAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 import SimpleCalendar from './SimpleCalendar';
@@ -153,9 +153,14 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
   const [savedLinks, setSavedLinks] = useState<Record<string, string>>({});
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
     social: true,
-    professional: true,
-    creative: true,
+    business: true,
+    sound: true,
+    custom: true,
   });
+  
+  // Delete confirmation state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [platformToDelete, setPlatformToDelete] = useState<string | null>(null);
 
   // Section reordering via drag & drop
   type SectionId = 'about' | 'experience' | 'skills' | 'connect';
@@ -342,11 +347,13 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
     };
   }, [profile?.social_links, isCustomizeMode]);
 
-  // Platform categories configuration with image icons
+  // Platform categories configuration with image icons - Reorganized per requirements
   const PLATFORM_CATEGORIES = {
     social: {
       label: 'Social',
       platforms: [
+        { id: 'discord', name: 'Discord', icon: '/discord.png', color: '#5865F2', domain: 'discord.com' },
+        { id: 'whatsapp', name: 'WhatsApp', icon: '/whatsapp.png', color: '#25D366', domain: 'wa.me' },
         { id: 'instagram', name: 'Instagram', icon: '/icons/social.png', color: '#E4405F', domain: 'instagram.com' },
         { id: 'facebook', name: 'Facebook', icon: '/icons/facebook.png', color: '#1877F2', domain: 'facebook.com' },
         { id: 'x', name: 'X', icon: '/icons/twitter.png', color: '#000000', domain: 'x.com' },
@@ -354,30 +361,38 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
         { id: 'pinterest', name: 'Pinterest', icon: '/icons/pinterest.png', color: '#E60023', domain: 'pinterest.com' },
         { id: 'tiktok', name: 'TikTok', icon: '/icons/tik-tok.png', color: '#000000', domain: 'tiktok.com' },
         { id: 'reddit', name: 'Reddit', icon: '/icons/reddit.png', color: '#FF4500', domain: 'reddit.com' },
+        { id: 'youtube', name: 'YouTube', icon: '/icons/youtube.png', color: '#FF0000', domain: 'youtube.com' },
       ]
     },
-    professional: {
-      label: 'Professional',
+    business: {
+      label: 'Business',
       platforms: [
         { id: 'linkedin', name: 'LinkedIn', icon: '/icons/linkedin.png', color: '#0A66C2', domain: 'linkedin.com' },
         { id: 'github', name: 'GitHub', icon: '/icons/github.png', color: '#181717', domain: 'github.com' },
-        { id: 'behance', name: 'Behance', icon: '/icons/behance.png', color: '#1769FF', domain: 'behance.net' },
-        { id: 'dribbble', name: 'Dribbble', icon: '/icons/dribbble.png', color: '#EA4C89', domain: 'dribbble.com' },
+        { id: 'calendar', name: 'Calendar', icon: '/icons/social.png', color: '#4285F4', domain: 'calendar.google.com' }, // Using placeholder icon
       ]
     },
-    creative: {
-      label: 'Creative',
+    sound: {
+      label: 'Sound',
       platforms: [
-        { id: 'youtube', name: 'YouTube', icon: '/icons/youtube.png', color: '#FF0000', domain: 'youtube.com' },
-        { id: 'spotify', name: 'Spotify', icon: '/icons/spotify.png', color: '#1DB954', domain: 'spotify.com' },
+        { id: 'spotify', name: 'Spotify', icon: '/icons/spotify.png', color: '#1DB954', domain: 'open.spotify.com' },
         { id: 'soundcloud', name: 'SoundCloud', icon: '/icons/soundcloud.png', color: '#FF3300', domain: 'soundcloud.com' },
+        { id: 'youtube-music', name: 'YouTube Music', icon: '/icons/youtube.png', color: '#FF0000', domain: 'music.youtube.com' },
+        { id: 'apple-music', name: 'Apple Music', icon: '/icons/social.png', color: '#FA243C', domain: 'music.apple.com' }, // Using placeholder icon
+      ]
+    },
+    custom: {
+      label: 'Custom',
+      platforms: [
+        { id: 'custom', name: 'Custom Link', icon: '/icons/social.png', color: '#00C2FF', domain: '' }, // Custom domain input
       ]
     }
   };
 
   // Helper function to render platform icon
   const renderPlatformIcon = (icon: string, size: number = 24) => {
-    if (icon.startsWith('/icons/')) {
+    // Handle all image paths (both /icons/ and root /public files)
+    if (icon.startsWith('/') && (icon.endsWith('.png') || icon.endsWith('.jpg') || icon.endsWith('.jpeg') || icon.endsWith('.svg'))) {
       return (
         <img 
           src={icon} 
@@ -413,16 +428,34 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
     }
 
     try {
-      let platformDomain = '';
-      for (const category of Object.values(PLATFORM_CATEGORIES)) {
-        const platform = category.platforms.find(p => p.id === selectedPlatformForLink);
-        if (platform) {
-          platformDomain = platform.domain;
-          break;
+      let link = '';
+      const platformDetails = getPlatformDetails(selectedPlatformForLink);
+      
+      if (selectedPlatformForLink === 'custom') {
+        // Custom link - use as-is (should be full URL)
+        link = linkUsername.trim();
+        // Add https:// if not present
+        if (!link.startsWith('http://') && !link.startsWith('https://')) {
+          link = `https://${link}`;
         }
+      } else if (platformDetails) {
+        // Regular platform - construct URL
+        const platformDomain = platformDetails.domain;
+        // Handle special cases
+        if (selectedPlatformForLink === 'whatsapp') {
+          // WhatsApp uses wa.me format
+          link = `https://wa.me/${linkUsername.trim().replace(/[^0-9]/g, '')}`;
+        } else if (selectedPlatformForLink === 'discord') {
+          // Discord uses discord.com/users/username format
+          link = `https://discord.com/users/${linkUsername.trim()}`;
+        } else {
+          link = `${platformDomain}/${linkUsername.trim()}`;
+        }
+      } else {
+        toast.error('Invalid platform');
+        return;
       }
 
-      const link = `${platformDomain}/${linkUsername.trim()}`;
       const updatedLinks = { ...savedLinks, [selectedPlatformForLink]: link };
       
       await profileAPI.updateMe({ social_links: JSON.stringify(updatedLinks) });
@@ -431,7 +464,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
       setShowAddConnect(false);
       setSelectedPlatformForLink(null);
       setLinkUsername('');
-      toast.success('Social link added!');
+      toast.success('Social link saved!');
       onUpdate();
     } catch (error) {
       toast.error('Failed to save social link');
@@ -680,9 +713,16 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
       setSavedLinks(updatedLinks);
       toast.success('Social link removed!');
       onUpdate();
+      setShowDeleteConfirm(false);
+      setPlatformToDelete(null);
     } catch (error) {
       toast.error('Failed to remove social link');
     }
+  };
+
+  const handleDeleteClick = (platform: string) => {
+    setPlatformToDelete(platform);
+    setShowDeleteConfirm(true);
   };
 
   // Get platform details by ID
@@ -1165,59 +1205,40 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                     className="date-unified-wrapper"
                     style={{
                       width: '100%',
-                      background: 'rgba(255, 255, 255, 0.02)',
-                      border: '1px solid rgba(255, 255, 255, 0.06)',
-                      borderRadius: '10px',
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
                       marginTop: '10px',
                       display: 'flex',
                       alignItems: 'center',
-                      height: '44px',
+                      gap: '8px',
+                      padding: '8px',
+                      position: 'relative',
+                      overflow: 'visible',
                     }}
                   >
-                    <input
-                      type="text"
-                              placeholder="Start"
-                      value={exp.startDate ? new Date(exp.startDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : ''}
-                      readOnly
-                      onClick={() => {
-                        // Will use SimpleCalendar logic later
-                      }}
-                      style={{
-                        flex: '1 1 50%',
-                        minWidth: 0,
-                        padding: '0 14px',
-                        background: 'transparent',
-                        border: 'none',
-                        outline: 'none',
-                        color: exp.startDate ? '#FFFFFF' : 'rgba(255, 255, 255, 0.4)',
-                        fontSize: '12px',
-                        cursor: 'pointer',
-                        textAlign: 'center',
-                      }}
-                    />
+                    {/* Start Date */}
+                    <div style={{ flex: '1 1 50%', position: 'relative', overflow: 'visible' }}>
+                      <SimpleCalendar
+                        value={exp.startDate || ''}
+                        onChange={(date) => {
+                          updateExperience(index, 'startDate', date);
+                        }}
+                        placeholder="Start*"
+                      />
+                    </div>
                     {/* Vertical divider */}
                     <div style={{ width: '1px', height: '24px', background: 'rgba(255, 255, 255, 0.1)', flexShrink: 0 }} />
-                    <input
-                      type="text"
-                      placeholder="End"
-                      value={exp.endDate ? new Date(exp.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : ''}
-                      readOnly
-                      onClick={() => {
-                        // Will use SimpleCalendar logic later
-                      }}
-                      style={{
-                        flex: '1 1 50%',
-                        minWidth: 0,
-                        padding: '0 14px',
-                        background: 'transparent',
-                        border: 'none',
-                        outline: 'none',
-                        color: exp.endDate ? '#FFFFFF' : 'rgba(255, 255, 255, 0.4)',
-                        fontSize: '12px',
-                        cursor: 'pointer',
-                        textAlign: 'center',
-                      }}
-                          />
+                    {/* End Date */}
+                    <div style={{ flex: '1 1 50%', position: 'relative', overflow: 'visible' }}>
+                      <SimpleCalendar
+                        value={exp.endDate || ''}
+                        onChange={(date) => {
+                          updateExperience(index, 'endDate', date);
+                        }}
+                        placeholder="End"
+                      />
+                    </div>
                         </div>
 
                   {/* Description - emotional CTA */}
@@ -1816,7 +1837,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
         </div>
 
           {showAddConnect && canEdit ? (
-          <div style={{ maxWidth: '336px', margin: '0 auto' }}>
+          <div style={{ maxWidth: '336px', margin: '0 auto', position: 'relative', zIndex: 100 }}>
             
               {/* Step 1: Platform Grid - Only show when no platform selected */}
             {!selectedPlatformForLink && (
@@ -1844,7 +1865,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                   </button>
 
                   {expandedCategories[categoryKey] && (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', paddingTop: 'var(--space-2)', maxHeight: categoryKey === 'social' ? '88px' : 'none', overflowY: categoryKey === 'social' ? 'auto' : 'visible', position: 'relative', zIndex: 1 }}>
                       {category.platforms.map((platform) => {
                         const isConnected = savedLinks.hasOwnProperty(platform.id);
                         return (
@@ -1874,8 +1895,8 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                             }}
                             title={isConnected ? `${platform.name} (Edit)` : platform.name}
                             >
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              {renderPlatformIcon(platform.icon, 38)}
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px' }}>
+                              {renderPlatformIcon(platform.icon, 32)}
                             </div>
                             {/* Small dot indicator for connected - subtle, not checkmark */}
                             {isConnected && (
@@ -1897,24 +1918,30 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                 </div>
               ))}
 
-              {/* Close picker button */}
+              {/* Back icon button - corner position */}
+              <div style={{ position: 'relative', marginTop: 'var(--space-3)' }}>
               <button
                 onClick={() => setShowAddConnect(false)}
-                className="transition w-full"
+                  className="transition"
                 style={{
-                  marginTop: 'var(--space-3)',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '32px',
                   height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   background: 'transparent',
                   border: 'none',
                   borderRadius: '8px',
-                  color: 'var(--text-tertiary)',
-                  fontSize: '12px',
-                  fontWeight: '500',
-                  textAlign: 'center',
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
                 }}
               >
-                ← Back
+                  <ChevronLeftIcon className="w-5 h-5" />
               </button>
+              </div>
             </div>
             )}
 
@@ -1922,7 +1949,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
             {selectedPlatformForLink && getPlatformDetails(selectedPlatformForLink) && (() => {
               const isEditing = savedLinks.hasOwnProperty(selectedPlatformForLink);
               return (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '28px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '40px', position: 'relative', zIndex: 100 }}>
                 {/* Icon that pops above the card */}
             <div
               style={{
@@ -1935,7 +1962,9 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                     alignItems: 'center', 
                     justifyContent: 'center',
                     marginBottom: '-26px',
-                    zIndex: 5,
+                    marginTop: '12px',
+                    position: 'relative',
+                    zIndex: 101,
                     boxShadow: '0 1px 4px rgba(0, 0, 0, 0.1)',
                   }}
                 >
@@ -1951,36 +1980,60 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                     borderRadius: '16px',
                     overflow: 'visible',
                     position: 'relative',
+                    zIndex: 100,
                   }}
                 >
-                  {/* Red minus badge - only when editing existing link (top right) */}
-                  {isEditing && (
-                    <div
+                  {/* Back icon - top left corner */}
+                  <button
                       onClick={() => {
-                        removeConnect(selectedPlatformForLink);
+                      setShowAddConnect(false); 
                         setSelectedPlatformForLink(null);
                         setLinkUsername('');
-                        setShowAddConnect(false);
                       }}
-                      className="minus-badge cursor-pointer"
+                    className="transition"
                       style={{
                         position: 'absolute',
-                        top: '8px',
-                        right: '8px',
-                        width: '22px',
-                        height: '22px',
-                        borderRadius: '50%',
-                        background: 'rgba(255, 59, 48, 0.95)',
-                        border: '2px solid var(--bg-primary)',
-                        color: 'white',
+                      top: '12px',
+                      left: '12px',
+                      width: '32px',
+                      height: '32px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '8px',
+                      color: 'var(--text-secondary)',
+                      cursor: 'pointer',
                         zIndex: 10,
-                        boxShadow: '0 2px 8px rgba(255, 59, 48, 0.4)',
+                    }}
+                  >
+                    <ChevronLeftIcon className="w-5 h-5" />
+                  </button>
+
+                  {/* Red minus badge - only when editing existing link (top right) */}
+                  {isEditing && (
+                    <div
+                      onClick={() => handleDeleteClick(selectedPlatformForLink)}
+                      className="minus-badge cursor-pointer transition"
+                      style={{
+                        position: 'absolute',
+                        top: '12px',
+                        right: '12px',
+                        width: '32px',
+                        height: '32px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'rgba(255, 59, 48, 0.15)',
+                        border: '1px solid rgba(255, 59, 48, 0.3)',
+                        borderRadius: '8px',
+                        color: 'rgba(255, 59, 48, 0.9)',
+                        zIndex: 10,
+                        cursor: 'pointer',
                       }}
                     >
-                      <MinusIcon size={12} strokeWidth={3} />
+                      <TrashIcon className="w-4 h-4" />
                       </div>
                   )}
                   
@@ -2002,7 +2055,17 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                       type="text"
                       value={linkUsername}
                       onChange={(e) => setLinkUsername(e.target.value)}
-                      placeholder={`${getPlatformDetails(selectedPlatformForLink)!.domain}/...`}
+                      placeholder={
+                        selectedPlatformForLink === 'custom' 
+                          ? 'https://example.com' 
+                          : selectedPlatformForLink === 'whatsapp'
+                          ? 'Phone number (e.g., 1234567890)'
+                          : selectedPlatformForLink === 'discord'
+                          ? 'Discord username'
+                          : getPlatformDetails(selectedPlatformForLink)!.domain 
+                            ? `${getPlatformDetails(selectedPlatformForLink)!.domain}/...` 
+                            : 'Enter URL or username'
+                      }
                       autoFocus
                       onKeyPress={(e) => e.key === 'Enter' && savePlatformLink()}
                       className="connect-link-input"
@@ -2045,30 +2108,10 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                       cursor: linkUsername.trim() ? 'pointer' : 'not-allowed',
                       }}
                     >
-                    {isEditing ? 'Save' : 'Link up'}
+                    Save
                     </button>
                 </div>
                 
-                {/* Back link - outside the card */}
-                    <button
-                  onClick={() => { 
-                    setShowAddConnect(false); 
-                    setSelectedPlatformForLink(null); 
-                    setLinkUsername(''); 
-                  }}
-                  className="transition"
-                      style={{
-                    marginTop: '10px',
-                    padding: '6px 12px',
-                    background: 'transparent',
-                        border: 'none',
-                    color: 'var(--text-tertiary)',
-                    fontSize: '12px',
-                    fontWeight: '500',
-                      }}
-                    >
-                  ← Back
-                    </button>
                   </div>
               );
             })()}
@@ -2089,7 +2132,26 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                           onClick={() => {
                             setShowAddConnect(true);
                             setSelectedPlatformForLink(platformId);
-                            setLinkUsername(link);
+                            // Extract username from saved link
+                            let username = link;
+                            if (platformId === 'custom') {
+                              username = link;
+                            } else if (platformId === 'whatsapp') {
+                              // Extract phone number from wa.me URL
+                              const match = link.match(/wa\.me\/(\d+)/);
+                              username = match ? match[1] : link;
+                            } else if (platformId === 'discord') {
+                              // Extract username from discord.com/users/username
+                              const match = link.match(/discord\.com\/users\/(.+)/);
+                              username = match ? match[1] : link;
+                            } else if (platformDetails && platformDetails.domain) {
+                              // Remove domain prefix
+                              const domain = platformDetails.domain;
+                              if (link.includes(domain)) {
+                                username = link.split(domain + '/')[1] || link.split(domain)[1] || link;
+                              }
+                            }
+                            setLinkUsername(username);
                           }}
                           className="transition cursor-pointer"
                           style={{
@@ -2103,11 +2165,11 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                           }}
                           title={`Edit ${platformDetails.name}`}
                         >
-                          {renderPlatformIcon(platformDetails.icon, 36)}
+                          {renderPlatformIcon(platformDetails.icon, 32)}
                         </div>
                       ) : (
                       <a
-                        href={`https://${link}`}
+                        href={link.startsWith('http://') || link.startsWith('https://') ? link : `https://${link}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="transition"
@@ -2122,7 +2184,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                         }}
                         title={`${platformDetails.name}: ${link}`}
                       >
-                          {renderPlatformIcon(platformDetails.icon, 36)}
+                          {renderPlatformIcon(platformDetails.icon, 32)}
                         </a>
                       )}
                     </div>
@@ -2248,6 +2310,106 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
         )}
         </div>
       </div>
+
+      {/* Delete Confirmation Popup */}
+      {showDeleteConfirm && platformToDelete && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000,
+            padding: 'var(--space-4)',
+          }}
+          onClick={() => {
+            setShowDeleteConfirm(false);
+            setPlatformToDelete(null);
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-xl)',
+              padding: 'var(--space-6)',
+              maxWidth: '320px',
+              width: '100%',
+            }}
+          >
+            <h3
+              style={{
+                fontSize: '18px',
+                fontWeight: '600',
+                color: 'var(--text-primary)',
+                marginBottom: 'var(--space-3)',
+              }}
+            >
+              Remove Link?
+            </h3>
+            <p
+              style={{
+                fontSize: '14px',
+                color: 'var(--text-secondary)',
+                marginBottom: 'var(--space-5)',
+                lineHeight: '1.5',
+              }}
+            >
+              Are you sure you want to remove this link?
+            </p>
+            <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setPlatformToDelete(null);
+                }}
+                style={{
+                  flex: 1,
+                  padding: 'var(--space-3)',
+                  background: 'transparent',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-md)',
+                  color: 'var(--text-secondary)',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (platformToDelete) {
+                    removeConnect(platformToDelete);
+                    setSelectedPlatformForLink(null);
+                    setLinkUsername('');
+                    setShowAddConnect(false);
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  padding: 'var(--space-3)',
+                  background: 'rgba(255, 59, 48, 0.15)',
+                  border: '1px solid rgba(255, 59, 48, 0.3)',
+                  borderRadius: 'var(--radius-md)',
+                  color: 'rgba(255, 59, 48, 0.9)',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

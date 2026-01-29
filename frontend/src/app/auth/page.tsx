@@ -218,7 +218,9 @@ export default function UnifiedAuthPage() {
         }
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Invalid credentials');
+      const errorDetail = err.response?.data?.detail;
+      const errorMessage = typeof errorDetail === 'string' ? errorDetail : (errorDetail?.message || err.message || 'Invalid credentials');
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -258,7 +260,9 @@ export default function UnifiedAuthPage() {
         router.push('/onboarding');
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Registration failed');
+      const errorDetail = err.response?.data?.detail;
+      const errorMessage = typeof errorDetail === 'string' ? errorDetail : (errorDetail?.message || err.message || 'Registration failed');
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

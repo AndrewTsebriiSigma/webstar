@@ -106,13 +106,15 @@ const BottomSlider = ({
   onClose, 
   title, 
   children,
-  zIndex = 50
+  zIndex = 50,
+  fullWidth = false
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
   title: string; 
   children: React.ReactNode;
   zIndex?: number;
+  fullWidth?: boolean;
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -141,7 +143,7 @@ const BottomSlider = ({
       
       {/* Bottom Slider Content */}
       <div 
-        className={`bottom-slider-content ${isVisible ? 'entering' : 'exiting'}`}
+        className={`bottom-slider-content ${fullWidth ? 'bottom-slider-content-full-width' : ''} ${isVisible ? 'entering' : 'exiting'}`}
         onClick={(e) => e.stopPropagation()}
         style={{ zIndex: zIndex + 1 }}
       >
@@ -271,27 +273,27 @@ const ChangeEmailSection = ({ onBack }: { onBack: () => void }) => {
               borderRadius: '12px',
               padding: '2px'
             }}>
-              <input
-                type="text"
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="000000"
-                maxLength={6}
-                style={{
-                  width: '100%',
-                  padding: '12px 14px',
+            <input
+              type="text"
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="000000"
+              maxLength={6}
+              style={{
+                width: '100%',
+                padding: '12px 14px',
                   background: 'transparent',
                   border: 'none',
-                  borderRadius: '12px',
+                borderRadius: '12px',
                   color: 'rgba(255, 255, 255, 0.95)',
-                  fontSize: '24px',
-                  fontWeight: 600,
-                  letterSpacing: '8px',
-                  textAlign: 'center',
-                  outline: 'none'
-                }}
-                required
-              />
+                fontSize: '24px',
+                fontWeight: 600,
+                letterSpacing: '8px',
+                textAlign: 'center',
+                outline: 'none'
+              }}
+              required
+            />
             </div>
           </div>
 
@@ -359,23 +361,23 @@ const ChangeEmailSection = ({ onBack }: { onBack: () => void }) => {
             borderRadius: '12px',
             padding: '2px'
           }}>
-            <input
-              type="email"
-              value={newEmail}
-              onChange={(e) => setNewEmail(e.target.value)}
-              placeholder="your@newemail.com"
-              style={{
-                width: '100%',
-                padding: '12px 14px',
+          <input
+            type="email"
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
+            placeholder="your@newemail.com"
+            style={{
+              width: '100%',
+              padding: '12px 14px',
                 background: 'transparent',
                 border: 'none',
-                borderRadius: '12px',
+              borderRadius: '12px',
                 color: 'rgba(255, 255, 255, 0.95)',
-                fontSize: '15px',
-                outline: 'none'
-              }}
-              required
-            />
+              fontSize: '15px',
+              outline: 'none'
+            }}
+            required
+          />
           </div>
         </div>
 
@@ -389,23 +391,23 @@ const ChangeEmailSection = ({ onBack }: { onBack: () => void }) => {
             borderRadius: '12px',
             padding: '2px'
           }}>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password to confirm"
-              style={{
-                width: '100%',
-                padding: '12px 14px',
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password to confirm"
+            style={{
+              width: '100%',
+              padding: '12px 14px',
                 background: 'transparent',
                 border: 'none',
-                borderRadius: '12px',
+              borderRadius: '12px',
                 color: 'rgba(255, 255, 255, 0.95)',
-                fontSize: '15px',
-                outline: 'none'
-              }}
-              required
-            />
+              fontSize: '15px',
+              outline: 'none'
+            }}
+            required
+          />
           </div>
         </div>
 
@@ -513,23 +515,23 @@ const ChangePasswordSection = ({ onBack }: { onBack: () => void }) => {
             borderRadius: '12px',
             padding: '2px'
           }}>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="Enter current password"
-              style={{
-                width: '100%',
-                padding: '12px 14px',
+          <input
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            placeholder="Enter current password"
+            style={{
+              width: '100%',
+              padding: '12px 14px',
                 background: 'transparent',
                 border: 'none',
-                borderRadius: '12px',
+              borderRadius: '12px',
                 color: 'rgba(255, 255, 255, 0.95)',
-                fontSize: '15px',
-                outline: 'none'
-              }}
-              required
-            />
+              fontSize: '15px',
+              outline: 'none'
+            }}
+            required
+          />
           </div>
         </div>
 
@@ -543,23 +545,23 @@ const ChangePasswordSection = ({ onBack }: { onBack: () => void }) => {
             borderRadius: '12px',
             padding: '2px'
           }}>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="At least 8 characters"
-              style={{
-                width: '100%',
-                padding: '12px 14px',
+          <input
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="At least 8 characters"
+            style={{
+              width: '100%',
+              padding: '12px 14px',
                 background: 'transparent',
                 border: 'none',
-                borderRadius: '12px',
+              borderRadius: '12px',
                 color: 'rgba(255, 255, 255, 0.95)',
-                fontSize: '15px',
-                outline: 'none'
-              }}
-              required
-            />
+              fontSize: '15px',
+              outline: 'none'
+            }}
+            required
+          />
           </div>
         </div>
 
@@ -573,23 +575,23 @@ const ChangePasswordSection = ({ onBack }: { onBack: () => void }) => {
             borderRadius: '12px',
             padding: '2px'
           }}>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Repeat new password"
-              style={{
-                width: '100%',
-                padding: '12px 14px',
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Repeat new password"
+            style={{
+              width: '100%',
+              padding: '12px 14px',
                 background: 'transparent',
                 border: 'none',
-                borderRadius: '12px',
+              borderRadius: '12px',
                 color: 'rgba(255, 255, 255, 0.95)',
-                fontSize: '15px',
-                outline: 'none'
-              }}
-              required
-            />
+              fontSize: '15px',
+              outline: 'none'
+            }}
+            required
+          />
           </div>
         </div>
 
@@ -631,7 +633,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
-  // Reset activeSection when modal closes
+  // Reset activeSection when modal closes or opens
   useEffect(() => {
     if (!isOpen) {
       setActiveSection(null);
@@ -639,6 +641,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setIsClosing(true);
       setTimeout(() => setIsClosing(false), 300);
     } else {
+      // Explicitly reset activeSection when modal opens to prevent flash
+      setActiveSection(null);
       setIsClosing(false);
       requestAnimationFrame(() => setIsVisible(true));
     }
@@ -710,81 +714,82 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           isOpen={isOpen}
           onClose={onClose}
           title="Settings"
+          fullWidth={true}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            {/* ACCOUNT Section */}
-            <div>
-              <SectionHeader icon={AccountIcon} label="ACCOUNT" />
-              <GlassCard>
-                <RowItem isFirst onClick={() => setActiveSection('email')} hasChevron>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                {/* ACCOUNT Section */}
+                <div>
+                  <SectionHeader icon={AccountIcon} label="ACCOUNT" />
+                  <GlassCard>
+                    <RowItem isFirst onClick={() => setActiveSection('email')} hasChevron>
                   <span style={{ fontSize: '15px', fontWeight: 400, color: 'rgba(255, 255, 255, 0.95)' }}>Email</span>
-                </RowItem>
-                <RowItem onClick={() => setActiveSection('password')} hasChevron>
+                    </RowItem>
+                    <RowItem onClick={() => setActiveSection('password')} hasChevron>
                   <span style={{ fontSize: '15px', fontWeight: 400, color: 'rgba(255, 255, 255, 0.95)' }}>Password</span>
-                </RowItem>
-                <RowItem isLast>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    </RowItem>
+                    <RowItem isLast>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '15px', fontWeight: 400, color: 'rgba(255, 255, 255, 0.95)' }}>2FA</span>
-                    {loading2FAStatus && <div className="w-3 h-3 border-2 border-gray-600 border-t-cyan-500 rounded-full animate-spin" />}
-                  </div>
-                  <Toggle enabled={settings.twoFactorEnabled} onToggle={handle2FAToggle} disabled={loading2FAStatus} />
-                </RowItem>
-              </GlassCard>
-            </div>
+                        {loading2FAStatus && <div className="w-3 h-3 border-2 border-gray-600 border-t-cyan-500 rounded-full animate-spin" />}
+                      </div>
+                      <Toggle enabled={settings.twoFactorEnabled} onToggle={handle2FAToggle} disabled={loading2FAStatus} />
+                    </RowItem>
+                  </GlassCard>
+                </div>
 
             {/* NOTIFICATIONS Section - Only Email */}
-            <div>
-              <SectionHeader icon={NotifIcon} label="NOTIFICATIONS" />
-              <GlassCard>
+                <div>
+                  <SectionHeader icon={NotifIcon} label="NOTIFICATIONS" />
+                  <GlassCard>
                 <RowItem isFirst isLast>
                   <span style={{ fontSize: '15px', fontWeight: 400, color: 'rgba(255, 255, 255, 0.95)' }}>Email</span>
-                  <Toggle enabled={settings.emailNotifications} onToggle={() => { toggleSetting('emailNotifications'); saveSettings(); }} />
-                </RowItem>
-              </GlassCard>
-            </div>
+                      <Toggle enabled={settings.emailNotifications} onToggle={() => { toggleSetting('emailNotifications'); saveSettings(); }} />
+                    </RowItem>
+                  </GlassCard>
+                </div>
 
-            {/* LEGAL Section */}
-            <div>
-              <SectionHeader icon={LegalIcon} label="LEGAL" />
-              <GlassCard>
-                <RowItem isFirst onClick={() => setActiveSection('terms')} hasChevron>
+                {/* LEGAL Section */}
+                <div>
+                  <SectionHeader icon={LegalIcon} label="LEGAL" />
+                  <GlassCard>
+                    <RowItem isFirst onClick={() => setActiveSection('terms')} hasChevron>
                   <span style={{ fontSize: '15px', fontWeight: 400, color: 'rgba(255, 255, 255, 0.95)' }}>Terms</span>
-                </RowItem>
-                <RowItem isLast onClick={() => setActiveSection('privacy-policy')} hasChevron>
+                    </RowItem>
+                    <RowItem isLast onClick={() => setActiveSection('privacy-policy')} hasChevron>
                   <span style={{ fontSize: '15px', fontWeight: 400, color: 'rgba(255, 255, 255, 0.95)' }}>Privacy</span>
-                </RowItem>
-              </GlassCard>
-            </div>
+                    </RowItem>
+                  </GlassCard>
+                </div>
 
-            {/* ACTIONS Section */}
-            <div>
-              <SectionHeader icon={ActionIcon} label="ACTIONS" />
-              <button
-                onClick={() => {
-                  logout();
-                  onClose();
-                  toast.success('Logged out successfully');
-                  router.push('/auth/login');
-                }}
-                style={{
-                  width: '100%',
-                  height: '55px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  padding: '0 16px',
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  borderRadius: '16px',
-                  cursor: 'pointer',
-                  transition: 'background 0.15s ease'
-                }}
-              >
-                <ArrowRightOnRectangleIcon style={{ width: '20px', height: '20px', color: '#EF4444' }} />
-                <span style={{ fontSize: '15px', fontWeight: 500, color: '#EF4444' }}>Log Out</span>
-              </button>
-            </div>
-          </div>
+                {/* ACTIONS Section */}
+                <div>
+                  <SectionHeader icon={ActionIcon} label="ACTIONS" />
+                  <button
+                    onClick={() => {
+                      logout();
+                      onClose();
+                      toast.success('Logged out successfully');
+                      router.push('/auth/login');
+                    }}
+                    style={{
+                      width: '100%',
+                      height: '55px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '0 16px',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      borderRadius: '16px',
+                      cursor: 'pointer',
+                      transition: 'background 0.15s ease'
+                    }}
+                  >
+                    <ArrowRightOnRectangleIcon style={{ width: '20px', height: '20px', color: '#EF4444' }} />
+                    <span style={{ fontSize: '15px', fontWeight: 500, color: '#EF4444' }}>Log Out</span>
+                  </button>
+                </div>
+              </div>
         </BottomSlider>
       )}
 
@@ -794,8 +799,9 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         onClose={() => setActiveSection(null)}
         title="Change Email"
         zIndex={52}
+        fullWidth={true}
       >
-        <ChangeEmailSection onBack={() => setActiveSection(null)} />
+                  <ChangeEmailSection onBack={() => setActiveSection(null)} />
       </BottomSlider>
 
       {/* Password Section - Bottom Slider */}
@@ -804,8 +810,9 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         onClose={() => setActiveSection(null)}
         title="Change Password"
         zIndex={52}
+        fullWidth={true}
       >
-        <ChangePasswordSection onBack={() => setActiveSection(null)} />
+                  <ChangePasswordSection onBack={() => setActiveSection(null)} />
       </BottomSlider>
 
       {/* Terms Section - Bottom Slider */}
@@ -814,49 +821,50 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         onClose={() => setActiveSection(null)}
         title="Terms of Service"
         zIndex={52}
+        fullWidth={true}
       >
-        <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '8px' }}>
-          <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', lineHeight: '1.6' }}>
-            <p style={{ marginBottom: '16px' }}>
+                  <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '8px' }}>
+                    <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', lineHeight: '1.6' }}>
+                      <p style={{ marginBottom: '16px' }}>
               <strong style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Last updated:</strong> January 2026
-            </p>
-            
+                      </p>
+                      
             <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>1. Acceptance of Terms</h4>
-            <p style={{ marginBottom: '12px' }}>
-              By accessing and using WebSTAR, you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our service.
-            </p>
+                      <p style={{ marginBottom: '12px' }}>
+                        By accessing and using WebSTAR, you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our service.
+                      </p>
 
             <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>2. Description of Service</h4>
-            <p style={{ marginBottom: '12px' }}>
-              WebSTAR is a professional portfolio and creative showcase platform that enables users to create, share, and manage their creative work, connect with other professionals, and build their personal brand.
-            </p>
+                      <p style={{ marginBottom: '12px' }}>
+                        WebSTAR is a professional portfolio and creative showcase platform that enables users to create, share, and manage their creative work, connect with other professionals, and build their personal brand.
+                      </p>
 
             <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>3. User Accounts</h4>
-            <p style={{ marginBottom: '12px' }}>
-              You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must notify us immediately of any unauthorized use.
-            </p>
+                      <p style={{ marginBottom: '12px' }}>
+                        You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must notify us immediately of any unauthorized use.
+                      </p>
 
             <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>4. User Content</h4>
-            <p style={{ marginBottom: '12px' }}>
-              You retain ownership of content you upload. By posting content, you grant WebSTAR a non-exclusive license to display, distribute, and promote your content within the platform.
-            </p>
+                      <p style={{ marginBottom: '12px' }}>
+                        You retain ownership of content you upload. By posting content, you grant WebSTAR a non-exclusive license to display, distribute, and promote your content within the platform.
+                      </p>
 
             <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>5. Prohibited Conduct</h4>
-            <p style={{ marginBottom: '12px' }}>
-              Users may not upload illegal content, harass others, spam, impersonate others, or attempt to compromise platform security.
-            </p>
+                      <p style={{ marginBottom: '12px' }}>
+                        Users may not upload illegal content, harass others, spam, impersonate others, or attempt to compromise platform security.
+                      </p>
 
             <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>6. Termination</h4>
-            <p style={{ marginBottom: '12px' }}>
-              We reserve the right to suspend or terminate accounts that violate these terms or for any other reason at our discretion.
-            </p>
+                      <p style={{ marginBottom: '12px' }}>
+                        We reserve the right to suspend or terminate accounts that violate these terms or for any other reason at our discretion.
+                      </p>
 
             <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>7. Contact</h4>
-            <p style={{ marginBottom: '12px' }}>
-              For questions about these terms, contact us at <span style={{ color: '#00C2FF' }}>legal@webstar.bio</span>
-            </p>
-          </div>
-        </div>
+                      <p style={{ marginBottom: '12px' }}>
+                        For questions about these terms, contact us at <span style={{ color: '#00C2FF' }}>legal@webstar.bio</span>
+                      </p>
+                    </div>
+                  </div>
       </BottomSlider>
 
       {/* Privacy Policy Section - Bottom Slider */}
@@ -865,49 +873,50 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         onClose={() => setActiveSection(null)}
         title="Privacy Policy"
         zIndex={52}
+        fullWidth={true}
       >
-        <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '8px' }}>
-          <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', lineHeight: '1.6' }}>
-            <p style={{ marginBottom: '16px' }}>
+                  <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '8px' }}>
+                    <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', lineHeight: '1.6' }}>
+                      <p style={{ marginBottom: '16px' }}>
               <strong style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Last updated:</strong> January 2026
-            </p>
-            
+                      </p>
+                      
             <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>1. Information We Collect</h4>
-            <p style={{ marginBottom: '12px' }}>
-              We collect information you provide directly, including your name, email, profile information, and content you upload. We also collect usage data to improve our services.
-            </p>
+                      <p style={{ marginBottom: '12px' }}>
+                        We collect information you provide directly, including your name, email, profile information, and content you upload. We also collect usage data to improve our services.
+                      </p>
 
             <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>2. How We Use Your Information</h4>
-            <p style={{ marginBottom: '12px' }}>
-              We use your information to provide and improve our services, communicate with you, personalize your experience, and ensure platform security.
-            </p>
+                      <p style={{ marginBottom: '12px' }}>
+                        We use your information to provide and improve our services, communicate with you, personalize your experience, and ensure platform security.
+                      </p>
 
             <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>3. Information Sharing</h4>
-            <p style={{ marginBottom: '12px' }}>
-              We do not sell your personal information. We may share data with service providers who help us operate the platform, and when required by law.
-            </p>
+                      <p style={{ marginBottom: '12px' }}>
+                        We do not sell your personal information. We may share data with service providers who help us operate the platform, and when required by law.
+                      </p>
 
             <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>4. Data Security</h4>
-            <p style={{ marginBottom: '12px' }}>
-              We implement industry-standard security measures to protect your data. However, no method of transmission over the internet is 100% secure.
-            </p>
+                      <p style={{ marginBottom: '12px' }}>
+                        We implement industry-standard security measures to protect your data. However, no method of transmission over the internet is 100% secure.
+                      </p>
 
             <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>5. Your Rights</h4>
-            <p style={{ marginBottom: '12px' }}>
-              You have the right to access, correct, or delete your personal data. You can manage your privacy settings in your account preferences.
-            </p>
+                      <p style={{ marginBottom: '12px' }}>
+                        You have the right to access, correct, or delete your personal data. You can manage your privacy settings in your account preferences.
+                      </p>
 
             <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>6. Cookies</h4>
-            <p style={{ marginBottom: '12px' }}>
-              We use cookies and similar technologies to enhance your experience, analyze usage patterns, and provide personalized content.
-            </p>
+                      <p style={{ marginBottom: '12px' }}>
+                        We use cookies and similar technologies to enhance your experience, analyze usage patterns, and provide personalized content.
+                      </p>
 
             <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>7. Contact Us</h4>
-            <p style={{ marginBottom: '12px' }}>
-              For privacy-related inquiries, contact us at <span style={{ color: '#00C2FF' }}>privacy@webstar.bio</span>
-            </p>
-          </div>
-        </div>
+                      <p style={{ marginBottom: '12px' }}>
+                        For privacy-related inquiries, contact us at <span style={{ color: '#00C2FF' }}>privacy@webstar.bio</span>
+                      </p>
+                    </div>
+                  </div>
       </BottomSlider>
 
       {/* 2FA Modals */}

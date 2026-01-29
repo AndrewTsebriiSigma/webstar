@@ -145,8 +145,8 @@ export default function Setup2FAModal({ isOpen, onClose, onSuccess }: Setup2FAMo
           }}
         >
           <span style={{ fontSize: '20px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)' }}>Enable Two-Factor Authentication</span>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="flex items-center justify-center hover:opacity-70 transition-opacity" 
             style={{ width: '32px', height: '32px' }}
           >
@@ -242,17 +242,17 @@ export default function Setup2FAModal({ isOpen, onClose, onSuccess }: Setup2FAMo
                   borderRadius: '12px',
                   padding: '2px'
                 }}>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    maxLength={6}
-                    value={verificationCode}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      setVerificationCode(value);
-                    }}
-                    placeholder="000000"
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  value={verificationCode}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    setVerificationCode(value);
+                  }}
+                  placeholder="000000"
                     style={{
                       width: '100%',
                       padding: '12px 14px',
@@ -267,8 +267,8 @@ export default function Setup2FAModal({ isOpen, onClose, onSuccess }: Setup2FAMo
                       fontFamily: 'monospace',
                       outline: 'none'
                     }}
-                    autoFocus
-                  />
+                  autoFocus
+                />
                 </div>
               </div>
 
@@ -328,9 +328,9 @@ export default function Setup2FAModal({ isOpen, onClose, onSuccess }: Setup2FAMo
                 >
                   {verifying ? 'Verifying...' : 'Verify & Enable'}
                 </button>
-              </div>
+        </div>
 
-              {/* Info Footer */}
+        {/* Info Footer */}
               <div style={{ 
                 background: 'rgba(255, 255, 255, 0.04)', 
                 border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -340,17 +340,17 @@ export default function Setup2FAModal({ isOpen, onClose, onSuccess }: Setup2FAMo
               }}>
                 <div style={{ display: 'flex', alignItems: 'start', gap: '12px' }}>
                   <svg style={{ width: '20px', height: '20px', color: '#00C2FF', flexShrink: 0, marginTop: '2px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
                   <p style={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: '13px', lineHeight: '1.5' }}>
-                    Two-factor authentication adds an extra layer of security to your account by requiring a code from your phone in addition to your password.
-                  </p>
-                </div>
-              </div>
+              Two-factor authentication adds an extra layer of security to your account by requiring a code from your phone in addition to your password.
+            </p>
+          </div>
+        </div>
             </div>
           )}
-        </div>
       </div>
+    </div>
     </>
   );
 }

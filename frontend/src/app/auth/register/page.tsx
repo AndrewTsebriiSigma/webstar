@@ -165,9 +165,12 @@ export default function RegisterPage() {
       toast.success('Account created! Let\'s set up your space.');
       router.push('/onboarding');
     } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || error.message || '';
+      const errorDetail = error.response?.data?.detail;
+      const errorMessage = typeof errorDetail === 'string' ? errorDetail : (errorDetail?.message || error.message || '');
       if (errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('already')) {
         toast.error('Email already exists. Please sign in instead.');
+      } else if (error.response?.status === 429) {
+        toast.error(errorMessage || 'Too many requests. Please wait a moment and try again.');
       } else {
         toast.error(errorMessage || 'Registration failed. Please try again.');
       }

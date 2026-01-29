@@ -219,7 +219,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           // Ensure audio is loaded before playing
           if (audioRef.current.readyState < 2) {
             audioRef.current.load();
-          }
+      }
           await audioRef.current.play();
           setIsPlaying(true);
         } catch (error) {
@@ -656,16 +656,16 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           });
           toast.success('Draft published! 🎉');
         } else {
-          await portfolioAPI.createItem({
-            content_type: 'text',
-            content_url: null,
-            text_content: textContent.trim(),
-            description: description || null,
-            aspect_ratio: '4:5',
+        await portfolioAPI.createItem({
+          content_type: 'text',
+          content_url: null,
+          text_content: textContent.trim(),
+          description: description || null,
+          aspect_ratio: '4:5',
             is_draft: false,
             attachment_url: attachmentUrl,
             attachment_type: attachmentType,
-          });
+        });
           toast.success('Text post published! 🎉');
         }
         
@@ -723,16 +723,16 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           toast.success('Draft published! 🎉');
         } else {
           // Create new portfolio item (published, not draft)
-          await portfolioAPI.createItem({
-            content_type: actualContentType,
-            content_url: contentUrl,
+        await portfolioAPI.createItem({
+          content_type: actualContentType,
+          content_url: contentUrl,
             title: fileTitle,
-            description: description || null,
-            aspect_ratio: '1:1',
+          description: description || null,
+          aspect_ratio: '1:1',
             is_draft: false,
-            attachment_url: attachmentUrl,
-            attachment_type: attachmentType,
-          });
+          attachment_url: attachmentUrl,
+          attachment_type: attachmentType,
+        });
           toast.success('Post published! 🎉');
         }
 
@@ -803,16 +803,16 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
           toast.success('Draft updated! 📝');
         } else {
           // Create new draft
-          await portfolioAPI.createItem({
-            content_type: 'text',
-            content_url: null,
-            text_content: textContent.trim(),
-            description: description || null,
-            aspect_ratio: '4:5',
-            is_draft: true,
+        await portfolioAPI.createItem({
+          content_type: 'text',
+          content_url: null,
+          text_content: textContent.trim(),
+          description: description || null,
+          aspect_ratio: '4:5',
+          is_draft: true,
             attachment_url: attachmentUrl,
             attachment_type: attachmentType,
-          });
+        });
           toast.success('Draft saved! 📝');
         }
         
@@ -903,9 +903,9 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   return (
     <>
       {/* Backdrop */}
-      <div 
+    <div 
         className={`bottom-slider-backdrop ${isVisible ? 'entering' : 'exiting'}`}
-        onClick={handleClose}
+      onClick={handleClose}
       />
       
       {/* Bottom Slider Content */}
@@ -927,7 +927,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               {/* Outer spinning ring - always rotates */}
               <svg 
                 viewBox="0 0 80 80" 
-                style={{ 
+                style={{
                   position: 'absolute',
                   width: '100%',
                   height: '100%',
@@ -1085,7 +1085,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 const isButtonEnabled = !uploading && (isEditing ? hasExistingContent : hasNewContent);
                 
                 return (
-                  <button
+              <button
                     onClick={defaultSaveAsDraft ? handleSaveAsDraft : handleSubmit}
                     onTouchEnd={(e) => {
                       // Prevent double-firing on mobile
@@ -1095,19 +1095,19 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                       }
                     }}
                     disabled={!isButtonEnabled}
-                    className="text-[14px] font-semibold rounded-[8px] transition disabled:opacity-50 disabled:cursor-not-allowed publish-btn"
-                    style={{
+                className="text-[14px] font-semibold rounded-[8px] transition disabled:opacity-50 disabled:cursor-not-allowed publish-btn"
+                style={{
                       background: !isButtonEnabled ? 'rgba(255, 255, 255, 0.2)' : '#00C2FF',
-                      color: '#fff',
-                      height: '32px',
-                      padding: '0 32px',
+                  color: '#fff',
+                  height: '32px',
+                  padding: '0 32px',
                       touchAction: 'manipulation', // Prevent 300ms tap delay
                       WebkitTapHighlightColor: 'transparent', // Remove iOS tap highlight
                       userSelect: 'none', // Prevent text selection
-                    }}
-                  >
+                }}
+              >
                     {uploading ? '...' : (defaultSaveAsDraft ? 'Save Draft' : 'Publish')}
-                  </button>
+              </button>
                 );
               })()}
             </div>
@@ -1347,11 +1347,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                              selectedContentType === 'audio' ? 'Tap or drag audio file' :
                              selectedContentType === 'pdf' ? 'Tap or drag PDF' :
                              'Tap or drag file here'}
-                          </p>
-                          <p className="text-[11px] mt-1 opacity-60">
-                            {selectedContentType === 'media' ? 'Images up to 10MB, Videos up to 500MB' :
-                             selectedContentType === 'audio' ? 'Audio up to 50MB' :
-                             selectedContentType === 'pdf' ? 'PDF up to 50MB' : ''}
                           </p>
                         </div>
                         <input
@@ -1705,14 +1700,14 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               )}
 
               {/* Attachment toolbar - flows with content */}
-              <div 
-                className="relative"
-                style={{
-                  background: 'transparent',
+            <div 
+              className="relative"
+              style={{
+                background: 'transparent',
                   padding: '12px 6px',
                   marginTop: '8px',
-                }}
-              >
+              }}
+            >
               
               <div 
                 className="flex items-center justify-between" 
@@ -1749,7 +1744,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 END FEATURE_DISABLED: SAVE_AS_DRAFT */}
                 
                 {/* Right: Attachment icons (always visible, disabled when not applicable) */}
-                <div className="flex items-center" style={{ gap: '25px' }}>
+                  <div className="flex items-center" style={{ gap: '25px' }}>
                   {/* Photo attachment - only enabled for media posts */}
                   <input
                     type="file"
@@ -1768,58 +1763,58 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                     }}
                   >
                     <svg className="w-[18px] h-[18px]" fill="none" stroke={attachmentType === 'photo' ? '#00C2FF' : 'currentColor'} strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                  </svg>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                    </svg>
                   </label>
 
                   {/* Audio attachment - only enabled for media posts */}
-                  <input
-                    type="file"
-                    id="audio-attachment-sticky"
+                    <input
+                      type="file"
+                      id="audio-attachment-sticky"
                     accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.flac,.caf,.aiff"
-                    onChange={handleAudioAttachment}
-                    className="hidden"
-                    disabled={uploading || !canAddAudioAttachment || attachmentType === 'pdf'}
-                  />
-                  <label
+                      onChange={handleAudioAttachment}
+                      className="hidden"
+                      disabled={uploading || !canAddAudioAttachment || attachmentType === 'pdf'}
+                    />
+                    <label
                     htmlFor={canAddAudioAttachment && !attachmentType ? "audio-attachment-sticky" : undefined}
                     className="transition"
                     style={{ 
                       opacity: (!canAddAudioAttachment || attachmentType === 'pdf') ? 0.3 : 1,
                       cursor: (canAddAudioAttachment && attachmentType !== 'pdf') ? 'pointer' : 'default'
                     }}
-                  >
-                    <svg className="w-[18px] h-[18px]" fill="none" stroke={attachmentType === 'audio' ? '#00C2FF' : 'currentColor'} strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                    </svg>
-                  </label>
+                    >
+                      <svg className="w-[18px] h-[18px]" fill="none" stroke={attachmentType === 'audio' ? '#00C2FF' : 'currentColor'} strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                      </svg>
+                    </label>
 
                   {/* PDF attachment - only enabled for media posts */}
-                  <input
-                    type="file"
-                    id="pdf-attachment-sticky"
-                    accept="application/pdf"
-                    onChange={handlePdfAttachment}
-                    className="hidden"
-                    disabled={uploading || !canAddPdfAttachment || attachmentType === 'audio'}
-                  />
-                  <label
+                    <input
+                      type="file"
+                      id="pdf-attachment-sticky"
+                      accept="application/pdf"
+                      onChange={handlePdfAttachment}
+                      className="hidden"
+                      disabled={uploading || !canAddPdfAttachment || attachmentType === 'audio'}
+                    />
+                    <label
                     htmlFor={canAddPdfAttachment && !attachmentType ? "pdf-attachment-sticky" : undefined}
                     className="transition"
                     style={{ 
                       opacity: (!canAddPdfAttachment || attachmentType === 'audio') ? 0.3 : 1,
                       cursor: (canAddPdfAttachment && attachmentType !== 'audio') ? 'pointer' : 'default'
                     }}
-                  >
-                    <svg className="w-[18px] h-[18px]" fill="none" stroke={attachmentType === 'pdf' ? '#00C2FF' : 'currentColor'} strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                    </svg>
-                  </label>
-                </div>
-              </div>
+                    >
+                      <svg className="w-[18px] h-[18px]" fill="none" stroke={attachmentType === 'pdf' ? '#00C2FF' : 'currentColor'} strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                      </svg>
+                    </label>
+                  </div>
               </div>
             </div>
-          </div>
+      </div>
+    </div>
 
       {/* PDF Preview Popup */}
       {showPdfPopup && attachmentType === 'pdf' && (attachmentFile || existingAttachmentUrl) && (

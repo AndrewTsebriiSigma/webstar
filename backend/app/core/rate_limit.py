@@ -108,11 +108,7 @@ class InMemoryRateLimiter:
             retry_after = window_seconds
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail={
-                    "error": "Rate limit exceeded",
-                    "message": f"Too many requests. Please try again in {retry_after} seconds.",
-                    "retry_after": retry_after
-                },
+                detail=f"Too many requests. Please try again in {retry_after} seconds.",
                 headers={"Retry-After": str(retry_after)}
             )
 

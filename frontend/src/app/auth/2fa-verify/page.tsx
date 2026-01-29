@@ -94,7 +94,9 @@ function TwoFactorVerifyContent() {
         router.push(`/${userData.username}`);
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Invalid verification code');
+      const errorDetail = error.response?.data?.detail;
+      const errorMessage = typeof errorDetail === 'string' ? errorDetail : (errorDetail?.message || 'Invalid verification code');
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
