@@ -227,6 +227,31 @@ V1: IDENTITY FOUNDATION
 
 **Output:** Personalized recommendations for building your space
 
+### **Quiz Discovery Fields**
+
+| Field | Question | Options |
+|-------|----------|---------|
+| **Archetype** | What's your vibe? | Engineer / Artist / Sound-Maker / Communicator |
+| **Sense** | Which talent is strongest? | Visual / Audio / Pattern / Atmosphere / Intuitive |
+| **Audience** | Who do you serve? | Enterprise / Consumer / Self / B2B / B2C |
+| **Offering** | What do you provide? | Solutions / Service / Consulting / Advisory / Product |
+| **Role** | What's your title? | [User input] |
+| **Experience** | How long have you done this? | [Duration → maps to level] |
+| **Scope** | Where do you work? | Remote / Local / Regional / National / Global |
+
+### **Level Mapping**
+
+| Level | Name | Characteristics |
+|-------|------|-----------------|
+| **4** | Noob | Tries everything, no focus |
+| **3** | Worker | Has skills, exploring niches |
+| **2** | Established | Chose specialty, can collaborate |
+| **1** | Master | Famous, industry leader |
+
+### **Positioning Output**
+
+Quiz generates: *"You are a **[Role]** who provides **[Offering]** for **[Audience]** with **[Level]** experience, focused on **[Specialty]**."*
+
 **Methodology:** Iterative design. First 100 users complete quiz + interview. We analyze which questions reveal most differentiation. Quiz evolves based on correlation between quiz answers and profile quality/retention.
 
 **Risk:** Quiz too long → drop-off.
@@ -437,6 +462,8 @@ V2: INTELLIGENCE LAYER
 
 **Solves:** "I don't know what's working or why. Generic AI doesn't know me."
 
+**Strategy:** App is FREE. AI is PAID. This is the monetization moat.
+
 ### **Context Engine (What Feeds the AI)**
 
 | Data Source | What It Provides |
@@ -448,6 +475,65 @@ V2: INTELLIGENCE LAYER
 | **Behavior Signals** | Session length, edit frequency, engagement |
 
 **Why This Matters:** Generic AI fails. Our AI knows your quiz results, your work, your stats, your patterns. This depth is the moat.
+
+### **AI Version Progression**
+
+| Version | Name | Data Input | Capabilities |
+|---------|------|------------|--------------|
+| **2.0a** | Star Coach | Quiz results only | Chat, explain results, mentor, success stories |
+| **2.0b** | Analytics Coach | Quiz + Basic Analytics | Recommendations based on what's working |
+| **2.0c** | Space Manager | Quiz + Analytics + Media | Import Hub, project suggestions, auto-descriptions |
+
+### **2.0a — Star Coach (First Release)**
+
+| Element | Specification |
+|---------|---------------|
+| **Interface** | Chat window in dashboard |
+| **Persona** | Trained on "winner" patterns and success psychology |
+| **Limits** | 10 free queries for new accounts, then 2/week |
+| **Requirement** | Low hallucination, good memory (context retention) |
+| **Cost** | Fine-tuning: ~$3-5 one-time |
+
+**What It Does:**
+- Maps and explains quiz results
+- Acts as mentor/coach based on archetype
+- Provides success stories relevant to user's field
+- Teaches mindset ("Winners in your field do X...")
+
+### **2.0b — Analytics Coach**
+
+| Element | Specification |
+|---------|---------------|
+| **Data Input** | Quiz + Profile + Basic Analytics |
+| **New Capability** | Reads traffic sources, identifies patterns |
+
+**What It Does:**
+- "Your main traffic comes from Instagram — focus there"
+- Tracks patterns over 30 days
+- Recommends where to invest effort
+
+### **2.0c — Space Manager**
+
+| Element | Specification |
+|---------|---------------|
+| **Data Input** | Quiz + Analytics + Media Files |
+| **AI Type** | LLM + CNN (image recognition) |
+
+**What It Does:**
+- Pattern recognition: "You have 8 photos from Monaco"
+- Project suggestions: "Create a Monaco project?"
+- Description generation with psychology/patterns
+- One-click project creation from chat
+- Style analysis: "Your photography style is street fashion"
+- Profile audit: "Your About section is too short"
+
+### **AI Technical Stack**
+
+| Service | Use Case |
+|---------|----------|
+| **Gemini** | Chat LLM (free tier available) |
+| **Google Vision** | Image analysis |
+| **Fine-tuning** | Custom model (~$3-5 one-time) |
 
 ### **AI Functions**
 
@@ -478,17 +564,39 @@ V2: INTELLIGENCE LAYER
 
 ---
 
-## **2.2 IMPORT SYSTEM**
+## **2.2 IMPORT SYSTEM (Import Hub)**
 
-*Reduce setup friction*
+*Reduce setup friction — AI-powered bulk import*
 
-**Solves:** "I don't want to rebuild from scratch."
+**Solves:** "I don't want to rebuild from scratch. I have 120 photos in a folder."
 
 | Feature | Function |
 |---------|----------|
-| **Bulk Upload** | Drop all files at once |
-| **Smart Sorting** | AI suggests organization |
-| **Metadata Extraction** | Auto-generate descriptions |
+| **Bulk Upload** | Drop entire folder at once |
+| **Smart Sorting** | AI analyzes all files, groups by pattern |
+| **Metadata Extraction** | Auto-generate descriptions with storytelling |
+| **Project Suggestions** | "8 photos from same location — create project?" |
+| **Import Quiz** | AI asks clarifying questions about work during import |
+
+### **Import Hub Flow**
+
+```
+DROP FOLDER
+    ↓
+AI ANALYZES (location, style, subject, date)
+    ↓
+GROUPS IDENTIFIED ("Monaco photos", "Portrait series")
+    ↓
+IMPORT QUIZ ("Why did you take this photo?")
+    ↓
+DESCRIPTIONS GENERATED (with psychology/patterns)
+    ↓
+PROJECTS SUGGESTED
+    ↓
+ONE-CLICK PUBLISH or REVIEW FIRST
+```
+
+**Philosophy:** Remove friction. User drops files, AI does the heavy lifting.
 
 ---
 
@@ -547,14 +655,18 @@ V2: INTELLIGENCE LAYER
 
 ## **2.5 MONETIZATION**
 
-| Feature | Free | Pro |
-|---------|------|-----|
+**Core Strategy:** App is FREE. AI is the paid feature.
+
+| Feature | Free | Pro ($4.99/month) |
+|---------|------|-------------------|
 | *All V1 Free* | ✅ | ✅ |
-| **AI Chat** | 10 queries/month | Unlimited |
+| **AI Chat** | 10 queries for new users, then 2/week | Unlimited |
 | **Advanced Analytics** | Last 7 days | Full history |
 | **Import System** | 10 files | Unlimited |
 | **Storage** | 1GB | Unlimited |
 | **Gamification** | Basic tasks | Full system |
+
+**Why This Works:** Free version demonstrates value. AI limits create natural upgrade moment without crippling core experience.
 
 ---
 
@@ -794,17 +906,19 @@ V5: ECOSYSTEM LAYER
 # **1.1.6 THE FUNNEL**
 
 ```
-CONTENT (Videos, breakdowns)
+INSTAGRAM CONTENT (Reels, breakdowns, quiz teasers)
        ↓
-QUIZ (Lead magnet — "Find your professional identity")
+QUIZ LINK (Lead magnet — "Discover your professional identity")
        ↓
-RESULTS (Your archetype, positioning, strategy)
+QUIZ (Can take anonymously before signup)
+       ↓
+RESULTS (Archetype + Level + Positioning statement)
        ↓
 ONBOARDING (Build space with quiz-informed guidance)
        ↓
 SPACE (Portfolio + Identity + Links)
        ↓
-TRACK (V2 — AI helps you grow)
+AI COACH (V2 — Star Coach helps you grow)
        ↓
 DISCOVER (V3 — Find and be found)
        ↓
@@ -812,6 +926,8 @@ TRANSACT (V4 — Work together, get paid)
        ↓
 ECOSYSTEM (V5 — Everything in one place)
 ```
+
+**Conversion Path:** Instagram → Quiz → Results → "Build your space now" → Account creation → Profile setup
 
 ---
 
@@ -823,12 +939,23 @@ ECOSYSTEM (V5 — Everything in one place)
 
 ```
 V1 → V2: AI builds on Quiz + Profile + Content + Analytics
+V1 Quiz → V2 AI 2.0a: Star Coach needs quiz data
+V1 Analytics → V2 AI 2.0b: Analytics Coach needs views/clicks
+V1 Content → V2 AI 2.0c: Space Manager needs media files
 V2 → V3: Search indexes all V1-V2 data
 V2 → V3: Challenges extend Gamification
 V2 → V3: Reputation extends Gamification
 V3 → V4: Marketplace builds on Search + Reputation
 V2 → V4: Credits extend Gamification currency
 V4 → V5: Enterprise extends all transaction features
+```
+
+### **AI Progression Sequence**
+
+```
+QA FIXES → QUIZ PLATFORM → AI 2.0a (Star Coach) → MONETIZATION
+         → AI 2.0b (Analytics Coach) → GAMIFICATION
+         → AI 2.0c (Space Manager / Import Hub)
 ```
 
 ---
@@ -867,6 +994,8 @@ V5: Full diversification (subscriptions, fees, enterprise, events, API)
 | **V1** | Quiz too long → drop-off | Progressive disclosure. Core = 5 min. |
 | **V1** | Free too generous → no conversion | 90-day Pro trial. Convert on value. |
 | **V2** | AI feels generic | Context depth from quiz + content + analytics + behavior. |
+| **V2** | AI hallucinates | Use Cursor-like accuracy. Gemini + fine-tuning. Human patterns as ground truth. |
+| **V2** | AI cost spirals | Free tier limits (10 queries then 2/week). Paid unlocks unlimited. |
 | **V2** | Gamification feels like busywork | Tasks tied to real improvement. |
 | **V2** | Novelty wears off | Constant iteration, seasonal refreshes. |
 | **V3** | Cold start | Ship V3 when V1-V2 base sufficient. |
@@ -888,6 +1017,8 @@ V5: Full diversification (subscriptions, fees, enterprise, events, API)
 | No cash-out is safer | Avoids money transmitter classification |
 | Bento shutdown = opportunity | Confirmed Feb 13, 2026 shutdown |
 | Strong free tier required | Market competitive pressure |
+| AI fine-tuning affordable | ~$3-5 one-time cost per custom model |
+| Quiz + AI = unicorn combo | Self-discovery + personalized guidance = retention moat |
 
 ---
 
