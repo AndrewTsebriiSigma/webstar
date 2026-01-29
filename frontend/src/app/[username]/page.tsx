@@ -45,7 +45,7 @@ interface ActionButton {
   id: string;
   label: string;
   url: string;
-  type: 'link' | 'email' | 'message';
+  type: 'link' | 'email'; // 'message' type removed - non-functional feature
 }
 
 export default function ProfilePage({ params }: { params: { username: string } }) {
@@ -62,7 +62,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [metrics, setMetrics] = useState<ProfileMetrics | null>(null);
   const [totalViews, setTotalViews] = useState<number>(0);
   const [loading, setLoading] = useState(true);
-  const [showShareModal, setShowShareModal] = useState(false);
+  // Share Modal removed - non-functional feature
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedPostType, setSelectedPostType] = useState<'media' | 'audio' | 'pdf' | 'text' | null>(null);
   const [showProjectModal, setShowProjectModal] = useState(false);
@@ -100,7 +100,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [gridAspectRatio, setGridAspectRatio] = useState<'1x1' | '4x5' | '5x4' | '4x6' | '3x4' | '16x9' | '4x3'>('1x1'); // Global aspect ratio for grid mode
   
   // Profile theme customization
-  type ProfileTheme = 'default' | 'monochrome';
+  type ProfileTheme = 'default' | 'monochrome' | 'custom';
   const [profileTheme, setProfileTheme] = useState<ProfileTheme>('default');
   const [showThemeCustomization, setShowThemeCustomization] = useState(false);
   
@@ -133,6 +133,77 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [editedRole, setEditedRole] = useState('');
   const [isUploadingProfilePic, setIsUploadingProfilePic] = useState(false);
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  
+  // Highlight state for editable fields
+  const [highlightedField, setHighlightedField] = useState<string | null>(null);
+  
+  // Custom color palette state
+  const [customThemeColor, setCustomThemeColor] = useState<string>('#00C2FF');
+  
+  // HSL Color Harmony Functions
+  const hexToHsl = (hex: string): [number, number, number] => {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+    
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        case b: h = ((r - g) / d + 4) / 6; break;
+      }
+    }
+    
+    return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)];
+  };
+  
+  const hslToHex = (h: number, s: number, l: number): string => {
+    l /= 100;
+    const a = s * Math.min(l, 1 - l) / 100;
+    const f = (n: number) => {
+      const k = (n + h / 30) % 12;
+      const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+      return Math.round(255 * color).toString(16).padStart(2, '0');
+    };
+    return `#${f(0)}${f(8)}${f(4)}`;
+  };
+  
+  // Generate harmonious colors from base color
+  const generateHarmoniousColors = (baseHex: string) => {
+    const [h, s, l] = hexToHsl(baseHex);
+    
+    // Complementary (180°)
+    const complementary = hslToHex((h + 180) % 360, s, l);
+    
+    // Analogous (30° and -30°)
+    const analogous1 = hslToHex((h + 30) % 360, s, l);
+    const analogous2 = hslToHex((h - 30 + 360) % 360, s, l);
+    
+    // Triadic (120° and 240°)
+    const triadic1 = hslToHex((h + 120) % 360, s, l);
+    const triadic2 = hslToHex((h + 240) % 360, s, l);
+    
+    // Lighter and darker variants
+    const lighter = hslToHex(h, s, Math.min(95, l + 20));
+    const darker = hslToHex(h, s, Math.max(5, l - 20));
+    
+    return {
+      base: baseHex,
+      complementary,
+      analogous1,
+      analogous2,
+      triadic1,
+      triadic2,
+      lighter,
+      darker
+    };
+  };
   
   const dashboardRef = useRef<HTMLDivElement>(null);
   const profilePicInputRef = useRef<HTMLInputElement>(null);
@@ -577,11 +648,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
     }
   };
 
-  const handleShare = () => {
-    const url = `${window.location.origin}/${username}`;
-    navigator.clipboard.writeText(url);
-    toast.success('Profile link copied!');
-  };
+  // handleShare removed - functionality moved to Copy Link button
 
   // Action button handlers
   const handleAddButton = () => {
@@ -615,8 +682,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const handleButtonClick = (button: ActionButton) => {
     if (button.type === 'email' && button.url) {
       window.location.href = `mailto:${button.url}`;
-    } else if (button.type === 'message') {
-      setShowShareModal(true);
     } else if (button.url) {
       window.open(button.url, '_blank');
     }
@@ -935,7 +1000,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
           style={{
             cursor: isOwnProfile && showCustomizePanel ? 'pointer' : 'default',
             position: 'relative',
-            zIndex: 1
+            zIndex: 10
           }}
           onClick={(e) => {
             // Only trigger if NOT clicking a button
@@ -943,6 +1008,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             if (target.closest('.banner-action-btn')) {
               return; // Button handles its own click
             }
+            // Make entire banner clickable
             if (isOwnProfile && showCustomizePanel && !isUploadingBanner) {
               bannerInputRef.current?.click();
             }
@@ -953,7 +1019,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
               src={profile.banner_image}
               alt="Profile banner"
               className="w-full h-full object-cover"
-              style={{ pointerEvents: 'none' }}
+              style={{ 
+                pointerEvents: 'none',
+                position: 'relative',
+                zIndex: 1
+              }}
             />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-600/30 via-blue-500/20 to-purple-600/30" style={{ pointerEvents: 'none' }} />
@@ -974,7 +1044,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
           
           {/* Viewer Mode & Settings - Bigger buttons - Always on top */}
           {isOwnProfile && (
-            <div className="absolute top-4 left-4 right-4 flex justify-between" style={{ zIndex: 10, pointerEvents: 'none' }}>
+            <div className="absolute top-4 left-4 right-4 flex justify-between" style={{ zIndex: 20, pointerEvents: 'none' }}>
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
@@ -1031,7 +1101,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
         </div>
 
         {/* Avatar - Responsive size with banner overlap */}
-        <div className="relative px-4 -mt-[90px] sm:-mt-[100px] lg:-mt-[110px]" style={{ zIndex: 2 }}>
+        <div className="relative px-4 -mt-[90px] sm:-mt-[100px] lg:-mt-[110px]" style={{ zIndex: 15 }}>
           <div className="flex items-center justify-center">
             <div 
               className="relative w-[150px] h-[150px]"
@@ -1136,7 +1206,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 {isOwnProfile && showCustomizePanel ? editedName : (profile.display_name || username)}
           </h1>
             </span>
-          {profile.expertise_badge && (
+          {profile.expertise_badge && !showCustomizePanel && (
               <CheckBadgeIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" style={{ marginTop: '-1px' }} />
           )}
           </div>
@@ -1214,13 +1284,27 @@ export default function ProfilePage({ params }: { params: { username: string } }
           </div>
         )}
 
-        {/* Location & Role - 14px to dashboard */}
+        {/* Location & Role - 14px to dashboard - Standardized heights */}
         <div className="flex items-center justify-center gap-2 flex-wrap px-2" style={{ marginBottom: '14px' }}>
-          <div className="flex items-center gap-1 relative" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
+          <div 
+            className="flex items-center gap-1 relative" 
+            style={{ 
+              color: 'rgba(255, 255, 255, 0.75)', 
+              fontSize: '13px',
+              height: '24px',
+              minWidth: '120px',
+              maxWidth: '200px'
+            }}
+            onClick={() => {
+              if (isOwnProfile && showCustomizePanel) {
+                setHighlightedField(highlightedField === 'location' ? null : 'location');
+              }
+            }}
+          >
             <MapPinIcon className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="relative">
-              {isOwnProfile && showCustomizePanel && (
-                <div className="sparkle-field" style={{ top: '-4px', left: '-6px', right: '-6px', bottom: '-4px' }}>
+            <span className="relative flex-1">
+              {isOwnProfile && showCustomizePanel && highlightedField === 'location' && (
+                <div className="sparkle-field" style={{ top: '-4px', left: '-6px', right: '-6px', bottom: '-4px', display: 'block' }}>
                   <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
                   <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
                   <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
@@ -1239,6 +1323,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 }}
                 onFocus={(e) => {
                   if (isOwnProfile && showCustomizePanel) {
+                    setHighlightedField('location');
                     // Mac folder rename: select all text on focus
                     const selection = window.getSelection();
                     const range = document.createRange();
@@ -1254,6 +1339,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   // Save the location value on blur
                   if (isOwnProfile && showCustomizePanel) {
                     setEditedLocation(e.currentTarget.textContent || '');
+                    setTimeout(() => setHighlightedField(null), 100);
                   }
                   setTimeout(() => setShowLocationDropdown(false), 200);
                   handleProfileFieldBlur();
@@ -1307,11 +1393,25 @@ export default function ProfilePage({ params }: { params: { username: string } }
           
           <div style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '12px', opacity: 0.5 }}>•</div>
           
-          <div className="flex items-center gap-1 relative" style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '13px' }}>
+          <div 
+            className="flex items-center gap-1 relative" 
+            style={{ 
+              color: 'rgba(255, 255, 255, 0.75)', 
+              fontSize: '13px',
+              height: '24px',
+              minWidth: '120px',
+              maxWidth: '200px'
+            }}
+            onClick={() => {
+              if (isOwnProfile && showCustomizePanel) {
+                setHighlightedField(highlightedField === 'role' ? null : 'role');
+              }
+            }}
+          >
             <BriefcaseIcon className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="relative">
-              {isOwnProfile && showCustomizePanel && (
-                <div className="sparkle-field" style={{ top: '-4px', left: '-6px', right: '-6px', bottom: '-4px' }}>
+            <span className="relative flex-1">
+              {isOwnProfile && showCustomizePanel && highlightedField === 'role' && (
+                <div className="sparkle-field" style={{ top: '-4px', left: '-6px', right: '-6px', bottom: '-4px', display: 'block' }}>
                   <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
                   <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
                   <span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span><span className="s">✦</span>
@@ -1323,6 +1423,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 suppressContentEditableWarning
                 onFocus={(e) => {
                   if (isOwnProfile && showCustomizePanel) {
+                    setHighlightedField('role');
                     // Mac folder rename: select all text on focus
                     const selection = window.getSelection();
                     const range = document.createRange();
@@ -1334,6 +1435,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 onBlur={(e) => {
                   if (isOwnProfile && showCustomizePanel) {
                     setEditedRole(e.currentTarget.textContent || '');
+                    setTimeout(() => setHighlightedField(null), 100);
                     handleProfileFieldBlur();
                   }
                 }}
@@ -1354,6 +1456,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
         <div 
           ref={dashboardRef}
           className="dashboard-strip"
+          style={{ position: 'relative' }}
+        >
+          <div
           onClick={() => {
             if (!showCustomizePanel) {
               router.push('/analytics');
@@ -1559,23 +1664,27 @@ export default function ProfilePage({ params }: { params: { username: string } }
               <img src="/palette.svg" alt="Customize" style={{ width: '20px', height: '20px', filter: showCustomizePanel ? 'invert(1) opacity(1)' : 'invert(1) opacity(0.44)' }} />
             </button>
           </div>
-        </div>
-      )}
 
-      {/* Theme Customization - Connected to Dashboard */}
-      {isOwnProfile && !viewerMode && showCustomizePanel && (
+          {/* Theme Customization - Slides from Dashboard */}
+          {showCustomizePanel && (
         <div 
           className="theme-bar-pulse"
           style={{ 
-            position: 'relative',
+                position: 'absolute',
+                top: '100%',
+                left: '16px',
+                right: '16px',
             display: 'flex',
             flexDirection: 'column',
             width: 'calc(100% - 32px)',
-            margin: '0 16px',
-            marginBottom: '16px',
+                marginTop: '0',
             overflow: 'hidden',
             boxSizing: 'border-box',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: showThemeCustomization ? 'translateY(0)' : 'translateY(-100%)',
+                opacity: showThemeCustomization ? 1 : 0,
+                pointerEvents: showThemeCustomization ? 'auto' : 'none',
+                zIndex: 100
           }}
         >
           {/* Toggle Button - Thin strip connecting to dashboard, blue text */}
@@ -1640,7 +1749,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', height: '32px' }}>
           {/* Dark Button */}
           <button
-            onClick={() => setProfileTheme('default')}
+            onClick={() => {
+              setProfileTheme('default');
+              // Reset to default colors
+              document.documentElement.style.setProperty('--accent', '#00C2FF');
+              document.documentElement.style.setProperty('--blue', '#00C2FF');
+              document.documentElement.style.setProperty('--blue-hover', '#33D1FF');
+              document.documentElement.style.setProperty('--blue-pressed', '#0099CC');
+            }}
             className="theme-btn-dark"
             style={{
               flex: 1,
@@ -1693,7 +1809,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
           {/* Light Button */}
           <button
-            onClick={() => setProfileTheme('monochrome')}
+            onClick={() => {
+              setProfileTheme('monochrome');
+              // Reset to default colors
+              document.documentElement.style.setProperty('--accent', '#00C2FF');
+              document.documentElement.style.setProperty('--blue', '#00C2FF');
+              document.documentElement.style.setProperty('--blue-hover', '#33D1FF');
+              document.documentElement.style.setProperty('--blue-pressed', '#0099CC');
+            }}
             className="theme-btn-light"
             style={{
               flex: 1,
@@ -1752,59 +1875,92 @@ export default function ProfilePage({ params }: { params: { username: string } }
             </span>
           </button>
 
-          {/* Custom Button (Disabled/Coming Soon) */}
-          <button
-            disabled
-            className="theme-btn-custom"
+          {/* Custom Color Picker */}
+          <div
             style={{
               flex: '0 0 auto',
               minWidth: '72px',
               height: '32px',
               borderRadius: '8px',
-              cursor: 'not-allowed',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '6px',
               padding: '0 10px',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              background: 'rgba(255, 255, 255, 0.04)',
-              opacity: 0.4,
-              transition: 'all 0.15s ease'
+              border: profileTheme === 'custom' ? '1px solid #00C2FF' : '1px solid rgba(255, 255, 255, 0.08)',
+              background: profileTheme === 'custom' ? 'rgba(0, 194, 255, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+              position: 'relative'
+            }}
+            onClick={() => {
+              setProfileTheme('custom');
+              const colors = generateHarmoniousColors(customThemeColor);
+              // Apply custom colors to CSS variables
+              document.documentElement.style.setProperty('--accent', colors.base);
+              document.documentElement.style.setProperty('--blue', colors.base);
+              document.documentElement.style.setProperty('--blue-hover', colors.lighter);
+              document.documentElement.style.setProperty('--blue-pressed', colors.darker);
+            }}
+            onMouseEnter={(e) => {
+              if (profileTheme !== 'custom') {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (profileTheme !== 'custom') {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+              }
             }}
           >
-            {/* Palette Icon */}
-            <svg 
-              width="14" height="14" viewBox="0 0 24 24" fill="none" 
-              stroke="rgba(255, 255, 255, 0.25)" 
-              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-            >
-              <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
-              <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
-              <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
-              <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
-              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
-            </svg>
+            {/* Color Preview */}
+            <div
+              style={{
+                width: '14px',
+                height: '14px',
+                borderRadius: '3px',
+                background: customThemeColor,
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+              }}
+            />
             <span style={{ 
               fontSize: '13px', 
               fontWeight: 600, 
               letterSpacing: '-0.2px',
-              color: 'rgba(255, 255, 255, 0.25)'
+              color: profileTheme === 'custom' ? '#00C2FF' : 'rgba(255, 255, 255, 0.5)',
+              transition: 'color 0.15s ease'
             }}>
               Custom
             </span>
-            <span style={{
-              fontSize: '8px',
-              fontWeight: 600,
-              color: 'rgba(255, 255, 255, 0.2)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.3px',
-              marginLeft: '2px'
-            }}>
-              Soon
-            </span>
-          </button>
+            {/* Color Picker Input (hidden) */}
+            <input
+              type="color"
+              value={customThemeColor}
+              onChange={(e) => {
+                setCustomThemeColor(e.target.value);
+                if (profileTheme === 'custom') {
+                  const colors = generateHarmoniousColors(e.target.value);
+                  document.documentElement.style.setProperty('--accent', colors.base);
+                  document.documentElement.style.setProperty('--blue', colors.base);
+                  document.documentElement.style.setProperty('--blue-hover', colors.lighter);
+                  document.documentElement.style.setProperty('--blue-pressed', colors.darker);
+                }
+              }}
+              style={{
+                position: 'absolute',
+                opacity: 0,
+                width: '100%',
+                height: '100%',
+                cursor: 'pointer'
+              }}
+            />
+          </div>
             </div>
+          </div>
+            </div>
+          )}
           </div>
         </div>
       )}
@@ -1824,8 +1980,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
         <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
             {/* Owner view - dynamic buttons (clickable in customize mode) */}
             <>
-              {/* Empty state placeholder when no buttons and not in customize mode */}
-              {actionButtons.length === 0 && !showCustomizePanel && (
+              {/* Empty state placeholder when no buttons and not in customize mode - Only show for owners */}
+              {isOwnProfile && actionButtons.length === 0 && !showCustomizePanel && (
                 <div 
                 style={{
                     flex: 1,
@@ -1956,6 +2112,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               )}
               
               {/* Copy Link Button - Always visible for owner */}
+              {/* COMMENTED OUT - Copy profile link button removed
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
@@ -1992,6 +2149,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 </svg>
                 Copy Link
               </button>
+              */}
             </>
         </div>
 
@@ -2057,7 +2215,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 </div>
                 
                 {/* URL/Email Input */}
-                {button.type !== 'message' && (
                   <div>
                     <label style={{ fontSize: '10px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '0.3px', marginBottom: '4px', display: 'block' }}>
                       {button.type === 'email' ? 'Email Address' : 'URL'}
@@ -2079,7 +2236,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       }}
                     />
                   </div>
-                )}
                 
                 {/* Delete Button */}
                 <button
@@ -2129,23 +2285,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             >
                 Follow
               </button>
-            <button 
-              onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
-                toast.success('Profile link copied!');
-              }}
-              className="flex-1 py-2 text-sm rounded-xl font-semibold transition flex items-center justify-center gap-2"
-              style={{ 
-                background: 'rgba(255, 255, 255, 0.06)', 
-                border: '1px solid rgba(255, 255, 255, 0.1)' 
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-              </svg>
-              Copy Link
-              </button>
+            {/* Copy Link and Message/Share buttons removed - non-functional */}
             <button 
               onClick={() => {
                 if (!user) {
@@ -2748,39 +2888,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
         )}
       </div>
 
-      {/* Share Modal */}
-      {showShareModal && (
-        <div 
-          className="fixed inset-0 flex items-center justify-center z-50 p-4"
-          style={{ background: 'rgba(17, 17, 17, 0.8)' }}
-        >
-          <div className="bg-gray-900 rounded-2xl shadow-2xl p-6 max-w-md w-full">
-            <h3 className="text-2xl font-bold mb-4">Share Your Profile</h3>
-            <p className="text-gray-400 mb-6">
-              Your unique profile link
-            </p>
-            <div className="bg-gray-800 rounded-lg p-4 mb-6 break-all text-sm text-gray-300">
-              {`${typeof window !== 'undefined' ? window.location.origin : ''}/${username}`}
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={handleShare}
-                className="flex-1 py-3 bg-cyan-500 hover:bg-cyan-600 font-semibold rounded-lg transition"
-              >
-                Copy Link
-              </button>
-              <button
-                onClick={() => setShowShareModal(false)}
-                className="px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Share Modal - Removed: Non-functional feature, removed until functionality is built */}
 
-      </div>{/* End responsive wrapper */}
+            </div>
 
       {/* Modals - Outside responsive wrapper for full-screen behavior */}
       <CreateContentModal
