@@ -75,6 +75,7 @@ async def get_my_profile(
         instagram_url=profile.instagram_url,
         behance_url=profile.behance_url,
         soundcloud_url=profile.soundcloud_url,
+        portfolio_customization=profile.portfolio_customization,
         profile_likes_count=profile.profile_likes_count,
         profile_views_count=profile.profile_views_count,
         portfolio_items_count=profile.portfolio_items_count,
@@ -148,6 +149,9 @@ async def update_my_profile(
             profile.behance_url = updates.behance_url
         if updates.soundcloud_url is not None:
             profile.soundcloud_url = updates.soundcloud_url
+        if updates.portfolio_customization is not None:
+            profile.portfolio_customization = updates.portfolio_customization
+            changes_made = True
         
         session.add(profile)
         session.commit()
@@ -189,6 +193,7 @@ async def update_my_profile(
         instagram_url=profile.instagram_url,
         behance_url=profile.behance_url,
         soundcloud_url=profile.soundcloud_url,
+        portfolio_customization=profile.portfolio_customization,
         profile_likes_count=profile.profile_likes_count,
         profile_views_count=profile.profile_views_count,
         portfolio_items_count=profile.portfolio_items_count,
@@ -289,6 +294,7 @@ async def get_profile_by_username(
         instagram_url=profile.instagram_url,
         behance_url=profile.behance_url,
         soundcloud_url=profile.soundcloud_url,
+        portfolio_customization=profile.portfolio_customization,
         profile_likes_count=profile.profile_likes_count,
         profile_views_count=profile.profile_views_count,
         portfolio_items_count=profile.portfolio_items_count,

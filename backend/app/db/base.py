@@ -76,6 +76,17 @@ def create_db_and_tables():
                     session.exec(text("ALTER TABLE profiles ADD COLUMN bio VARCHAR(200)"))
                     session.commit()
                     print("✅ Added bio column to profiles table")
+                
+                # Add portfolio_customization column if missing
+                result2 = session.exec(text("""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_name = 'profiles' AND column_name = 'portfolio_customization'
+                """))
+                if not result2.fetchone():
+                    session.exec(text("ALTER TABLE profiles ADD COLUMN portfolio_customization VARCHAR"))
+                    session.commit()
+                    print("✅ Added portfolio_customization column to profiles table")
             else:
                 # SQLite - check if columns exist
                 result = session.exec(text("PRAGMA table_info(profiles)"))
@@ -98,6 +109,12 @@ def create_db_and_tables():
                     session.exec(text("ALTER TABLE profiles ADD COLUMN bio TEXT"))
                     session.commit()
                     print("✅ Added bio column to profiles table")
+                
+                # Add portfolio_customization column if missing
+                if 'portfolio_customization' not in columns:
+                    session.exec(text("ALTER TABLE profiles ADD COLUMN portfolio_customization TEXT"))
+                    session.commit()
+                    print("✅ Added portfolio_customization column to profiles table")
     except Exception as e:
         print(f"Migration note: {e}")
         # If it fails, columns might already exist

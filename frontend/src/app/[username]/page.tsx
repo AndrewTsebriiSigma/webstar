@@ -213,6 +213,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
   
   const dashboardRef = useRef<HTMLDivElement>(null);
   const profilePicInputRef = useRef<HTMLInputElement>(null);
+  const saveCustomizationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   
   const isOwnProfile = user?.username === username;
@@ -221,9 +222,38 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const heightReduction = Math.min(scrollY / 100, 1);
   const isScrolled = scrollY > 5;
 
-  // Load grid customization from localStorage on mount
+  // Load grid customization from backend profile (for both owner and guests)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (profile?.portfolio_customization) {
+      try {
+        const custom = JSON.parse(profile.portfolio_customization);
+        if (custom.gridColumns) setGridColumns(custom.gridColumns);
+        if (custom.gridGap !== undefined) setGridGap(custom.gridGap);
+        if (custom.gridRadius !== undefined) setGridRadius(custom.gridRadius);
+        if (custom.layoutMode) setLayoutMode(custom.layoutMode);
+        if (custom.gridAspectRatio) setGridAspectRatio(custom.gridAspectRatio);
+        if (custom.theme) setProfileTheme(custom.theme);
+      } catch (e) {
+        // Invalid JSON, fallback to localStorage
+        if (typeof window !== 'undefined') {
+          const saved = localStorage.getItem(`portfolio_customization_${username}`);
+          if (saved) {
+            try {
+              const { gridColumns: gc, gridGap: gg, gridRadius: gr, layoutMode: lm, gridAspectRatio: gar, theme: th } = JSON.parse(saved);
+              if (gc) setGridColumns(gc);
+              if (gg !== undefined) setGridGap(gg);
+              if (gr !== undefined) setGridRadius(gr);
+              if (lm) setLayoutMode(lm);
+              if (gar) setGridAspectRatio(gar);
+              if (th) setProfileTheme(th);
+            } catch (e2) {
+              // Invalid JSON, ignore
+            }
+          }
+        }
+      }
+    } else if (typeof window !== 'undefined') {
+      // Fallback to localStorage if backend doesn't have it
       const saved = localStorage.getItem(`portfolio_customization_${username}`);
       if (saved) {
         try {
@@ -239,19 +269,44 @@ export default function ProfilePage({ params }: { params: { username: string } }
         }
       }
     }
-  }, [username]);
+  }, [profile, username]);
 
-  // Save grid customization to localStorage when changed (only for own profile)
+  // Save grid customization to backend and localStorage when changed (only for own profile)
   useEffect(() => {
     if (isOwnProfile && typeof window !== 'undefined') {
-      localStorage.setItem(`portfolio_customization_${username}`, JSON.stringify({
+      const customization = {
         gridColumns,
         gridGap,
         gridRadius,
         layoutMode,
         gridAspectRatio,
         theme: profileTheme
-      }));
+      };
+      
+      // Save to localStorage immediately for instant access
+      localStorage.setItem(`portfolio_customization_${username}`, JSON.stringify(customization));
+      
+      // Debounce backend save (wait 1 second after last change)
+      if (saveCustomizationTimeoutRef.current) {
+        clearTimeout(saveCustomizationTimeoutRef.current);
+      }
+      
+      saveCustomizationTimeoutRef.current = setTimeout(async () => {
+        try {
+          await profileAPI.updateMe({ portfolio_customization: JSON.stringify(customization) });
+          // Optionally refresh profile to ensure sync
+          loadProfile(true);
+        } catch (error) {
+          console.error('Failed to save portfolio customization to backend:', error);
+          // Continue using localStorage as fallback
+        }
+      }, 1000);
+      
+      return () => {
+        if (saveCustomizationTimeoutRef.current) {
+          clearTimeout(saveCustomizationTimeoutRef.current);
+        }
+      };
     }
   }, [gridColumns, gridGap, gridRadius, layoutMode, gridAspectRatio, profileTheme, isOwnProfile, username]);
 

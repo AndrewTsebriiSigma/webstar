@@ -21,6 +21,7 @@ class ProfileUpdate(BaseModel):
     instagram_url: Optional[str] = None
     behance_url: Optional[str] = None
     soundcloud_url: Optional[str] = None
+    portfolio_customization: Optional[str] = None  # JSON string: {gridColumns, gridGap, gridRadius, layoutMode, gridAspectRatio}
 
 
 class ProfileResponse(BaseModel):
@@ -45,6 +46,7 @@ class ProfileResponse(BaseModel):
     instagram_url: Optional[str]
     behance_url: Optional[str]
     soundcloud_url: Optional[str]
+    portfolio_customization: Optional[str]  # JSON string: {gridColumns, gridGap, gridRadius, layoutMode, gridAspectRatio}
     
     # Metrics
     profile_likes_count: int

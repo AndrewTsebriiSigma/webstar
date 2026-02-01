@@ -60,6 +60,7 @@ export interface Profile {
   has_about: boolean;
   has_skills: boolean;
   profile_completeness: number;
+  portfolio_customization?: string | null;  // JSON string: {gridColumns, gridGap, gridRadius, layoutMode, gridAspectRatio, theme}
 }
 
 export interface PortfolioItem {

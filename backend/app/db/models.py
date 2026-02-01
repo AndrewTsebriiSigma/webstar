@@ -109,6 +109,9 @@ class Profile(SQLModel, table=True):
     portfolio_items_count: int = Field(default=0)
     projects_count: int = Field(default=0)
     
+    # Portfolio customization settings (JSON string)
+    portfolio_customization: Optional[str] = None  # Store as JSON: {gridColumns, gridGap, gridRadius, layoutMode, gridAspectRatio}
+    
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
