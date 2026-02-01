@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { XMarkIcon, PlayIcon, MusicalNoteIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Project } from '@/lib/types';
 import { projectsAPI } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 interface ProjectDetailModalProps {
   isOpen: boolean;
