@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { XMarkIcon, ChevronRightIcon, ArrowRightOnRectangleIcon, ClipboardIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ChevronRightIcon, ArrowRightOnRectangleIcon, ClipboardIcon, CheckIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/context/AuthContext';
-import { settingsAPI, profileAPI } from '@/lib/api';
+import { settingsAPI, profileAPI, authAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 import Setup2FAModal from './Setup2FAModal';
 import Disable2FAModal from './Disable2FAModal';
@@ -177,7 +177,7 @@ const BottomSlider = ({
 };
 
 // Change Email Section Component - Redesigned to match profile page style
-const ChangeEmailSection = ({ onBack }: { onBack: () => void }) => {
+export const ChangeEmailSection = ({ onBack }: { onBack: () => void }) => {
   const [step, setStep] = useState<'request' | 'verify'>('request');
   const [newEmail, setNewEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -438,8 +438,201 @@ const ChangeEmailSection = ({ onBack }: { onBack: () => void }) => {
   );
 };
 
+// Change Username Section Component
+export const ChangeUsernameSection = ({ onBack }: { onBack: () => void }) => {
+  const { user, updateUser } = useAuth();
+  const router = useRouter();
+  const [newUsername, setNewUsername] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+  const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+
+  // Check username availability
+  useEffect(() => {
+    if (!newUsername || newUsername.length < 3) {
+      setIsAvailable(null);
+      return;
+    }
+
+    if (newUsername.toLowerCase() === user?.username?.toLowerCase()) {
+      setIsAvailable(null);
+      setError('New username must be different from current username');
+      return;
+    }
+
+    const checkAvailability = async () => {
+      setCheckingAvailability(true);
+      setError('');
+      try {
+        const response = await authAPI.checkUsername(newUsername);
+        setIsAvailable(response.data.available);
+        if (!response.data.available) {
+          setError('Username is already taken');
+        } else {
+          setError('');
+        }
+      } catch (err: any) {
+        setIsAvailable(false);
+        setError(err.response?.data?.detail || 'Failed to check username availability');
+      } finally {
+        setCheckingAvailability(false);
+      }
+    };
+
+    const timeoutId = setTimeout(checkAvailability, 500);
+    return () => clearTimeout(timeoutId);
+  }, [newUsername, user?.username]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newUsername.trim()) {
+      setError('Username is required');
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(newUsername)) {
+      setError('Username must be 3-20 characters and contain only letters, numbers, and underscores');
+      return;
+    }
+
+    if (isAvailable === false) {
+      setError('Username is already taken');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await settingsAPI.changeUsername(newUsername);
+      if (response.data) {
+        setSuccess(true);
+        toast.success('Username updated successfully!');
+        
+        // Update user in localStorage and context
+        if (user) {
+          const updatedUser = { ...user, username: response.data.username };
+          updateUser(updatedUser);
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+        
+        // Redirect to new username profile after a delay
+        setTimeout(() => {
+          router.push(`/${response.data.username}`);
+          onBack();
+        }, 1500);
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to update username');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="text-center py-8">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" 
+          style={{ background: 'rgba(52, 199, 89, 0.1)' }}>
+          <svg className="w-8 h-8 text-[#34C759]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px' }}>Username Updated!</h3>
+        <p style={{ color: 'rgba(255, 255, 255, 0.65)' }}>Your username has been changed successfully.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px' }}>Change Username</h3>
+      <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.65)', marginBottom: '20px' }}>
+        Your current username is <span style={{ color: '#00C2FF' }}>@{user?.username}</span>
+      </p>
+      
+      {error && (
+        <div className="mb-4 p-3 rounded-xl text-sm"
+          style={{ background: 'rgba(255, 69, 58, 0.1)', color: '#FF453A', border: '1px solid rgba(255, 69, 58, 0.2)' }}
+        >
+          {error}
+        </div>
+      )}
+
+      {isAvailable === true && (
+        <div className="mb-4 p-3 rounded-xl text-sm"
+          style={{ background: 'rgba(52, 199, 89, 0.1)', color: '#34C759', border: '1px solid rgba(52, 199, 89, 0.2)' }}
+        >
+          Username is available
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', fontSize: '13px', color: 'rgba(255, 255, 255, 0.65)', marginBottom: '6px' }}>
+            New Username
+          </label>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.06)',
+            border: isAvailable === true ? '1px solid rgba(52, 199, 89, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '12px',
+            padding: '2px'
+          }}>
+            <input
+              type="text"
+              value={newUsername}
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^a-zA-Z0-9_]/g, '');
+                setNewUsername(value);
+              }}
+              placeholder="Enter new username"
+              style={{
+                width: '100%',
+                padding: '12px 14px',
+                background: 'transparent',
+                border: 'none',
+                borderRadius: '12px',
+                color: 'rgba(255, 255, 255, 0.95)',
+                fontSize: '15px',
+                outline: 'none'
+              }}
+              maxLength={20}
+              required
+            />
+          </div>
+          <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)', marginTop: '6px' }}>
+            {checkingAvailability ? 'Checking availability...' : '3-20 characters, letters, numbers, and underscores only'}
+          </p>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading || !newUsername || isAvailable === false || checkingAvailability}
+          style={{
+            width: '100%',
+            padding: '14px',
+            background: loading || !newUsername || isAvailable === false || checkingAvailability ? 'rgba(255, 255, 255, 0.1)' : '#00C2FF',
+            borderRadius: '12px',
+            color: '#FFFFFF',
+            fontSize: '15px',
+            fontWeight: 600,
+            border: 'none',
+            cursor: loading || !newUsername || isAvailable === false || checkingAvailability ? 'not-allowed' : 'pointer',
+            transition: 'background 0.2s'
+          }}
+        >
+          {loading ? 'Updating...' : 'Update Username'}
+        </button>
+      </form>
+    </div>
+  );
+};
+
 // Change Password Section Component - Redesigned to match profile page style
-const ChangePasswordSection = ({ onBack }: { onBack: () => void }) => {
+export const ChangePasswordSection = ({ onBack }: { onBack: () => void }) => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -620,11 +813,14 @@ const ChangePasswordSection = ({ onBack }: { onBack: () => void }) => {
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [show2FASetup, setShow2FASetup] = useState(false);
   const [show2FADisable, setShow2FADisable] = useState(false);
   const [loading2FAStatus, setLoading2FAStatus] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const [settings, setSettings] = useState({
     email: '',
     emailNotifications: true,
@@ -698,6 +894,31 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     load2FAStatus();
   };
 
+  const handleFeedbackSubmit = async () => {
+    if (!feedbackText.trim()) {
+      toast.error('Please enter your feedback');
+      return;
+    }
+
+    setFeedbackSubmitting(true);
+    try {
+      // For now, we'll use mailto link. In the future, this could be an API endpoint
+      const subject = encodeURIComponent('WebSTAR Feedback');
+      const body = encodeURIComponent(`User: ${user?.email || 'Anonymous'}\nUsername: ${user?.username || 'N/A'}\n\nFeedback:\n${feedbackText}`);
+      window.location.href = `mailto:feedback@webstar.bio?subject=${subject}&body=${body}`;
+      
+      // Show success message
+      toast.success('Opening email client...');
+      setFeedbackText('');
+      setShowFeedbackModal(false);
+      onClose();
+    } catch (error) {
+      toast.error('Failed to open email client');
+    } finally {
+      setFeedbackSubmitting(false);
+    }
+  };
+
   if (!isOpen && !isClosing) return null;
 
   // Icons
@@ -764,30 +985,47 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 {/* ACTIONS Section */}
                 <div>
                   <SectionHeader icon={ActionIcon} label="ACTIONS" />
-                  <button
-                    onClick={() => {
-                      logout();
-                      onClose();
-                      toast.success('Logged out successfully');
-                      router.push('/auth/login');
-                    }}
-                    style={{
-                      width: '100%',
-                      height: '55px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      padding: '0 16px',
-                      background: 'rgba(239, 68, 68, 0.1)',
-                      border: '1px solid rgba(239, 68, 68, 0.3)',
-                      borderRadius: '16px',
-                      cursor: 'pointer',
-                      transition: 'background 0.15s ease'
-                    }}
-                  >
-                    <ArrowRightOnRectangleIcon style={{ width: '20px', height: '20px', color: '#EF4444' }} />
-                    <span style={{ fontSize: '15px', fontWeight: 500, color: '#EF4444' }}>Log Out</span>
-                  </button>
+                  <GlassCard>
+                    <RowItem isFirst onClick={() => setShowFeedbackModal(true)} hasChevron>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <ChatBubbleLeftRightIcon style={{ width: '18px', height: '18px', color: 'rgba(255, 255, 255, 0.7)' }} />
+                        <span style={{ fontSize: '15px', fontWeight: 400, color: 'rgba(255, 255, 255, 0.95)' }}>Feedback</span>
+                      </div>
+                    </RowItem>
+                    <RowItem isLast>
+                      <button
+                        onClick={() => {
+                          logout();
+                          onClose();
+                          toast.success('Logged out successfully');
+                          router.push('/auth/login');
+                        }}
+                        style={{
+                          width: '100%',
+                          height: '55px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '10px',
+                          padding: '0 16px',
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          borderRadius: '12px',
+                          cursor: 'pointer',
+                          transition: 'background 0.15s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                        }}
+                      >
+                        <ArrowRightOnRectangleIcon style={{ width: '20px', height: '20px', color: '#EF4444' }} />
+                        <span style={{ fontSize: '15px', fontWeight: 500, color: '#EF4444' }}>Log Out</span>
+                      </button>
+                    </RowItem>
+                  </GlassCard>
                 </div>
               </div>
         </BottomSlider>
@@ -930,6 +1168,152 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         onClose={() => setShow2FADisable(false)}
         onSuccess={handle2FASuccess}
       />
+
+      {/* Feedback Modal */}
+      {showFeedbackModal && (
+        <div 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(10px)',
+            zIndex: 60,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+          onClick={() => setShowFeedbackModal(false)}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '500px',
+              background: '#111111',
+              borderRadius: '20px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              padding: '24px',
+              maxHeight: '80vh',
+              overflowY: 'auto'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: 600, color: '#FFFFFF' }}>Send Feedback</h2>
+              <button 
+                onClick={() => setShowFeedbackModal(false)}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                }}
+              >
+                <XMarkIcon style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
+              </button>
+            </div>
+            
+            <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '16px' }}>
+              We'd love to hear your thoughts, suggestions, or report any issues you've encountered.
+            </p>
+
+            <textarea
+              value={feedbackText}
+              onChange={(e) => setFeedbackText(e.target.value)}
+              placeholder="Tell us what you think..."
+              style={{
+                width: '100%',
+                minHeight: '150px',
+                padding: '12px 14px',
+                background: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+                color: '#FFFFFF',
+                fontSize: '14px',
+                fontFamily: 'inherit',
+                resize: 'vertical',
+                outline: 'none',
+                marginBottom: '16px'
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(0, 194, 255, 0.5)';
+                e.currentTarget.style.boxShadow = '0 0 0 1px rgba(0, 194, 255, 0.3)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            />
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setFeedbackText('');
+                  setShowFeedbackModal(false);
+                }}
+                style={{
+                  padding: '10px 20px',
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'background 0.15s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleFeedbackSubmit}
+                disabled={feedbackSubmitting || !feedbackText.trim()}
+                style={{
+                  padding: '10px 20px',
+                  background: feedbackSubmitting || !feedbackText.trim() ? 'rgba(0, 194, 255, 0.3)' : '#00C2FF',
+                  border: 'none',
+                  borderRadius: '12px',
+                  color: '#FFFFFF',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: feedbackSubmitting || !feedbackText.trim() ? 'not-allowed' : 'pointer',
+                  transition: 'background 0.15s ease'
+                }}
+                onMouseEnter={(e) => {
+                  if (!feedbackSubmitting && feedbackText.trim()) {
+                    e.currentTarget.style.background = '#0099CC';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!feedbackSubmitting && feedbackText.trim()) {
+                    e.currentTarget.style.background = '#00C2FF';
+                  }
+                }}
+              >
+                {feedbackSubmitting ? 'Sending...' : 'Send Feedback'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

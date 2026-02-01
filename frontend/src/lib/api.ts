@@ -204,6 +204,7 @@ export const quizAPI = {
   submitQuiz: (data: { quiz_id: number; answers: Array<{question_id: number; answer_id: number}>; session_id?: string }) =>
     api.post('/api/quizzes/submit', data),
   getResults: () => api.get('/api/quizzes/results'),
+  getResultDetail: (quiz_id: number) => api.get(`/api/quizzes/results/${quiz_id}`),
   transferSessionResults: (session_id: string) => api.post('/api/quizzes/transfer-session', { session_id }),
 };
 
@@ -259,6 +260,11 @@ export const settingsAPI = {
     api.post('/api/settings/account/change-password', { 
       current_password: currentPassword, 
       new_password: newPassword 
+    }),
+  
+  changeUsername: (newUsername: string) =>
+    api.post('/api/settings/account/change-username', { 
+      new_username: newUsername 
     }),
 };
 

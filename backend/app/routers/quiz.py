@@ -45,6 +45,17 @@ class QuizResultResponse(BaseModel):
     created_at: str
 
 
+class QuizResultDetailResponse(BaseModel):
+    """Detailed quiz result with questions and answers."""
+    id: int
+    quiz_id: int
+    quiz_title: str
+    total_score: int
+    result_summary: Optional[str]
+    created_at: str
+    answers: List[dict]  # [{"question_id": 1, "question_text": "...", "answer_id": 3, "answer_text": "...", "score_value": 5}, ...]
+
+
 @router.get("/quizzes/{slug}", response_model=QuizResponse)
 async def get_quiz(
     slug: str,
@@ -203,6 +214,75 @@ async def get_user_quiz_results(
         ))
     
     return response_list
+
+
+@router.get("/quizzes/results/{quiz_id}", response_model=QuizResultDetailResponse)
+async def get_quiz_result_detail(
+    quiz_id: int,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user_optional)
+):
+    """Get detailed quiz result with questions and answers for a specific quiz."""
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required"
+        )
+    
+    # Get the most recent result for this quiz and user
+    result = session.exec(
+        select(QuizResult)
+        .where(QuizResult.user_id == current_user.id)
+        .where(QuizResult.quiz_id == quiz_id)
+        .order_by(QuizResult.created_at.desc())
+    ).first()
+    
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Quiz result not found"
+        )
+    
+    # Get quiz title
+    quiz = session.exec(select(Quiz).where(Quiz.id == quiz_id)).first()
+    
+    # Parse answers JSON and enrich with question/answer text
+    import json
+    answers_data = json.loads(result.answers_json)
+    enriched_answers = []
+    
+    for answer_data in answers_data:
+        question_id = answer_data.get("question_id")
+        answer_id = answer_data.get("answer_id")
+        
+        # Get question
+        question = session.exec(
+            select(QuizQuestion).where(QuizQuestion.id == question_id)
+        ).first()
+        
+        # Get answer
+        answer = session.exec(
+            select(QuizAnswer).where(QuizAnswer.id == answer_id)
+        ).first()
+        
+        if question and answer:
+            enriched_answers.append({
+                "question_id": question_id,
+                "question_text": question.question_text,
+                "answer_id": answer_id,
+                "answer_text": answer.answer_text,
+                "score_value": answer.score_value
+            })
+    
+    return QuizResultDetailResponse(
+        id=result.id,
+        quiz_id=result.quiz_id,
+        quiz_title=quiz.title if quiz else "Unknown Quiz",
+        total_score=result.total_score,
+        result_summary=result.result_summary,
+        created_at=result.created_at.isoformat(),
+        answers=enriched_answers
+    )
 
 
 class TransferSessionRequest(BaseModel):

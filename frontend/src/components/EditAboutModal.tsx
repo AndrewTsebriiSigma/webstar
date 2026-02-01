@@ -236,7 +236,13 @@ export default function EditAboutModal({ isOpen, onClose, onSuccess, currentData
                 maxLength={500}
                 className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none text-white placeholder-gray-500"
               />
-              <p className="text-sm text-gray-500 mt-1">
+              <p 
+                className="text-sm mt-1"
+                style={{ 
+                  color: aboutText.length > 480 ? '#FF453A' : aboutText.length > 450 ? '#FF9F0A' : 'rgba(255, 255, 255, 0.5)',
+                  transition: 'color 0.2s ease',
+                }}
+              >
                 {aboutText.length}/500 characters
               </p>
             </div>

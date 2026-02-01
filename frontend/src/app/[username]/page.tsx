@@ -36,7 +36,11 @@ import {
   CheckIcon,
   XMarkIcon,
   CameraIcon,
-  FlagIcon
+  FlagIcon,
+  EllipsisHorizontalIcon,
+  ClipboardIcon,
+  CurrencyDollarIcon,
+  LinkIcon as LinkChainIcon
 } from '@heroicons/react/24/outline';
 import { BellIcon as BellSolidIcon, CheckBadgeIcon } from '@heroicons/react/24/solid';
 
@@ -81,6 +85,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [reportReason, setReportReason] = useState('');
   const [reportDescription, setReportDescription] = useState('');
   const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [showGuestMenu, setShowGuestMenu] = useState(false);
   const [feedInitialPostId, setFeedInitialPostId] = useState<number | undefined>(undefined);
   const [currentAudioTrack, setCurrentAudioTrack] = useState<any>(null);
   const [isMiniPlayerMuted, setIsMiniPlayerMuted] = useState(true); // Default muted (red button)
@@ -108,6 +113,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
   type WidgetSize = '1x1' | '4x5' | '5x4' | '4x6' | '3x4' | '16x9' | '4x3';
   const [showSizePicker, setShowSizePicker] = useState(false);
   const [selectedItemForResize, setSelectedItemForResize] = useState<PortfolioItem | null>(null);
+  const [editingPortfolioItem, setEditingPortfolioItem] = useState<PortfolioItem | null>(null);
   const [sizePickerPosition, setSizePickerPosition] = useState({ x: 0, y: 0 });
   
   // Drag & drop state for portfolio reordering
@@ -427,6 +433,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
     
     // TODO: Optionally save new order to backend
     // await portfolioAPI.reorderItems(newItems.map(item => item.id));
+  };
+
+  // === EDIT PORTFOLIO ITEM ===
+  const handleEditItem = (item: PortfolioItem) => {
+    setEditingPortfolioItem(item);
+    setShowUploadModal(true);
+    setShowActionMenu(null);
   };
 
   // === DELETE PORTFOLIO ITEM ===
@@ -810,10 +823,34 @@ export default function ProfilePage({ params }: { params: { username: string } }
       
       if (data.features) {
         setLocationSuggestions(
-          data.features.map((feature: any) => ({
-            place_name: feature.place_name,
-            id: feature.id
-          }))
+          data.features.map((feature: any) => {
+            // Extract city and country from context
+            const context = feature.context || [];
+            let city = '';
+            let country = '';
+            
+            // Find city (place) and country from context
+            context.forEach((ctx: any) => {
+              if (ctx.id?.startsWith('place')) {
+                city = ctx.text;
+              } else if (ctx.id?.startsWith('country')) {
+                country = ctx.text;
+              }
+            });
+            
+            // If no city found, use the feature text as city
+            if (!city && feature.text) {
+              city = feature.text;
+            }
+            
+            // Format as "City, Country" or just city if no country
+            const formattedLocation = country ? `${city}, ${country}` : city;
+            
+            return {
+              place_name: formattedLocation,
+              id: feature.id
+            };
+          })
         );
         setShowLocationDropdown(true);
       }
@@ -953,25 +990,138 @@ export default function ProfilePage({ params }: { params: { username: string } }
             </span>
           </div>
           
-          {/* Notifications - Right */}
-              <button 
-                onClick={() => setShowNotifications(true)}
-            className="nav-btn"
-              >
-            <BellIcon 
-              className="text-white" 
-              style={{ 
-                width: `${22 - (3 * heightReduction)}px`, 
-                height: `${22 - (3 * heightReduction)}px` 
-              }} 
-            />
-                {isOwnProfile && (
+          {/* Notifications for owners, 3 dots menu for guests - Right */}
+          {isOwnProfile ? (
+            <button 
+              onClick={() => setShowNotifications(true)}
+              className="nav-btn"
+            >
+              <BellIcon 
+                className="text-white" 
+                style={{ 
+                  width: `${22 - (3 * heightReduction)}px`, 
+                  height: `${22 - (3 * heightReduction)}px` 
+                }} 
+              />
               <span 
                 className="nav-badge"
                 style={{ transform: `scale(${1 - (0.15 * heightReduction)})` }}
               >3</span>
-                )}
+            </button>
+          ) : (
+            <div style={{ position: 'relative' }}>
+              <button 
+                onClick={() => setShowGuestMenu(!showGuestMenu)}
+                className="nav-btn"
+              >
+                <EllipsisHorizontalIcon 
+                  className="text-white" 
+                  style={{ 
+                    width: `${22 - (3 * heightReduction)}px`, 
+                    height: `${22 - (3 * heightReduction)}px` 
+                  }} 
+                />
               </button>
+              {showGuestMenu && (
+                <>
+                  <div 
+                    style={{
+                      position: 'fixed',
+                      inset: 0,
+                      zIndex: 998
+                    }}
+                    onClick={() => setShowGuestMenu(false)}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 8px)',
+                      right: 0,
+                      zIndex: 999,
+                      background: 'rgba(22, 22, 24, 0.95)',
+                      backdropFilter: 'blur(20px)',
+                      WebkitBackdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      borderRadius: '12px',
+                      padding: '4px',
+                      minWidth: '160px',
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+                      animation: 'fadeIn 0.2s ease-out'
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={() => {
+                        const url = `${window.location.origin}/${username}`;
+                        navigator.clipboard.writeText(url);
+                        toast.success('Link copied to clipboard!');
+                        setShowGuestMenu(false);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        background: 'transparent',
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: 'rgba(255, 255, 255, 0.95)',
+                        fontSize: '14px',
+                        fontWeight: 400,
+                        cursor: 'pointer',
+                        transition: 'background 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <ClipboardIcon style={{ width: '18px', height: '18px', color: 'rgba(255, 255, 255, 0.7)' }} />
+                      <span>Copy Link</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!user) {
+                          sessionStorage.setItem('returnAfterAuth', `/${username}`);
+                          router.push('/auth');
+                          return;
+                        }
+                        setShowReportModal(true);
+                        setShowGuestMenu(false);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        background: 'transparent',
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: 'rgba(255, 255, 255, 0.95)',
+                        fontSize: '14px',
+                        fontWeight: 400,
+                        cursor: 'pointer',
+                        transition: 'background 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <FlagIcon style={{ width: '18px', height: '18px', color: 'rgba(255, 255, 255, 0.7)' }} />
+                      <span>Report</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </header>
       )}
 
@@ -1074,7 +1224,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               <button 
                   onClick={(e) => {
                     e.stopPropagation();
-                    setShowSettingsModal(true);
+                    router.push('/settings');
                   }}
                   className="banner-action-btn flex items-center justify-center"
                 style={{ 
@@ -1547,6 +1697,78 @@ export default function ProfilePage({ params }: { params: { username: string } }
             </div>
           </div>
           <div className="dashboard-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            {/* Monetization Button */}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push('/subscribe');
+              }}
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: 'rgba(255, 255, 255, 0.06)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                cursor: 'pointer',
+                transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                padding: 0
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+              }}
+              title="Monetization"
+            >
+              <CurrencyDollarIcon style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.7)' }} />
+            </button>
+
+            {/* Copy Link Button */}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                const url = `${window.location.origin}/${username}`;
+                navigator.clipboard.writeText(url);
+                toast.success('Link copied to clipboard!');
+              }}
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: 'rgba(255, 255, 255, 0.06)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                cursor: 'pointer',
+                transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                padding: 0
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+              }}
+              title="Copy Link"
+            >
+              <LinkChainIcon style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.7)' }} />
+            </button>
+
             {/* ================================================================
                 FEATURE_DISABLED: DRAFTS
                 ================================================================
@@ -2268,24 +2490,55 @@ export default function ProfilePage({ params }: { params: { username: string } }
       </div>
       )}
 
-      {/* Visitor Action Buttons - Always visible for non-owners */}
-      {!isOwnProfile && (
+      {/* Visitor Action Buttons - Only custom action buttons or empty space */}
+      {!isOwnProfile && actionButtons.length > 0 && (
         <div style={{ padding: '0 16px', marginBottom: '12px' }}>
-          <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-            <button 
-              onClick={() => {
-                if (!user) {
-                  sessionStorage.setItem('returnAfterAuth', `/${username}`);
-                  router.push('/auth');
-                  return;
-                }
-                toast.success(`Following ${profile?.display_name || username}!`);
-              }}
-              className="flex-1 py-2 text-sm bg-cyan-500 hover:bg-cyan-600 rounded-xl font-semibold transition"
-            >
-                Follow
-              </button>
-            {/* Copy Link and Message/Share buttons removed - non-functional */}
+          <div style={{ display: 'flex', gap: '8px', width: '100%', flexWrap: 'wrap' }}>
+            {actionButtons.map((button, index) => (
+              <a
+                key={button.id}
+                href={button.type === 'email' ? `mailto:${button.url}` : button.url}
+                target={button.type === 'link' ? '_blank' : undefined}
+                rel={button.type === 'link' ? 'noopener noreferrer' : undefined}
+                className={`action-btn ${getButtonSizeClass(index, actionButtons.length)}`}
+                style={{
+                  flex: actionButtons.length === 2 
+                    ? '1 1 calc(50% - 4px)' 
+                    : actionButtons.length === 3 
+                    ? '1 1 calc(33.333% - 6px)' 
+                    : actionButtons.length === 4
+                    ? '1 1 calc(25% - 6px)'
+                    : '1 1 auto',
+                  minWidth: '60px',
+                  padding: '10px 16px',
+                  borderRadius: '12px',
+                  background: 'rgba(0, 194, 255, 0.1)',
+                  border: '1px solid rgba(0, 194, 255, 0.2)',
+                  color: '#00C2FF',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                  textDecoration: 'none',
+                  transition: 'all 0.15s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 194, 255, 0.15)';
+                  e.currentTarget.style.borderColor = 'rgba(0, 194, 255, 0.3)';
+                  e.currentTarget.style.transform = 'scale(1.02)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 194, 255, 0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(0, 194, 255, 0.2)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                {button.label}
+              </a>
+            ))}
             <button 
               onClick={() => {
                 if (!user) {
@@ -2358,8 +2611,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
             width: '100%',
             padding: '10px'
           }}>
-            {/* Grid Customization Controls - Figma Template */}
-            {isOwnProfile && !viewerMode && showCustomizePanel && (
+            {/* Grid Customization Controls - Visible to all viewers, editable only by owner */}
+            {!viewerMode && showCustomizePanel && (
               <div 
                 className="portfolio-customizer-inline"
                 style={{
@@ -2382,7 +2635,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   {[2, 3, 4].map((cols) => (
                     <button
                       key={cols}
-                      onClick={() => setGridColumns(cols as 2 | 3 | 4)}
+                      onClick={() => isOwnProfile && setGridColumns(cols as 2 | 3 | 4)}
+                      disabled={!isOwnProfile}
                       style={{
                         flex: 1,
                         minWidth: '42px',
@@ -2393,13 +2647,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
                         color: gridColumns === cols ? '#00C2FF' : 'rgba(255, 255, 255, 0.65)',
                         fontSize: '13px',
                         fontWeight: 600,
-                        cursor: 'pointer',
+                        cursor: isOwnProfile ? 'pointer' : 'default',
                         transition: 'all 0.15s ease',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         padding: 0,
-                        flexShrink: 0
+                        flexShrink: 0,
+                        opacity: isOwnProfile ? 1 : 0.6
                       }}
                     >
                       {cols}x
@@ -2412,7 +2667,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   {/* Layout Mode Buttons */}
                   {/* Uniform Grid */}
                   <button
-                    onClick={() => setLayoutMode('uniform')}
+                    onClick={() => isOwnProfile && setLayoutMode('uniform')}
+                    disabled={!isOwnProfile}
                     style={{
                       width: '42px',
                       height: '32px',
@@ -2422,10 +2678,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      cursor: 'pointer',
+                      cursor: isOwnProfile ? 'pointer' : 'default',
                       transition: 'all 0.15s ease',
                       padding: 0,
-                      flexShrink: 0
+                      flexShrink: 0,
+                      opacity: isOwnProfile ? 1 : 0.6
                     }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={layoutMode === 'uniform' ? '#00C2FF' : 'rgba(255,255,255,0.65)'} strokeWidth="2.5">
@@ -2438,7 +2695,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   
                   {/* Masonry Grid */}
                   <button
-                    onClick={() => setLayoutMode('masonry')}
+                    onClick={() => isOwnProfile && setLayoutMode('masonry')}
+                    disabled={!isOwnProfile}
                     style={{
                       width: '42px',
                       height: '32px',
@@ -2448,10 +2706,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      cursor: 'pointer',
+                      cursor: isOwnProfile ? 'pointer' : 'default',
                       transition: 'all 0.15s ease',
                       padding: 0,
-                      flexShrink: 0
+                      flexShrink: 0,
+                      opacity: isOwnProfile ? 1 : 0.6
                     }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill={layoutMode === 'masonry' ? '#00C2FF' : 'rgba(255,255,255,0.65)'} stroke="none">
@@ -2481,7 +2740,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       min="0"
                       max="16"
                       value={gridGap}
-                      onChange={(e) => setGridGap(parseInt(e.target.value))}
+                      onChange={(e) => isOwnProfile && setGridGap(parseInt(e.target.value))}
+                      disabled={!isOwnProfile}
                       style={{
                         flex: 1,
                         height: '4px',
@@ -2489,9 +2749,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
                         appearance: 'none',
                         background: `linear-gradient(to right, #00C2FF 0%, #00C2FF ${(gridGap / 16) * 100}%, rgba(255,255,255,0.08) ${(gridGap / 16) * 100}%, rgba(255,255,255,0.08) 100%)`,
                         borderRadius: '2px',
-                        cursor: 'pointer',
+                        cursor: isOwnProfile ? 'pointer' : 'default',
                         minWidth: '50px',
-                        outline: 'none'
+                        outline: 'none',
+                        opacity: isOwnProfile ? 1 : 0.6
                       }}
                       className="compact-slider"
                     />
@@ -2516,7 +2777,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       min="0"
                       max="24"
                       value={gridRadius}
-                      onChange={(e) => setGridRadius(parseInt(e.target.value))}
+                      onChange={(e) => isOwnProfile && setGridRadius(parseInt(e.target.value))}
+                      disabled={!isOwnProfile}
                       style={{
                         flex: 1,
                         height: '4px',
@@ -2524,9 +2786,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
                         appearance: 'none',
                         background: `linear-gradient(to right, #00C2FF 0%, #00C2FF ${(gridRadius / 24) * 100}%, rgba(255,255,255,0.08) ${(gridRadius / 24) * 100}%, rgba(255,255,255,0.08) 100%)`,
                         borderRadius: '2px',
-                        cursor: 'pointer',
+                        cursor: isOwnProfile ? 'pointer' : 'default',
                         minWidth: '50px',
-                        outline: 'none'
+                        outline: 'none',
+                        opacity: isOwnProfile ? 1 : 0.6
                       }}
                       className="compact-slider"
                     />
@@ -2576,11 +2839,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       className={`portfolio-grid-item ${showCustomizePanel && isOwnProfile ? 'customize-mode' : ''} ${selectedItemForResize?.id === item.id ? 'selected-for-resize' : ''} ${dragOverItemId === item.id ? 'drag-over' : ''}`}
                       // Drag & drop handlers (customize mode only)
                       draggable={showCustomizePanel && isOwnProfile}
-                      onDragStart={(e) => handlePortfolioDragStart(e, item.id)}
+                      onDragStart={(e) => showCustomizePanel && isOwnProfile && handlePortfolioDragStart(e, item.id)}
                       onDragEnd={handlePortfolioDragEnd}
-                      onDragOver={(e) => handlePortfolioDragOver(e, item.id)}
+                      onDragOver={(e) => showCustomizePanel && isOwnProfile && handlePortfolioDragOver(e, item.id)}
                       onDragLeave={handlePortfolioDragLeave}
-                      onDrop={(e) => handlePortfolioDrop(e, item.id)}
+                      onDrop={(e) => showCustomizePanel && isOwnProfile && handlePortfolioDrop(e, item.id)}
                       // Touch handlers for mobile
                       onTouchStart={(e) => handleLongPressStart(e, item)}
                       onTouchEnd={handleLongPressEnd}
@@ -2638,7 +2901,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       />
                       
                       {/* Customize mode overlay - drag handle and size badge */}
-                      {showCustomizePanel && isOwnProfile && (
+                      {showCustomizePanel && (
                         <>
                           {/* Drag handle indicator at top */}
                           <div style={{
@@ -2913,9 +3176,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
         onClose={() => {
           setShowUploadModal(false);
           setSelectedPostType(null);
+          setEditingPortfolioItem(null);
         }}
-        onSuccess={() => loadProfile(true)}
+        onSuccess={() => {
+          loadProfile(true);
+          setEditingPortfolioItem(null);
+        }}
         initialContentType={selectedPostType}
+        editingDraft={editingPortfolioItem}
       />
 
       <CreateProjectModal
@@ -3427,6 +3695,32 @@ export default function ProfilePage({ params }: { params: { username: string } }
               animation: 'actionMenuPop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)'
             }}
           >
+            {/* Edit option */}
+            <button
+              onClick={() => {
+                const item = portfolioItems.find(p => p.id === showActionMenu);
+                if (item) {
+                  handleEditItem(item);
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                background: 'transparent',
+                border: 'none',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                cursor: 'pointer',
+                color: 'white',
+                fontSize: '14px'
+              }}
+            >
+              <PencilIcon style={{ width: '16px', height: '16px' }} />
+              Edit
+            </button>
+
             {/* Resize option */}
             <button
               onClick={() => {

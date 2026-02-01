@@ -862,6 +862,7 @@ function VideoDisplay({
   onToggleMiniPlayerMute?: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isMuted, setIsMuted] = useState(true);
 
   // Check if this item is currently playing in mini-player
   const isCurrentlyPlaying = currentPlayingTrackId === item.id;
@@ -870,14 +871,23 @@ function VideoDisplay({
     ? item.content_url 
     : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`;
 
-  // Auto-play muted on mount for preview (video always stays muted)
+  // Auto-play muted on mount for preview
   useEffect(() => {
     if (videoRef.current) {
+      videoRef.current.muted = isMuted;
       videoRef.current.play().catch(() => {
         // Autoplay was prevented - this is expected on some browsers without user interaction
       });
     }
-  }, []);
+  }, [isMuted]);
+
+  // Sync with mini-player mute state when playing in mini-player
+  useEffect(() => {
+    if (isCurrentlyPlaying && videoRef.current && onToggleMiniPlayerMute !== undefined) {
+      videoRef.current.muted = isMiniPlayerMuted ?? true;
+      setIsMuted(isMiniPlayerMuted ?? true);
+    }
+  }, [isCurrentlyPlaying, isMiniPlayerMuted, onToggleMiniPlayerMute]);
 
   const handleMiniPlayerClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -888,9 +898,16 @@ function VideoDisplay({
 
   const handleSoundToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Only toggle mute if this track is currently playing in mini-player
+    // If playing in mini-player, use mini-player mute control
     if (isCurrentlyPlaying && onToggleMiniPlayerMute) {
       onToggleMiniPlayerMute();
+    } else {
+      // Otherwise, toggle local video mute
+      const newMuted = !isMuted;
+      setIsMuted(newMuted);
+      if (videoRef.current) {
+        videoRef.current.muted = newMuted;
+      }
     }
   };
 
@@ -918,99 +935,11 @@ function VideoDisplay({
           objectFit: 'cover'
         }}
         loop
-        muted // Video always muted - audio via mini-player only
+        muted={isMuted}
         playsInline
         autoPlay
       />
-      {/* Button container for sound and mini-player */}
-      <div style={{
-          position: 'absolute',
-          bottom: '8px',
-          right: '8px',
-        display: 'flex',
-        gap: '6px',
-        zIndex: 10
-      }}>
-        {/* Sound Toggle Button - only visible when this track is playing in mini-player */}
-        {isCurrentlyPlaying && (
-          <button
-            onClick={handleSoundToggle}
-            style={{
-          width: '32px',
-          height: '32px',
-          borderRadius: '50%',
-              background: isMiniPlayerMuted ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 194, 255, 0.3)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
-              border: isMiniPlayerMuted ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 194, 255, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-              transition: 'all 150ms'
-        }}
-        onMouseEnter={(e) => {
-              e.currentTarget.style.background = isMiniPlayerMuted ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 194, 255, 0.4)';
-          e.currentTarget.style.transform = 'scale(1.1)';
-        }}
-        onMouseLeave={(e) => {
-              e.currentTarget.style.background = isMiniPlayerMuted ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 194, 255, 0.3)';
-          e.currentTarget.style.transform = 'scale(1)';
-        }}
-            title={isMiniPlayerMuted ? 'Unmute' : 'Mute'}
-      >
-            {isMiniPlayerMuted ? (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
-            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
-          </svg>
-        ) : (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
-            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-          </svg>
-        )}
-      </button>
-        )}
-
-        {/* Mini-Player Button - Opens audio in mini-player */}
-        {onPlayInMiniPlayer && (
-          <button
-            onClick={handleMiniPlayerClick}
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              background: isCurrentlyPlaying ? 'rgba(0, 194, 255, 0.3)' : 'rgba(0, 0, 0, 0.6)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
-              border: isCurrentlyPlaying ? '1px solid rgba(0, 194, 255, 0.5)' : '1px solid rgba(255, 255, 255, 0.15)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'all 150ms'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(0, 194, 255, 0.3)';
-              e.currentTarget.style.borderColor = 'rgba(0, 194, 255, 0.5)';
-              e.currentTarget.style.transform = 'scale(1.1)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = isCurrentlyPlaying ? 'rgba(0, 194, 255, 0.3)' : 'rgba(0, 0, 0, 0.6)';
-              e.currentTarget.style.borderColor = isCurrentlyPlaying ? 'rgba(0, 194, 255, 0.5)' : 'rgba(255, 255, 255, 0.15)';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-            title="Play in mini-player"
-          >
-            {/* Modern equalizer/waveform icon */}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
-              <rect x="4" y="8" width="2" height="8" rx="1" fill="white" />
-              <rect x="9" y="5" width="2" height="14" rx="1" fill="white" />
-              <rect x="14" y="7" width="2" height="10" rx="1" fill="white" />
-              <rect x="19" y="9" width="2" height="6" rx="1" fill="white" />
-            </svg>
-          </button>
-        )}
-      </div>
+      {/* Button container removed from portfolio preview - only shown in feed modal */}
     </div>
   );
 }

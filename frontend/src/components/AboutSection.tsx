@@ -549,16 +549,48 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
   // Skills CRUD
   const addSkill = async () => {
     if (!newSkillName.trim()) return;
-    if (skills.length >= 6) {
+    
+    // Get the role name to exclude it from saved skills (role + expertise is computed, not stored)
+    const roleName = profile?.role || '';
+    
+    // Get current display skills to ensure we don't lose any existing skills
+    const currentDisplaySkills = getDisplaySkills();
+    
+    // Merge skills state with displaySkills to get all existing skills
+    const allSkills = [...currentDisplaySkills];
+    skills.forEach(skill => {
+      const exists = allSkills.find(s => s.name === skill.name);
+      if (!exists) {
+        allSkills.push(skill);
+      } else {
+        // Update the existing skill's level if it's in the state
+        const index = allSkills.findIndex(s => s.name === skill.name);
+        allSkills[index] = skill;
+      }
+    });
+    
+    // Check if skill already exists
+    if (allSkills.some(s => s.name.toLowerCase() === newSkillName.trim().toLowerCase())) {
+      toast.error('This skill already exists');
+      return;
+    }
+    
+    if (allSkills.length >= 6) {
       toast.error('Maximum 6 skills allowed');
       return;
     }
-    const updated = [...skills, { name: newSkillName.trim(), level: 85 }];
-    setSkills(updated);
+    
+    const newSkill = { name: newSkillName.trim(), level: 85 };
+    const updated = [...allSkills, newSkill];
+    
+    // Filter out the role + expertise skill before saving (it's computed, not stored)
+    const skillsToSave = updated.filter(skill => skill.name !== roleName);
+    
+    setSkills(skillsToSave);
     setNewSkillName('');
     setIsSavingSkills(true);
     try {
-      await profileAPI.updateMe({ skills: JSON.stringify(updated) });
+      await profileAPI.updateMe({ skills: JSON.stringify(skillsToSave) });
       onUpdate();
     } catch (error) {
       toast.error('Failed to add skill');
@@ -568,11 +600,32 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
   };
 
   const removeSkill = async (index: number) => {
-    const updated = skills.filter((_, i) => i !== index);
-    setSkills(updated);
+    // Get the role name to exclude it from saved skills (role + expertise is computed, not stored)
+    const roleName = profile?.role || '';
+    
+    // Use skillsToShow to get the actual displayed skills (merged list)
+    const currentDisplaySkills = getDisplaySkills();
+    const allSkills = [...currentDisplaySkills];
+    skills.forEach(skill => {
+      const exists = allSkills.find(s => s.name === skill.name);
+      if (!exists) {
+        allSkills.push(skill);
+      } else {
+        const idx = allSkills.findIndex(s => s.name === skill.name);
+        allSkills[idx] = skill;
+      }
+    });
+    
+    // Remove the skill at the specified index
+    const updated = allSkills.filter((_, i) => i !== index);
+    
+    // Filter out the role + expertise skill before saving (it's computed, not stored)
+    const skillsToSave = updated.filter(skill => skill.name !== roleName);
+    
+    setSkills(skillsToSave);
     setIsSavingSkills(true);
     try {
-      await profileAPI.updateMe({ skills: JSON.stringify(updated) });
+      await profileAPI.updateMe({ skills: JSON.stringify(skillsToSave) });
       onUpdate();
       toast.success('Skill removed');
     } catch (error) {
@@ -600,7 +653,11 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
     skillsSaveTimeoutRef.current = setTimeout(async () => {
       setIsSavingSkills(true);
       try {
-        await profileAPI.updateMe({ skills: JSON.stringify(skills) });
+        // Get the role name to exclude it from saved skills (role + expertise is computed, not stored)
+        const roleName = profile?.role || '';
+        // Filter out the role + expertise skill before saving (it's computed, not stored)
+        const skillsToSave = skills.filter(skill => skill.name !== roleName);
+        await profileAPI.updateMe({ skills: JSON.stringify(skillsToSave) });
         // Don't call onUpdate() - it resets the form data!
       } catch (error) {
         console.error('Failed to save skills:', error);
@@ -614,7 +671,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
         clearTimeout(skillsSaveTimeoutRef.current);
       }
     };
-  }, [skills, isCustomizeMode, isOwnProfile]);
+  }, [skills, isCustomizeMode, isOwnProfile, profile]);
 
   const formatExperiencePeriod = (startDate: string, endDate: string): string => {
     if (!startDate) return '';
@@ -736,6 +793,26 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
 
   const displaySkills = getDisplaySkills();
   const displayExperiences = getDisplayExperiences();
+
+  // In customization mode, merge skills state with displaySkills to ensure all skills are always visible
+  // This ensures existing skills from profile are always shown even when customization mode is first turned on
+  const skillsToShow = isCustomizeMode && isOwnProfile 
+    ? (() => {
+        // Merge skills state with displaySkills, removing duplicates by name
+        const merged = [...displaySkills];
+        skills.forEach(skill => {
+          const exists = merged.find(s => s.name === skill.name);
+          if (!exists) {
+            merged.push(skill);
+          } else {
+            // Update the existing skill's level if it's in the state
+            const index = merged.findIndex(s => s.name === skill.name);
+            merged[index] = skill;
+          }
+        });
+        return merged;
+      })()
+    : displaySkills;
 
   // Check if customize mode is active for editing
   const canEdit = isCustomizeMode && isOwnProfile;
@@ -942,20 +1019,19 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                   }
                 }}
               />
-              {/* Character count inside field - only show on focus */}
-              {aboutFocused && (
-                <span
-                  style={{
-                    position: 'absolute',
-                    bottom: '8px',
-                    right: '12px',
-                    fontSize: '11px',
-                    color: 'rgba(255, 255, 255, 0.4)',
-                  }}
-                >
-                  {aboutText.length}/250
-                </span>
-              )}
+              {/* Character count inside field - always visible */}
+              <span
+                style={{
+                  position: 'absolute',
+                  bottom: '8px',
+                  right: '12px',
+                  fontSize: '11px',
+                  color: aboutText.length > 240 ? '#FF453A' : aboutText.length > 220 ? '#FF9F0A' : 'rgba(255, 255, 255, 0.4)',
+                  transition: 'color 0.2s ease',
+                }}
+              >
+                {aboutText.length}/250
+              </span>
             </div>
           </div>
         ) : (
@@ -994,32 +1070,46 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                 )}
               </>
             ) : (
-                // Simple skeleton lines for empty about - 3+2 paragraphs
-                <div 
-                  style={{
-                    padding: 'var(--space-4)',
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    borderRadius: '12px',
-                    maxWidth: '336px',
-                    margin: '0 auto',
-                  }}
-                >
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    {/* Paragraph 1 - 3 lines */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <SkeletonLine width="100%" height="11px" />
-                      <SkeletonLine width="90%" height="11px" />
-                      <SkeletonLine width="65%" height="11px" />
-                    </div>
-                    
-                    {/* Paragraph 2 - 2 lines */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <SkeletonLine width="95%" height="11px" />
-                      <SkeletonLine width="50%" height="11px" />
-                    </div>
+                // Empty state for view mode
+                !isOwnProfile ? (
+                  <div 
+                    style={{
+                      padding: 'var(--space-4)',
+                      textAlign: 'center',
+                      color: 'rgba(255, 255, 255, 0.4)',
+                      fontSize: '13px',
+                    }}
+                  >
+                    User has not provided info yet
                   </div>
-                  <CustomizeHint text="to tell your story" isOwnProfile={isOwnProfile} />
-          </div>
+                ) : (
+                  // Simple skeleton lines for empty about - 3+2 paragraphs (only for own profile)
+                  <div 
+                    style={{
+                      padding: 'var(--space-4)',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      borderRadius: '12px',
+                      maxWidth: '336px',
+                      margin: '0 auto',
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                      {/* Paragraph 1 - 3 lines */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <SkeletonLine width="100%" height="11px" />
+                        <SkeletonLine width="90%" height="11px" />
+                        <SkeletonLine width="65%" height="11px" />
+                      </div>
+                      
+                      {/* Paragraph 2 - 2 lines */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <SkeletonLine width="95%" height="11px" />
+                        <SkeletonLine width="50%" height="11px" />
+                      </div>
+                    </div>
+                    <CustomizeHint text="to tell your story" isOwnProfile={isOwnProfile} />
+                  </div>
+                )
         )}
             </div>
           )}
@@ -1387,53 +1477,67 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                   </div>
                 </div>
               ) : (
-                // Skeleton timeline card for empty experience - iOS style
-                <div 
-                            style={{
-                    padding: 'var(--space-4)',
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    borderRadius: '12px',
-                    maxWidth: '336px',
-                    margin: '0 auto',
-                            }}
-                          >
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'flex-start', 
-                    gap: 'var(--space-3)',
-                  }}>
-                    {/* Timeline dot - skeleton */}
-                    <div 
-                      className="skeleton-shimmer"
-                            style={{
-                        width: '10px', 
-                        height: '10px', 
-                        borderRadius: '50%', 
-                        background: 'linear-gradient(90deg, rgba(0,194,255,0.2) 0%, rgba(0,194,255,0.3) 50%, rgba(0,194,255,0.2) 100%)',
-                        backgroundSize: '200% 100%',
-                        animation: 'shimmer 2s ease-in-out infinite',
-                        marginTop: '5px',
-                        flexShrink: 0,
-                      }} 
-                    />
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {/* Role skeleton */}
-                      <SkeletonLine width="60%" height="16px" />
-                      {/* Company + date row */}
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <SkeletonLine width="35%" height="12px" />
-                        <span style={{ color: 'rgba(255,255,255,0.1)' }}>•</span>
-                        <SkeletonLine width="25%" height="12px" />
-                      </div>
-                      {/* Description skeleton */}
-                      <div style={{ marginTop: '4px' }}>
-                        <SkeletonLine width="100%" height="10px" style={{ marginBottom: '6px' }} />
-                        <SkeletonLine width="75%" height="10px" />
-                      </div>
+                // Empty state for view mode
+                !isOwnProfile ? (
+                  <div 
+                    style={{
+                      padding: 'var(--space-4)',
+                      textAlign: 'center',
+                      color: 'rgba(255, 255, 255, 0.4)',
+                      fontSize: '13px',
+                    }}
+                  >
+                    User has not provided info yet
+                  </div>
+                ) : (
+                  // Skeleton timeline card for empty experience - iOS style (only for own profile)
+                  <div 
+                    style={{
+                      padding: 'var(--space-4)',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      borderRadius: '12px',
+                      maxWidth: '336px',
+                      margin: '0 auto',
+                    }}
+                  >
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'flex-start', 
+                      gap: 'var(--space-3)',
+                    }}>
+                      {/* Timeline dot - skeleton */}
+                      <div 
+                        className="skeleton-shimmer"
+                        style={{
+                          width: '10px', 
+                          height: '10px', 
+                          borderRadius: '50%', 
+                          background: 'linear-gradient(90deg, rgba(0,194,255,0.2) 0%, rgba(0,194,255,0.3) 50%, rgba(0,194,255,0.2) 100%)',
+                          backgroundSize: '200% 100%',
+                          animation: 'shimmer 2s ease-in-out infinite',
+                          marginTop: '5px',
+                          flexShrink: 0,
+                        }} 
+                      />
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {/* Role skeleton */}
+                        <SkeletonLine width="60%" height="16px" />
+                        {/* Company + date row */}
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <SkeletonLine width="35%" height="12px" />
+                          <span style={{ color: 'rgba(255,255,255,0.1)' }}>•</span>
+                          <SkeletonLine width="25%" height="12px" />
+                        </div>
+                        {/* Description skeleton */}
+                        <div style={{ marginTop: '4px' }}>
+                          <SkeletonLine width="100%" height="10px" style={{ marginBottom: '6px' }} />
+                          <SkeletonLine width="75%" height="10px" />
                         </div>
                       </div>
-                  <CustomizeHint text="to show your journey" isOwnProfile={isOwnProfile} />
                     </div>
+                    <CustomizeHint text="to show your journey" isOwnProfile={isOwnProfile} />
+                  </div>
+                )
               )}
                         </div>
           )}
@@ -1514,14 +1618,14 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
           {canEdit ? (
             // Editable mode
           <div style={{ maxWidth: '336px', margin: '0 auto' }}>
-            {skills.length > 0 && (
+            {skillsToShow.length > 0 && (
               <div style={{ marginBottom: 'var(--space-4)' }}>
-                {skills.slice(0, 5).map((skill, index) => (
+                {skillsToShow.slice(0, 5).map((skill, index) => (
                     <div 
                       key={index} 
                       className="relative"
                       style={{ 
-                        marginBottom: index < skills.length - 1 ? '12px' : '0',
+                        marginBottom: index < skillsToShow.length - 1 ? '12px' : '0',
                         padding: '12px',
                         background: 'rgba(255, 255, 255, 0.02)',
                         borderRadius: '12px',
@@ -1558,7 +1662,11 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                       <span style={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '12px', fontWeight: '500' }}>{skill.level}</span>
                     </div>
                     {/* Skill slider with blue fill */}
-                    <div style={{ position: 'relative', height: '6px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '3px' }}>
+                    <div 
+                      style={{ position: 'relative', height: '6px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '3px' }}
+                      onDragStart={(e) => e.preventDefault()}
+                      onDrag={(e) => e.preventDefault()}
+                    >
                       {/* Blue fill up to thumb position */}
                       <div style={{
                         position: 'absolute',
@@ -1577,10 +1685,56 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                       max="100"
                       value={skill.level}
                       onChange={(e) => updateSkillLevel(index, parseInt(e.target.value))}
-                        onPointerDown={(e) => e.stopPropagation()}
-                        onMouseDown={(e) => e.stopPropagation()}
-                        onTouchStart={(e) => e.stopPropagation()}
-                        className="w-full appearance-none cursor-pointer"
+                      onPointerDown={(e) => {
+                        e.stopPropagation();
+                        // Prevent section drag when interacting with slider
+                        const sectionWrapper = e.currentTarget.closest('[draggable="true"]');
+                        if (sectionWrapper) {
+                          (sectionWrapper as HTMLElement).draggable = false;
+                        }
+                      }}
+                      onPointerUp={(e) => {
+                        // Re-enable section drag after slider interaction
+                        const sectionWrapper = e.currentTarget.closest('[draggable="true"]');
+                        if (sectionWrapper && canEdit) {
+                          (sectionWrapper as HTMLElement).draggable = true;
+                        }
+                      }}
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        // Prevent section drag when interacting with slider
+                        const sectionWrapper = e.currentTarget.closest('[draggable="true"]');
+                        if (sectionWrapper) {
+                          (sectionWrapper as HTMLElement).draggable = false;
+                        }
+                      }}
+                      onMouseUp={(e) => {
+                        // Re-enable section drag after slider interaction
+                        const sectionWrapper = e.currentTarget.closest('[draggable="true"]');
+                        if (sectionWrapper && canEdit) {
+                          (sectionWrapper as HTMLElement).draggable = true;
+                        }
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation();
+                        // Prevent section drag when interacting with slider
+                        const sectionWrapper = e.currentTarget.closest('[draggable="true"]');
+                        if (sectionWrapper) {
+                          (sectionWrapper as HTMLElement).draggable = false;
+                        }
+                      }}
+                      onTouchEnd={(e) => {
+                        // Re-enable section drag after slider interaction
+                        const sectionWrapper = e.currentTarget.closest('[draggable="true"]');
+                        if (sectionWrapper && canEdit) {
+                          (sectionWrapper as HTMLElement).draggable = true;
+                        }
+                      }}
+                      onDragStart={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      className="w-full appearance-none cursor-pointer"
                       style={{
                           position: 'absolute',
                           top: 0,
@@ -1599,7 +1753,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
             )}
 
               {/* Add Skill Input - Unified block (Picture 2 style) - max 5 skills */}
-            {skills.length < 5 && (
+            {skillsToShow.length < 5 && (
               <div
                 className="skill-unified-wrapper"
                 style={{
@@ -1665,7 +1819,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
             )}
 
               {/* Add Card placeholder if no skills - Dashed style */}
-              {skills.length === 0 && (
+              {skillsToShow.length === 0 && (
               <button
                 onClick={() => {
                   const input = document.querySelector('.skill-unified-wrapper input') as HTMLInputElement;
@@ -1728,23 +1882,37 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                 ))}
               </div>
             ) : (
-                // Skeleton progress bars for empty skills - iOS style
-                <div 
-                  style={{
-                    padding: 'var(--space-4)',
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    borderRadius: '12px',
-                    maxWidth: '336px',
-                    margin: '0 auto',
-                  }}
-                >
-                  {/* Three skeleton skill bars with text left, number right, bar below */}
-                  <SkeletonProgressBar labelWidth="55%" percent={85} />
-                  <SkeletonProgressBar labelWidth="45%" percent={70} />
-                  <SkeletonProgressBar labelWidth="60%" percent={55} />
-                  
-                  <CustomizeHint text="to show your superpowers" isOwnProfile={isOwnProfile} />
-                    </div>
+                // Empty state for view mode
+                !isOwnProfile ? (
+                  <div 
+                    style={{
+                      padding: 'var(--space-4)',
+                      textAlign: 'center',
+                      color: 'rgba(255, 255, 255, 0.4)',
+                      fontSize: '13px',
+                    }}
+                  >
+                    User has not provided info yet
+                  </div>
+                ) : (
+                  // Skeleton progress bars for empty skills - iOS style (only for own profile)
+                  <div 
+                    style={{
+                      padding: 'var(--space-4)',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      borderRadius: '12px',
+                      maxWidth: '336px',
+                      margin: '0 auto',
+                    }}
+                  >
+                    {/* Three skeleton skill bars with text left, number right, bar below */}
+                    <SkeletonProgressBar labelWidth="55%" percent={85} />
+                    <SkeletonProgressBar labelWidth="45%" percent={70} />
+                    <SkeletonProgressBar labelWidth="60%" percent={55} />
+                    
+                    <CustomizeHint text="to show your superpowers" isOwnProfile={isOwnProfile} />
+                  </div>
+                )
         )}
             </div>
           )}

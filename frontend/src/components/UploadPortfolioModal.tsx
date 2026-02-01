@@ -29,7 +29,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   
   // Attachment states
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
-  const [attachmentType, setAttachmentType] = useState<'audio' | 'pdf' | 'photo' | null>(null);
+  const [attachmentType, setAttachmentType] = useState<'audio' | 'pdf' | null>(null);
   const [attachmentSwipeX, setAttachmentSwipeX] = useState(0);
   const [attachmentStartX, setAttachmentStartX] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -37,7 +37,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   const [isRemovingAttachment, setIsRemovingAttachment] = useState(false);
   const [existingAttachmentUrl, setExistingAttachmentUrl] = useState<string>('');
   const [showPdfPopup, setShowPdfPopup] = useState(false);
-  const [showPhotoPopup, setShowPhotoPopup] = useState(false);
   
   // Drag & drop state
   const [isDragging, setIsDragging] = useState(false);
@@ -238,7 +237,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   // - Media (photo/video) → All attachments allowed
   const canAddAudioAttachment = selectedContentType === 'text' || selectedContentType === 'media' || selectedContentType === 'pdf';
   const canAddPdfAttachment = selectedContentType === 'text' || selectedContentType === 'media' || selectedContentType === 'audio';
-  const canAddPhotoAttachment = selectedContentType === 'text' || selectedContentType === 'media';
 
   // Sync state when initialContentType changes
   useEffect(() => {
@@ -362,7 +360,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     setExistingAttachmentUrl('');
     setAttachmentBlobUrl('');
     setShowPdfPopup(false);
-    setShowPhotoPopup(false);
     setDescription('');
     setUploading(false);
     setUploadProgress(0);
@@ -506,30 +503,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
     e.target.value = '';
   };
 
-  const handlePhotoAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
-
-    if (!selectedFile.type.startsWith('image/')) {
-      toast.error('Please select an image file');
-      e.target.value = ''; // Reset input
-      return;
-    }
-
-    if (selectedFile.size > 10 * 1024 * 1024) {
-      toast.error('Image must be under 10MB');
-      e.target.value = ''; // Reset input
-      return;
-    }
-
-    setAttachmentFile(selectedFile);
-    setAttachmentType('photo');
-    setAttachmentFileName(selectedFile.name.replace(/\.[^/.]+$/, ''));
-    toast.success('Photo attachment added');
-    
-    // Reset input value to allow re-selecting the same file
-    e.target.value = '';
-  };
 
   const removeAttachment = () => {
     // Smooth fade + slide out animation
@@ -914,7 +887,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
         className={`bottom-slider-content ${isVisible ? 'entering' : 'exiting'}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Upload overlay - continuous spinner with spring-animated percentage */}
+        {/* Upload overlay - simple spinner */}
         {uploading && (
           <div 
             className="absolute inset-0 z-20 flex flex-col items-center justify-center"
@@ -923,122 +896,14 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               borderRadius: '16px',
             }}
           >
-            <div className="relative" style={{ width: '80px', height: '80px' }}>
-              {/* Outer spinning ring - always rotates */}
-              <svg 
-                viewBox="0 0 80 80" 
-                style={{
-                  position: 'absolute',
-                  width: '100%',
-                  height: '100%',
-                  animation: 'spinContinuous 1.2s linear infinite'
-                }}
-              >
-                <defs>
-                  <linearGradient id="spinnerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#00C2FF" stopOpacity="1"/>
-                    <stop offset="100%" stopColor="#00C2FF" stopOpacity="0"/>
-                  </linearGradient>
-                </defs>
-                <circle 
-                  cx="40" 
-                  cy="40" 
-                  r="35" 
-                  fill="none" 
-                  stroke="url(#spinnerGradient)"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  strokeDasharray="180 220"
-                />
-              </svg>
-              
-              {/* Progress arc - fills based on progress */}
-              <svg 
-                viewBox="0 0 80 80" 
-                style={{ 
-                  position: 'absolute',
-                  width: '100%',
-                  height: '100%',
-                  transform: 'rotate(-90deg)'
-                }}
-              >
-                <circle 
-                  cx="40" 
-                  cy="40" 
-                  r="30" 
-                  fill="none" 
-                  stroke="rgba(255, 255, 255, 0.06)"
-                  strokeWidth="3"
-                />
-                <circle 
-                  cx="40" 
-                  cy="40" 
-                  r="30" 
-                  fill="none" 
-                  stroke="#00C2FF"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeDasharray={`${(Math.round(displayProgress) / 100) * 188.5} 188.5`}
-                  style={{ transition: 'stroke-dasharray 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
-                />
-              </svg>
-              
-              {/* Center content */}
-              <div style={{
-                position: 'absolute',
-                inset: '15px',
-                borderRadius: '50%',
-                background: 'rgba(20, 20, 20, 1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                {displayProgress >= 85 ? (
-                  <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" style={{ animation: 'pulse 1.5s ease-in-out infinite' }}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
-                  </svg>
-                ) : null}
-              </div>
-            </div>
-            
-            {/* Animated percentage with spring effect */}
-            <p 
-              className="mt-5 text-white/80 text-2xl font-semibold"
+            {/* Simple spinning spinner */}
+            <div 
+              className="animate-spin rounded-full border-4 border-transparent border-t-[#00C2FF]"
               style={{ 
-                fontVariantNumeric: 'tabular-nums',
-                transition: 'transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                width: '48px', 
+                height: '48px'
               }}
-            >
-              {Math.round(displayProgress)}%
-            </p>
-            <p 
-              className="mt-2 text-white/40 text-sm"
-            >
-              {displayProgress < 20 ? 'Starting upload...' : 
-               displayProgress < 40 ? 'Uploading file...' :
-               displayProgress < 60 ? 'Processing media...' :
-               displayProgress < 75 ? 'Compressing for quality...' :
-               displayProgress < 85 ? 'Optimizing storage...' :
-               displayProgress < 95 ? 'Almost there...' :
-               'Wrapping up...'}
-            </p>
-            {displayProgress >= 85 && (
-              <p className="mt-1 text-white/30 text-xs">
-                This may take a moment for larger files
-              </p>
-            )}
-            
-            {/* CSS Animations */}
-            <style jsx>{`
-              @keyframes spinContinuous {
-                from { transform: rotate(0deg); }
-                to { transform: rotate(360deg); }
-              }
-              @keyframes pulse {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.4; }
-              }
-            `}</style>
+            />
           </div>
         )}
 
@@ -1251,7 +1116,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                                     )}
                                   </button>
                                   <p className="text-[13px] font-medium">{file?.name?.replace(/\.[^/.]+$/, '')}</p>
-                                  <p className="text-[11px] mt-1 opacity-60">{(file.size / (1024 * 1024)).toFixed(1)} MB</p>
                                   {/* Hidden audio element for preview */}
                                   {file && (
                                     <audio
@@ -1475,21 +1339,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                         onTouchEnd={handleSwipeEnd}
                         onClick={() => attachmentSwipeX > 0 && setAttachmentSwipeX(0)}
                       >
-                        {/* Album art / icon / photo thumbnail - cleaner style */}
-                        {attachmentType === 'photo' ? (
-                          <img 
-                            src={attachmentBlobUrl || existingAttachmentUrl}
-                            alt="Photo attachment"
-                            className="flex-shrink-0"
-                            style={{
-                              width: '36px',
-                              height: '36px',
-                              borderRadius: '6px',
-                              objectFit: 'cover',
-                              border: '1px solid rgba(255,255,255,0.1)',
-                            }}
-                          />
-                        ) : (
+                        {/* Album art / icon - cleaner style */}
                         <div 
                           className="flex items-center justify-center flex-shrink-0"
                           style={{
@@ -1510,7 +1360,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                             </svg>
                           )}
                         </div>
-                        )}
                         
                         {/* File name - Apple focus glow on wrapper like caption */}
                         <div 
@@ -1614,32 +1463,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           </button>
                         )}
 
-                        {/* View button for Photo - opens in popup */}
-                        {attachmentType === 'photo' && (
-                          <button
-                            onClick={(e) => { 
-                              e.stopPropagation(); 
-                              setShowPhotoPopup(true);
-                            }}
-                            className="flex items-center justify-center"
-                            style={{
-                              width: '35px',
-                              height: '35px',
-                              minWidth: '35px',
-                              minHeight: '35px',
-                              maxWidth: '35px',
-                              maxHeight: '35px',
-                              background: 'rgba(255, 255, 255, 0.12)',
-                              borderRadius: '50%',
-                              flexShrink: 0,
-                            }}
-                          >
-                            <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="white" strokeWidth={2} viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                          </button>
-                        )}
                       </div>
                     </div>
                   )}
@@ -1745,28 +1568,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                 
                 {/* Right: Attachment icons (always visible, disabled when not applicable) */}
                   <div className="flex items-center" style={{ gap: '25px' }}>
-                  {/* Photo attachment - only enabled for media posts */}
-                  <input
-                    type="file"
-                    id="photo-attachment-sticky"
-                    accept="image/*"
-                    onChange={handlePhotoAttachment}
-                    className="hidden"
-                    disabled={uploading || !canAddPhotoAttachment || !!attachmentType}
-                  />
-                  <label
-                    htmlFor={canAddPhotoAttachment && !attachmentType ? "photo-attachment-sticky" : undefined}
-                    className="transition"
-                    style={{ 
-                      opacity: (!canAddPhotoAttachment || !!attachmentType) ? 0.3 : 1,
-                      cursor: (canAddPhotoAttachment && !attachmentType) ? 'pointer' : 'default'
-                    }}
-                  >
-                    <svg className="w-[18px] h-[18px]" fill="none" stroke={attachmentType === 'photo' ? '#00C2FF' : 'currentColor'} strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                    </svg>
-                  </label>
-
                   {/* Audio attachment - only enabled for media posts */}
                     <input
                       type="file"
@@ -1904,99 +1705,6 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
         </div>
       )}
 
-      {/* Photo Preview Popup */}
-      {showPhotoPopup && attachmentType === 'photo' && (attachmentFile || existingAttachmentUrl) && (
-        <div 
-          onClick={(e) => {
-            e.stopPropagation();
-            // Clicking backdrop closes Photo popup only, not parent modal
-            setShowPhotoPopup(false);
-          }}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.95)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            zIndex: 60,
-            display: 'flex',
-            flexDirection: 'column',
-            animation: 'fadeIn 0.2s ease-out',
-          }}
-        >
-          {/* Header */}
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              padding: '16px 20px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-            }}
-          >
-            <h3 style={{ 
-              color: '#fff', 
-              fontSize: '17px', 
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-            }}>
-              <svg className="w-5 h-5" fill="none" stroke="#00C2FF" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-              </svg>
-              {attachmentFileName || 'Photo'}
-            </h3>
-            <button
-              onClick={() => setShowPhotoPopup(false)}
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                background: 'rgba(255, 255, 255, 0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'background 0.2s',
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="#fff" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Photo Viewer */}
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            style={{ 
-              flex: 1, 
-              overflow: 'hidden', 
-              padding: '20px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <img
-              src={attachmentBlobUrl || existingAttachmentUrl}
-              alt="Photo preview"
-              style={{
-                maxWidth: '100%',
-                maxHeight: '100%',
-                objectFit: 'contain',
-                borderRadius: '12px',
-              }}
-            />
-          </div>
-        </div>
-      )}
     </>
   );
 }

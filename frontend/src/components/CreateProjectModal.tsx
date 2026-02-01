@@ -1080,43 +1080,14 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
               backdropFilter: 'blur(10px)'
             }}
           >
-            {/* Circular progress */}
+            {/* Simple spinning spinner */}
             <div 
-              className="relative"
-              style={{ width: '80px', height: '80px' }}
-            >
-              <svg className="w-full h-full transform -rotate-90">
-                <circle
-                  cx="40"
-                  cy="40"
-                  r="36"
-                  fill="none"
-                  stroke="rgba(255, 255, 255, 0.1)"
-                  strokeWidth="4"
-                />
-                <circle
-                  cx="40"
-                  cy="40"
-                  r="36"
-                  fill="none"
-                  stroke="#00C2FF"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  strokeDasharray={`${2 * Math.PI * 36}`}
-                  strokeDashoffset={`${2 * Math.PI * 36 * (1 - uploadProgress / 100)}`}
-                  style={{ transition: 'stroke-dashoffset 0.3s ease-out' }}
-                />
-              </svg>
-              <div 
-                className="absolute inset-0 flex items-center justify-center"
-                style={{ fontSize: '18px', fontWeight: '600', color: '#FFFFFF' }}
-              >
-                {uploadProgress}%
-              </div>
-            </div>
-            <p style={{ marginTop: '16px', fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>
-              {uploadingCover ? 'Uploading cover...' : 'Creating project...'}
-            </p>
+              className="animate-spin rounded-full border-4 border-transparent border-t-[#00C2FF]"
+              style={{ 
+                width: '48px', 
+                height: '48px'
+              }}
+            />
           </div>
         )}
 
