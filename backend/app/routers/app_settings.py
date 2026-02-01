@@ -31,6 +31,10 @@ class ChangePasswordRequest(BaseModel):
     new_password: str
 
 
+class ChangeUsernameRequest(BaseModel):
+    new_username: str
+
+
 class Enable2FAResponse(BaseModel):
     secret: str
     qr_code: str  # Base64 encoded QR code
@@ -184,6 +188,53 @@ async def change_password(
     session.commit()
     
     return {"message": "Password updated successfully"}
+
+
+@router.post("/account/change-username")
+async def change_username(
+    request: ChangeUsernameRequest,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    """Change user username."""
+    import re
+    
+    # Validate username format (alphanumeric, underscore, 3-20 chars)
+    if not re.match(r'^[a-zA-Z0-9_]{3,20}$', request.new_username):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username must be 3-20 characters and contain only letters, numbers, and underscores"
+        )
+    
+    # Check if username is already taken by another user
+    existing_username = session.exec(
+        select(User).where(
+            (User.username == request.new_username.lower()) & (User.id != current_user.id)
+        )
+    ).first()
+    if existing_username:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already taken"
+        )
+    
+    # Check if username is the same as current
+    if current_user.username.lower() == request.new_username.lower():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New username must be different from current username"
+        )
+    
+    # Update username
+    current_user.username = request.new_username.lower()
+    session.add(current_user)
+    session.commit()
+    session.refresh(current_user)
+    
+    return {
+        "message": "Username updated successfully",
+        "username": current_user.username
+    }
 
 
 # ============= 2FA Routes =============

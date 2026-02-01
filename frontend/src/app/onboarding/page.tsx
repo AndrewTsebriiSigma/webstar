@@ -181,10 +181,34 @@ export default function OnboardingPage() {
       
       if (data.features) {
         setLocationSuggestions(
-          data.features.map((feature: any) => ({
-            place_name: feature.place_name,
-            id: feature.id
-          }))
+          data.features.map((feature: any) => {
+            // Extract city and country from context
+            const context = feature.context || [];
+            let city = '';
+            let country = '';
+            
+            // Find city (place) and country from context
+            context.forEach((ctx: any) => {
+              if (ctx.id?.startsWith('place')) {
+                city = ctx.text;
+              } else if (ctx.id?.startsWith('country')) {
+                country = ctx.text;
+              }
+            });
+            
+            // If no city found, use the feature text as city
+            if (!city && feature.text) {
+              city = feature.text;
+            }
+            
+            // Format as "City, Country" or just city if no country
+            const formattedLocation = country ? `${city}, ${country}` : city;
+            
+            return {
+              place_name: formattedLocation,
+              id: feature.id
+            };
+          })
         );
         setShowLocationDropdown(true);
       }

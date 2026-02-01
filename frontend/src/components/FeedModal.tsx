@@ -489,6 +489,7 @@ function FeedPostContent({
             style={{
               width: '100%',
               maxHeight: '65vh',
+              aspectRatio: '4 / 5',
               borderRadius: '12px',
               overflow: 'hidden',
               marginBottom: '12px',
@@ -507,8 +508,10 @@ function FeedPostContent({
                 alt={post.title || 'Post'}
                 style={{
                   width: '100%',
+                  height: '100%',
                   maxHeight: '65vh',
-                  objectFit: 'contain'
+                  objectFit: 'cover',
+                  aspectRatio: '4 / 5'
                 }}
               />
             ) : post.content_type === 'video' && post.content_url ? (
@@ -524,8 +527,9 @@ function FeedPostContent({
                   onClick={handleVideoClick}
                   style={{
                     width: '100%',
+                    height: '100%',
                     maxHeight: '65vh',
-                    objectFit: 'contain',
+                    objectFit: 'cover',
                     cursor: 'pointer'
                   }}
                 />
@@ -556,7 +560,7 @@ function FeedPostContent({
                     </svg>
                   </div>
                 )}
-                {/* Button container for sound and mini-player */}
+                {/* Button container for sound and mini-player - Fixed positioning to stay visible */}
                 <div style={{
                   position: 'absolute',
                   bottom: '16px',
@@ -565,9 +569,8 @@ function FeedPostContent({
                   gap: '8px',
                   zIndex: 10
                 }}>
-                  {/* Sound Toggle Button - only visible when this track is playing in mini-player */}
-                  {isCurrentlyPlaying && (
-                    <button
+                  {/* Sound Toggle Button - always visible for videos */}
+                  <button
                       onClick={handleSoundToggle}
                       style={{
                         width: '44px',
@@ -603,7 +606,6 @@ function FeedPostContent({
                         </svg>
                       )}
                     </button>
-                  )}
 
                   {/* Mini-Player Button - Opens audio in mini-player */}
                   {onPlayInMiniPlayer && (
@@ -661,8 +663,13 @@ function FeedPostContent({
               position: 'relative'
             }}
           >
-            {/* Audio Visual Display - No inline audio element, uses mini-player */}
+            {/* Audio Visual Display - Clickable to load in mini-player */}
             <div 
+              onClick={() => {
+                if (onAudioClick) {
+                  onAudioClick(post);
+                }
+              }}
               style={{
                 width: '100%',
                 aspectRatio: '4 / 5',
@@ -677,7 +684,20 @@ function FeedPostContent({
                 gap: '24px',
                 position: 'relative',
                 overflow: 'hidden',
-                transition: 'all 180ms cubic-bezier(0.25, 0.8, 0.25, 1)'
+                transition: 'all 180ms cubic-bezier(0.25, 0.8, 0.25, 1)',
+                cursor: onAudioClick ? 'pointer' : 'default'
+              }}
+              onMouseEnter={(e) => {
+                if (onAudioClick) {
+                  e.currentTarget.style.transform = 'scale(1.02)';
+                  e.currentTarget.style.borderColor = 'rgba(10, 132, 255, 0.4)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (onAudioClick) {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.borderColor = 'rgba(10, 132, 255, 0.25)';
+                }
               }}
             >
               {/* Background Equalizer Pattern */}
@@ -802,10 +822,13 @@ function FeedPostContent({
                   )}
                 </button>
 
-                {/* Add to Player Button */}
-                {onPlayInMiniPlayer && (
+                {/* Add to Player Button - For audio posts */}
+                {onAudioClick && (
                   <button
-                    onClick={handleMiniPlayerClick}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAudioClick(post);
+                    }}
                     style={{
                       width: '44px',
                       height: '44px',
@@ -872,13 +895,14 @@ function FeedPostContent({
           </div>
         );
       
-      case 'pdf':
+      case 'pdf': {
         const pdfUrl = post.content_url && post.content_url.startsWith('http') 
           ? post.content_url 
           : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${post.content_url}`;
         return (
           <>
             <div 
+              onClick={() => setShowPdfModal(true)}
               style={{
                 padding: '48px',
                 borderRadius: 'var(--radius-lg)',
@@ -887,7 +911,17 @@ function FeedPostContent({
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                marginBottom: '16px'
+                marginBottom: '16px',
+                cursor: 'pointer',
+                transition: 'all 150ms'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                e.currentTarget.style.transform = 'scale(1.01)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                e.currentTarget.style.transform = 'scale(1)';
               }}
             >
               <div 
@@ -912,31 +946,17 @@ function FeedPostContent({
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <button
-                onClick={() => setShowPdfModal(true)}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '20px',
-                  background: '#00C2FF',
-                  color: '#000000',
-                  fontWeight: 600,
-                  fontSize: '14px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 150ms',
-                  opacity: post.content_url ? 1 : 0.5
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#33D1FF';
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#00C2FF';
-                  e.currentTarget.style.transform = 'scale(1)';
-                }}
-              >
+              <div style={{
+                padding: '12px 24px',
+                borderRadius: '20px',
+                background: '#00C2FF',
+                color: '#000000',
+                fontWeight: 600,
+                fontSize: '14px',
+                opacity: post.content_url ? 1 : 0.5
+              }}>
                 View Document
-              </button>
+              </div>
             </div>
             
             {/* PDF Preview Modal */}
@@ -1012,7 +1032,7 @@ function FeedPostContent({
                   onClick={(e) => e.stopPropagation()}
                   style={{ 
                     flex: 1, 
-                    overflow: platform === 'desktop' ? 'auto' : 'hidden', 
+                    overflow: 'hidden',
                     padding: '20px',
                     display: 'flex',
                     flexDirection: 'column',
@@ -1020,102 +1040,37 @@ function FeedPostContent({
                     justifyContent: 'center'
                   }}
                 >
-                  {platform === 'ios' || platform === 'android' ? (
-                    // Mobile: Use native PDF viewer
-                    <div style={{
-                      width: '100%',
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '20px',
-                      padding: '40px 20px'
-                    }}>
-                      <div style={{
-                        width: '80px',
-                        height: '80px',
-                        borderRadius: '50%',
-                        background: 'rgba(0, 194, 255, 0.15)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginBottom: '10px'
-                      }}>
-                        <svg className="w-10 h-10" fill="none" stroke="#00C2FF" strokeWidth={2} viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                        </svg>
-                      </div>
-                      <p style={{
-                        fontSize: '16px',
-                        fontWeight: 600,
-                        color: '#FFFFFF',
-                        textAlign: 'center',
-                        marginBottom: '8px'
-                      }}>
-                        {post.title || 'PDF Document'}
-                      </p>
-                      <p style={{
-                        fontSize: '14px',
-                        color: 'rgba(255, 255, 255, 0.6)',
-                        textAlign: 'center',
-                        marginBottom: '24px'
-                      }}>
-                        Tap to open in {platform === 'ios' ? 'Safari' : 'Chrome'} viewer
-                      </p>
-                      <a
-                        href={pdfUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          padding: '14px 32px',
-                          borderRadius: '20px',
-                          background: '#00C2FF',
-                          color: '#000000',
-                          fontWeight: 600,
-                          fontSize: '15px',
-                          textDecoration: 'none',
-                          display: 'inline-block',
-                          transition: 'all 150ms',
-                          cursor: 'pointer'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = '#33D1FF';
-                          e.currentTarget.style.transform = 'scale(1.05)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = '#00C2FF';
-                          e.currentTarget.style.transform = 'scale(1)';
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Open in native viewer - will navigate away, but that's expected for native viewers
-                        }}
-                      >
-                        Open PDF
-                      </a>
-                    </div>
-                  ) : (
-                    // Desktop: Use scrollable iframe
-                  <iframe
-                      src={`${pdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
+                  {/* Desktop: Use scrollable iframe with hidden scrollbar */}
+                  <div 
                     style={{
                       width: '100%',
                       height: '100%',
-                        minHeight: '600px',
-                      border: 'none',
+                      overflow: 'auto',
                       borderRadius: '12px',
-                      background: '#FFFFFF',
+                      scrollbarWidth: 'none',
+                      msOverflowStyle: 'none'
                     }}
-                    title="PDF Document"
-                  />
-                  )}
+                    className="pdf-viewer-container"
+                  >
+                    <iframe
+                      src={pdfUrl ? `${pdfUrl}#toolbar=1&navpanes=1&scrollbar=0` : ''}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        minHeight: '600px',
+                        border: 'none',
+                        borderRadius: '12px',
+                        background: '#FFFFFF',
+                      }}
+                      title="PDF Document"
+                    />
+                  </div>
                 </div>
               </div>
             )}
           </>
         );
-      
+      }
       default:
         return null;
     }
@@ -1432,7 +1387,8 @@ function FeedPostContent({
                       style={{
                         maxWidth: '100%',
                         maxHeight: '100%',
-                        objectFit: 'contain',
+                        objectFit: 'cover',
+                        aspectRatio: '4 / 5',
                         borderRadius: '12px'
                       }}
                     />

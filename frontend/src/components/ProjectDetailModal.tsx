@@ -28,6 +28,7 @@ export default function ProjectDetailModal({
   const [isClosing, setIsClosing] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingMediaId, setDeletingMediaId] = useState<number | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   
   // Preview states
@@ -521,6 +522,60 @@ export default function ProjectDetailModal({
                       e.currentTarget.style.transform = 'scale(1)';
                     }}
                   >
+                    {/* Delete button for owner */}
+                    {isOwnProfile && (
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (media.id && confirm('Delete this media item?')) {
+                            setDeletingMediaId(media.id);
+                            try {
+                              await projectsAPI.deleteProjectMedia(project!.id, media.id);
+                              setProjectMedia(prev => prev.filter(m => m.id !== media.id));
+                              toast.success('Media item deleted');
+                            } catch (error) {
+                              console.error('Failed to delete media:', error);
+                              toast.error('Failed to delete media item');
+                            } finally {
+                              setDeletingMediaId(null);
+                            }
+                          }
+                        }}
+                        disabled={deletingMediaId === media.id}
+                        style={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          width: '28px',
+                          height: '28px',
+                          borderRadius: '50%',
+                          background: 'rgba(255, 59, 48, 0.9)',
+                          border: 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          zIndex: 10,
+                          transition: 'all 0.15s ease',
+                          opacity: deletingMediaId === media.id ? 0.5 : 1
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'scale(1.1)';
+                          e.currentTarget.style.background = 'rgba(255, 59, 48, 1)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)';
+                          e.currentTarget.style.background = 'rgba(255, 59, 48, 0.9)';
+                        }}
+                        title="Delete media"
+                      >
+                        {deletingMediaId === media.id ? (
+                          <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <XMarkIcon className="w-4 h-4 text-white" />
+                        )}
+                      </button>
+                    )}
                     {/* PHOTO */}
                     {media.media_type === 'photo' && media.media_url && (
                       <img

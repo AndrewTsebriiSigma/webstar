@@ -104,6 +104,22 @@ interface Quiz {
   questions: QuizQuestion[];
 }
 
+interface QuizResultDetail {
+  id: number;
+  quiz_id: number;
+  quiz_title: string;
+  total_score: number;
+  result_summary: string | null;
+  created_at: string;
+  answers: Array<{
+    question_id: number;
+    question_text: string;
+    answer_id: number;
+    answer_text: string;
+    score_value: number;
+  }>;
+}
+
 export default function QuizPage() {
   const router = useRouter();
   const { user } = useAuth();
@@ -114,6 +130,10 @@ export default function QuizPage() {
   const [submitting, setSubmitting] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
   const [error, setError] = useState('');
+  const [hasCompletedQuiz, setHasCompletedQuiz] = useState(false);
+  const [showResultsModal, setShowResultsModal] = useState(false);
+  const [quizResult, setQuizResult] = useState<QuizResultDetail | null>(null);
+  const [loadingResult, setLoadingResult] = useState(false);
 
   // Generate session ID for anonymous users
   const [sessionId] = useState(() => {
@@ -132,6 +152,12 @@ export default function QuizPage() {
     loadQuiz();
   }, []);
 
+  useEffect(() => {
+    if (quiz && user) {
+      checkQuizCompletion();
+    }
+  }, [quiz, user]);
+
   const loadQuiz = async () => {
     try {
       const response = await quizAPI.getQuiz('discover-hidden-skills');
@@ -141,6 +167,36 @@ export default function QuizPage() {
       console.error('Failed to load quiz:', err);
       setError('Failed to load quiz. Please try again.');
       setLoading(false);
+    }
+  };
+
+  const checkQuizCompletion = async () => {
+    if (!user || !quiz) return;
+    
+    try {
+      const response = await quizAPI.getResults();
+      const results = response.data;
+      const quizResult = results.find((r: any) => r.quiz_id === quiz.id);
+      setHasCompletedQuiz(!!quizResult);
+    } catch (err: any) {
+      console.error('Failed to check quiz completion:', err);
+    }
+  };
+
+  const handleViewQuiz = async () => {
+    if (!quiz || !user) return;
+    
+    setLoadingResult(true);
+    setShowResultsModal(true);
+    
+    try {
+      const response = await quizAPI.getResultDetail(quiz.id);
+      setQuizResult(response.data);
+    } catch (err: any) {
+      console.error('Failed to load quiz results:', err);
+      setError('Failed to load quiz results. Please try again.');
+    } finally {
+      setLoadingResult(false);
     }
   };
 
@@ -196,6 +252,8 @@ export default function QuizPage() {
       }
 
       setShowCompletion(true);
+      // Refresh quiz completion status
+      await checkQuizCompletion();
     } catch (err: any) {
       console.error('Failed to submit quiz:', err);
       setError('Failed to submit quiz. Please try again.');
@@ -309,11 +367,234 @@ export default function QuizPage() {
   const selectedAnswer = answers[question.id];
 
   return (
-    <div 
-      className="min-h-screen min-h-screen-safe flex flex-col items-center px-4 sm:px-6 py-6 sm:py-8 relative overflow-hidden"
-      style={{ background: 'radial-gradient(ellipse at center, #0B0B0C 0%, #050506 100%)' }}
-    >
-      <FloatingOrbs />
+    <>
+      {/* Quiz Results Modal */}
+      {showResultsModal && (
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowResultsModal(false);
+            }
+          }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 1000,
+            background: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(20px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '672px',
+              maxHeight: '90vh',
+              background: 'rgba(22, 22, 24, 0.95)',
+              backdropFilter: 'blur(20px)',
+              borderRadius: '24px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            {/* Header */}
+            <div
+              style={{
+                padding: '20px 24px',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: '20px',
+                  fontWeight: 600,
+                  color: '#FFFFFF',
+                }}
+              >
+                {loadingResult ? 'Loading Results...' : quizResult?.quiz_title || 'Quiz Results'}
+              </h2>
+              <button
+                onClick={() => setShowResultsModal(false)}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#FFFFFF',
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div
+              style={{
+                flex: 1,
+                overflowY: 'auto',
+                padding: '24px',
+              }}
+            >
+              {loadingResult ? (
+                <div style={{ textAlign: 'center', padding: '40px' }}>
+                  <div
+                    className="animate-spin rounded-full border-4 border-transparent border-t-[#00C2FF]"
+                    style={{ width: '48px', height: '48px', margin: '0 auto' }}
+                  />
+                </div>
+              ) : quizResult ? (
+                <>
+                  {/* Summary */}
+                  <div
+                    style={{
+                      padding: '20px',
+                      borderRadius: '16px',
+                      background: 'rgba(0, 194, 255, 0.1)',
+                      border: '1px solid rgba(0, 194, 255, 0.2)',
+                      marginBottom: '24px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: '32px',
+                        fontWeight: 700,
+                        color: '#00C2FF',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      Score: {quizResult.total_score}
+                    </div>
+                    {quizResult.result_summary && (
+                      <p
+                        style={{
+                          fontSize: '14px',
+                          lineHeight: '1.6',
+                          color: 'rgba(255, 255, 255, 0.8)',
+                          marginTop: '12px',
+                        }}
+                      >
+                        {quizResult.result_summary}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Answers */}
+                  <div style={{ marginTop: '24px' }}>
+                    <h3
+                      style={{
+                        fontSize: '16px',
+                        fontWeight: 600,
+                        color: '#FFFFFF',
+                        marginBottom: '16px',
+                      }}
+                    >
+                      Your Answers
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      {quizResult.answers.map((answer, index) => (
+                        <div
+                          key={answer.question_id}
+                          style={{
+                            padding: '16px',
+                            borderRadius: '12px',
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              color: 'rgba(255, 255, 255, 0.5)',
+                              marginBottom: '8px',
+                            }}
+                          >
+                            Question {index + 1}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: '15px',
+                              fontWeight: 500,
+                              color: '#FFFFFF',
+                              marginBottom: '12px',
+                            }}
+                          >
+                            {answer.question_text}
+                          </div>
+                          <div
+                            style={{
+                              padding: '12px',
+                              borderRadius: '8px',
+                              background: 'rgba(0, 194, 255, 0.1)',
+                              border: '1px solid rgba(0, 194, 255, 0.2)',
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: '14px',
+                                color: '#00C2FF',
+                                marginBottom: '4px',
+                              }}
+                            >
+                              Your Answer:
+                            </div>
+                            <div
+                              style={{
+                                fontSize: '14px',
+                                color: 'rgba(255, 255, 255, 0.9)',
+                              }}
+                            >
+                              {answer.answer_text}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: '12px',
+                                color: 'rgba(255, 255, 255, 0.5)',
+                                marginTop: '8px',
+                              }}
+                            >
+                              Points: {answer.score_value}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '40px', color: 'rgba(255, 255, 255, 0.6)' }}>
+                  No results found
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div 
+        className="min-h-screen min-h-screen-safe flex flex-col items-center px-4 sm:px-6 py-6 sm:py-8 relative overflow-hidden"
+        style={{ background: 'radial-gradient(ellipse at center, #0B0B0C 0%, #050506 100%)' }}
+      >
+        <FloatingOrbs />
 
       {/* Progress Bar */}
       <div className="w-full max-w-md mb-8 relative z-10">
@@ -338,6 +619,23 @@ export default function QuizPage() {
           />
         </div>
       </div>
+
+      {/* View Quiz Button (if completed) */}
+      {hasCompletedQuiz && user && (
+        <div className="w-full max-w-md relative z-10 mb-4">
+          <button
+            onClick={handleViewQuiz}
+            className="w-full py-3 px-4 rounded-xl text-sm font-semibold transition-all hover:scale-[1.02]"
+            style={{
+              background: 'rgba(0, 194, 255, 0.15)',
+              color: '#00C2FF',
+              border: '1px solid rgba(0, 194, 255, 0.3)',
+            }}
+          >
+            View Quiz Results
+          </button>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="w-full max-w-md relative z-10 flex-1 flex flex-col">
@@ -425,6 +723,7 @@ export default function QuizPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

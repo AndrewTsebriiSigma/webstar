@@ -212,13 +212,13 @@ export default function AnalyticsPage() {
     });
   };
 
-  const handleGraphClick = (e: React.MouseEvent<SVGSVGElement>, type: 'views' | 'clicks') => {
+  const handleGraphHover = (e: React.MouseEvent<SVGSVGElement>, type: 'views' | 'clicks') => {
     e.stopPropagation();
     const graphRef = type === 'views' ? viewsGraphRef : clicksGraphRef;
     if (!graphRef.current || dailyData.length === 0) return;
     
     const rect = graphRef.current.getBoundingClientRect();
-    const clickX = ((e.clientX - rect.left) / rect.width) * GRAPH_WIDTH;
+    const hoverX = ((e.clientX - rect.left) / rect.width) * GRAPH_WIDTH;
     const graphData = prepareGraphData(type);
     
     if (graphData.length === 0) return;
@@ -228,7 +228,7 @@ export default function AnalyticsPage() {
     let minDistance = Infinity;
     
     graphData.forEach((point, i) => {
-      const distance = Math.abs(clickX - point.x);
+      const distance = Math.abs(hoverX - point.x);
       if (distance < minDistance) {
         minDistance = distance;
         nearestIndex = i;
@@ -434,7 +434,8 @@ export default function AnalyticsPage() {
         viewBox={`0 0 ${GRAPH_WIDTH} ${GRAPH_HEIGHT}`}
         preserveAspectRatio="xMidYMid meet"
       ref={graphRef} 
-      onClick={(e) => handleGraphClick(e, type)}
+      onMouseMove={(e) => handleGraphHover(e, type)}
+      onMouseLeave={clearTooltip}
         style={{ 
           cursor: 'pointer', 
           width: '100%', 
@@ -494,7 +495,7 @@ export default function AnalyticsPage() {
               r="12"
               fill="transparent"
               style={{ cursor: 'pointer', pointerEvents: 'all' }}
-                onClick={(e) => {
+                onMouseEnter={(e) => {
                 e.stopPropagation();
                 const data = dailyData[i];
                 setActiveGraph(type);

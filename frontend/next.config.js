@@ -1,14 +1,26 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Reduce file watching overhead
-  webpack: (config, { isServer }) => {
+  // Disable source maps completely to avoid permission issues
+  productionBrowserSourceMaps: false,
+  // Reduce file watching overhead and fix permission issues
+  webpack: (config, { isServer, dev }) => {
     if (!isServer) {
+      // Use polling instead of native file watching to avoid EMFILE errors
       config.watchOptions = {
-        poll: 1000,
-        aggregateTimeout: 300,
-        ignored: ['**/node_modules', '**/.git', '**/.next'],
+        poll: 2000,
+        aggregateTimeout: 500,
+        ignored: ['**/node_modules/**', '**/.git/**', '**/.next/**'],
       };
+      
+      // Disable source maps in development to avoid permission issues
+      if (dev) {
+        // Don't set devtool to false - Next.js will override it, but we can reduce file watching
+        config.optimization = {
+          ...config.optimization,
+          minimize: false,
+        };
+      }
     }
     return config;
   },
