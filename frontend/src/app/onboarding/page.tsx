@@ -21,9 +21,10 @@ const POPULAR_ROLES = [
 
 // Get expertise label based on slider value (0-100)
 const getExpertiseLabel = (value: number): string => {
-  if (value < 33) return 'Emerging';
-  if (value < 67) return 'Developing';
-  return 'Established';
+  if (value < 25) return 'Beginner';
+  if (value < 50) return 'Intermediate';
+  if (value < 75) return 'Advanced';
+  return 'Maestro';
 };
 
 // Progress Bar - with 3 stepping stone checkpoints
@@ -144,7 +145,6 @@ export default function OnboardingPage() {
   // Focus states for inputs
   const [nameFocused, setNameFocused] = useState(false);
   const [roleFocused, setRoleFocused] = useState(false);
-  const [headlineFocused, setHeadlineFocused] = useState(false);
   const [locationFocused, setLocationFocused] = useState(false);
   const [usernameFocused, setUsernameFocused] = useState(false);
   
@@ -155,8 +155,8 @@ export default function OnboardingPage() {
   
   const MAPBOX_TOKEN = 'pk.eyJ1Ijoid2Vic3RhcnVzZXIiLCJhIjoiY21rNmF2NDluMDFzaDNlcG5tOHVzN2xsMCJ9.VZVvRWxM2wScW3M1D299fQ';
 
-  // Total steps: Talent(1) → Name(2) → Location(3) → Role+Expertise(4) → Description(5) → Username(6)
-  const TOTAL_STEPS = 6;
+  // Total steps: Talent(1) → Name(2) → Location(3) → Role+Expertise(4) → Username(5)
+  const TOTAL_STEPS = 5;
 
   // Finale lines
   const finaleLines = [
@@ -348,7 +348,6 @@ export default function OnboardingPage() {
     const showName = step >= 2;       // Show from step 2+ (placeholder or real)
     const showLocation = step >= 3;   // Show from step 3+ (placeholder or real)
     const showRole = step >= 4;       // Show from step 4+ (placeholder or real)
-    const showHeadline = step >= 5 && formData.headline;  // Only show when filled
     
     return (
       <div 
@@ -395,23 +394,6 @@ export default function OnboardingPage() {
             {formData.fullName || 'Your Name'}
           </h2>
         )}
-        
-        {/* Headline/Bio - only shows when filled */}
-        {showHeadline && (
-          <p 
-            className="text-center px-2"
-            style={{ 
-              color: 'rgba(255, 255, 255, 0.75)',
-              fontSize: '15px',
-              lineHeight: '1.4',
-              opacity: 0.9,
-              marginBottom: '8px',
-              maxWidth: '280px'
-            }}
-          >
-            {formData.headline}
-            </p>
-          )}
         
         {/* Location + Role - shows placeholders when empty to signal purpose */}
         {(showLocation || showRole) && (
@@ -616,14 +598,14 @@ export default function OnboardingPage() {
             <>
               <div className="text-center mb-6">
                 <h2 className="text-2xl font-bold" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
-                  What should we call you?
+                  What's your name?
                 </h2>
               </div>
 
               <InputWrapper focused={nameFocused}>
                 <input
                   type="text"
-                  placeholder="Your name"
+                  placeholder="Jack Sandman"
                   value={formData.fullName}
                   onChange={(e) => {
                     if (e.target.value.length <= 30) {
@@ -664,7 +646,7 @@ export default function OnboardingPage() {
             <>
               <div className="text-center mb-6">
                 <h2 className="text-2xl font-bold" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
-                  Working from where?
+                  What's your current location?
                 </h2>
               </div>
 
@@ -817,9 +799,10 @@ export default function OnboardingPage() {
                     animation: 'slideIn 0.3s ease-out'
                   }}
                 >
-                  <p className="text-sm text-center mb-4" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                    New to this or years deep?
-                  </p>
+                  <div className="flex justify-between text-xs mb-2 px-1" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                    <span>Beginner</span>
+                    <span>Maestro</span>
+                  </div>
                   
                   <div className="px-2 relative">
                 <input
@@ -878,70 +861,12 @@ export default function OnboardingPage() {
             </>
           )}
 
-          {/* Step 5: Headline - clean, no examples */}
+          {/* Step 5: Username */}
           {step === 5 && (
             <>
               <div className="text-center mb-6">
                 <h2 className="text-2xl font-bold" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
-                  What will they remember?
-                </h2>
-              </div>
-
-              <InputWrapper focused={headlineFocused}>
-                <div className="relative">
-                  <textarea
-                    placeholder="Your one-liner..."
-                    value={formData.headline}
-                  onChange={(e) => {
-                      if (e.target.value.length <= 70) {
-                        setFormData(prev => ({ ...prev, headline: e.target.value }));
-                      }
-                    }}
-                    onFocus={() => setHeadlineFocused(true)}
-                    onBlur={() => setHeadlineFocused(false)}
-                    className="w-full px-5 py-4 text-lg resize-none"
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                      color: 'rgba(255, 255, 255, 0.95)',
-                      minHeight: '80px',
-                      textAlign: 'left'
-                  }}
-                  autoFocus
-                    maxLength={70}
-                    rows={2}
-                  />
-                  {/* Character count INSIDE the frame */}
-                  <span 
-                    className="absolute bottom-2 right-3 text-xs"
-                    style={{ color: 'rgba(255, 255, 255, 0.3)' }}
-                  >
-                    {formData.headline.length}/70
-                        </span>
-                  </div>
-              </InputWrapper>
-
-                <button
-                  onClick={() => setStep(6)}
-                className="w-full mt-4 py-4 font-semibold rounded-xl transition"
-                  style={{
-                    background: 'linear-gradient(135deg, #00C2FF 0%, #0099CC 100%)',
-                    color: '#FFF',
-                    border: 'none'
-                  }}
-                >
-                  Continue
-                </button>
-            </>
-          )}
-
-          {/* Step 6: Username */}
-          {step === 6 && (
-            <>
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
-                  Claim your space.
+                  Pick your link
                 </h2>
               </div>
 

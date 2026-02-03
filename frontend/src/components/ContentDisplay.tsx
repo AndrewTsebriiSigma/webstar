@@ -114,20 +114,7 @@ function PhotoDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => 
         position: 'relative',
         overflow: 'hidden',
         cursor: onClick ? 'pointer' : 'default',
-        background: 'rgba(255, 255, 255, 0.03)',
-        transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)'
-      }}
-      onMouseEnter={(e) => {
-        if (onClick) {
-          e.currentTarget.style.transform = 'translateY(-4px)';
-          e.currentTarget.style.boxShadow = '0 12px 48px rgba(0, 0, 0, 0.3)';
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (onClick) {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = 'none';
-        }
+        background: 'rgba(255, 255, 255, 0.03)'
       }}
     >
       <img
@@ -186,16 +173,7 @@ function AudioDisplayCompact({
         gap: '16px',
         position: 'relative',
         overflow: 'hidden',
-        cursor: 'pointer',
-        transition: 'all 180ms cubic-bezier(0.25, 0.8, 0.25, 1)'
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-4px)';
-        e.currentTarget.style.boxShadow = '0 12px 32px rgba(10, 132, 255, 0.2)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = 'none';
+        cursor: 'pointer'
       }}
     >
       {/* Animated Equalizer Bars - Always visible */}
@@ -592,19 +570,10 @@ function TextDisplayCompact({ item, onClick }: { item: PortfolioItem; onClick?: 
         justifyContent: 'center',
         gap: '8px',
         cursor: 'pointer',
-        transition: 'all 180ms cubic-bezier(0.25, 0.8, 0.25, 1)',
         position: 'relative',
         overflow: 'hidden',
         boxSizing: 'border-box',
         minHeight: '100%'
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-4px)';
-        e.currentTarget.style.boxShadow = '0 18px 40px rgba(10, 132, 255, 0.15)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = 'none';
       }}
     >
       {/* Decorative gradient orb - FIXED sizing */}
@@ -689,21 +658,8 @@ function TextDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => v
         flexDirection: 'column',
         justifyContent: 'center',
         cursor: onClick ? 'pointer' : 'default',
-        transition: 'all 180ms cubic-bezier(0.25, 0.8, 0.25, 1)',
         position: 'relative',
         overflow: 'hidden'
-      }}
-      onMouseEnter={(e) => {
-        if (onClick) {
-          e.currentTarget.style.transform = 'translateY(-4px)';
-          e.currentTarget.style.boxShadow = '0 18px 40px rgba(10, 132, 255, 0.15)';
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (onClick) {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = 'none';
-        }
       }}
     >
       {/* Decorative gradient orb */}
@@ -772,21 +728,8 @@ function PDFDisplay({ item, onClick }: { item: PortfolioItem; onClick?: () => vo
         justifyContent: 'center',
         gap: '12px',
         cursor: onClick ? 'pointer' : 'default',
-        transition: 'all 180ms cubic-bezier(0.25, 0.8, 0.25, 1)',
         position: 'relative',
         overflow: 'hidden'
-      }}
-      onMouseEnter={(e) => {
-        if (onClick) {
-          e.currentTarget.style.transform = 'translateY(-4px)';
-          e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 194, 255, 0.2)';
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (onClick) {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = 'none';
-        }
       }}
     >
       {/* PDF Icon */}

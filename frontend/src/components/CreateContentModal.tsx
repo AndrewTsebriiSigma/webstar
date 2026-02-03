@@ -8,7 +8,7 @@ interface CreateContentModalProps {
   onSelectPost: (type?: 'media' | 'audio' | 'pdf' | 'text') => void;
   onSelectProject: () => void;
   navHeightReduction?: number;
-  defaultPostExpanded?: boolean; // Skip Post/Project selection, go directly to post types
+  defaultPostExpanded?: boolean;
 }
 
 export default function CreateContentModal({
@@ -24,24 +24,20 @@ export default function CreateContentModal({
   const [isVisible, setIsVisible] = useState(false);
   const [selectedPostType, setSelectedPostType] = useState<'media' | 'audio' | 'pdf' | 'text' | null>(null);
 
-  // Entrance animation + reset postExpanded based on prop
   useEffect(() => {
     if (isOpen) {
       setPostExpanded(defaultPostExpanded);
-      setSelectedPostType(null); // Reset selection when modal opens
-      // Small delay for entrance animation
+      setSelectedPostType(null);
       requestAnimationFrame(() => setIsVisible(true));
     } else {
       setIsVisible(false);
       setIsClosing(false);
-      setSelectedPostType(null); // Reset selection when modal closes
+      setPostExpanded(false);
+      setSelectedPostType(null);
     }
   }, [isOpen, defaultPostExpanded]);
 
   if (!isOpen && !isClosing) return null;
-
-  const navHeight = 54 - (10 * navHeightReduction);
-  const dropdownTop = navHeight + 6;
 
   const postTypes = [
     { 
@@ -97,11 +93,7 @@ export default function CreateContentModal({
       setPostExpanded(false);
       setIsClosing(false);
       onClose();
-    }, 150); // Match animation duration
-  };
-
-  const handlePostClick = () => {
-    setPostExpanded(true);
+    }, 150);
   };
 
   const handleTypeSelect = (type: 'media' | 'audio' | 'pdf' | 'text') => {
@@ -112,97 +104,169 @@ export default function CreateContentModal({
       onSelectPost(type);
       setPostExpanded(false);
       setIsClosing(false);
-      setSelectedPostType(null); // Reset after closing
+      setSelectedPostType(null);
       onClose();
     }, 150);
   };
 
-  const handleCollapse = () => {
-    setPostExpanded(false);
+  const handleProjectSelect = () => {
+    setIsClosing(true);
+    setIsVisible(false);
+    setTimeout(() => {
+      onSelectProject();
+      setPostExpanded(false);
+      setIsClosing(false);
+      onClose();
+    }, 150);
   };
 
   return (
     <div 
       className="fixed inset-0 z-50"
       style={{ 
-        background: 'rgba(0, 0, 0, 0.3)',
+        background: 'rgba(0, 0, 0, 0.4)',
         opacity: isVisible ? 1 : 0,
         transition: 'opacity 0.15s ease-out'
       }}
       onClick={handleClose}
     >
       <div 
-        className={`create-content-dropdown ${isVisible ? 'entering' : 'exiting'}`}
         style={{
-          top: `${dropdownTop}px`,
-          background: 'rgba(18, 18, 18, 0.95)',
-          backdropFilter: 'blur(24px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+          position: 'fixed',
+          bottom: isVisible ? '85px' : '65px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 'calc(100% - 40px)',
+          maxWidth: '320px',
+          background: 'rgba(22, 22, 22, 0.88)',
+          backdropFilter: 'blur(40px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '16px',
           overflow: 'hidden',
-          opacity: isVisible ? 1 : 0
+          opacity: isVisible ? 1 : 0,
+          transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+          boxShadow: '0 12px 32px rgba(0, 0, 0, 0.4)',
+          padding: '10px 14px'
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Post Section */}
-        <button
-          onClick={postExpanded ? handleCollapse : handlePostClick}
-          className="w-full transition-all duration-200 ease-out"
-          style={{ 
-            padding: postExpanded ? '3px 12px' : '12px',
-            background: 'transparent'
+        {/* Initial view: Full-size side by side (hidden when expanded) */}
+        <div 
+          className="grid grid-cols-2 gap-2 transition-all duration-200"
+          style={{
+            maxHeight: postExpanded ? '0' : '54px',
+            opacity: postExpanded ? 0 : 1,
+            overflow: 'hidden',
+            marginBottom: postExpanded ? '0' : '0'
           }}
         >
-          {postExpanded ? (
-            // Shrunk header - same size/color as original Post title
-            <div className="flex items-center justify-center">
-              <span className="text-[15px] font-semibold text-white">Post</span>
+          {/* Add Post */}
+          <button
+            onClick={() => setPostExpanded(true)}
+            className="flex items-center gap-2 px-2.5 py-2 rounded-[10px] transition-all duration-150"
+            style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+          >
+            <div 
+              className="w-8 h-8 rounded-[7px] flex items-center justify-center flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg, rgba(0, 80, 120, 0.8) 0%, rgba(0, 50, 80, 0.9) 100%)' }}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="#00C2FF" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 8.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v8.25A2.25 2.25 0 006 16.5h2.25m8.25-8.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-7.5A2.25 2.25 0 018.25 18v-1.5m8.25-8.25h-6a2.25 2.25 0 00-2.25 2.25v6" />
+              </svg>
             </div>
-          ) : (
-            // Original Post option - UNCHANGED
-            <div className="flex items-center gap-3">
-              <div 
-                className="flex items-center justify-center flex-shrink-0"
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  background: 'linear-gradient(135deg, rgba(0, 194, 255, 0.2) 0%, rgba(0, 122, 255, 0.2) 100%)',
-                  borderRadius: '10px'
-                }}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="#00C2FF" strokeWidth={1.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 8.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v8.25A2.25 2.25 0 006 16.5h2.25m8.25-8.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-7.5A2.25 2.25 0 018.25 18v-1.5m8.25-8.25h-6a2.25 2.25 0 00-2.25 2.25v6" />
-                </svg>
-              </div>
-              <div className="flex-1 text-left">
-                <h3 className="text-[15px] font-semibold text-white">Post</h3>
-                <p className="text-[13px]" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Share progress in your portfolio</p>
-              </div>
+            <span className="text-[13px] font-semibold text-white">Add Post</span>
+          </button>
+
+          {/* Add Project */}
+          <button
+            onClick={handleProjectSelect}
+            className="flex items-center gap-2 px-2.5 py-2 rounded-[10px] transition-all duration-150"
+            style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+          >
+            <div 
+              className="w-8 h-8 rounded-[7px] flex items-center justify-center flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.3) 0%, rgba(236, 72, 153, 0.3) 100%)' }}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="#A78BFA" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+              </svg>
             </div>
-          )}
-        </button>
+            <span className="text-[13px] font-semibold text-white">Add Project</span>
+          </button>
+        </div>
 
-        {/* Divider - Always visible */}
-        <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.06)', margin: '0 12px' }} />
+        {/* Expanded view: Compact header (shown when expanded) */}
+        <div 
+          className="grid grid-cols-2 gap-2 transition-all duration-200"
+          style={{
+            maxHeight: postExpanded ? '35px' : '0',
+            opacity: postExpanded ? 1 : 0,
+            overflow: 'hidden',
+            marginBottom: postExpanded ? '8px' : '0'
+          }}
+        >
+          {/* Add Post - compact */}
+          <button
+            onClick={() => setPostExpanded(false)}
+            className="flex items-center justify-center gap-1.5 py-1.5 rounded-[8px] transition-all duration-150"
+            style={{ 
+              background: 'rgba(0, 194, 255, 0.12)',
+              border: '1px solid rgba(0, 194, 255, 0.25)'
+            }}
+          >
+            <div 
+              className="w-5 h-5 rounded-[4px] flex items-center justify-center flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg, rgba(0, 80, 120, 0.8) 0%, rgba(0, 50, 80, 0.9) 100%)' }}
+            >
+              <svg className="w-3 h-3" fill="none" stroke="#00C2FF" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+            </div>
+            <span className="text-[12px] font-medium text-white whitespace-nowrap">Add Post</span>
+          </button>
 
-        {/* 4 Post Type Buttons - Slide up when expanded */}
+          {/* Add Project - compact */}
+          <button
+            onClick={handleProjectSelect}
+            className="flex items-center justify-center gap-1.5 py-1.5 rounded-[8px] transition-all duration-150"
+            style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+          >
+            <div 
+              className="w-5 h-5 rounded-[4px] flex items-center justify-center flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(236, 72, 153, 0.4) 100%)' }}
+            >
+              <svg className="w-3 h-3" fill="none" stroke="#A78BFA" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+            </div>
+            <span className="text-[12px] font-medium text-white whitespace-nowrap">Add Project</span>
+          </button>
+        </div>
+
+        {/* 4 Post Type Buttons - Appear BELOW when expanded */}
         <div 
           className="transition-all duration-200 ease-out overflow-hidden"
           style={{
-            maxHeight: postExpanded ? '100px' : '0',
+            maxHeight: postExpanded ? '90px' : '0',
             opacity: postExpanded ? 1 : 0,
-            padding: postExpanded ? '8px 12px' : '0 12px'
+            marginTop: postExpanded ? '8px' : '0'
           }}
         >
           <div className="grid grid-cols-4 gap-1">
             {postTypes.map((item) => {
               const isSelected = selectedPostType === item.type;
               return (
-              <button
-                key={item.type}
-                onClick={() => handleTypeSelect(item.type)}
-                className="flex flex-col items-center gap-1.5 p-1.5 rounded-[10px] transition-all duration-150"
+                <button
+                  key={item.type}
+                  onClick={() => handleTypeSelect(item.type)}
+                  className="flex flex-col items-center gap-1 p-1 rounded-[8px] transition-all duration-150"
                   style={{ 
                     background: isSelected ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
                     border: isSelected ? `1px solid ${item.color}40` : '1px solid transparent'
@@ -217,73 +281,27 @@ export default function CreateContentModal({
                       e.currentTarget.style.background = 'transparent';
                     }
                   }}
-              >
-                <div 
-                    className="w-12 h-12 rounded-[10px] flex items-center justify-center transition-all duration-150"
+                >
+                  <div 
+                    className="w-10 h-10 rounded-[8px] flex items-center justify-center transition-all duration-150"
                     style={{ 
-                      background: isSelected ? item.gradient : item.gradient,
+                      background: item.gradient,
                       transform: isSelected ? 'scale(1.05)' : 'scale(1)',
                       boxShadow: isSelected ? `0 4px 12px ${item.color}40` : 'none'
                     }}
-                >
-                  <span style={{ color: item.color }}>{item.icon}</span>
-                </div>
+                  >
+                    <span style={{ color: item.color }}>{item.icon}</span>
+                  </div>
                   <span 
-                    className="text-[12px] font-medium transition-colors duration-150"
-                    style={{ 
-                      color: isSelected ? item.color : '#FFFFFF'
-                    }}
+                    className="text-[11px] font-medium transition-colors duration-150"
+                    style={{ color: isSelected ? item.color : '#FFFFFF' }}
                   >
                     {item.label}
                   </span>
-              </button>
+                </button>
               );
             })}
           </div>
-        </div>
-
-        {/* Project Option - Fades out when expanded */}
-        <div
-          className="transition-all duration-200 ease-out overflow-hidden"
-          style={{
-            maxHeight: postExpanded ? '0' : '80px',
-            opacity: postExpanded ? 0 : 1
-          }}
-        >
-          <button
-            onClick={() => {
-              setIsClosing(true);
-              setIsVisible(false);
-              setTimeout(() => {
-                onSelectProject();
-                setPostExpanded(false);
-                setIsClosing(false);
-                onClose();
-              }, 150);
-            }}
-            className="w-full flex items-center gap-3 p-3 transition-colors"
-            style={{ background: 'transparent' }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-          >
-            <div 
-              className="flex items-center justify-center flex-shrink-0"
-              style={{
-                width: '44px',
-                height: '44px',
-                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%)',
-                borderRadius: '10px'
-              }}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="#A78BFA" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 10.5v6m3-3H9m4.06-7.19l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
-              </svg>
-            </div>
-            <div className="flex-1 text-left">
-              <h3 className="text-[15px] font-semibold text-white">Project</h3>
-              <p className="text-[13px]" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Curated collection of your work</p>
-            </div>
-          </button>
         </div>
       </div>
     </div>

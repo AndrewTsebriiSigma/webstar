@@ -177,7 +177,13 @@ const BottomSlider = ({
 };
 
 // Change Email Section Component - Redesigned to match profile page style
-export const ChangeEmailSection = ({ onBack }: { onBack: () => void }) => {
+export const ChangeEmailSection = ({ 
+  onBack,
+  onValidChange 
+}: { 
+  onBack: () => void;
+  onValidChange?: (isValid: boolean, submitFn: () => Promise<void>, label: string) => void;
+}) => {
   const [step, setStep] = useState<'request' | 'verify'>('request');
   const [newEmail, setNewEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -186,9 +192,8 @@ export const ChangeEmailSection = ({ onBack }: { onBack: () => void }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  const handleRequestChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newEmail || !password) return;
+  const handleRequestChange = async () => {
+    if (!newEmail || !password || loading) return;
 
     setLoading(true);
     setError('');
@@ -196,19 +201,18 @@ export const ChangeEmailSection = ({ onBack }: { onBack: () => void }) => {
     try {
       const response = await settingsAPI.requestEmailChange(newEmail, password);
       if (response.data) {
-        toast.success('Verification code sent to your new email!');
+        toast.success('Code sent!');
         setStep('verify');
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to request email change');
+      setError(err.response?.data?.detail || 'Failed to send code');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerifyChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!verificationCode) return;
+  const handleVerifyChange = async () => {
+    if (!verificationCode || loading) return;
 
     setLoading(true);
     setError('');
@@ -217,18 +221,32 @@ export const ChangeEmailSection = ({ onBack }: { onBack: () => void }) => {
       const response = await settingsAPI.verifyEmailChange(verificationCode);
       if (response.data) {
         setSuccess(true);
-        toast.success('Email updated successfully!');
+        toast.success('Email updated!');
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         user.email = response.data.new_email || newEmail;
         localStorage.setItem('user', JSON.stringify(user));
         setTimeout(() => onBack(), 1500);
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Invalid verification code');
+      setError(err.response?.data?.detail || 'Invalid code');
     } finally {
       setLoading(false);
     }
   };
+
+  // Notify parent of validity changes for header button
+  const isValidRequest = newEmail.length > 0 && password.length > 0 && !loading;
+  const isValidVerify = verificationCode.length === 6 && !loading;
+  
+  useEffect(() => {
+    if (onValidChange) {
+      if (step === 'request') {
+        onValidChange(isValidRequest, handleRequestChange, 'Next');
+      } else {
+        onValidChange(isValidVerify, handleVerifyChange, 'Confirm');
+      }
+    }
+  }, [step, isValidRequest, isValidVerify, newEmail, password, verificationCode]);
 
   if (success) {
     return (
@@ -239,8 +257,8 @@ export const ChangeEmailSection = ({ onBack }: { onBack: () => void }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px' }}>Email Updated!</h3>
-        <p style={{ color: 'rgba(255, 255, 255, 0.65)' }}>Your email has been changed successfully.</p>
+        <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px' }}>Done!</h3>
+        <p style={{ color: 'rgba(255, 255, 255, 0.65)' }}>Your email has been updated.</p>
       </div>
     );
   }
@@ -249,90 +267,59 @@ export const ChangeEmailSection = ({ onBack }: { onBack: () => void }) => {
   if (step === 'verify') {
     return (
       <div>
-        <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px' }}>Verify New Email</h3>
-        <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.65)', marginBottom: '20px' }}>
-          We sent a 6-digit code to <span style={{ color: '#00C2FF' }}>{newEmail}</span>
+        {/* Context */}
+        <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '20px' }}>
+          Enter the code sent to <span style={{ color: '#00C2FF' }}>{newEmail}</span>
         </p>
         
         {error && (
-          <div className="mb-4 p-3 rounded-xl text-sm"
-            style={{ background: 'rgba(255, 69, 58, 0.1)', color: '#FF453A', border: '1px solid rgba(255, 69, 58, 0.2)' }}
-          >
-            {error}
-          </div>
+          <p style={{ fontSize: '13px', color: '#FF453A', marginBottom: '12px' }}>{error}</p>
         )}
 
-        <form onSubmit={handleVerifyChange}>
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '13px', color: 'rgba(255, 255, 255, 0.65)', marginBottom: '6px' }}>
-              Verification Code
-            </label>
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.06)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '12px',
-              padding: '2px'
-            }}>
-            <input
-              type="text"
-              value={verificationCode}
-              onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              placeholder="000000"
-              maxLength={6}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                  background: 'transparent',
-                  border: 'none',
-                borderRadius: '12px',
-                  color: 'rgba(255, 255, 255, 0.95)',
-                fontSize: '24px',
-                fontWeight: 600,
-                letterSpacing: '8px',
-                textAlign: 'center',
-                outline: 'none'
-              }}
-              required
-            />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading || verificationCode.length !== 6}
+        {/* Code input - matching username style */}
+        <div style={{
+          background: 'transparent',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          borderRadius: '12px',
+          marginBottom: '16px'
+        }}>
+          <input
+            type="text"
+            value={verificationCode}
+            onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            placeholder="000000"
+            autoFocus
+            maxLength={6}
             style={{
               width: '100%',
-              padding: '14px',
-              background: loading || verificationCode.length !== 6 ? 'rgba(255, 255, 255, 0.1)' : '#00C2FF',
-              borderRadius: '12px',
-              color: '#FFFFFF',
-              fontSize: '15px',
-              fontWeight: 600,
-              border: 'none',
-              cursor: loading || verificationCode.length !== 6 ? 'not-allowed' : 'pointer',
-              transition: 'background 0.2s'
-            }}
-          >
-            {loading ? 'Verifying...' : 'Verify & Update Email'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => { setStep('request'); setError(''); setVerificationCode(''); }}
-            style={{
-              width: '100%',
-              padding: '12px',
+              padding: '14px 16px',
               background: 'transparent',
               border: 'none',
-              color: 'rgba(255, 255, 255, 0.65)',
-              fontSize: '14px',
-              cursor: 'pointer',
-              marginTop: '12px'
+              color: 'rgba(255, 255, 255, 0.95)',
+              fontSize: '20px',
+              fontWeight: 600,
+              letterSpacing: '8px',
+              textAlign: 'center',
+              outline: 'none'
             }}
-          >
-            Use a different email
-          </button>
-        </form>
+          />
+        </div>
+
+        {/* Change email link */}
+        <button
+          type="button"
+          onClick={() => { setStep('request'); setError(''); setVerificationCode(''); }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: '#00C2FF',
+            fontSize: '14px',
+            cursor: 'pointer',
+            padding: 0
+          }}
+        >
+          Change email address
+        </button>
       </div>
     );
   }
@@ -340,109 +327,75 @@ export const ChangeEmailSection = ({ onBack }: { onBack: () => void }) => {
   // Step 1: Request Email Change
   return (
     <div>
-      <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '16px' }}>Change Email</h3>
-      
       {error && (
-        <div className="mb-4 p-3 rounded-xl text-sm"
-          style={{ background: 'rgba(255, 69, 58, 0.1)', color: '#FF453A', border: '1px solid rgba(255, 69, 58, 0.2)' }}
-        >
-          {error}
-        </div>
+        <p style={{ fontSize: '13px', color: '#FF453A', marginBottom: '12px' }}>{error}</p>
       )}
 
-      <form onSubmit={handleRequestChange}>
-        <div style={{ marginBottom: '12px' }}>
-          <label style={{ display: 'block', fontSize: '13px', color: 'rgba(255, 255, 255, 0.65)', marginBottom: '6px' }}>
-            New Email
-          </label>
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.06)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '12px',
-            padding: '2px'
-          }}>
-          <input
-            type="email"
-            value={newEmail}
-            onChange={(e) => setNewEmail(e.target.value)}
-            placeholder="your@newemail.com"
-            style={{
-              width: '100%',
-              padding: '12px 14px',
-                background: 'transparent',
-                border: 'none',
-              borderRadius: '12px',
-                color: 'rgba(255, 255, 255, 0.95)',
-              fontSize: '15px',
-              outline: 'none'
-            }}
-            required
-          />
-          </div>
-        </div>
-
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', fontSize: '13px', color: 'rgba(255, 255, 255, 0.65)', marginBottom: '6px' }}>
-            Current Password
-          </label>
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.06)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '12px',
-            padding: '2px'
-          }}>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password to confirm"
-            style={{
-              width: '100%',
-              padding: '12px 14px',
-                background: 'transparent',
-                border: 'none',
-              borderRadius: '12px',
-                color: 'rgba(255, 255, 255, 0.95)',
-              fontSize: '15px',
-              outline: 'none'
-            }}
-            required
-          />
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading || !newEmail || !password}
+      {/* Email input - matching username style */}
+      <div style={{
+        background: 'transparent',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
+        borderRadius: '12px',
+        marginBottom: '12px'
+      }}>
+        <input
+          type="email"
+          value={newEmail}
+          onChange={(e) => setNewEmail(e.target.value)}
+          placeholder="New email address"
+          autoFocus
           style={{
             width: '100%',
-            padding: '14px',
-            background: loading || !newEmail || !password ? 'rgba(255, 255, 255, 0.1)' : '#00C2FF',
-            borderRadius: '12px',
-            color: '#FFFFFF',
-            fontSize: '15px',
-            fontWeight: 600,
+            padding: '14px 16px',
+            background: 'transparent',
             border: 'none',
-            cursor: loading || !newEmail || !password ? 'not-allowed' : 'pointer',
-            transition: 'background 0.2s'
+            color: 'rgba(255, 255, 255, 0.95)',
+            fontSize: '16px',
+            outline: 'none'
           }}
-        >
-          {loading ? 'Sending code...' : 'Send Verification Code'}
-        </button>
-        
-        <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)', marginTop: '12px', textAlign: 'center' }}>
-          A verification code will be sent to your new email address
-        </p>
-      </form>
+        />
+      </div>
+
+      {/* Password input - matching username style */}
+      <div style={{
+        background: 'transparent',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
+        borderRadius: '12px'
+      }}>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Current password"
+          style={{
+            width: '100%',
+            padding: '14px 16px',
+            background: 'transparent',
+            border: 'none',
+            color: 'rgba(255, 255, 255, 0.95)',
+            fontSize: '16px',
+            outline: 'none'
+          }}
+        />
+      </div>
     </div>
   );
 };
 
-// Change Username Section Component
-export const ChangeUsernameSection = ({ onBack }: { onBack: () => void }) => {
+// Change Username Section Component - Onboarding style with live preview
+export const ChangeUsernameSection = ({ 
+  onBack,
+  onSubmit,
+  onValidChange 
+}: { 
+  onBack: () => void;
+  onSubmit?: () => void;
+  onValidChange?: (isValid: boolean, submitFn: () => Promise<void>) => void;
+}) => {
   const { user, updateUser } = useAuth();
   const router = useRouter();
-  const [newUsername, setNewUsername] = useState('');
+  // Pre-fill with current username
+  const [newUsername, setNewUsername] = useState(user?.username || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -453,12 +406,14 @@ export const ChangeUsernameSection = ({ onBack }: { onBack: () => void }) => {
   useEffect(() => {
     if (!newUsername || newUsername.length < 3) {
       setIsAvailable(null);
+      setError('');
       return;
     }
 
+    // If same as current, no need to check - it's "available" (no change)
     if (newUsername.toLowerCase() === user?.username?.toLowerCase()) {
       setIsAvailable(null);
-      setError('New username must be different from current username');
+      setError('');
       return;
     }
 
@@ -468,14 +423,9 @@ export const ChangeUsernameSection = ({ onBack }: { onBack: () => void }) => {
       try {
         const response = await authAPI.checkUsername(newUsername);
         setIsAvailable(response.data.available);
-        if (!response.data.available) {
-          setError('Username is already taken');
-        } else {
-          setError('');
-        }
       } catch (err: any) {
         setIsAvailable(false);
-        setError(err.response?.data?.detail || 'Failed to check username availability');
+        setError(err.response?.data?.detail || 'Failed to check');
       } finally {
         setCheckingAvailability(false);
       }
@@ -485,23 +435,8 @@ export const ChangeUsernameSection = ({ onBack }: { onBack: () => void }) => {
     return () => clearTimeout(timeoutId);
   }, [newUsername, user?.username]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!newUsername.trim()) {
-      setError('Username is required');
-      return;
-    }
-
-    if (!/^[a-zA-Z0-9_]{3,20}$/.test(newUsername)) {
-      setError('Username must be 3-20 characters and contain only letters, numbers, and underscores');
-      return;
-    }
-
-    if (isAvailable === false) {
-      setError('Username is already taken');
-      return;
-    }
+  const handleSubmit = async () => {
+    if (!newUsername.trim() || isAvailable !== true || loading) return;
 
     setLoading(true);
     setError('');
@@ -510,27 +445,33 @@ export const ChangeUsernameSection = ({ onBack }: { onBack: () => void }) => {
       const response = await settingsAPI.changeUsername(newUsername);
       if (response.data) {
         setSuccess(true);
-        toast.success('Username updated successfully!');
+        toast.success('Username updated!');
         
-        // Update user in localStorage and context
         if (user) {
           const updatedUser = { ...user, username: response.data.username };
           updateUser(updatedUser);
           localStorage.setItem('user', JSON.stringify(updatedUser));
         }
         
-        // Redirect to new username profile after a delay
         setTimeout(() => {
           router.push(`/${response.data.username}`);
           onBack();
         }, 1500);
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to update username');
+      setError(err.response?.data?.detail || 'Failed to update');
     } finally {
       setLoading(false);
     }
   };
+
+  // Notify parent of validity changes for header "Done" button
+  const isValid = isAvailable === true && newUsername.length >= 3 && !checkingAvailability && !loading;
+  useEffect(() => {
+    if (onValidChange) {
+      onValidChange(isValid, handleSubmit);
+    }
+  }, [isValid, newUsername]);
 
   if (success) {
     return (
@@ -541,98 +482,118 @@ export const ChangeUsernameSection = ({ onBack }: { onBack: () => void }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px' }}>Username Updated!</h3>
-        <p style={{ color: 'rgba(255, 255, 255, 0.65)' }}>Your username has been changed successfully.</p>
+        <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px' }}>Done!</h3>
+        <p style={{ color: 'rgba(255, 255, 255, 0.65)' }}>Redirecting to your profile...</p>
       </div>
     );
   }
 
+  // Clean: just username input + live preview below
   return (
     <div>
-      <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px' }}>Change Username</h3>
-      <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.65)', marginBottom: '20px' }}>
-        Your current username is <span style={{ color: '#00C2FF' }}>@{user?.username}</span>
-      </p>
-      
-      {error && (
-        <div className="mb-4 p-3 rounded-xl text-sm"
-          style={{ background: 'rgba(255, 69, 58, 0.1)', color: '#FF453A', border: '1px solid rgba(255, 69, 58, 0.2)' }}
-        >
-          {error}
-        </div>
-      )}
-
-      {isAvailable === true && (
-        <div className="mb-4 p-3 rounded-xl text-sm"
-          style={{ background: 'rgba(52, 199, 89, 0.1)', color: '#34C759', border: '1px solid rgba(52, 199, 89, 0.2)' }}
-        >
-          Username is available
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', fontSize: '13px', color: 'rgba(255, 255, 255, 0.65)', marginBottom: '6px' }}>
-            New Username
-          </label>
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.06)',
-            border: isAvailable === true ? '1px solid rgba(52, 199, 89, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '12px',
-            padding: '2px'
-          }}>
-            <input
-              type="text"
-              value={newUsername}
-              onChange={(e) => {
-                const value = e.target.value.replace(/[^a-zA-Z0-9_]/g, '');
-                setNewUsername(value);
+      {/* Simple username input - pre-filled with current */}
+      <div style={{
+        background: 'transparent',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
+        borderRadius: '12px',
+        display: 'flex',
+        alignItems: 'center',
+        overflow: 'hidden'
+      }}>
+        {/* Input - pre-filled with current username */}
+        <input
+          type="text"
+          value={newUsername}
+          onChange={(e) => {
+            const value = e.target.value.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
+            if (value.length <= 15) {
+              setNewUsername(value);
+            }
+          }}
+          placeholder="username"
+          autoFocus
+          style={{
+            flex: 1,
+            padding: '14px 16px',
+            background: 'transparent',
+            border: 'none',
+            color: 'rgba(255, 255, 255, 0.95)',
+            fontSize: '16px',
+            outline: 'none'
+          }}
+          maxLength={15}
+        />
+        
+        {/* Inline status indicator */}
+        <div style={{ paddingRight: '12px', display: 'flex', alignItems: 'center' }}>
+          {checkingAvailability ? (
+            <div 
+              className="animate-spin rounded-full border-2 border-transparent"
+              style={{ 
+                width: '18px', 
+                height: '18px',
+                borderColor: '#00C2FF',
+                borderTopColor: 'transparent'
               }}
-              placeholder="Enter new username"
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                background: 'transparent',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'rgba(255, 255, 255, 0.95)',
-                fontSize: '15px',
-                outline: 'none'
-              }}
-              maxLength={20}
-              required
             />
-          </div>
-          <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)', marginTop: '6px' }}>
-            {checkingAvailability ? 'Checking availability...' : '3-20 characters, letters, numbers, and underscores only'}
+          ) : newUsername.length >= 3 && newUsername !== user?.username ? (
+            isAvailable === true ? (
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="#30D158">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            ) : isAvailable === false ? (
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="#FF453A">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            ) : null
+          ) : null}
+        </div>
+      </div>
+
+      {/* Live preview - shows the full URL as they type */}
+      {newUsername && (
+        <div style={{ 
+          marginTop: '16px',
+          padding: '12px 16px',
+          background: 'rgba(255, 255, 255, 0.03)',
+          borderRadius: '10px',
+          textAlign: 'center'
+        }}>
+          <p style={{ 
+            fontSize: '13px', 
+            color: 'rgba(255, 255, 255, 0.5)',
+            marginBottom: '4px'
+          }}>
+            Your profile link
+          </p>
+          <p style={{ 
+            fontSize: '15px', 
+            color: '#00C2FF',
+            fontWeight: 500
+          }}>
+            webstar.bio/{newUsername}
           </p>
         </div>
+      )}
 
-        <button
-          type="submit"
-          disabled={loading || !newUsername || isAvailable === false || checkingAvailability}
-          style={{
-            width: '100%',
-            padding: '14px',
-            background: loading || !newUsername || isAvailable === false || checkingAvailability ? 'rgba(255, 255, 255, 0.1)' : '#00C2FF',
-            borderRadius: '12px',
-            color: '#FFFFFF',
-            fontSize: '15px',
-            fontWeight: 600,
-            border: 'none',
-            cursor: loading || !newUsername || isAvailable === false || checkingAvailability ? 'not-allowed' : 'pointer',
-            transition: 'background 0.2s'
-          }}
-        >
-          {loading ? 'Updating...' : 'Update Username'}
-        </button>
-      </form>
+      {/* Error message */}
+      {error && (
+        <p style={{ fontSize: '13px', color: '#FF453A', marginTop: '12px', textAlign: 'center' }}>
+          {error}
+        </p>
+      )}
     </div>
   );
 };
 
-// Change Password Section Component - Redesigned to match profile page style
-export const ChangePasswordSection = ({ onBack }: { onBack: () => void }) => {
+// Change Password Section Component
+export const ChangePasswordSection = ({ 
+  onBack,
+  onValidChange 
+}: { 
+  onBack: () => void;
+  onValidChange?: (isValid: boolean, submitFn: () => Promise<void>) => void;
+}) => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -640,8 +601,8 @@ export const ChangePasswordSection = ({ onBack }: { onBack: () => void }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    if (loading) return;
     
     if (newPassword.length < 8) {
       setError('New password must be at least 8 characters');
@@ -660,7 +621,7 @@ export const ChangePasswordSection = ({ onBack }: { onBack: () => void }) => {
       const response = await settingsAPI.changePassword(currentPassword, newPassword);
       if (response.data) {
         setSuccess(true);
-        toast.success('Password updated successfully!');
+        toast.success('Password updated!');
         setTimeout(() => onBack(), 1500);
       }
     } catch (err: any) {
@@ -669,6 +630,15 @@ export const ChangePasswordSection = ({ onBack }: { onBack: () => void }) => {
       setLoading(false);
     }
   };
+
+  // Notify parent of validity changes for header button
+  const isValid = currentPassword.length > 0 && newPassword.length >= 8 && confirmPassword.length > 0 && newPassword === confirmPassword && !loading;
+  
+  useEffect(() => {
+    if (onValidChange) {
+      onValidChange(isValid, handleSubmit);
+    }
+  }, [isValid, currentPassword, newPassword, confirmPassword]);
 
   if (success) {
     return (
@@ -679,134 +649,118 @@ export const ChangePasswordSection = ({ onBack }: { onBack: () => void }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px' }}>Password Updated!</h3>
-        <p style={{ color: 'rgba(255, 255, 255, 0.65)' }}>Your password has been changed successfully.</p>
+        <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px' }}>Done!</h3>
+        <p style={{ color: 'rgba(255, 255, 255, 0.65)' }}>Your password has been updated.</p>
       </div>
     );
   }
 
   return (
     <div>
-      <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '16px' }}>Change Password</h3>
+      {/* Description */}
+      <p style={{ 
+        fontSize: '14px', 
+        color: 'rgba(255, 255, 255, 0.5)', 
+        lineHeight: 1.5,
+        marginBottom: '20px' 
+      }}>
+        Your password must be at least 8 characters.
+      </p>
       
       {error && (
-        <div className="mb-4 p-3 rounded-xl text-sm"
-          style={{ background: 'rgba(255, 69, 58, 0.1)', color: '#FF453A', border: '1px solid rgba(255, 69, 58, 0.2)' }}
-        >
-          {error}
-        </div>
+        <p style={{ fontSize: '13px', color: '#FF453A', marginBottom: '12px' }}>{error}</p>
       )}
 
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '12px' }}>
-          <label style={{ display: 'block', fontSize: '13px', color: 'rgba(255, 255, 255, 0.65)', marginBottom: '6px' }}>
-            Current Password
-          </label>
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.06)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '12px',
-            padding: '2px'
-          }}>
-          <input
-            type="password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            placeholder="Enter current password"
-            style={{
-              width: '100%',
-              padding: '12px 14px',
-                background: 'transparent',
-                border: 'none',
-              borderRadius: '12px',
-                color: 'rgba(255, 255, 255, 0.95)',
-              fontSize: '15px',
-              outline: 'none'
-            }}
-            required
-          />
-          </div>
-        </div>
-
-        <div style={{ marginBottom: '12px' }}>
-          <label style={{ display: 'block', fontSize: '13px', color: 'rgba(255, 255, 255, 0.65)', marginBottom: '6px' }}>
-            New Password
-          </label>
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.06)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '12px',
-            padding: '2px'
-          }}>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="At least 8 characters"
-            style={{
-              width: '100%',
-              padding: '12px 14px',
-                background: 'transparent',
-                border: 'none',
-              borderRadius: '12px',
-                color: 'rgba(255, 255, 255, 0.95)',
-              fontSize: '15px',
-              outline: 'none'
-            }}
-            required
-          />
-          </div>
-        </div>
-
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', fontSize: '13px', color: 'rgba(255, 255, 255, 0.65)', marginBottom: '6px' }}>
-            Confirm New Password
-          </label>
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.06)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '12px',
-            padding: '2px'
-          }}>
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Repeat new password"
-            style={{
-              width: '100%',
-              padding: '12px 14px',
-                background: 'transparent',
-                border: 'none',
-              borderRadius: '12px',
-                color: 'rgba(255, 255, 255, 0.95)',
-              fontSize: '15px',
-              outline: 'none'
-            }}
-            required
-          />
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading || !currentPassword || !newPassword || !confirmPassword}
+      {/* Current Password - matching username style */}
+      <div style={{
+        background: 'transparent',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
+        borderRadius: '12px',
+        marginBottom: '12px'
+      }}>
+        <input
+          type="password"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+          placeholder="Current password"
+          autoFocus
           style={{
             width: '100%',
-            padding: '14px',
-            background: loading || !currentPassword || !newPassword || !confirmPassword ? 'rgba(255, 255, 255, 0.1)' : '#00C2FF',
-            borderRadius: '12px',
-            color: '#FFFFFF',
-            fontSize: '15px',
-            fontWeight: 600,
+            padding: '14px 16px',
+            background: 'transparent',
             border: 'none',
-            cursor: loading || !currentPassword || !newPassword || !confirmPassword ? 'not-allowed' : 'pointer',
-            transition: 'background 0.2s'
+            color: 'rgba(255, 255, 255, 0.95)',
+            fontSize: '16px',
+            outline: 'none'
           }}
-        >
-          {loading ? 'Updating...' : 'Update Password'}
-        </button>
-      </form>
+        />
+      </div>
+
+      {/* New Password - matching username style */}
+      <div style={{
+        background: 'transparent',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
+        borderRadius: '12px',
+        marginBottom: '12px'
+      }}>
+        <input
+          type="password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          placeholder="New password"
+          style={{
+            width: '100%',
+            padding: '14px 16px',
+            background: 'transparent',
+            border: 'none',
+            color: 'rgba(255, 255, 255, 0.95)',
+            fontSize: '16px',
+            outline: 'none'
+          }}
+        />
+      </div>
+
+      {/* Confirm Password - matching username style */}
+      <div style={{
+        background: 'transparent',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
+        borderRadius: '12px',
+        marginBottom: '16px'
+      }}>
+        <input
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          placeholder="Confirm new password"
+          style={{
+            width: '100%',
+            padding: '14px 16px',
+            background: 'transparent',
+            border: 'none',
+            color: 'rgba(255, 255, 255, 0.95)',
+            fontSize: '16px',
+            outline: 'none'
+          }}
+        />
+      </div>
+
+      {/* Forgot password link */}
+      <button
+        type="button"
+        onClick={() => {
+          toast('Password reset feature coming soon', { icon: '🔐' });
+        }}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          color: '#00C2FF',
+          fontSize: '14px',
+          cursor: 'pointer',
+          padding: 0
+        }}
+      >
+        Forgot your password?
+      </button>
     </div>
   );
 };

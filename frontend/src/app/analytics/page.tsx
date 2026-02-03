@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { analyticsAPI, quizAPI } from '@/lib/api';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, UserIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -604,61 +604,7 @@ export default function AnalyticsPage() {
       }} />
       
       {/* Mobile-first responsive container */}
-      <div className="w-full mx-auto" style={{ maxWidth: '540px', position: 'relative', zIndex: 1 }}>
-        
-        {/* Header - matches profile page top-nav */}
-        <div className="px-4 sm:px-5" style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 40,
-          height: '55px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'rgba(18, 18, 18, 0.95)',
-          backdropFilter: 'blur(24px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-          borderBottom: '1px solid #2D2D2D',
-          transition: 'all 0.15s ease'
-        }}>
-          {/* Close button - absolute left */}
-          <button
-            onClick={(e) => { e.stopPropagation(); router.push(`/${user?.username || ''}`); }}
-            style={{
-              position: 'absolute',
-              left: '16px',
-              width: '32px',
-              height: '32px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'transparent',
-              border: 'none',
-              color: 'rgba(255, 255, 255, 0.6)',
-              cursor: 'pointer',
-              borderRadius: '8px',
-              transition: 'all 0.15s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-              e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
-            }}
-          >
-            <XMarkIcon style={{ width: '20px', height: '20px' }} />
-          </button>
-          <h1 style={{ 
-            fontSize: '17px', 
-            fontWeight: '600', 
-            margin: 0,
-            color: '#fff'
-          }}>
-            Dashboard
-          </h1>
-        </div>
+      <div className="w-full mx-auto" style={{ maxWidth: '540px', position: 'relative', zIndex: 1, paddingBottom: '100px' }}>
         
         {/* Content - mobile-first padding */}
         <div className="px-4 sm:px-5 py-4" style={{
@@ -1648,6 +1594,135 @@ export default function AnalyticsPage() {
             </div>
         </>
           )}
+
+      {/* Bottom fade gradient - content fades into menu */}
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '120px',
+          background: 'linear-gradient(to top, rgba(15, 15, 15, 0.95) 0%, rgba(15, 15, 15, 0.7) 40%, transparent 100%)',
+          pointerEvents: 'none',
+          zIndex: 999
+        }}
+      />
+
+      {/* Bottom Navigation Bar - Identical to Profile Page */}
+      <div
+        style={{
+          position: 'fixed',
+          bottom: '24px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '110px',
+          padding: '6px 32px',
+          background: 'rgba(30, 30, 34, 0.65)',
+          backdropFilter: 'blur(40px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+          borderRadius: '18px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+          zIndex: 1000
+        }}
+      >
+        {/* Profile Button */}
+        <button
+          onClick={() => router.push(`/${user?.username || ''}`)}
+          style={{
+            width: '34px',
+            height: '34px',
+            borderRadius: '50%',
+            background: 'transparent',
+            border: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(0, 194, 255, 0.15)';
+            const icon = e.currentTarget.querySelector('svg');
+            if (icon) (icon as SVGElement).style.color = '#00C2FF';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            const icon = e.currentTarget.querySelector('svg');
+            if (icon) (icon as SVGElement).style.color = 'rgba(255, 255, 255, 0.65)';
+          }}
+        >
+          <UserIcon style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.65)', transition: 'color 0.15s ease' }} />
+        </button>
+
+        {/* Dashboard Button - ACTIVE (blue) */}
+        <button
+          style={{
+            width: '34px',
+            height: '34px',
+            borderRadius: '50%',
+            background: 'transparent',
+            border: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'default'
+          }}
+        >
+          <ChartBarIcon style={{ width: '20px', height: '20px', color: '#00C2FF' }} />
+        </button>
+      </div>
+
+      {/* CREATE Button - Always centered, same as Profile Page */}
+      <button
+        onClick={() => router.push(`/${user?.username || ''}?create=true`)}
+        style={{
+          position: 'fixed',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '58px',
+          height: '54px',
+          borderRadius: '16px',
+          background: 'linear-gradient(135deg, #00C2FF 0%, #00A8E8 50%, #0090D0 100%)',
+          border: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          transition: 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+          boxShadow: '0 4px 18px rgba(0, 194, 255, 0.25), 0 0 28px rgba(0, 194, 255, 0.12)',
+          zIndex: 1001
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateX(-50%) scale(1.05)';
+          e.currentTarget.style.boxShadow = '0 6px 28px rgba(0, 194, 255, 0.4), 0 0 40px rgba(0, 194, 255, 0.22)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
+          e.currentTarget.style.boxShadow = '0 4px 18px rgba(0, 194, 255, 0.25), 0 0 28px rgba(0, 194, 255, 0.12)';
+        }}
+        onMouseDown={(e) => {
+          e.currentTarget.style.transform = 'translateX(-50%) scale(0.95)';
+        }}
+        onMouseUp={(e) => {
+          e.currentTarget.style.transform = 'translateX(-50%) scale(1.05)';
+        }}
+      >
+        <img 
+          src="/webstar-logo.png" 
+          alt="Create" 
+          style={{ 
+            width: '32px', 
+            height: '32px', 
+            filter: 'brightness(0) invert(1) drop-shadow(0 0 16px rgba(255, 255, 255, 1)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.8))'
+          }} 
+        />
+      </button>
     </div>
   );
 }

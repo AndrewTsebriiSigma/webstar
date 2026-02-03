@@ -40,7 +40,10 @@ import {
   EllipsisHorizontalIcon,
   ClipboardIcon,
   CurrencyDollarIcon,
-  LinkIcon as LinkChainIcon
+  LinkIcon as LinkChainIcon,
+  Bars3Icon,
+  UserIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 import { BellIcon as BellSolidIcon, CheckBadgeIcon } from '@heroicons/react/24/solid';
 
@@ -1013,13 +1016,13 @@ export default function ProfilePage({ params }: { params: { username: string } }
             transform: `translateY(-${navPushUp}px)`
           }}
         >
-          {/* Post - Left */}
+          {/* Settings Menu - Left */}
             {isOwnProfile ? (
               <button 
-                onClick={() => setShowCreateContentModal(true)}
+                onClick={() => router.push('/settings')}
               className="nav-btn"
               >
-              <PlusIcon 
+              <Bars3Icon 
                 className="text-white" 
                 style={{ 
                   width: `${22 - (3 * heightReduction)}px`, 
@@ -1274,12 +1277,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
               >
                 <EyeIcon className="w-[20px] h-[20px]" />
               </button>
-              {/* Hide settings gear icon in viewer mode */}
+              {/* Copy Link button - Hide in viewer mode */}
               {!viewerMode && (
               <button 
                   onClick={(e) => {
                     e.stopPropagation();
-                    router.push('/settings');
+                    const url = `${window.location.origin}/${username}`;
+                    navigator.clipboard.writeText(url);
+                    toast.success('Link copied!');
                   }}
                   className="banner-action-btn flex items-center justify-center"
                 style={{ 
@@ -1296,9 +1301,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
                 onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                title="Settings"
+                title="Copy profile link"
               >
-                  <Cog6ToothIcon className="w-[20px] h-[20px]" />
+                  <LinkChainIcon className="w-[17px] h-[17px]" />
               </button>
               )}
             </div>
@@ -1758,14 +1763,16 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 e.stopPropagation();
                 router.push('/subscribe');
               }}
+              className="action-button"
               style={{
-                width: '40px',
+                width: '55px',
                 height: '40px',
-                borderRadius: '50%',
-                background: 'rgba(255, 255, 255, 0.06)',
+                borderRadius: '20px',
+                background: '#2A2A2A',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                border: '1px solid #414141',
+                color: '#707070',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1775,53 +1782,33 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 padding: 0
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.color = '#f5f5f5';
+                const svg = e.currentTarget.querySelector('svg');
+                if (svg) (svg as SVGElement).style.opacity = '0.95';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.background = '#2A2A2A';
+                e.currentTarget.style.borderColor = '#414141';
+                e.currentTarget.style.color = '#707070';
+                const svg = e.currentTarget.querySelector('svg');
+                if (svg) (svg as SVGElement).style.opacity = '0.44';
+              }}
+              onMouseDown={(e) => {
+                e.currentTarget.style.transform = 'scale(0.94)';
+              }}
+              onMouseUp={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
               }}
               title="Monetization"
             >
-              <CurrencyDollarIcon style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.7)' }} />
-            </button>
-
-            {/* Copy Link Button */}
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                const url = `${window.location.origin}/${username}`;
-                navigator.clipboard.writeText(url);
-                toast.success('Link copied to clipboard!');
-              }}
-              style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                background: 'rgba(255, 255, 255, 0.06)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                cursor: 'pointer',
-                transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-                padding: 0
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-              }}
-              title="Copy Link"
-            >
-              <LinkChainIcon style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.7)' }} />
+              {/* Gem Icon - matches palette.svg stroke weight */}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.44, transition: 'opacity 0.15s' }}>
+                <path d="M6 3h12l4 6-10 12L2 9l4-6z" />
+                <path d="M2 9h20" />
+                <path d="M12 21L8.5 9 12 3l3.5 6L12 21z" />
+              </svg>
             </button>
 
             {/* ================================================================
@@ -3845,6 +3832,149 @@ export default function ProfilePage({ params }: { params: { username: string } }
               }
             }
           `}</style>
+        </>
+      )}
+
+      {/* Bottom Navigation Bar - Bar passes BEHIND the CREATE circle */}
+      {isOwnProfile && !viewerMode && (
+        <>
+          <style>{`
+            @keyframes createButtonPulse {
+              0%, 100% { box-shadow: 0 4px 18px rgba(0, 194, 255, 0.25), 0 0 28px rgba(0, 194, 255, 0.12); }
+              50% { box-shadow: 0 6px 24px rgba(0, 194, 255, 0.35), 0 0 36px rgba(0, 194, 255, 0.18); }
+            }
+          `}</style>
+          
+          {/* Bottom fade gradient - content fades into menu */}
+          <div
+            style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: '120px',
+              background: 'linear-gradient(to top, rgba(17, 17, 17, 0.95) 0%, rgba(17, 17, 17, 0.7) 40%, transparent 100%)',
+              pointerEvents: 'none',
+              zIndex: 999
+            }}
+          />
+          
+          {/* The glassy bar - passes BEHIND the CREATE button */}
+          <div
+            style={{
+              position: 'fixed',
+              bottom: '24px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '110px',
+              padding: '6px 32px',
+              background: 'rgba(30, 30, 34, 0.65)',
+              backdropFilter: 'blur(40px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+              borderRadius: '18px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+              zIndex: 1000
+            }}
+          >
+            {/* Profile Button - ACTIVE (blue) */}
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              style={{
+                width: '34px',
+                height: '34px',
+                borderRadius: '50%',
+                background: 'transparent',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer'
+              }}
+            >
+              <UserIcon style={{ width: '20px', height: '20px', color: '#00C2FF' }} />
+            </button>
+
+            {/* Dashboard Button */}
+            <button
+              onClick={() => router.push('/analytics')}
+              style={{
+                width: '34px',
+                height: '34px',
+                borderRadius: '50%',
+                background: 'transparent',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(0, 194, 255, 0.15)';
+                const icon = e.currentTarget.querySelector('svg');
+                if (icon) (icon as SVGElement).style.color = '#00C2FF';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                const icon = e.currentTarget.querySelector('svg');
+                if (icon) (icon as SVGElement).style.color = 'rgba(255, 255, 255, 0.65)';
+              }}
+            >
+              <ChartBarIcon style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.65)', transition: 'color 0.15s ease' }} />
+            </button>
+          </div>
+
+          {/* CREATE Button - Rounded rect positioned IN FRONT of the bar */}
+          <button
+            onClick={() => setShowCreateContentModal(true)}
+            style={{
+              position: 'fixed',
+              bottom: '20px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '58px',
+              height: '54px',
+              borderRadius: '16px',
+              background: 'linear-gradient(135deg, #00C2FF 0%, #00A8E8 50%, #0090D0 100%)',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+              animation: 'createButtonPulse 3s ease-in-out infinite',
+              zIndex: 1001
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateX(-50%) scale(1.05)';
+              e.currentTarget.style.animation = 'none';
+              e.currentTarget.style.boxShadow = '0 6px 28px rgba(0, 194, 255, 0.4), 0 0 40px rgba(0, 194, 255, 0.22)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
+              e.currentTarget.style.animation = 'createButtonPulse 3s ease-in-out infinite';
+            }}
+            onMouseDown={(e) => {
+              e.currentTarget.style.transform = 'translateX(-50%) scale(0.95)';
+            }}
+            onMouseUp={(e) => {
+              e.currentTarget.style.transform = 'translateX(-50%) scale(1.05)';
+            }}
+          >
+            <img 
+              src="/webstar-logo.png" 
+              alt="Create" 
+              style={{ 
+                width: '32px', 
+                height: '32px', 
+                filter: 'brightness(0) invert(1) drop-shadow(0 0 16px rgba(255, 255, 255, 1)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.8))'
+              }} 
+            />
+          </button>
         </>
       )}
       
