@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { XMarkIcon, PlayIcon, MusicalNoteIcon, ArrowLeftIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, PlayIcon, MusicalNoteIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Project, ProjectMedia } from '@/lib/types';
 import { projectsAPI } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
@@ -176,14 +176,17 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
           borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
         }}
       >
-        <div className="px-4 sm:px-6" style={{ height: '55px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div className="px-4 sm:px-6" style={{ height: '55px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+          {/* Close button - left */}
           <button
             onClick={handleBack}
+            className="hover:opacity-70 transition-opacity"
             style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
-              background: 'rgba(255, 255, 255, 0.06)',
+              position: 'absolute',
+              left: '16px',
+              width: '32px',
+              height: '32px',
+              background: 'transparent',
               border: 'none',
               display: 'flex',
               alignItems: 'center',
@@ -191,15 +194,12 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
               cursor: 'pointer'
             }}
           >
-            <ArrowLeftIcon className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+            <XMarkIcon style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.6)' }} />
           </button>
-          <h1 style={{ fontSize: '17px', fontWeight: 600, color: '#FFF', flex: 1 }}>
-            {project.title}
-          </h1>
           
-          {/* Three-dot menu (owner only) */}
+          {/* Three-dot menu (owner only) - right */}
           {isOwner && (
-            <div ref={menuRef} style={{ position: 'relative' }}>
+            <div ref={menuRef} style={{ position: 'absolute', right: '16px' }}>
               <button
                 onClick={() => setShowMenu(!showMenu)}
                 style={{
@@ -293,15 +293,21 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
               )}
             </div>
           )}
+          
+          {/* Centered title */}
+          <h1 style={{ fontSize: '16px', fontWeight: 600, color: '#FFF', textAlign: 'center', maxWidth: '60%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {project.title}
+          </h1>
         </div>
       </header>
 
       {/* Content */}
       <div style={{ padding: '16px', maxWidth: '800px', margin: '0 auto' }}>
-        {/* Cover Image */}
+        {/* Cover Image with Date Badge */}
         {project.cover_image && (
           <div 
             style={{
+              position: 'relative',
               width: '100%',
               aspectRatio: '16 / 9',
               borderRadius: '16px',
@@ -319,36 +325,67 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
                 objectFit: 'cover'
               }}
             />
+            {/* Date Badge - top right with glassmorphism */}
+            <div 
+              style={{
+                position: 'absolute',
+                top: '12px',
+                right: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '6px 10px',
+                background: 'rgba(0, 0, 0, 0.4)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 255, 255, 0.15)'
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              <span style={{ fontSize: '12px', fontWeight: 500, color: 'rgba(255,255,255,0.9)' }}>
+                {new Date(project.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+              </span>
+            </div>
           </div>
         )}
 
-        {/* Project Info */}
-        <div style={{ marginBottom: '24px' }}>
-          {/* Date */}
+        {/* No cover - show date as inline badge */}
+        {!project.cover_image && (
           <div style={{ marginBottom: '12px' }}>
             <div 
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '5px',
-                padding: '4px 10px',
-                background: 'rgba(255, 255, 255, 0.04)',
+                padding: '6px 10px',
+                background: 'rgba(255, 255, 255, 0.06)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
                 borderRadius: '8px',
-                border: '1px solid rgba(255, 255, 255, 0.08)'
+                border: '1px solid rgba(255, 255, 255, 0.1)'
               }}
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2">
                 <rect x="3" y="4" width="18" height="18" rx="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              <span style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(255,255,255,0.5)' }}>
+              <span style={{ fontSize: '12px', fontWeight: 500, color: 'rgba(255,255,255,0.6)' }}>
                 {new Date(project.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
               </span>
             </div>
           </div>
-          
+        )}
+
+        {/* Project Info */}
+        <div style={{ marginBottom: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#FFF', marginBottom: '12px' }}>
             {project.title}
           </h2>

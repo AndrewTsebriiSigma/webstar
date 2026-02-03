@@ -277,49 +277,49 @@ export const ChangeEmailSection = ({
         )}
 
         {/* Code input - matching username style */}
-        <div style={{
+            <div style={{
           background: 'transparent',
           border: '1px solid rgba(255, 255, 255, 0.15)',
-          borderRadius: '12px',
+              borderRadius: '12px',
           marginBottom: '16px'
-        }}>
-          <input
-            type="text"
-            value={verificationCode}
-            onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-            placeholder="000000"
+            }}>
+            <input
+              type="text"
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="000000"
             autoFocus
-            maxLength={6}
-            style={{
-              width: '100%',
+              maxLength={6}
+              style={{
+                width: '100%',
               padding: '14px 16px',
-              background: 'transparent',
-              border: 'none',
-              color: 'rgba(255, 255, 255, 0.95)',
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'rgba(255, 255, 255, 0.95)',
               fontSize: '20px',
-              fontWeight: 600,
-              letterSpacing: '8px',
-              textAlign: 'center',
-              outline: 'none'
-            }}
-          />
-        </div>
+                fontWeight: 600,
+                letterSpacing: '8px',
+                textAlign: 'center',
+                outline: 'none'
+              }}
+            />
+          </div>
 
         {/* Change email link */}
-        <button
-          type="button"
-          onClick={() => { setStep('request'); setError(''); setVerificationCode(''); }}
-          style={{
-            background: 'transparent',
-            border: 'none',
+          <button
+            type="button"
+            onClick={() => { setStep('request'); setError(''); setVerificationCode(''); }}
+            style={{
+              background: 'transparent',
+              border: 'none',
             color: '#00C2FF',
-            fontSize: '14px',
-            cursor: 'pointer',
+              fontSize: '14px',
+              cursor: 'pointer',
             padding: 0
-          }}
-        >
+            }}
+          >
           Change email address
-        </button>
+          </button>
       </div>
     );
   }
@@ -332,52 +332,52 @@ export const ChangeEmailSection = ({
       )}
 
       {/* Email input - matching username style */}
-      <div style={{
+          <div style={{
         background: 'transparent',
         border: '1px solid rgba(255, 255, 255, 0.15)',
-        borderRadius: '12px',
+            borderRadius: '12px',
         marginBottom: '12px'
-      }}>
-        <input
-          type="email"
-          value={newEmail}
-          onChange={(e) => setNewEmail(e.target.value)}
+          }}>
+          <input
+            type="email"
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
           placeholder="New email address"
           autoFocus
-          style={{
-            width: '100%',
+            style={{
+              width: '100%',
             padding: '14px 16px',
-            background: 'transparent',
-            border: 'none',
-            color: 'rgba(255, 255, 255, 0.95)',
+                background: 'transparent',
+                border: 'none',
+                color: 'rgba(255, 255, 255, 0.95)',
             fontSize: '16px',
-            outline: 'none'
-          }}
-        />
-      </div>
+              outline: 'none'
+            }}
+          />
+        </div>
 
       {/* Password input - matching username style */}
-      <div style={{
+          <div style={{
         background: 'transparent',
         border: '1px solid rgba(255, 255, 255, 0.15)',
         borderRadius: '12px'
-      }}>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          }}>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           placeholder="Current password"
-          style={{
-            width: '100%',
+            style={{
+              width: '100%',
             padding: '14px 16px',
-            background: 'transparent',
-            border: 'none',
-            color: 'rgba(255, 255, 255, 0.95)',
+                background: 'transparent',
+                border: 'none',
+                color: 'rgba(255, 255, 255, 0.95)',
             fontSize: '16px',
-            outline: 'none'
-          }}
-        />
-      </div>
+              outline: 'none'
+            }}
+          />
+          </div>
     </div>
   );
 };
@@ -492,35 +492,35 @@ export const ChangeUsernameSection = ({
   return (
     <div>
       {/* Simple username input - pre-filled with current */}
-      <div style={{
+          <div style={{
         background: 'transparent',
         border: '1px solid rgba(255, 255, 255, 0.15)',
-        borderRadius: '12px',
+            borderRadius: '12px',
         display: 'flex',
         alignItems: 'center',
         overflow: 'hidden'
-      }}>
+          }}>
         {/* Input - pre-filled with current username */}
-        <input
-          type="text"
-          value={newUsername}
-          onChange={(e) => {
+            <input
+              type="text"
+              value={newUsername}
+              onChange={(e) => {
             const value = e.target.value.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
             if (value.length <= 15) {
-              setNewUsername(value);
+                setNewUsername(value);
             }
-          }}
+              }}
           placeholder="username"
           autoFocus
-          style={{
+              style={{
             flex: 1,
             padding: '14px 16px',
-            background: 'transparent',
-            border: 'none',
-            color: 'rgba(255, 255, 255, 0.95)',
+                background: 'transparent',
+                border: 'none',
+                color: 'rgba(255, 255, 255, 0.95)',
             fontSize: '16px',
-            outline: 'none'
-          }}
+                outline: 'none'
+              }}
           maxLength={15}
         />
         
@@ -547,8 +547,8 @@ export const ChangeUsernameSection = ({
               </svg>
             ) : null
           ) : null}
+          </div>
         </div>
-      </div>
 
       {/* Live preview - shows the full URL as they type */}
       {newUsername && (
@@ -567,7 +567,7 @@ export const ChangeUsernameSection = ({
             Your profile link
           </p>
           <p style={{ 
-            fontSize: '15px', 
+            fontSize: '15px',
             color: '#00C2FF',
             fontWeight: 500
           }}>
@@ -672,95 +672,95 @@ export const ChangePasswordSection = ({
       )}
 
       {/* Current Password - matching username style */}
-      <div style={{
+          <div style={{
         background: 'transparent',
         border: '1px solid rgba(255, 255, 255, 0.15)',
-        borderRadius: '12px',
+            borderRadius: '12px',
         marginBottom: '12px'
-      }}>
-        <input
-          type="password"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
+          }}>
+          <input
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
           placeholder="Current password"
           autoFocus
-          style={{
-            width: '100%',
+            style={{
+              width: '100%',
             padding: '14px 16px',
-            background: 'transparent',
-            border: 'none',
-            color: 'rgba(255, 255, 255, 0.95)',
+                background: 'transparent',
+                border: 'none',
+                color: 'rgba(255, 255, 255, 0.95)',
             fontSize: '16px',
-            outline: 'none'
-          }}
-        />
-      </div>
+              outline: 'none'
+            }}
+          />
+        </div>
 
       {/* New Password - matching username style */}
-      <div style={{
+          <div style={{
         background: 'transparent',
         border: '1px solid rgba(255, 255, 255, 0.15)',
-        borderRadius: '12px',
+            borderRadius: '12px',
         marginBottom: '12px'
-      }}>
-        <input
-          type="password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
+          }}>
+          <input
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
           placeholder="New password"
-          style={{
-            width: '100%',
+            style={{
+              width: '100%',
             padding: '14px 16px',
-            background: 'transparent',
-            border: 'none',
-            color: 'rgba(255, 255, 255, 0.95)',
+                background: 'transparent',
+                border: 'none',
+                color: 'rgba(255, 255, 255, 0.95)',
             fontSize: '16px',
-            outline: 'none'
-          }}
-        />
-      </div>
+              outline: 'none'
+            }}
+          />
+        </div>
 
       {/* Confirm Password - matching username style */}
-      <div style={{
+          <div style={{
         background: 'transparent',
         border: '1px solid rgba(255, 255, 255, 0.15)',
-        borderRadius: '12px',
+            borderRadius: '12px',
         marginBottom: '16px'
-      }}>
-        <input
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
+          }}>
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
           placeholder="Confirm new password"
-          style={{
-            width: '100%',
+            style={{
+              width: '100%',
             padding: '14px 16px',
-            background: 'transparent',
-            border: 'none',
-            color: 'rgba(255, 255, 255, 0.95)',
+                background: 'transparent',
+                border: 'none',
+                color: 'rgba(255, 255, 255, 0.95)',
             fontSize: '16px',
-            outline: 'none'
-          }}
-        />
-      </div>
+              outline: 'none'
+            }}
+          />
+        </div>
 
       {/* Forgot password link */}
-      <button
+        <button
         type="button"
         onClick={() => {
           toast('Password reset feature coming soon', { icon: '🔐' });
         }}
-        style={{
+          style={{
           background: 'transparent',
-          border: 'none',
+            border: 'none',
           color: '#00C2FF',
           fontSize: '14px',
           cursor: 'pointer',
           padding: 0
-        }}
-      >
+          }}
+        >
         Forgot your password?
-      </button>
+        </button>
     </div>
   );
 };

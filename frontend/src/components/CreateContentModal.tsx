@@ -114,7 +114,7 @@ export default function CreateContentModal({
     setIsVisible(false);
     setTimeout(() => {
       onSelectProject();
-      setPostExpanded(false);
+    setPostExpanded(false);
       setIsClosing(false);
       onClose();
     }, 150);
@@ -154,7 +154,7 @@ export default function CreateContentModal({
         {/* Initial view: Full-size side by side (hidden when expanded) */}
         <div 
           className="grid grid-cols-2 gap-2 transition-all duration-200"
-          style={{
+          style={{ 
             maxHeight: postExpanded ? '0' : '54px',
             opacity: postExpanded ? 0 : 1,
             overflow: 'hidden',
@@ -214,7 +214,7 @@ export default function CreateContentModal({
           <button
             onClick={() => setPostExpanded(false)}
             className="flex items-center justify-center gap-1.5 py-1.5 rounded-[8px] transition-all duration-150"
-            style={{ 
+                style={{
               background: 'rgba(0, 194, 255, 0.12)',
               border: '1px solid rgba(0, 194, 255, 0.25)'
             }}
@@ -222,11 +222,11 @@ export default function CreateContentModal({
             <div 
               className="w-5 h-5 rounded-[4px] flex items-center justify-center flex-shrink-0"
               style={{ background: 'linear-gradient(135deg, rgba(0, 80, 120, 0.8) 0%, rgba(0, 50, 80, 0.9) 100%)' }}
-            >
+              >
               <svg className="w-3 h-3" fill="none" stroke="#00C2FF" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-            </div>
+                </svg>
+              </div>
             <span className="text-[12px] font-medium text-white whitespace-nowrap">Add Post</span>
           </button>
 
@@ -247,7 +247,7 @@ export default function CreateContentModal({
               </svg>
             </div>
             <span className="text-[12px] font-medium text-white whitespace-nowrap">Add Project</span>
-          </button>
+        </button>
         </div>
 
         {/* 4 Post Type Buttons - Appear BELOW when expanded */}
@@ -263,9 +263,9 @@ export default function CreateContentModal({
             {postTypes.map((item) => {
               const isSelected = selectedPostType === item.type;
               return (
-                <button
-                  key={item.type}
-                  onClick={() => handleTypeSelect(item.type)}
+              <button
+                key={item.type}
+                onClick={() => handleTypeSelect(item.type)}
                   className="flex flex-col items-center gap-1 p-1 rounded-[8px] transition-all duration-150"
                   style={{ 
                     background: isSelected ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
@@ -281,24 +281,24 @@ export default function CreateContentModal({
                       e.currentTarget.style.background = 'transparent';
                     }
                   }}
-                >
-                  <div 
+              >
+                <div 
                     className="w-10 h-10 rounded-[8px] flex items-center justify-center transition-all duration-150"
                     style={{ 
                       background: item.gradient,
                       transform: isSelected ? 'scale(1.05)' : 'scale(1)',
                       boxShadow: isSelected ? `0 4px 12px ${item.color}40` : 'none'
                     }}
-                  >
-                    <span style={{ color: item.color }}>{item.icon}</span>
-                  </div>
+                >
+                  <span style={{ color: item.color }}>{item.icon}</span>
+                </div>
                   <span 
                     className="text-[11px] font-medium transition-colors duration-150"
                     style={{ color: isSelected ? item.color : '#FFFFFF' }}
                   >
                     {item.label}
                   </span>
-                </button>
+              </button>
               );
             })}
           </div>

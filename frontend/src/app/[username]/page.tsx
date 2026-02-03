@@ -61,6 +61,55 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const searchParams = useSearchParams();
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('portfolio');
+  
+  // Swipe navigation for bottom bar (Profile ↔ Dashboard)
+  const bottomSwipeStartX = useRef<number>(0);
+  const bottomSwipeEndX = useRef<number>(0);
+  
+  const handleBottomSwipeStart = (e: React.TouchEvent) => {
+    bottomSwipeStartX.current = e.touches[0].clientX;
+  };
+  
+  const handleBottomSwipeMove = (e: React.TouchEvent) => {
+    bottomSwipeEndX.current = e.touches[0].clientX;
+  };
+  
+  const handleBottomSwipeEnd = () => {
+    const swipeDistance = bottomSwipeStartX.current - bottomSwipeEndX.current;
+    const minSwipeDistance = 50;
+    
+    // Swipe left → go to analytics
+    if (swipeDistance > minSwipeDistance) {
+      router.push('/analytics');
+    }
+  };
+  
+  // Swipe navigation for tabs (Portfolio ↔ Projects ↔ About)
+  const tabSwipeStartX = useRef<number>(0);
+  const tabSwipeEndX = useRef<number>(0);
+  const tabs = ['portfolio', 'projects', 'about'];
+  
+  const handleTabSwipeStart = (e: React.TouchEvent) => {
+    tabSwipeStartX.current = e.touches[0].clientX;
+  };
+  
+  const handleTabSwipeMove = (e: React.TouchEvent) => {
+    tabSwipeEndX.current = e.touches[0].clientX;
+  };
+  
+  const handleTabSwipeEnd = () => {
+    const swipeDistance = tabSwipeStartX.current - tabSwipeEndX.current;
+    const minSwipeDistance = 50;
+    const currentIndex = tabs.indexOf(activeTab);
+    
+    if (swipeDistance > minSwipeDistance && currentIndex < tabs.length - 1) {
+      // Swipe left → next tab
+      setActiveTab(tabs[currentIndex + 1]);
+    } else if (swipeDistance < -minSwipeDistance && currentIndex > 0) {
+      // Swipe right → previous tab
+      setActiveTab(tabs[currentIndex - 1]);
+    }
+  };
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [profile, setProfile] = useState<Profile | null>(null);
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
@@ -1001,11 +1050,17 @@ export default function ProfilePage({ params }: { params: { username: string } }
       className={`min-h-screen min-h-screen-safe text-white ${profileTheme === 'monochrome' ? 'theme-monochrome' : ''} ${isOwnProfile && showCustomizePanel ? 'customize-mode' : ''}`} 
       style={{ 
         background: '#111111',
-        ...themeStyles
+        ...themeStyles,
       }}
     >
       {/* Responsive wrapper for centered content on larger screens */}
-      <div className="w-full max-w-content-default mx-auto lg:max-w-content-wide xl:max-w-content-xl">
+      {/* Header area is swipeable for page navigation (Profile ↔ Dashboard) */}
+      <div 
+        className="w-full max-w-content-default mx-auto lg:max-w-content-wide xl:max-w-content-xl"
+        onTouchStart={isOwnProfile ? handleBottomSwipeStart : undefined}
+        onTouchMove={isOwnProfile ? handleBottomSwipeMove : undefined}
+        onTouchEnd={isOwnProfile ? handleBottomSwipeEnd : undefined}
+      >
       {/* Mobile Header - Animated on scroll, hidden in viewer mode */}
       {!viewerMode && (
         <header 
@@ -2636,14 +2691,21 @@ export default function ProfilePage({ params }: { params: { username: string } }
         </div>
       </div>
 
-      {/* Tab Content */}
-      <div className={`${activeTab === 'portfolio' ? 'pt-[5px]' : activeTab === 'projects' ? '' : 'py-4 px-3'}`}>
+      {/* Tab Content - Swipeable between tabs */}
+      <div 
+        className={`${activeTab === 'portfolio' ? 'pt-[5px]' : activeTab === 'projects' ? '' : 'py-4 px-3'}`} 
+        style={{ paddingBottom: '140px' }}
+        onTouchStart={handleTabSwipeStart}
+        onTouchMove={handleTabSwipeMove}
+        onTouchEnd={handleTabSwipeEnd}
+      >
         {activeTab === 'about' && (
           <AboutSection
             isOwnProfile={isOwnProfile}
             isCustomizeMode={showCustomizePanel}
             profile={profile}
             onUpdate={() => loadProfile(true)}
+            onActivateCustomize={() => setShowCustomizePanel(true)}
           />
         )}
 
@@ -3014,14 +3076,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '6px',
-                        background: 'transparent',
+                        background: 'rgba(255, 255, 255, 0.02)',
                         color: 'rgba(255, 255, 255, 0.4)',
                         width: '130px',
                         height: '48px',
                         fontSize: '13px',
                         fontWeight: 500,
                         borderRadius: '12px',
-                        border: '1px dashed rgba(255, 255, 255, 0.15)',
+                        border: '2px dashed rgba(255, 255, 255, 0.15)',
                         cursor: 'pointer',
                         transition: 'all 150ms ease'
                       }}
@@ -3030,7 +3092,17 @@ export default function ProfilePage({ params }: { params: { username: string } }
                     </button>
                   </>
                 ) : (
-                  <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.35)' }}>No portfolio items yet</p>
+                  <div style={{
+                    padding: '16px 12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    borderRadius: '10px',
+                    border: '2px dashed rgba(255, 255, 255, 0.15)',
+                  }}>
+                    <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>No portfolio items yet</span>
+                  </div>
                 )}
               </div>
             )}
@@ -3169,14 +3241,14 @@ export default function ProfilePage({ params }: { params: { username: string } }
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '6px',
-                        background: 'transparent',
+                        background: 'rgba(255, 255, 255, 0.02)',
                         color: 'rgba(255, 255, 255, 0.4)',
                         width: '130px',
                         height: '48px',
                         fontSize: '13px',
                         fontWeight: 500,
                         borderRadius: '12px',
-                        border: '1px dashed rgba(255, 255, 255, 0.15)',
+                        border: '2px dashed rgba(255, 255, 255, 0.15)',
                         cursor: 'pointer',
                         transition: 'all 150ms ease'
                       }}
@@ -3185,7 +3257,17 @@ export default function ProfilePage({ params }: { params: { username: string } }
                     </button>
                   </>
                 ) : (
-                  <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.35)' }}>No projects yet</p>
+                  <div style={{
+                    padding: '16px 12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    borderRadius: '10px',
+                    border: '2px dashed rgba(255, 255, 255, 0.15)',
+                  }}>
+                    <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>No projects yet</span>
+                  </div>
                 )}
               </div>
             )}
@@ -3845,8 +3927,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
             }
           `}</style>
           
-          {/* Bottom fade gradient - content fades into menu */}
+          {/* Bottom swipe zone + fade gradient */}
           <div
+            onTouchStart={handleBottomSwipeStart}
+            onTouchMove={handleBottomSwipeMove}
+            onTouchEnd={handleBottomSwipeEnd}
             style={{
               position: 'fixed',
               bottom: 0,
@@ -3854,7 +3939,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
               right: 0,
               height: '120px',
               background: 'linear-gradient(to top, rgba(17, 17, 17, 0.95) 0%, rgba(17, 17, 17, 0.7) 40%, transparent 100%)',
-              pointerEvents: 'none',
               zIndex: 999
             }}
           />

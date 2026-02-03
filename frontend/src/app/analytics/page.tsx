@@ -63,6 +63,29 @@ export default function AnalyticsPage() {
     display_name: string | null;
     profile_picture: string | null;
   } | null>(null);
+  const [svgActualWidth, setSvgActualWidth] = useState(340);
+  
+  // Swipe navigation for bottom bar (Dashboard → Profile)
+  const bottomSwipeStartX = useRef<number>(0);
+  const bottomSwipeEndX = useRef<number>(0);
+  
+  const handleBottomSwipeStart = (e: React.TouchEvent) => {
+    bottomSwipeStartX.current = e.touches[0].clientX;
+  };
+  
+  const handleBottomSwipeMove = (e: React.TouchEvent) => {
+    bottomSwipeEndX.current = e.touches[0].clientX;
+  };
+  
+  const handleBottomSwipeEnd = () => {
+    const swipeDistance = bottomSwipeEndX.current - bottomSwipeStartX.current;
+    const minSwipeDistance = 50;
+    
+    // Swipe right → go back to profile
+    if (swipeDistance > minSwipeDistance && user?.username) {
+      router.push(`/${user.username}`);
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -181,11 +204,11 @@ export default function AnalyticsPage() {
     return num.toString();
   };
 
-  // Graph dimensions - per spec: 280x64 for small, 280x140 for combined
-  const GRAPH_WIDTH = 280;
+  // Graph dimensions - wider to fill mobile containers
+  const GRAPH_WIDTH = 340;
   const GRAPH_HEIGHT = 64;
   const COMBINED_GRAPH_HEIGHT = 140;
-  const GRAPH_PADDING = 5;
+  const GRAPH_PADDING = 8;
 
   const prepareGraphData = (type: 'views' | 'clicks'): GraphPoint[] => {
     if (dailyData.length === 0) return [];
@@ -223,7 +246,8 @@ export default function AnalyticsPage() {
     const maxValue = Math.max(...viewValues, ...clickValues, 1);
     
     const dataLength = dailyData.length;
-    const pointSpacing = (GRAPH_WIDTH - GRAPH_PADDING * 2) / (dataLength - 1 || 1);
+    const graphWidth = svgActualWidth || GRAPH_WIDTH; // Use actual rendered width
+    const pointSpacing = (graphWidth - GRAPH_PADDING * 2) / (dataLength - 1 || 1);
     const graphableHeight = COMBINED_GRAPH_HEIGHT - 30; // Leave space for padding
     
     const views = dailyData.map((d, i) => {
@@ -294,12 +318,31 @@ export default function AnalyticsPage() {
   // Combined graph ref
   const combinedGraphRef = useRef<SVGSVGElement>(null);
 
+  // Track actual SVG width to calculate proper grid proportions
+  useEffect(() => {
+    if (!combinedGraphRef.current) return;
+    
+    const updateWidth = () => {
+      if (combinedGraphRef.current) {
+        setSvgActualWidth(combinedGraphRef.current.getBoundingClientRect().width);
+      }
+    };
+    
+    updateWidth();
+    
+    const resizeObserver = new ResizeObserver(updateWidth);
+    resizeObserver.observe(combinedGraphRef.current);
+    
+    return () => resizeObserver.disconnect();
+  }, []);
+
   const handleCombinedGraphHover = (e: React.MouseEvent<SVGSVGElement>) => {
     e.stopPropagation();
     if (!combinedGraphRef.current || dailyData.length === 0) return;
     
     const rect = combinedGraphRef.current.getBoundingClientRect();
-    const hoverX = ((e.clientX - rect.left) / rect.width) * GRAPH_WIDTH;
+    const graphWidth = svgActualWidth || GRAPH_WIDTH;
+    const hoverX = ((e.clientX - rect.left) / rect.width) * graphWidth;
     const { views } = prepareCombinedGraphData();
     
     if (views.length === 0) return;
@@ -644,7 +687,7 @@ export default function AnalyticsPage() {
     return (
       <svg 
         ref={combinedGraphRef}
-        viewBox={`0 0 ${GRAPH_WIDTH} ${COMBINED_GRAPH_HEIGHT}`}
+        viewBox={`0 0 ${svgActualWidth || GRAPH_WIDTH} ${COMBINED_GRAPH_HEIGHT}`}
         preserveAspectRatio="xMidYMid meet"
         onMouseMove={handleCombinedGraphHover}
         onMouseLeave={clearTooltip}
@@ -657,9 +700,15 @@ export default function AnalyticsPage() {
         }}
       >
         <defs>
-          {/* Subtle grid pattern */}
-          <pattern id="combinedGrid" width="14" height="14" patternUnits="userSpaceOnUse">
-            <rect width="14" height="14" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5"/>
+          {/* Clean grid pattern - no stretch needed with dynamic viewBox */}
+          <pattern id="combinedGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect 
+              width="20" 
+              height="20" 
+              fill="none" 
+              stroke="rgba(255,255,255,0.04)" 
+              strokeWidth="0.5"
+            />
           </pattern>
           
           {/* Gradients for area fills */}
@@ -674,7 +723,7 @@ export default function AnalyticsPage() {
         </defs>
         
         {/* Background grid */}
-        <rect width={GRAPH_WIDTH} height={COMBINED_GRAPH_HEIGHT} fill="url(#combinedGrid)" rx="8"/>
+        <rect width={svgActualWidth || GRAPH_WIDTH} height={COMBINED_GRAPH_HEIGHT} fill="url(#combinedGrid)" rx="8"/>
         
         {/* Y-axis lines */}
         {[0.25, 0.5, 0.75].map((ratio, i) => (
@@ -682,7 +731,7 @@ export default function AnalyticsPage() {
             key={i}
             x1={GRAPH_PADDING} 
             y1={COMBINED_GRAPH_HEIGHT * ratio} 
-            x2={GRAPH_WIDTH - GRAPH_PADDING} 
+            x2={(svgActualWidth || GRAPH_WIDTH) - GRAPH_PADDING} 
             y2={COMBINED_GRAPH_HEIGHT * ratio}
             stroke="rgba(255,255,255,0.06)"
             strokeDasharray="3,3"
@@ -693,13 +742,13 @@ export default function AnalyticsPage() {
           <>
             {/* Views area fill */}
             <path
-              d={`M ${views[0]?.x || 0},${views[0]?.yPos || COMBINED_GRAPH_HEIGHT/2} ${views.map((d) => `L ${d.x},${d.yPos}`).join(' ')} L ${views[views.length - 1]?.x || GRAPH_WIDTH},${COMBINED_GRAPH_HEIGHT} L ${GRAPH_PADDING},${COMBINED_GRAPH_HEIGHT} Z`}
+              d={`M ${views[0]?.x || 0},${views[0]?.yPos || COMBINED_GRAPH_HEIGHT/2} ${views.map((d) => `L ${d.x},${d.yPos}`).join(' ')} L ${views[views.length - 1]?.x || (svgActualWidth || GRAPH_WIDTH)},${COMBINED_GRAPH_HEIGHT} L ${GRAPH_PADDING},${COMBINED_GRAPH_HEIGHT} Z`}
               fill="url(#viewsGradientCombined)"
             />
             
             {/* Clicks area fill */}
             <path
-              d={`M ${clicks[0]?.x || 0},${clicks[0]?.yPos || COMBINED_GRAPH_HEIGHT/2} ${clicks.map((d) => `L ${d.x},${d.yPos}`).join(' ')} L ${clicks[clicks.length - 1]?.x || GRAPH_WIDTH},${COMBINED_GRAPH_HEIGHT} L ${GRAPH_PADDING},${COMBINED_GRAPH_HEIGHT} Z`}
+              d={`M ${clicks[0]?.x || 0},${clicks[0]?.yPos || COMBINED_GRAPH_HEIGHT/2} ${clicks.map((d) => `L ${d.x},${d.yPos}`).join(' ')} L ${clicks[clicks.length - 1]?.x || (svgActualWidth || GRAPH_WIDTH)},${COMBINED_GRAPH_HEIGHT} L ${GRAPH_PADDING},${COMBINED_GRAPH_HEIGHT} Z`}
               fill="url(#clicksGradientCombined)"
             />
             
@@ -784,7 +833,7 @@ export default function AnalyticsPage() {
             {!tooltipData && (
               <>
                 <circle 
-                  cx={views[views.length - 1]?.x || GRAPH_WIDTH - GRAPH_PADDING} 
+                  cx={views[views.length - 1]?.x || (svgActualWidth || GRAPH_WIDTH) - GRAPH_PADDING} 
                   cy={views[views.length - 1]?.yPos || COMBINED_GRAPH_HEIGHT/2} 
                   r="3" 
                   fill={VIEWS_COLOR}
@@ -793,7 +842,7 @@ export default function AnalyticsPage() {
                   <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
                 </circle>
                 <circle 
-                  cx={clicks[clicks.length - 1]?.x || GRAPH_WIDTH - GRAPH_PADDING} 
+                  cx={clicks[clicks.length - 1]?.x || (svgActualWidth || GRAPH_WIDTH) - GRAPH_PADDING} 
                   cy={clicks[clicks.length - 1]?.yPos || COMBINED_GRAPH_HEIGHT/2} 
                   r="3" 
                   fill={CLICKS_COLOR}
@@ -829,7 +878,7 @@ export default function AnalyticsPage() {
       style={{ 
         background: 'linear-gradient(180deg, #0f0f0f 0%, #151515 50%, #121212 100%)',
         color: 'rgba(255, 255, 255, 0.92)',
-        position: 'relative'
+        position: 'relative',
       }} 
       onClick={clearTooltip}
     >
@@ -858,8 +907,14 @@ export default function AnalyticsPage() {
         zIndex: 0
       }} />
       
-      {/* Mobile-first responsive container */}
-      <div className="w-full mx-auto" style={{ maxWidth: '540px', position: 'relative', zIndex: 1, paddingBottom: '100px' }}>
+      {/* Mobile-first responsive container - entire area swipeable for page navigation */}
+      <div 
+        className="w-full mx-auto" 
+        style={{ maxWidth: '540px', position: 'relative', zIndex: 1, paddingBottom: '100px' }}
+        onTouchStart={handleBottomSwipeStart}
+        onTouchMove={handleBottomSwipeMove}
+        onTouchEnd={handleBottomSwipeEnd}
+      >
         
         {/* Content - mobile-first padding */}
         <div className="px-4 sm:px-5 py-4" style={{
@@ -1077,7 +1132,9 @@ export default function AnalyticsPage() {
               scrollSnapType: 'x mandatory',
               msOverflowStyle: 'none',
               scrollbarWidth: 'none',
-              paddingBottom: '4px'
+              paddingBottom: '12px',
+              marginRight: '-16px',
+              paddingRight: '16px'
             }}>
               {/* Data Tab */}
               <button
@@ -1165,82 +1222,92 @@ export default function AnalyticsPage() {
             {/* Tab Content */}
             {activeTab === 'data' && (
             <>
-            {/* Analytics Section - Views & Clicks */}
-            <div style={{ marginTop: '12px' }}>
+            {/* Analytics Section */}
+            <div style={{ marginTop: '16px' }}>
               
-              {/* Combined Analytics Card */}
+              {/* Filter Pills Strip - Instagram style */}
               <div 
                 style={{
-                  padding: '16px',
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '12px'
+                  display: 'flex',
+                  gap: '8px',
+                  overflowX: 'auto',
+                  WebkitOverflowScrolling: 'touch',
+                  msOverflowStyle: 'none',
+                  scrollbarWidth: 'none',
+                  marginRight: '-16px',
+                  paddingRight: '16px',
+                  paddingBottom: '16px'
+                }}
+              >
+                {/* All Pill - Selected */}
+                <div 
+                  style={{ 
+                    padding: '6px 14px',
+                    background: '#fff',
+                    borderRadius: '8px',
+                    flexShrink: 0,
+                    cursor: 'default'
+                  }}
+                >
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: '#000' }}>All</span>
+                </div>
+                
+                {/* Views Pill */}
+                <div 
+                  style={{ 
+                    padding: '6px 12px',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    borderRadius: '8px',
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    cursor: 'default'
+                  }}
+                >
+                  <svg width="11" height="11" fill="none" stroke="#00C2FF" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span style={{ fontSize: '12px', fontWeight: '500', color: 'rgba(255, 255, 255, 0.8)' }}>Views</span>
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: '#fff' }}>{formatNumber(totalViews)}</span>
+                </div>
+                
+                {/* Clicks Pill */}
+                <div 
+                  style={{ 
+                    padding: '6px 12px',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    borderRadius: '8px',
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    cursor: 'default'
+                  }}
+                >
+                  <svg width="11" height="11" fill="none" stroke="#FF006B" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                  </svg>
+                  <span style={{ fontSize: '12px', fontWeight: '500', color: 'rgba(255, 255, 255, 0.8)' }}>Clicks</span>
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: '#fff' }}>{formatNumber(totalClicks)}</span>
+                </div>
+              </div>
+              
+              {/* Graph - Full width, no frame */}
+              <div 
+                style={{
+                  padding: '0'
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
-                {/* Header: Stat Blocks - Instagram style */}
-                <div style={{ 
-                  display: 'flex', 
-                  gap: '8px',
-                  marginBottom: '16px'
-                }}>
-                  {/* Views Block */}
-                  <div style={{ 
-                    flex: 1,
-                    padding: '12px 14px',
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    borderRadius: '10px'
-                  }}>
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '6px',
-                      marginBottom: '6px'
-                    }}>
-                      <svg width="14" height="14" fill="none" stroke="#00C2FF" strokeWidth="1.5" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)' }}>Profile Views</span>
-                    </div>
-                    <div style={{ fontSize: '22px', fontWeight: '700', color: '#fff' }}>
-                      {formatNumber(totalViews)}
-                    </div>
-                  </div>
-                  
-                  {/* Clicks Block */}
-                  <div style={{ 
-                    flex: 1,
-                    padding: '12px 14px',
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    borderRadius: '10px'
-                  }}>
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '6px',
-                      marginBottom: '6px'
-                    }}>
-                      <svg width="14" height="14" fill="none" stroke="#FF006B" strokeWidth="1.5" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-                      </svg>
-                      <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)' }}>Link Clicks</span>
-                    </div>
-                    <div style={{ fontSize: '22px', fontWeight: '700', color: '#fff' }}>
-                      {formatNumber(totalClicks)}
-                    </div>
-                  </div>
-                </div>
-                
                 {/* Combined Graph */}
                 <div style={{ position: 'relative' }}>
                   {renderCombinedGraph()}
                   
                   {/* Tooltip */}
                   {tooltipData && (() => {
-                    const pointPercent = (tooltipData.x / GRAPH_WIDTH) * 100;
+                    const pointPercent = (tooltipData.x / (svgActualWidth || GRAPH_WIDTH)) * 100;
                     const showOnRight = pointPercent < 50;
                     
                     return (
@@ -1300,15 +1367,35 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            {/* Content Distribution - Single Row Trading Candles */}
-            <div style={{ marginTop: '12px' }}>
+            {/* Content Section - Tab + Candles */}
+            <div style={{ marginTop: '28px' }}>
+              {/* Tab Bar with divider */}
+              <div style={{
+                display: 'flex',
+                gap: '24px',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
+              }}>
+                {/* Content Tab - Active, underline sits on divider */}
+                <button style={{
+                  padding: '0 0 10px 0',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#fff',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: '2px solid #fff',
+                  marginBottom: '-1px',
+                  cursor: 'pointer'
+                }}>
+                  Content
+                </button>
+              </div>
+              
+              {/* Trading Candles - No frame */}
               <div style={{
                 display: 'flex',
                 gap: '2px',
-                padding: '14px 10px',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '12px',
+                padding: '20px 0 14px 0',
                 height: '130px'
               }}>
                 {contentTypes.map(renderTradingCandle)}
@@ -1323,19 +1410,12 @@ export default function AnalyticsPage() {
             {/* Quiz Library */}
             <div style={{ marginTop: '12px' }}>
               
-              {/* Container Block */}
+              {/* Quiz Cards - no outer frame */}
               <div style={{
-                padding: '10px',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '14px'
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
               }}>
-                {/* Single Column - One Quiz Per Row */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-                  gap: '8px'
-                }}>
                   {/* Quiz 1: Hidden Skills */}
                   {(() => {
                     const result = quizResults.find(r => r.quiz_title?.toLowerCase().includes('hidden') || r.quiz_id === 1);
@@ -1370,9 +1450,13 @@ export default function AnalyticsPage() {
                           flexShrink: 0,
                           position: 'relative'
                         }}>
-                          🎯
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <circle cx="12" cy="12" r="6"/>
+                            <circle cx="12" cy="12" r="2"/>
+                          </svg>
                           {isCompleted && (
-              <div style={{
+                            <div style={{
                               position: 'absolute',
                               top: '-3px',
                               right: '-3px',
@@ -1380,7 +1464,7 @@ export default function AnalyticsPage() {
                               height: '14px',
                               borderRadius: '50%',
                               background: '#00C2FF',
-                display: 'flex',
+                              display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               border: '2px solid #111'
@@ -1388,7 +1472,7 @@ export default function AnalyticsPage() {
                               <svg width="7" height="7" fill="none" stroke="#111" strokeWidth="2.5" viewBox="0 0 24 24">
                                 <polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round"/>
                               </svg>
-              </div>
+                            </div>
                           )}
                         </div>
                         <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
@@ -1435,9 +1519,13 @@ export default function AnalyticsPage() {
                           flexShrink: 0,
                           position: 'relative'
                         }}>
-                          💡
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#667eea" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M9 18h6"/>
+                            <path d="M10 22h4"/>
+                            <path d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2z"/>
+                          </svg>
                           {isCompleted && (
-              <div style={{
+                            <div style={{
                               position: 'absolute',
                               top: '-3px',
                               right: '-3px',
@@ -1445,7 +1533,7 @@ export default function AnalyticsPage() {
                               height: '14px',
                               borderRadius: '50%',
                               background: '#667eea',
-                display: 'flex',
+                              display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               border: '2px solid #111'
@@ -1453,9 +1541,9 @@ export default function AnalyticsPage() {
                               <svg width="7" height="7" fill="none" stroke="#fff" strokeWidth="2.5" viewBox="0 0 24 24">
                                 <polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round"/>
                               </svg>
-              </div>
+                            </div>
                           )}
-            </div>
+                        </div>
                         <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
                           <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff', marginBottom: '3px' }}>Brand Strategy</div>
                           <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', lineHeight: 1.3 }}>
@@ -1500,9 +1588,15 @@ export default function AnalyticsPage() {
                           flexShrink: 0,
                           position: 'relative'
                         }}>
-                          🎨
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF006B" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="13.5" cy="6.5" r="1.5"/>
+                            <circle cx="17.5" cy="10.5" r="1.5"/>
+                            <circle cx="8.5" cy="7.5" r="1.5"/>
+                            <circle cx="6.5" cy="12.5" r="1.5"/>
+                            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.7-.1 2.5-.3.4-.1.6-.5.4-.9-.6-1.1-1-2.5-.6-3.8.5-1.6 2-2.7 3.6-2.7 1 0 2 .4 2.7 1 .4.3 1 .2 1.2-.3.2-.6.2-1.3.2-2C22 6.5 17.5 2 12 2z"/>
+                          </svg>
                           {isCompleted && (
-              <div style={{
+                            <div style={{
                               position: 'absolute',
                               top: '-3px',
                               right: '-3px',
@@ -1510,7 +1604,7 @@ export default function AnalyticsPage() {
                               height: '14px',
                               borderRadius: '50%',
                               background: '#FF006B',
-                display: 'flex',
+                              display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               border: '2px solid #111'
@@ -1551,15 +1645,17 @@ export default function AnalyticsPage() {
                     <div style={{
                       width: '44px',
                       height: '44px',
-                borderRadius: '12px',
+                      borderRadius: '12px',
                       background: 'rgba(255, 255, 255, 0.06)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '22px',
                       flexShrink: 0
                     }}>
-                      🔒
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                      </svg>
                     </div>
                     <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
                       <div style={{ fontSize: '13px', fontWeight: '600', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '3px' }}>Audience Analysis</div>
@@ -1569,7 +1665,6 @@ export default function AnalyticsPage() {
                     </div>
                   </Link>
                 </div>
-              </div>
             </div>
             </>
             )}
@@ -1666,9 +1761,29 @@ export default function AnalyticsPage() {
                   fontSize: '40px',
                   flexShrink: 0
                 }}>
-                  {expandedQuiz === 'hidden-skills' && '🎯'}
-                  {expandedQuiz === 'brand-strategy' && '💡'}
-                  {expandedQuiz === 'visual-language' && '🎨'}
+                  {expandedQuiz === 'hidden-skills' && (
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <circle cx="12" cy="12" r="6"/>
+                      <circle cx="12" cy="12" r="2"/>
+                    </svg>
+                  )}
+                  {expandedQuiz === 'brand-strategy' && (
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#667eea" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 18h6"/>
+                      <path d="M10 22h4"/>
+                      <path d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2z"/>
+                    </svg>
+                  )}
+                  {expandedQuiz === 'visual-language' && (
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#FF006B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="13.5" cy="6.5" r="1.5"/>
+                      <circle cx="17.5" cy="10.5" r="1.5"/>
+                      <circle cx="8.5" cy="7.5" r="1.5"/>
+                      <circle cx="6.5" cy="12.5" r="1.5"/>
+                      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.7-.1 2.5-.3.4-.1.6-.5.4-.9-.6-1.1-1-2.5-.6-3.8.5-1.6 2-2.7 3.6-2.7 1 0 2 .4 2.7 1 .4.3 1 .2 1.2-.3.2-.6.2-1.3.2-2C22 6.5 17.5 2 12 2z"/>
+                    </svg>
+                  )}
                 </div>
                 
                 {/* Title & Short Info */}
@@ -1847,8 +1962,11 @@ export default function AnalyticsPage() {
         </>
           )}
 
-      {/* Bottom fade gradient - content fades into menu */}
+      {/* Bottom swipe zone + fade gradient */}
       <div
+        onTouchStart={handleBottomSwipeStart}
+        onTouchMove={handleBottomSwipeMove}
+        onTouchEnd={handleBottomSwipeEnd}
         style={{
           position: 'fixed',
           bottom: 0,
@@ -1856,7 +1974,6 @@ export default function AnalyticsPage() {
           right: 0,
           height: '120px',
           background: 'linear-gradient(to top, rgba(15, 15, 15, 0.95) 0%, rgba(15, 15, 15, 0.7) 40%, transparent 100%)',
-          pointerEvents: 'none',
           zIndex: 999
         }}
       />

@@ -492,38 +492,38 @@ export default function SettingsPage() {
               </button>
 
               {/* Log Out Button */}
-              <button
-                onClick={() => {
-                  logout();
-                  toast.success('Logged out successfully');
-                  router.push('/auth/login');
-                }}
-                style={{
-                  width: '100%',
-                  height: '55px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '10px',
-                  padding: '0 16px',
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  <button
+                    onClick={() => {
+                      logout();
+                      toast.success('Logged out successfully');
+                      router.push('/auth/login');
+                    }}
+                    style={{
+                      width: '100%',
+                      height: '55px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '10px',
+                      padding: '0 16px',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
                   borderRadius: '16px',
-                  cursor: 'pointer',
+                      cursor: 'pointer',
                   transition: 'all 0.15s ease'
-                }}
-                onMouseEnter={(e) => {
+                    }}
+                    onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'rgba(239, 68, 68, 0.18)';
                   e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.4)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
                   e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
-                }}
-              >
-                <ArrowRightOnRectangleIcon style={{ width: '20px', height: '20px', color: '#EF4444' }} />
-                <span style={{ fontSize: '15px', fontWeight: 500, color: '#EF4444' }}>Log Out</span>
-              </button>
+                    }}
+                  >
+                    <ArrowRightOnRectangleIcon style={{ width: '20px', height: '20px', color: '#EF4444' }} />
+                    <span style={{ fontSize: '15px', fontWeight: 500, color: '#EF4444' }}>Log Out</span>
+                  </button>
             </div>
           </div>
         </div>
@@ -590,39 +590,39 @@ export default function SettingsPage() {
         onClose={() => setActiveSection(null)}
         title="Terms of Service"
       >
-        <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', lineHeight: '1.6' }}>
-          <p style={{ marginBottom: '16px' }}>
-            <strong style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Last updated:</strong> January 2026
-          </p>
-          <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>1. Acceptance of Terms</h4>
-          <p style={{ marginBottom: '12px' }}>
-            By accessing and using WebSTAR, you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our service.
-          </p>
-          <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>2. Description of Service</h4>
-          <p style={{ marginBottom: '12px' }}>
-            WebSTAR is a professional portfolio and creative showcase platform that enables users to create, share, and manage their creative work, connect with other professionals, and build their personal brand.
-          </p>
-          <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>3. User Accounts</h4>
-          <p style={{ marginBottom: '12px' }}>
-            You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must notify us immediately of any unauthorized use.
-          </p>
-          <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>4. User Content</h4>
-          <p style={{ marginBottom: '12px' }}>
-            You retain ownership of content you upload. By posting content, you grant WebSTAR a non-exclusive license to display, distribute, and promote your content within the platform.
-          </p>
-          <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>5. Prohibited Conduct</h4>
-          <p style={{ marginBottom: '12px' }}>
-            Users may not upload illegal content, harass others, spam, impersonate others, or attempt to compromise platform security.
-          </p>
-          <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>6. Termination</h4>
-          <p style={{ marginBottom: '12px' }}>
-            We reserve the right to suspend or terminate accounts that violate these terms or for any other reason at our discretion.
-          </p>
-          <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>7. Contact</h4>
-          <p style={{ marginBottom: '12px' }}>
-            For questions about these terms, contact us at <span style={{ color: '#00C2FF' }}>legal@webstar.bio</span>
-          </p>
-        </div>
+            <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', lineHeight: '1.6' }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Last updated:</strong> January 2026
+              </p>
+              <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>1. Acceptance of Terms</h4>
+              <p style={{ marginBottom: '12px' }}>
+                By accessing and using WebSTAR, you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our service.
+              </p>
+              <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>2. Description of Service</h4>
+              <p style={{ marginBottom: '12px' }}>
+                WebSTAR is a professional portfolio and creative showcase platform that enables users to create, share, and manage their creative work, connect with other professionals, and build their personal brand.
+              </p>
+              <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>3. User Accounts</h4>
+              <p style={{ marginBottom: '12px' }}>
+                You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must notify us immediately of any unauthorized use.
+              </p>
+              <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>4. User Content</h4>
+              <p style={{ marginBottom: '12px' }}>
+                You retain ownership of content you upload. By posting content, you grant WebSTAR a non-exclusive license to display, distribute, and promote your content within the platform.
+              </p>
+              <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>5. Prohibited Conduct</h4>
+              <p style={{ marginBottom: '12px' }}>
+                Users may not upload illegal content, harass others, spam, impersonate others, or attempt to compromise platform security.
+              </p>
+              <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>6. Termination</h4>
+              <p style={{ marginBottom: '12px' }}>
+                We reserve the right to suspend or terminate accounts that violate these terms or for any other reason at our discretion.
+              </p>
+              <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>7. Contact</h4>
+              <p style={{ marginBottom: '12px' }}>
+                For questions about these terms, contact us at <span style={{ color: '#00C2FF' }}>legal@webstar.bio</span>
+              </p>
+            </div>
       </SettingsSubModal>
 
       {/* Privacy Policy Modal */}
@@ -631,39 +631,39 @@ export default function SettingsPage() {
         onClose={() => setActiveSection(null)}
         title="Privacy Policy"
       >
-        <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', lineHeight: '1.6' }}>
-          <p style={{ marginBottom: '16px' }}>
-            <strong style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Last updated:</strong> January 2026
-          </p>
-          <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>1. Information We Collect</h4>
-          <p style={{ marginBottom: '12px' }}>
-            We collect information you provide directly, including your name, email, profile information, and content you upload. We also collect usage data to improve our services.
-          </p>
-          <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>2. How We Use Your Information</h4>
-          <p style={{ marginBottom: '12px' }}>
-            We use your information to provide and improve our services, communicate with you, personalize your experience, and ensure platform security.
-          </p>
-          <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>3. Information Sharing</h4>
-          <p style={{ marginBottom: '12px' }}>
-            We do not sell your personal information. We may share data with service providers who help us operate the platform, and when required by law.
-          </p>
-          <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>4. Data Security</h4>
-          <p style={{ marginBottom: '12px' }}>
-            We implement industry-standard security measures to protect your data. However, no method of transmission over the internet is 100% secure.
-          </p>
-          <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>5. Your Rights</h4>
-          <p style={{ marginBottom: '12px' }}>
-            You have the right to access, correct, or delete your personal data. You can manage your privacy settings in your account preferences.
-          </p>
-          <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>6. Cookies</h4>
-          <p style={{ marginBottom: '12px' }}>
-            We use cookies and similar technologies to enhance your experience, analyze usage patterns, and provide personalized content.
-          </p>
-          <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>7. Contact Us</h4>
-          <p style={{ marginBottom: '12px' }}>
-            For privacy-related inquiries, contact us at <span style={{ color: '#00C2FF' }}>privacy@webstar.bio</span>
-          </p>
-        </div>
+            <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', lineHeight: '1.6' }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Last updated:</strong> January 2026
+              </p>
+              <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>1. Information We Collect</h4>
+              <p style={{ marginBottom: '12px' }}>
+                We collect information you provide directly, including your name, email, profile information, and content you upload. We also collect usage data to improve our services.
+              </p>
+              <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>2. How We Use Your Information</h4>
+              <p style={{ marginBottom: '12px' }}>
+                We use your information to provide and improve our services, communicate with you, personalize your experience, and ensure platform security.
+              </p>
+              <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>3. Information Sharing</h4>
+              <p style={{ marginBottom: '12px' }}>
+                We do not sell your personal information. We may share data with service providers who help us operate the platform, and when required by law.
+              </p>
+              <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>4. Data Security</h4>
+              <p style={{ marginBottom: '12px' }}>
+                We implement industry-standard security measures to protect your data. However, no method of transmission over the internet is 100% secure.
+              </p>
+              <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>5. Your Rights</h4>
+              <p style={{ marginBottom: '12px' }}>
+                You have the right to access, correct, or delete your personal data. You can manage your privacy settings in your account preferences.
+              </p>
+              <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>6. Cookies</h4>
+              <p style={{ marginBottom: '12px' }}>
+                We use cookies and similar technologies to enhance your experience, analyze usage patterns, and provide personalized content.
+              </p>
+              <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', marginBottom: '8px', marginTop: '20px' }}>7. Contact Us</h4>
+              <p style={{ marginBottom: '12px' }}>
+                For privacy-related inquiries, contact us at <span style={{ color: '#00C2FF' }}>privacy@webstar.bio</span>
+              </p>
+            </div>
       </SettingsSubModal>
 
       {/* 2FA Modals */}
@@ -689,7 +689,7 @@ export default function SettingsPage() {
         rightAction={handleFeedbackSubmit}
         rightActionLabel={feedbackSubmitting ? 'Sending...' : 'Send'}
         rightActionDisabled={feedbackSubmitting || !feedbackText.trim()}
-      >
+              >
         <div>
           {/* Description centered */}
           <div style={{ textAlign: 'center', marginBottom: '20px' }}>

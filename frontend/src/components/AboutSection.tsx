@@ -8,9 +8,10 @@ import SimpleCalendar from './SimpleCalendar';
 
 interface AboutSectionProps {
   isOwnProfile: boolean;
-  isCustomizeMode: boolean; // NEW: Controls when editing is enabled
+  isCustomizeMode: boolean;
   profile: any;
   onUpdate: () => void;
+  onActivateCustomize?: () => void; // Callback to activate customize mode from empty states
 }
 
 interface Skill {
@@ -106,17 +107,82 @@ const CustomizeHint = ({ text, isOwnProfile }: { text: string; isOwnProfile: boo
   );
 };
 
-// GripVertical Icon component
-const GripVerticalIcon = ({ size = 16, strokeWidth = 2.5 }: { size?: number; strokeWidth?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="9" cy="5" r="1" fill="currentColor" />
-    <circle cx="9" cy="12" r="1" fill="currentColor" />
-    <circle cx="9" cy="19" r="1" fill="currentColor" />
-    <circle cx="15" cy="5" r="1" fill="currentColor" />
-    <circle cx="15" cy="12" r="1" fill="currentColor" />
-    <circle cx="15" cy="19" r="1" fill="currentColor" />
-  </svg>
-);
+// Compact Empty State - shows cyan add button in customize mode, otherwise plain text
+const EmptyStateInline = ({ 
+  text, 
+  isOwnProfile,
+  isCustomizeMode,
+  onTapCustomize,
+  onAdd
+}: { 
+  text: string; 
+  isOwnProfile: boolean;
+  isCustomizeMode?: boolean;
+  onTapCustomize?: () => void;
+  onAdd?: () => void;
+}) => {
+  // In customize mode with onAdd, show cyan dashed button
+  if (isCustomizeMode && isOwnProfile && onAdd) {
+    return (
+      <button
+        onClick={onAdd}
+        className="add-card w-full transition-all active:scale-[0.98]"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '6px',
+          height: '32px',
+          padding: '5px 12px',
+          borderRadius: '8px',
+          background: 'rgba(0, 194, 255, 0.08)',
+          border: '1.5px dashed rgba(0, 194, 255, 0.5)',
+          color: 'var(--blue)',
+          fontSize: '13px',
+          fontWeight: 500,
+          cursor: 'pointer',
+        }}
+      >
+        + {text}
+      </button>
+    );
+  }
+  
+  // Default: plain empty state
+  return (
+    <div 
+      onClick={isOwnProfile && onTapCustomize ? onTapCustomize : undefined}
+      style={{
+        padding: '16px 12px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        background: 'rgba(255, 255, 255, 0.02)',
+        borderRadius: '10px',
+        border: '2px dashed rgba(255, 255, 255, 0.15)',
+        cursor: isOwnProfile && onTapCustomize ? 'pointer' : 'default',
+      }}
+    >
+      <span style={{ 
+        fontSize: '14px', 
+        color: 'rgba(255, 255, 255, 0.4)',
+      }}>
+        {text}
+      </span>
+      {isOwnProfile && (
+        <span style={{
+          fontSize: '11px',
+          color: 'rgba(255, 255, 255, 0.3)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px'
+        }}>
+          tap <img src="/palette.svg" alt="" style={{ width: '11px', height: '11px', filter: 'invert(1) opacity(0.4)' }} />
+        </span>
+      )}
+    </div>
+  );
+};
 
 // Minus Icon component
 const MinusIcon = ({ size = 12, strokeWidth = 3 }: { size?: number; strokeWidth?: number }) => (
@@ -125,7 +191,7 @@ const MinusIcon = ({ size = 12, strokeWidth = 3 }: { size?: number; strokeWidth?
   </svg>
 );
 
-export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, onUpdate }: AboutSectionProps) {
+export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, onUpdate, onActivateCustomize }: AboutSectionProps) {
   // About editing
   const [aboutText, setAboutText] = useState('');
   const [showFullAbout, setShowFullAbout] = useState(false);
@@ -162,11 +228,9 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [platformToDelete, setPlatformToDelete] = useState<string | null>(null);
 
-  // Section reordering via drag & drop
+  // Section reordering with simple up/down arrows
   type SectionId = 'about' | 'experience' | 'skills' | 'connect';
   const [sectionOrder, setSectionOrder] = useState<SectionId[]>(['about', 'experience', 'skills', 'connect']);
-  const [draggedSection, setDraggedSection] = useState<SectionId | null>(null);
-  const [dragOverSection, setDragOverSection] = useState<SectionId | null>(null);
 
   // Load section order from localStorage
   useEffect(() => {
@@ -183,52 +247,17 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
     }
   }, []);
 
-  // Drag handlers for section reordering
-  const handleDragStart = (e: React.DragEvent, sectionId: SectionId) => {
-    setDraggedSection(sectionId);
-    e.dataTransfer.effectAllowed = 'move';
-    // Add visual feedback
-    const target = e.currentTarget as HTMLElement;
-    target.style.opacity = '0.5';
-  };
-
-  const handleDragEnd = (e: React.DragEvent) => {
-    const target = e.currentTarget as HTMLElement;
-    target.style.opacity = '1';
-    setDraggedSection(null);
-    setDragOverSection(null);
-  };
-
-  const handleDragOver = (e: React.DragEvent, sectionId: SectionId) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    if (draggedSection && draggedSection !== sectionId) {
-      setDragOverSection(sectionId);
-    }
-  };
-
-  const handleDragLeave = () => {
-    setDragOverSection(null);
-  };
-
-  const handleDrop = (e: React.DragEvent, targetSectionId: SectionId) => {
-    e.preventDefault();
-    if (!draggedSection || draggedSection === targetSectionId) return;
-
+  // Simple move function for section reordering
+  const moveSection = (sectionId: SectionId, direction: 'up' | 'down') => {
+    const currentIndex = sectionOrder.indexOf(sectionId);
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    
+    if (newIndex < 0 || newIndex >= sectionOrder.length) return;
+    
     const newOrder = [...sectionOrder];
-    const draggedIndex = newOrder.indexOf(draggedSection);
-    const targetIndex = newOrder.indexOf(targetSectionId);
-
-    // Swap the sections
-    newOrder[draggedIndex] = targetSectionId;
-    newOrder[targetIndex] = draggedSection;
-
+    [newOrder[currentIndex], newOrder[newIndex]] = [newOrder[newIndex], newOrder[currentIndex]];
     setSectionOrder(newOrder);
     localStorage.setItem('about_section_order', JSON.stringify(newOrder));
-    toast.success('Section order updated!');
-
-    setDraggedSection(null);
-    setDragOverSection(null);
   };
 
   // Track if we've already initialized for this customize session
@@ -817,67 +846,8 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
   // Check if customize mode is active for editing
   const canEdit = isCustomizeMode && isOwnProfile;
 
-  // Section wrapper with drag functionality
-  const SectionWrapper = ({ 
-    sectionId, 
-    children 
-  }: { 
-    sectionId: SectionId; 
-    children: React.ReactNode;
-  }) => (
-      <div 
-      className="rounded-xl border relative"
-      draggable={canEdit}
-      onDragStart={(e) => canEdit && handleDragStart(e, sectionId)}
-      onDragEnd={handleDragEnd}
-      onDragOver={(e) => canEdit && handleDragOver(e, sectionId)}
-      onDragLeave={handleDragLeave}
-      onDrop={(e) => canEdit && handleDrop(e, sectionId)}
-        style={{
-          background: 'var(--bg-surface)',
-        borderColor: dragOverSection === sectionId 
-          ? 'rgba(0, 194, 255, 0.8)' 
-          : canEdit 
-            ? 'rgba(0, 194, 255, 0.3)' 
-            : 'var(--border)',
-          borderRadius: 'var(--radius-xl)',
-        transform: dragOverSection === sectionId ? 'scale(1.02)' : 'scale(1)',
-        transition: 'all 0.2s ease',
-        boxShadow: dragOverSection === sectionId ? '0 0 20px rgba(0, 194, 255, 0.3)' : 'none',
-      }}
-    >
-      {/* Drag Handle - only in customize mode */}
-      {canEdit && (
-        <div 
-          className="drag-handle"
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: '32px',
-            background: draggedSection === sectionId 
-              ? 'linear-gradient(90deg, rgba(0, 194, 255, 0.3) 0%, rgba(0, 194, 255, 0.15) 100%)'
-              : 'linear-gradient(90deg, rgba(0, 194, 255, 0.12) 0%, rgba(0, 194, 255, 0.04) 100%)',
-            borderRight: '1px solid rgba(0, 194, 255, 0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: draggedSection === sectionId ? 'rgba(0, 194, 255, 1)' : 'rgba(0, 194, 255, 0.7)',
-            cursor: 'grab',
-            borderTopLeftRadius: 'var(--radius-xl)',
-            borderBottomLeftRadius: 'var(--radius-xl)',
-          }}
-        >
-          <GripVerticalIcon size={16} strokeWidth={2.5} />
-        </div>
-      )}
-      {children}
-    </div>
-  );
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '100px' }}>
       {/* CSS for skeleton shimmer animations - iOS/Telegram style */}
       <style jsx global>{`
         @keyframes shimmer {
@@ -900,76 +870,85 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
       `}</style>
       
       {/* About Section */}
-      <div 
-        className="rounded-xl border relative"
-        draggable={canEdit}
-        onDragStart={(e) => canEdit && handleDragStart(e, 'about')}
-        onDragEnd={handleDragEnd}
-        onDragOver={(e) => canEdit && handleDragOver(e, 'about')}
-        onDragLeave={handleDragLeave}
-        onDrop={(e) => canEdit && handleDrop(e, 'about')}
-        style={{
-          order: sectionOrder.indexOf('about'),
-          background: 'var(--bg-surface)',
-          borderColor: dragOverSection === 'about' ? 'rgba(0, 194, 255, 0.8)' : 'var(--border)',
-          borderRadius: 'var(--radius-xl)',
-          transform: dragOverSection === 'about' ? 'scale(1.01)' : 'scale(1)',
-          transition: 'all 0.2s ease',
-          boxShadow: dragOverSection === 'about' ? '0 0 20px rgba(0, 194, 255, 0.3)' : 'none',
-          opacity: draggedSection === 'about' ? 0.5 : 1,
-        }}
-      >
-        {/* Drag Handle - only in customize mode */}
-        {canEdit && (
-          <div 
-            className="drag-handle"
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: '32px',
-              background: 'linear-gradient(90deg, rgba(0, 194, 255, 0.12) 0%, rgba(0, 194, 255, 0.04) 100%)',
-              borderRight: '1px solid rgba(0, 194, 255, 0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'rgba(0, 194, 255, 0.7)',
-              cursor: 'grab',
-              borderTopLeftRadius: 'var(--radius-xl)',
-              borderBottomLeftRadius: 'var(--radius-xl)',
-            }}
-          >
-            <GripVerticalIcon size={16} strokeWidth={2.5} />
-          </div>
-        )}
-        
-        <div 
-          style={{ 
-            padding: 'var(--space-4)',
-            marginLeft: canEdit ? '32px' : '0',
-            transition: 'margin-left 0.2s ease',
-        }}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <label 
-            className="font-semibold"
-            style={{ 
-              fontSize: '11px',
-              lineHeight: '16px',
-                    fontWeight: '600',
-              color: 'rgba(255, 255, 255, 0.5)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-                  }}
-                >
+      <div style={{ order: sectionOrder.indexOf('about') }}>
+        {/* Title outside card */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          marginBottom: '8px',
+          paddingLeft: '4px'
+        }}>
+          <label style={{ 
+            fontSize: '11px',
+            fontWeight: '600',
+            color: 'rgba(255, 255, 255, 0.35)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+          }}>
             About
           </label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {isSavingAbout && (
-            <span style={{ fontSize: '11px', color: 'var(--blue)' }}>Saving...</span>
-          )}
+              <span style={{ fontSize: '11px', color: 'var(--blue)' }}>Saving...</span>
+            )}
+            {canEdit && (
+              <div style={{ display: 'flex', gap: '2px' }}>
+                <button
+                  onClick={() => moveSection('about', 'up')}
+                  disabled={sectionOrder.indexOf('about') === 0}
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: sectionOrder.indexOf('about') === 0 ? 'not-allowed' : 'pointer',
+                    opacity: sectionOrder.indexOf('about') === 0 ? 0.3 : 0.6,
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m18 15-6-6-6 6"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={() => moveSection('about', 'down')}
+                  disabled={sectionOrder.indexOf('about') === 3}
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: sectionOrder.indexOf('about') === 3 ? 'not-allowed' : 'pointer',
+                    opacity: sectionOrder.indexOf('about') === 3 ? 0.3 : 0.6,
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m6 9 6 6 6-6"/>
+                  </svg>
+                </button>
               </div>
-
+            )}
+          </div>
+        </div>
+        
+        {/* Card */}
+        <div 
+          className="rounded-xl border"
+          style={{
+            background: 'var(--bg-surface)',
+            borderColor: 'var(--border)',
+            borderRadius: 'var(--radius-xl)',
+          }}
+        >
+          <div style={{ padding: 'var(--space-4)' }}>
           {canEdit ? (
             // Editable mode - matching Edit Post styling
           <div style={{ maxWidth: '336px', margin: '0 auto', position: 'relative' }}>
@@ -1070,123 +1049,107 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                 )}
               </>
             ) : (
-                // Empty state for view mode
+                // Empty state - static card, not loading-like skeleton
                 !isOwnProfile ? (
-                  <div 
-                    style={{
-                      padding: 'var(--space-4)',
-                      textAlign: 'center',
-                      color: 'rgba(255, 255, 255, 0.4)',
-                      fontSize: '13px',
-                    }}
-                  >
-                    User has not provided info yet
+                  <div style={{ padding: '20px', textAlign: 'center', color: 'rgba(255, 255, 255, 0.35)', fontSize: '13px' }}>
+                    Nothing here yet
                   </div>
                 ) : (
-                  // Simple skeleton lines for empty about - 3+2 paragraphs (only for own profile)
-                  <div 
-                    style={{
-                      padding: 'var(--space-4)',
-                      background: 'rgba(255, 255, 255, 0.02)',
-                      borderRadius: '12px',
-                      maxWidth: '336px',
-                      margin: '0 auto',
-                    }}
-                  >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                      {/* Paragraph 1 - 3 lines */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <SkeletonLine width="100%" height="11px" />
-                        <SkeletonLine width="90%" height="11px" />
-                        <SkeletonLine width="65%" height="11px" />
-                      </div>
-                      
-                      {/* Paragraph 2 - 2 lines */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <SkeletonLine width="95%" height="11px" />
-                        <SkeletonLine width="50%" height="11px" />
-                      </div>
-                    </div>
-                    <CustomizeHint text="to tell your story" isOwnProfile={isOwnProfile} />
-                  </div>
+                  <EmptyStateInline 
+                    text="Add your story" 
+                    isOwnProfile={isOwnProfile} 
+                    isCustomizeMode={isCustomizeMode}
+                    onTapCustomize={onActivateCustomize}
+                    onAdd={onActivateCustomize}
+                  />
                 )
-        )}
+              )}
             </div>
           )}
+          </div>
         </div>
       </div>
 
       {/* Experience Section */}
-      <div 
-        className="border relative"
-        draggable={canEdit}
-        onDragStart={(e) => canEdit && handleDragStart(e, 'experience')}
-        onDragEnd={handleDragEnd}
-        onDragOver={(e) => canEdit && handleDragOver(e, 'experience')}
-        onDragLeave={handleDragLeave}
-        onDrop={(e) => canEdit && handleDrop(e, 'experience')}
-        style={{
-          order: sectionOrder.indexOf('experience'),
-          background: 'var(--bg-surface)',
-          borderColor: dragOverSection === 'experience' ? 'rgba(0, 194, 255, 0.8)' : 'var(--border)',
-          borderRadius: 'var(--radius-xl)',
-          transform: dragOverSection === 'experience' ? 'scale(1.01)' : 'scale(1)',
-          transition: 'all 0.2s ease',
-          boxShadow: dragOverSection === 'experience' ? '0 0 20px rgba(0, 194, 255, 0.3)' : 'none',
-          opacity: draggedSection === 'experience' ? 0.5 : 1,
-        }}
-      >
-        {/* Drag Handle */}
-        {canEdit && (
-          <div 
-            className="drag-handle"
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: '32px',
-              background: 'linear-gradient(90deg, rgba(0, 194, 255, 0.12) 0%, rgba(0, 194, 255, 0.04) 100%)',
-              borderRight: '1px solid rgba(0, 194, 255, 0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'rgba(0, 194, 255, 0.7)',
-              cursor: 'grab',
-              borderTopLeftRadius: 'var(--radius-xl)',
-              borderBottomLeftRadius: 'var(--radius-xl)',
-            }}
-          >
-            <GripVerticalIcon size={16} strokeWidth={2.5} />
-          </div>
-        )}
-
-        <div 
-          style={{ 
-          padding: 'var(--space-4)',
-            marginLeft: canEdit ? '32px' : '0',
-            transition: 'margin-left 0.2s ease',
-        }}
-      >
-        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
-          <label 
-            className="font-semibold"
-            style={{
-              fontSize: '11px',
-              lineHeight: '16px',
-              fontWeight: '600',
-              color: 'rgba(255, 255, 255, 0.5)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-            }}
-          >
+      <div style={{ order: sectionOrder.indexOf('experience') }}>
+        {/* Title outside card */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          marginBottom: '8px',
+          paddingLeft: '4px'
+        }}>
+          <label style={{ 
+            fontSize: '11px',
+            fontWeight: '600',
+            color: 'rgba(255, 255, 255, 0.35)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+          }}>
             Experience
           </label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {isSavingExperience && (
-            <span style={{ fontSize: '11px', color: 'var(--blue)' }}>Saving...</span>
-          )}
+              <span style={{ fontSize: '11px', color: 'var(--blue)' }}>Saving...</span>
+            )}
+            {canEdit && (
+              <div style={{ display: 'flex', gap: '2px' }}>
+                <button
+                  onClick={() => moveSection('experience', 'up')}
+                  disabled={sectionOrder.indexOf('experience') === 0}
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: sectionOrder.indexOf('experience') === 0 ? 'not-allowed' : 'pointer',
+                    opacity: sectionOrder.indexOf('experience') === 0 ? 0.3 : 0.6,
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m18 15-6-6-6 6"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={() => moveSection('experience', 'down')}
+                  disabled={sectionOrder.indexOf('experience') === 3}
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: sectionOrder.indexOf('experience') === 3 ? 'not-allowed' : 'pointer',
+                    opacity: sectionOrder.indexOf('experience') === 3 ? 0.3 : 0.6,
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m6 9 6 6 6-6"/>
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-
+        
+        {/* Card */}
+        <div 
+          className="border"
+          style={{
+            background: 'var(--bg-surface)',
+            borderColor: 'var(--border)',
+            borderRadius: 'var(--radius-xl)',
+          }}
+        >
+          <div style={{ padding: 'var(--space-4)' }}>
           {canEdit ? (
             // Editable mode
           <div style={{ maxWidth: '336px', margin: '0 auto' }}>
@@ -1477,144 +1440,107 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                   </div>
                 </div>
               ) : (
-                // Empty state for view mode
+                // Empty state - static card, not loading-like skeleton
                 !isOwnProfile ? (
-                  <div 
-                    style={{
-                      padding: 'var(--space-4)',
-                      textAlign: 'center',
-                      color: 'rgba(255, 255, 255, 0.4)',
-                      fontSize: '13px',
-                    }}
-                  >
-                    User has not provided info yet
+                  <div style={{ padding: '20px', textAlign: 'center', color: 'rgba(255, 255, 255, 0.35)', fontSize: '13px' }}>
+                    Nothing here yet
                   </div>
                 ) : (
-                  // Skeleton timeline card for empty experience - iOS style (only for own profile)
-                  <div 
-                    style={{
-                      padding: 'var(--space-4)',
-                      background: 'rgba(255, 255, 255, 0.02)',
-                      borderRadius: '12px',
-                      maxWidth: '336px',
-                      margin: '0 auto',
-                    }}
-                  >
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'flex-start', 
-                      gap: 'var(--space-3)',
-                    }}>
-                      {/* Timeline dot - skeleton */}
-                      <div 
-                        className="skeleton-shimmer"
-                        style={{
-                          width: '10px', 
-                          height: '10px', 
-                          borderRadius: '50%', 
-                          background: 'linear-gradient(90deg, rgba(0,194,255,0.2) 0%, rgba(0,194,255,0.3) 50%, rgba(0,194,255,0.2) 100%)',
-                          backgroundSize: '200% 100%',
-                          animation: 'shimmer 2s ease-in-out infinite',
-                          marginTop: '5px',
-                          flexShrink: 0,
-                        }} 
-                      />
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {/* Role skeleton */}
-                        <SkeletonLine width="60%" height="16px" />
-                        {/* Company + date row */}
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <SkeletonLine width="35%" height="12px" />
-                          <span style={{ color: 'rgba(255,255,255,0.1)' }}>•</span>
-                          <SkeletonLine width="25%" height="12px" />
-                        </div>
-                        {/* Description skeleton */}
-                        <div style={{ marginTop: '4px' }}>
-                          <SkeletonLine width="100%" height="10px" style={{ marginBottom: '6px' }} />
-                          <SkeletonLine width="75%" height="10px" />
-                        </div>
-                      </div>
-                    </div>
-                    <CustomizeHint text="to show your journey" isOwnProfile={isOwnProfile} />
-                  </div>
+                  <EmptyStateInline 
+                    text="Add experience" 
+                    isOwnProfile={isOwnProfile} 
+                    isCustomizeMode={isCustomizeMode}
+                    onTapCustomize={onActivateCustomize}
+                    onAdd={addExperience}
+                  />
                 )
               )}
-                        </div>
+            </div>
           )}
-                    </div>
-              </div>
+          </div>
+        </div>
+      </div>
 
       {/* Skills Section */}
-      <div 
-        className="border relative"
-        draggable={canEdit}
-        onDragStart={(e) => canEdit && handleDragStart(e, 'skills')}
-        onDragEnd={handleDragEnd}
-        onDragOver={(e) => canEdit && handleDragOver(e, 'skills')}
-        onDragLeave={handleDragLeave}
-        onDrop={(e) => canEdit && handleDrop(e, 'skills')}
-                  style={{
-          order: sectionOrder.indexOf('skills'),
-          background: 'var(--bg-surface)',
-          borderColor: dragOverSection === 'skills' ? 'rgba(0, 194, 255, 0.8)' : 'var(--border)',
-                    borderRadius: 'var(--radius-xl)',
-          transform: dragOverSection === 'skills' ? 'scale(1.01)' : 'scale(1)',
-          transition: 'all 0.2s ease',
-          boxShadow: dragOverSection === 'skills' ? '0 0 20px rgba(0, 194, 255, 0.3)' : 'none',
-          opacity: draggedSection === 'skills' ? 0.5 : 1,
-                  }}
-                >
-        {/* Drag Handle */}
-        {canEdit && (
-          <div 
-            className="drag-handle"
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: '32px',
-              background: 'linear-gradient(90deg, rgba(0, 194, 255, 0.12) 0%, rgba(0, 194, 255, 0.04) 100%)',
-              borderRight: '1px solid rgba(0, 194, 255, 0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'rgba(0, 194, 255, 0.7)',
-              cursor: 'grab',
-              borderTopLeftRadius: 'var(--radius-xl)',
-              borderBottomLeftRadius: 'var(--radius-xl)',
-            }}
-          >
-            <GripVerticalIcon size={16} strokeWidth={2.5} />
-          </div>
-        )}
-
-      <div 
-        style={{
-          padding: 'var(--space-4)',
-            marginLeft: canEdit ? '32px' : '0',
-            transition: 'margin-left 0.2s ease',
-        }}
-      >
-        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
-          <label 
-            className="font-semibold"
-            style={{
-              fontSize: '11px',
-              lineHeight: '16px',
-              fontWeight: '600',
-              color: 'rgba(255, 255, 255, 0.5)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-            }}
-          >
+      <div style={{ order: sectionOrder.indexOf('skills') }}>
+        {/* Title outside card */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          marginBottom: '8px',
+          paddingLeft: '4px'
+        }}>
+          <label style={{ 
+            fontSize: '11px',
+            fontWeight: '600',
+            color: 'rgba(255, 255, 255, 0.35)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+          }}>
             Skills
           </label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {isSavingSkills && (
-            <span style={{ fontSize: '11px', color: 'var(--blue)' }}>Saving...</span>
-          )}
+              <span style={{ fontSize: '11px', color: 'var(--blue)' }}>Saving...</span>
+            )}
+            {canEdit && (
+              <div style={{ display: 'flex', gap: '2px' }}>
+                <button
+                  onClick={() => moveSection('skills', 'up')}
+                  disabled={sectionOrder.indexOf('skills') === 0}
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: sectionOrder.indexOf('skills') === 0 ? 'not-allowed' : 'pointer',
+                    opacity: sectionOrder.indexOf('skills') === 0 ? 0.3 : 0.6,
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m18 15-6-6-6 6"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={() => moveSection('skills', 'down')}
+                  disabled={sectionOrder.indexOf('skills') === 3}
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: sectionOrder.indexOf('skills') === 3 ? 'not-allowed' : 'pointer',
+                    opacity: sectionOrder.indexOf('skills') === 3 ? 0.3 : 0.6,
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m6 9 6 6 6-6"/>
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-
+        
+        {/* Card */}
+        <div 
+          className="border"
+          style={{
+            background: 'var(--bg-surface)',
+            borderColor: 'var(--border)',
+            borderRadius: 'var(--radius-xl)',
+          }}
+        >
+          <div style={{ padding: 'var(--space-4)' }}>
           {canEdit ? (
             // Editable mode
           <div style={{ maxWidth: '336px', margin: '0 auto' }}>
@@ -1913,110 +1839,106 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                     <CustomizeHint text="to show your superpowers" isOwnProfile={isOwnProfile} />
                   </div>
                 )
-        )}
+              )}
             </div>
           )}
+          </div>
         </div>
       </div>
 
       {/* Connect Section */}
-      <div 
-        className="border relative"
-        draggable={canEdit}
-        onDragStart={(e) => canEdit && handleDragStart(e, 'connect')}
-        onDragEnd={handleDragEnd}
-        onDragOver={(e) => canEdit && handleDragOver(e, 'connect')}
-        onDragLeave={handleDragLeave}
-        onDrop={(e) => canEdit && handleDrop(e, 'connect')}
-        style={{
-          order: sectionOrder.indexOf('connect'),
-          background: 'var(--bg-surface)',
-          borderColor: dragOverSection === 'connect' ? 'rgba(0, 194, 255, 0.8)' : 'var(--border)',
-          borderRadius: 'var(--radius-xl)',
-          transform: dragOverSection === 'connect' ? 'scale(1.01)' : 'scale(1)',
-          transition: 'all 0.2s ease',
-          boxShadow: dragOverSection === 'connect' ? '0 0 20px rgba(0, 194, 255, 0.3)' : 'none',
-          opacity: draggedSection === 'connect' ? 0.5 : 1,
-        }}
-      >
-        {/* Drag Handle */}
-        {canEdit && (
-          <div 
-            className="drag-handle"
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: '32px',
-              background: 'linear-gradient(90deg, rgba(0, 194, 255, 0.12) 0%, rgba(0, 194, 255, 0.04) 100%)',
-              borderRight: '1px solid rgba(0, 194, 255, 0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'rgba(0, 194, 255, 0.7)',
-              cursor: 'grab',
-              borderTopLeftRadius: 'var(--radius-xl)',
-              borderBottomLeftRadius: 'var(--radius-xl)',
-            }}
-          >
-            <GripVerticalIcon size={16} strokeWidth={2.5} />
-          </div>
-        )}
-
-        <div 
-          style={{ 
-          padding: 'var(--space-4)',
-            marginLeft: canEdit ? '32px' : '0',
-            transition: 'margin-left 0.2s ease',
-        }}
-      >
-        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
-          <label 
-            className="font-semibold"
-            style={{
-              fontSize: '11px',
-              lineHeight: '16px',
-              fontWeight: '600',
-              color: 'rgba(255, 255, 255, 0.5)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-            }}
-          >
+      <div style={{ order: sectionOrder.indexOf('connect') }}>
+        {/* Title outside card */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          marginBottom: '8px',
+          paddingLeft: '4px'
+        }}>
+          <label style={{ 
+            fontSize: '11px',
+            fontWeight: '600',
+            color: 'rgba(255, 255, 255, 0.35)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+          }}>
             Connect
           </label>
-            {canEdit && !showAddConnect && (
-            <button
-              onClick={() => setShowAddConnect(true)}
-              style={{
-                height: '24px',
-                padding: '0 10px',
-                background: 'rgba(0, 194, 255, 0.08)',
-                border: '1.5px dashed rgba(0, 194, 255, 0.6)',
-                borderRadius: '6px',
-                  color: 'var(--blue)',
-                fontSize: '11px',
-                  fontWeight: '600',
-                }}
-              >
-                + Add
-            </button>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {canEdit && (
+              <div style={{ display: 'flex', gap: '2px' }}>
+                <button
+                  onClick={() => moveSection('connect', 'up')}
+                  disabled={sectionOrder.indexOf('connect') === 0}
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: sectionOrder.indexOf('connect') === 0 ? 'not-allowed' : 'pointer',
+                    opacity: sectionOrder.indexOf('connect') === 0 ? 0.3 : 0.6,
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m18 15-6-6-6 6"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={() => moveSection('connect', 'down')}
+                  disabled={sectionOrder.indexOf('connect') === 3}
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: sectionOrder.indexOf('connect') === 3 ? 'not-allowed' : 'pointer',
+                    opacity: sectionOrder.indexOf('connect') === 3 ? 0.3 : 0.6,
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m6 9 6 6 6-6"/>
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-
+        
+        {/* Card */}
+        <div 
+          className="border"
+          style={{
+            background: 'var(--bg-surface)',
+            borderColor: 'var(--border)',
+            borderRadius: 'var(--radius-xl)',
+          }}
+        >
+          <div style={{ padding: 'var(--space-4)' }}>
           {showAddConnect && canEdit ? (
           <div style={{ maxWidth: '336px', margin: '0 auto', position: 'relative', zIndex: 100 }}>
             
               {/* Step 1: Platform Grid - Only show when no platform selected */}
             {!selectedPlatformForLink && (
             <div>
-              {Object.entries(PLATFORM_CATEGORIES).map(([categoryKey, category]) => (
+              {Object.entries(PLATFORM_CATEGORIES).map(([categoryKey, category], index) => (
                 <div key={categoryKey} style={{ marginBottom: 'var(--space-4)' }}>
                   <button
                     onClick={() => toggleCategory(categoryKey)}
                     className="w-full flex items-center justify-between transition"
                     style={{
                       padding: 'var(--space-2) 0',
+                      borderTop: index > 0 ? '1px solid rgba(255, 255, 255, 0.08)' : 'none',
+                      paddingTop: index > 0 ? 'var(--space-3)' : 'var(--space-2)',
+                      background: 'transparent',
                       color: 'var(--text-secondary)',
                       fontSize: '13px',
                       fontWeight: '500',
@@ -2024,16 +1946,40 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                       textAlign: 'left',
                     }}
                   >
-                    <span>{category.label}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {/* Category icons */}
+                      {categoryKey === 'social' && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
+                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                      )}
+                      {categoryKey === 'business' && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
+                          <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                        </svg>
+                      )}
+                      {categoryKey === 'sound' && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
+                          <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                        </svg>
+                      )}
+                      {categoryKey === 'custom' && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
+                          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                        </svg>
+                      )}
+                      {category.label}
+                    </span>
                     <span style={{ 
                       transform: expandedCategories[categoryKey] ? 'rotate(180deg)' : 'rotate(0deg)',
                       transition: 'transform 200ms',
                       fontSize: '10px',
+                      opacity: 0.5,
                     }}>▼</span>
                   </button>
 
                   {expandedCategories[categoryKey] && (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', paddingTop: 'var(--space-2)', maxHeight: categoryKey === 'social' ? '88px' : 'none', overflowY: categoryKey === 'social' ? 'auto' : 'visible', position: 'relative', zIndex: 1 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', paddingTop: 'var(--space-2)' }}>
                       {category.platforms.map((platform) => {
                         const isConnected = savedLinks.hasOwnProperty(platform.id);
                         return (
@@ -2086,30 +2032,30 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                 </div>
               ))}
 
-              {/* Back icon button - corner position */}
-              <div style={{ position: 'relative', marginTop: 'var(--space-3)' }}>
+              {/* Back button - full width */}
               <button
                 onClick={() => setShowAddConnect(false)}
-                  className="transition"
+                className="w-full transition-all active:scale-[0.98]"
                 style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '32px',
+                  marginTop: 'var(--space-3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
                   height: '32px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  background: 'transparent',
-                  border: 'none',
+                  padding: '5px 12px',
                   borderRadius: '8px',
-                    color: 'var(--text-secondary)',
-                    cursor: 'pointer',
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  color: 'var(--text-secondary)',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
                 }}
               >
-                  <ChevronLeftIcon className="w-5 h-5" />
+                <ChevronLeftIcon className="w-4 h-4" />
+                Back
               </button>
-              </div>
             </div>
             )}
 
@@ -2287,6 +2233,7 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
         ) : (
           <div style={{ maxWidth: '336px', margin: '0 auto' }}>
             {Object.keys(savedLinks).length > 0 ? (
+              <>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--space-3)' }}>
                 {Object.entries(savedLinks).map(([platformId, link]) => {
                   const platformDetails = getPlatformDetails(platformId);
@@ -2358,124 +2305,52 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                     </div>
                   );
                 })}
-              </div>
-            ) : (
-                // Skeleton connect placeholder - iOS style (matches actual grid layout)
-                <div 
-                  style={{
-                    padding: 'var(--space-4)',
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    borderRadius: '12px',
-                    maxWidth: '336px',
-                    margin: '0 auto',
-                  }}
-                >
-                  {/* 4 Skeleton social icons - same grid as actual social links */}
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(4, 1fr)',
-                    gap: 'var(--space-3)',
-                    marginBottom: 'var(--space-4)'
-                  }}>
-                    {[0, 1, 2, 3].map((i) => (
-                      <div 
-                        key={i}
-                        className="skeleton-shimmer"
-                        style={{
-                          aspectRatio: '1',
-                          borderRadius: 'var(--radius-lg)',
-                          background: 'linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 100%)',
-                          backgroundSize: '200% 100%',
-                          animation: 'shimmer 2s ease-in-out infinite',
-                        }}
-                      />
-                    ))}
-                  </div>
-                  
-                  {/* Merged hint: "tap [icon] to link up your Instagram" */}
-                  {isOwnProfile ? (
-                    <p 
-                      style={{ 
-                        fontSize: '12px', 
-                        color: 'var(--text-tertiary)',
-                        textAlign: 'center',
-                        marginTop: 'var(--space-2)',
-                          display: 'flex',
-                          alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '4px',
-                        opacity: 0.6
-                        }}
-                      >
-                      <span style={{ fontStyle: 'italic' }}>tap</span>
-                        <img 
-                        src="/palette.svg" 
-                          alt="" 
-                          style={{ 
-                          width: '12px', 
-                          height: '12px', 
-                          filter: 'invert(1) opacity(0.5)'
-                        }} 
-                      />
-                      <span style={{ fontStyle: 'italic' }}>to link up your</span>
-                      <span 
-                        style={{ 
-                          display: 'inline-block',
-                          width: '70px',
-                          textAlign: 'left',
-                        }}
-                      >
-                        <span 
-                          key={connectPlatformIndex}
-                          style={{ 
-                            display: 'inline-block',
-                            color: 'rgba(0, 194, 255, 0.8)',
-                            fontWeight: 600,
-                            fontSize: '11px',
-                            animation: 'cubeFlip 0.5s ease-out'
-                          }}
-                        >
-                          {CONNECT_PLATFORMS[connectPlatformIndex]}
-                        </span>
-                      </span>
-                    </p>
-                  ) : (
-                  <p 
-                    style={{ 
-                      fontSize: '13px', 
-                    color: 'var(--text-secondary)',
-                      textAlign: 'center',
-                        opacity: 0.6,
-                        marginTop: 'var(--space-2)',
-                  }}
-                >
-                      Link up your{' '}
-                      <span 
-                        style={{ 
-                      display: 'inline-block',
-                          width: '70px',
-                          textAlign: 'left',
-                        }}
-                      >
-                        <span 
-                          key={connectPlatformIndex}
-                          style={{ 
-                            display: 'inline-block',
-                            color: 'rgba(0, 194, 255, 0.8)',
-                            fontWeight: 600,
-                      fontSize: '12px', 
-                            animation: 'cubeFlip 0.5s ease-out'
-                          }}
-                        >
-                          {CONNECT_PLATFORMS[connectPlatformIndex]}
-                        </span>
-                      </span>
-                    </p>
-                  )}
                 </div>
-            )}
+                {/* Add more links button - only in customize mode */}
+                {canEdit && (
+                  <button
+                    onClick={() => setShowAddConnect(true)}
+                    className="add-card w-full transition-all active:scale-[0.98]"
+                    style={{
+                      marginTop: 'var(--space-3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      height: '32px',
+                      padding: '5px 12px',
+                      borderRadius: '8px',
+                      background: 'rgba(0, 194, 255, 0.08)',
+                      border: '1.5px dashed rgba(0, 194, 255, 0.5)',
+                      color: 'var(--blue)',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    + Add social link
+                  </button>
+                )}
+              </>
+            ) : (
+                // Empty state - static card, not loading-like skeleton
+                !isOwnProfile ? (
+                  <div style={{ padding: '20px', textAlign: 'center', color: 'rgba(255, 255, 255, 0.35)', fontSize: '13px' }}>
+                    Nothing here yet
+                  </div>
+                ) : (
+                  <EmptyStateInline 
+                    text="Add social link" 
+                    isOwnProfile={isOwnProfile} 
+                    isCustomizeMode={isCustomizeMode}
+                    onTapCustomize={onActivateCustomize}
+                    onAdd={() => setShowAddConnect(true)}
+                  />
+                )
+              )}
+            </div>
+          )}
           </div>
-        )}
         </div>
       </div>
 
