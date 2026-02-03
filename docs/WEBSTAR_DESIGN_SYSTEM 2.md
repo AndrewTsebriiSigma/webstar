@@ -15,15 +15,12 @@
 6. [Modal Architecture](#part-vi-modal-architecture)
 7. [Animation Standards](#part-vii-animation-standards)
 8. [Component Patterns](#part-viii-component-patterns)
-9. [Bottom Navigation Bar](#part-ix-bottom-navigation-bar)
-10. [Dashboard Tab Navigation](#part-x-dashboard-tab-navigation)
-11. [Settings Sub-Modals](#part-xi-settings-sub-modals)
-12. [Profile Page Geometry](#part-xii-profile-page-geometry)
-13. [Code Architecture](#part-xiii-code-architecture)
-14. [Git Workflow](#part-xiv-git-workflow)
-15. [Debug Methodology](#part-xv-debug-methodology)
-16. [Implementation Status](#part-xvi-implementation-status)
-17. [Quick Reference](#part-xvii-quick-reference)
+9. [Profile Page Geometry](#part-ix-profile-page-geometry)
+10. [Code Architecture](#part-x-code-architecture)
+11. [Git Workflow](#part-xi-git-workflow)
+12. [Debug Methodology](#part-xii-debug-methodology)
+13. [Implementation Status](#part-xiii-implementation-status)
+14. [Quick Reference](#part-xiv-quick-reference)
 
 ---
 
@@ -496,258 +493,7 @@ Further Expanded:
 
 ---
 
-# Part IX: Bottom Navigation Bar
-
-> The Telegram-inspired floating navigation system with layered z-index architecture.
-
-## The "Belt Through Ring" Pattern
-
-The CREATE button is a **separate element** that floats through the nav bar, creating depth:
-
-```
-                    ┌──────────┐
-                    │  CREATE  │  ← z-index: 1001 (ABOVE)
-┌───────────────────┼──────────┼───────────────────┐
-│   [Profile]       │  button  │       [Dashboard] │  ← z-index: 1000
-└───────────────────┼──────────┼───────────────────┘
-                    │          │  ← Extends BELOW bar too
-                    └──────────┘
-```
-
-## Measurements
-
-| Element | Value |
-|---------|-------|
-| Nav bar bottom | `24px` |
-| Nav bar padding | `6px 32px` |
-| Nav bar gap | `110px` (space for CREATE) |
-| Nav bar border-radius | `18px` |
-| Side buttons | `34×34px`, `border-radius: 50%` |
-| CREATE button | `58×54px`, `border-radius: 16px` |
-| CREATE button bottom | `22px` (vertically centered) |
-| Logo inside CREATE | `32×32px` |
-
-## Glass Effect
-
-```css
-/* Nav Bar */
-background: rgba(30, 30, 34, 0.65);
-backdrop-filter: blur(40px) saturate(180%);
-border: 1px solid rgba(255, 255, 255, 0.08);
-box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-```
-
-## Color States
-
-| State | Icon Color | Background |
-|-------|------------|------------|
-| Inactive | `rgba(255, 255, 255, 0.65)` | `transparent` |
-| Active | `#00C2FF` | `transparent` |
-| Hover | `#00C2FF` | `rgba(0, 194, 255, 0.15)` |
-
-## CREATE Button Styling
-
-```css
-background: linear-gradient(135deg, #00C2FF 0%, #00A8E8 50%, #0090D0 100%);
-box-shadow: 0 4px 18px rgba(0, 194, 255, 0.25), 0 0 28px rgba(0, 194, 255, 0.12);
-animation: createButtonPulse 3s ease-in-out infinite;
-
-/* Logo glow */
-filter: brightness(0) invert(1) 
-        drop-shadow(0 0 16px rgba(255, 255, 255, 1)) 
-        drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
-```
-
-## Bottom Fade Gradient
-
-Content scrolls naturally under the nav bar with a fade effect:
-
-```css
-/* Overlay above content, below nav */
-position: fixed;
-bottom: 0;
-height: 120px;
-background: linear-gradient(
-  to top, 
-  rgba(17, 17, 17, 0.95) 0%, 
-  rgba(17, 17, 17, 0.7) 40%, 
-  transparent 100%
-);
-pointer-events: none;
-z-index: 999;
-```
-
----
-
-# Part X: Dashboard Tab Navigation
-
-> Instagram-inspired tab navigation with soft bluish-white active states.
-
-## Tab Structure
-
-```
-┌─────────────────────────────────────┐
-│  ┌────────┐      ┌────────┐         │
-│  │  icon  │      │  icon  │         │  ← 84×52px blocks
-│  └────────┘      └────────┘         │
-│    Data            Quiz             │  ← Labels below
-└─────────────────────────────────────┘
-     ↑                ↑
-   Active          Inactive
-```
-
-## Measurements
-
-| Element | Value |
-|---------|-------|
-| Tab block | `84×52px` |
-| Icon size | `22×22px`, `strokeWidth: 2.2` |
-| Block border-radius | `12px` |
-| Gap below icon | `6px` |
-| Label font | `11px`, `fontWeight: 600` |
-| Tab gap | `12px` |
-
-## Color States
-
-### Active State (Soft Bluish-White)
-
-```css
-/* Icon */
-stroke: rgba(190, 230, 250, 0.95);
-
-/* Border */
-border: 1.5px solid rgba(180, 220, 240, 0.4);
-
-/* Label */
-color: rgba(190, 230, 250, 0.95);
-```
-
-### Inactive State
-
-```css
-/* Icon */
-stroke: rgba(255, 255, 255, 0.45);
-
-/* Border - INVISIBLE */
-border: 1px solid transparent;
-
-/* Label */
-color: rgba(255, 255, 255, 0.45);
-```
-
-### Block Background
-
-```css
-/* Both states - matches stat cards */
-background: rgba(255, 255, 255, 0.04);
-```
-
-## Scrollable Strip
-
-```css
-overflow-x: auto;
--webkit-overflow-scrolling: touch;
-scroll-snap-type: x mandatory;
-scrollbar-width: none;  /* Hide scrollbar */
-```
-
-## Icon Style (Apple Thick Lines)
-
-```jsx
-<svg 
-  width="22" 
-  height="22" 
-  viewBox="0 0 24 24" 
-  fill="none" 
-  stroke={isActive ? 'rgba(190, 230, 250, 0.95)' : 'rgba(255,255,255,0.45)'}
-  strokeWidth="2.2" 
-  strokeLinecap="round" 
-  strokeLinejoin="round"
->
-  {/* Custom paths here */}
-</svg>
-```
-
----
-
-# Part XI: Settings Sub-Modals
-
-> Instagram-style clean, minimal settings forms with unified sub-modal pattern.
-
-## The SettingsSubModal Component
-
-A reusable component for all settings sub-pages (username, email, password, terms, privacy, feedback).
-
-```
-┌─────────────────────────────────────────────┐
-│ [←]        Title                   [Done]   │  ← Header (55px, no border)
-├─────────────────────────────────────────────┤
-│                                             │
-│              Content Area                   │  ← Solid #111111 background
-│                                             │
-└─────────────────────────────────────────────┘
-```
-
-## Backdrop Styling
-
-```css
-/* Light tint, subtle blur - NOT heavy */
-background: rgba(0, 0, 0, 0.15);
-backdrop-filter: blur(8px);
-```
-
-## Header Pattern
-
-| Element | Style |
-|---------|-------|
-| Height | `55px` |
-| Background | `#111111` (solid, no blur) |
-| Border | **None** (no divider) |
-| Back arrow | `ChevronLeft`, `18×18px`, `rgba(255, 255, 255, 0.9)` |
-| Title | Centered, `17px`, `fontWeight: 600` |
-| Right action | Optional "Done" button, `#00C2FF` when enabled |
-
-## Form Field Styling (Instagram Pattern)
-
-```css
-/* Input fields */
-background: transparent;
-border: 1px solid rgba(255, 255, 255, 0.12);
-border-radius: 12px;
-padding: 14px 16px;
-font-size: 16px;
-color: rgba(255, 255, 255, 0.95);
-
-/* Focus state */
-border-color: rgba(0, 194, 255, 0.5);
-```
-
-## Design Principles
-
-1. **Placeholders only** — No labels above fields
-2. **Submit in header** — "Done" button top-right, not bottom
-3. **Inline validation** — Small ✓/✗ icons, not message boxes
-4. **Progressive disclosure** — Multi-step flows (email verification)
-5. **Pre-filled values** — Show current username/email in field
-
-## Live Preview Pattern (Username)
-
-```jsx
-<div style={{
-  marginTop: '12px',
-  padding: '12px 16px',
-  background: 'rgba(255, 255, 255, 0.04)',
-  borderRadius: '10px',
-  color: 'rgba(255, 255, 255, 0.5)',
-  fontSize: '14px'
-}}>
-  webstar.bio/{newUsername || 'username'}
-</div>
-```
-
----
-
-# Part XII: Profile Page Geometry
+# Part IX: Profile Page Geometry
 
 ## The Avatar
 
@@ -798,7 +544,7 @@ Inactive tab: `text-gray-500`
 
 ---
 
-# Part XIII: Code Architecture
+# Part X: Code Architecture
 
 ## The InputWrapper Lesson
 
@@ -911,7 +657,7 @@ const handleClose = () => {
 
 ---
 
-# Part XIV: Git Workflow
+# Part XI: Git Workflow
 
 ## Branch Strategy
 
@@ -947,7 +693,7 @@ Types: feat, fix, style, refactor, docs, chore
 
 ---
 
-# Part XV: Debug Methodology
+# Part XII: Debug Methodology
 
 ## The Symptom → Cause → Fix Pattern
 
@@ -968,7 +714,7 @@ Always check:
 
 ---
 
-# Part XVI: Implementation Status
+# Part XIII: Implementation Status
 
 ## ✅ Completed
 
@@ -977,37 +723,33 @@ Always check:
 | **Profile Page** | ✅ Complete | Avatar, bio, tabs, responsive |
 | **Auth Pages** | ✅ Complete | Login, register, forgot-password |
 | **Onboarding** | ✅ Complete | All steps, username check, logo |
-| **CreateContentModal** | ✅ Complete | Post creation flow, bottom-positioned |
+| **CreateContentModal** | ✅ Complete | Post creation flow |
 | **CreateProjectModal** | ✅ Complete | Bottom slider, inline content picker |
 | **UploadPortfolioModal** | ✅ Complete | Bottom slider pattern |
 | **Select Posts Modal** | ✅ Complete | Popup card pattern |
 | **Project Detail Page** | ✅ Complete | Responsive, date on banner |
-| **Analytics Page** | ✅ Complete | Combined graphs, tab navigation |
+| **Analytics Page** | ✅ Complete | Responsive cards, graphs |
 | **Responsive System** | ✅ Complete | CSS variables, breakpoints |
-| **Bottom Navigation Bar** | ✅ Complete | Glassy Telegram-style, CREATE floats through |
-| **Settings Sub-Modals** | ✅ Complete | Universal SettingsSubModal component |
-| **Dashboard Tab Navigation** | ✅ Complete | Data/Quiz tabs, soft bluish-white active |
-| **Dashboard Strip Buttons** | ✅ Complete | Monetization matches Customize style |
 
 ## 🔄 In Progress / Pending
 
 | Area | Status | What's Needed |
 |------|--------|---------------|
+| **Dashboard View** | 🔄 Pending | Apply responsive patterns |
+| **Settings Inner Pages** | 🔄 Pending | Standardize modal patterns |
 | **Feed** | 🔄 Pending | Not yet styled |
 | **Feed Preview** | 🔄 Pending | Not yet edited |
 | **Customization Mode Polish** | 🔄 Pending | Sparkle effects, hover states |
-| **Onboarding Hints** | 🔄 Pending | Linktree-style first-time guidance |
 
 ## 📋 Future Considerations
 
 - Theme customization panel (deferred)
 - Sparkle effects on editable fields (deferred)
-- Arrow-based reordering in About section (replace drag)
-- More dashboard tab categories
+- Dashboard hover shimmer effects (partially implemented)
 
 ---
 
-# Part XVII: Quick Reference
+# Part XIV: Quick Reference
 
 ## The Sacred Numbers
 
@@ -1025,18 +767,12 @@ Always check:
 │ Touch Target Min:     44px × 44px                       │
 │ Z-Index Modal:        50-51                             │
 │ Z-Index Popup:        60-61                             │
-│ Z-Index Bottom Nav:   1000-1001                         │
 │ Glass Blur:           blur(40px) saturate(180%)         │
 │ Header Blur:          blur(20px)                        │
 │ Content Blur:         blur(16px)                        │
-│ Settings Backdrop:    blur(8px), rgba(0,0,0,0.15)       │
 │ Max Bio Length:       70 characters                     │
 │ Primary Accent:       #00C2FF                           │
-│ Soft Active Tint:     rgba(190, 230, 250, 0.95)         │
 │ Background:           #111111 / rgb(17, 17, 17)         │
-│ Bottom Nav Bar:       24px from bottom, 18px radius     │
-│ CREATE Button:        58×54px, 16px radius              │
-│ Tab Block:            84×52px, 12px radius              │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -1048,25 +784,11 @@ Always check:
 --bg-app: rgb(17, 17, 17);
 --text-primary: rgba(255, 255, 255, 0.92);
 --text-secondary: rgba(255, 255, 255, 0.65);
---text-inactive: rgba(255, 255, 255, 0.45);
 --border: rgba(255, 255, 255, 0.10);
-
-/* Soft Active States (bluish-white) */
---active-soft-icon: rgba(190, 230, 250, 0.95);
---active-soft-border: rgba(180, 220, 240, 0.4);
 
 /* Glass Effects */
 background: rgba(20, 20, 20, 0.88);
 backdrop-filter: blur(40px) saturate(180%);
-
-/* Bottom Nav Glass */
-background: rgba(30, 30, 34, 0.65);
-backdrop-filter: blur(40px) saturate(180%);
-border: 1px solid rgba(255, 255, 255, 0.08);
-
-/* Settings Backdrop */
-background: rgba(0, 0, 0, 0.15);
-backdrop-filter: blur(8px);
 
 /* Spacing */
 --space-4: 16px;
@@ -1133,18 +855,6 @@ Study the patterns. Understand why they exist. Then execute with precision.
 
 ---
 
-*Document Version: 2.0*
-*Last Updated: February 2026*
+*Document Version: 1.0*
+*Last Updated: January 2026*
 *This is the accumulated wisdom of iteration, debugging, and refinement.*
-
----
-
-## Changelog
-
-### v2.0 (February 2026)
-- Added Part IX: Bottom Navigation Bar (Telegram-style glassy nav with CREATE button floating through)
-- Added Part X: Dashboard Tab Navigation (Instagram-style tabs with soft bluish-white active states)
-- Added Part XI: Settings Sub-Modals (Universal SettingsSubModal component pattern)
-- Updated Implementation Status with completed features
-- Added new Sacred Numbers for bottom nav, CREATE button, and tab blocks
-- Added new CSS variables for soft active states and bottom nav glass effects

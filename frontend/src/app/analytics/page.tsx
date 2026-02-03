@@ -58,6 +58,7 @@ export default function AnalyticsPage() {
   const clicksGraphRef = useRef<SVGSVGElement>(null);
   const [expandedQuiz, setExpandedQuiz] = useState<string | null>(null);
   const [quizModalVisible, setQuizModalVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState<'data' | 'quiz'>('data');
   const [profile, setProfile] = useState<{
     display_name: string | null;
     profile_picture: string | null;
@@ -180,9 +181,10 @@ export default function AnalyticsPage() {
     return num.toString();
   };
 
-  // Graph dimensions - per spec: 280x64
+  // Graph dimensions - per spec: 280x64 for small, 280x140 for combined
   const GRAPH_WIDTH = 280;
   const GRAPH_HEIGHT = 64;
+  const COMBINED_GRAPH_HEIGHT = 140;
   const GRAPH_PADDING = 5;
 
   const prepareGraphData = (type: 'views' | 'clicks'): GraphPoint[] => {
@@ -212,6 +214,47 @@ export default function AnalyticsPage() {
     });
   };
 
+  // Prepare combined graph data - normalize both to same scale
+  const prepareCombinedGraphData = (): { views: GraphPoint[], clicks: GraphPoint[] } => {
+    if (dailyData.length === 0) return { views: [], clicks: [] };
+    
+    const viewValues = dailyData.map(d => d.profile_views);
+    const clickValues = dailyData.map(d => d.link_clicks);
+    const maxValue = Math.max(...viewValues, ...clickValues, 1);
+    
+    const dataLength = dailyData.length;
+    const pointSpacing = (GRAPH_WIDTH - GRAPH_PADDING * 2) / (dataLength - 1 || 1);
+    const graphableHeight = COMBINED_GRAPH_HEIGHT - 30; // Leave space for padding
+    
+    const views = dailyData.map((d, i) => {
+      const normalized = d.profile_views / maxValue;
+      const yPos = COMBINED_GRAPH_HEIGHT - (normalized * graphableHeight) - 15;
+      return {
+        x: GRAPH_PADDING + (pointSpacing * i),
+        y: yPos,
+        yPos,
+        value: d.profile_views,
+        date: d.date,
+        index: i
+      };
+    });
+    
+    const clicks = dailyData.map((d, i) => {
+      const normalized = d.link_clicks / maxValue;
+      const yPos = COMBINED_GRAPH_HEIGHT - (normalized * graphableHeight) - 15;
+      return {
+        x: GRAPH_PADDING + (pointSpacing * i),
+        y: yPos,
+        yPos,
+        value: d.link_clicks,
+        date: d.date,
+        index: i
+      };
+    });
+    
+    return { views, clicks };
+  };
+
   const handleGraphHover = (e: React.MouseEvent<SVGSVGElement>, type: 'views' | 'clicks') => {
     e.stopPropagation();
     const graphRef = type === 'views' ? viewsGraphRef : clicksGraphRef;
@@ -239,6 +282,44 @@ export default function AnalyticsPage() {
     const data = dailyData[nearestIndex];
     
     setActiveGraph(type);
+    setTooltipData({
+      x: point.x,
+      y: point.yPos,
+      date: point.date,
+      profileViews: data.profile_views,
+      linkClicks: data.link_clicks
+    });
+  };
+
+  // Combined graph ref
+  const combinedGraphRef = useRef<SVGSVGElement>(null);
+
+  const handleCombinedGraphHover = (e: React.MouseEvent<SVGSVGElement>) => {
+    e.stopPropagation();
+    if (!combinedGraphRef.current || dailyData.length === 0) return;
+    
+    const rect = combinedGraphRef.current.getBoundingClientRect();
+    const hoverX = ((e.clientX - rect.left) / rect.width) * GRAPH_WIDTH;
+    const { views } = prepareCombinedGraphData();
+    
+    if (views.length === 0) return;
+    
+    // Find nearest data point
+    let nearestIndex = 0;
+    let minDistance = Infinity;
+    
+    views.forEach((point, i) => {
+      const distance = Math.abs(hoverX - point.x);
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestIndex = i;
+      }
+    });
+    
+    const point = views[nearestIndex];
+    const data = dailyData[nearestIndex];
+    
+    setActiveGraph('views'); // Use 'views' as the active graph type for combined
     setTooltipData({
       x: point.x,
       y: point.yPos,
@@ -554,6 +635,180 @@ export default function AnalyticsPage() {
   );
   };
 
+  // Combined graph renderer - two lines overlaid
+  const renderCombinedGraph = () => {
+    const { views, clicks } = prepareCombinedGraphData();
+    const VIEWS_COLOR = '#00C2FF';
+    const CLICKS_COLOR = '#FF006B';
+    
+    return (
+      <svg 
+        ref={combinedGraphRef}
+        viewBox={`0 0 ${GRAPH_WIDTH} ${COMBINED_GRAPH_HEIGHT}`}
+        preserveAspectRatio="xMidYMid meet"
+        onMouseMove={handleCombinedGraphHover}
+        onMouseLeave={clearTooltip}
+        style={{ 
+          cursor: 'pointer', 
+          width: '100%', 
+          height: '140px',
+          borderRadius: '8px',
+          overflow: 'visible'
+        }}
+      >
+        <defs>
+          {/* Subtle grid pattern */}
+          <pattern id="combinedGrid" width="14" height="14" patternUnits="userSpaceOnUse">
+            <rect width="14" height="14" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5"/>
+          </pattern>
+          
+          {/* Gradients for area fills */}
+          <linearGradient id="viewsGradientCombined" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={VIEWS_COLOR} stopOpacity="0.25"/>
+            <stop offset="100%" stopColor={VIEWS_COLOR} stopOpacity="0"/>
+          </linearGradient>
+          <linearGradient id="clicksGradientCombined" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={CLICKS_COLOR} stopOpacity="0.2"/>
+            <stop offset="100%" stopColor={CLICKS_COLOR} stopOpacity="0"/>
+          </linearGradient>
+        </defs>
+        
+        {/* Background grid */}
+        <rect width={GRAPH_WIDTH} height={COMBINED_GRAPH_HEIGHT} fill="url(#combinedGrid)" rx="8"/>
+        
+        {/* Y-axis lines */}
+        {[0.25, 0.5, 0.75].map((ratio, i) => (
+          <line 
+            key={i}
+            x1={GRAPH_PADDING} 
+            y1={COMBINED_GRAPH_HEIGHT * ratio} 
+            x2={GRAPH_WIDTH - GRAPH_PADDING} 
+            y2={COMBINED_GRAPH_HEIGHT * ratio}
+            stroke="rgba(255,255,255,0.06)"
+            strokeDasharray="3,3"
+          />
+        ))}
+        
+        {views.length > 0 && clicks.length > 0 && (
+          <>
+            {/* Views area fill */}
+            <path
+              d={`M ${views[0]?.x || 0},${views[0]?.yPos || COMBINED_GRAPH_HEIGHT/2} ${views.map((d) => `L ${d.x},${d.yPos}`).join(' ')} L ${views[views.length - 1]?.x || GRAPH_WIDTH},${COMBINED_GRAPH_HEIGHT} L ${GRAPH_PADDING},${COMBINED_GRAPH_HEIGHT} Z`}
+              fill="url(#viewsGradientCombined)"
+            />
+            
+            {/* Clicks area fill */}
+            <path
+              d={`M ${clicks[0]?.x || 0},${clicks[0]?.yPos || COMBINED_GRAPH_HEIGHT/2} ${clicks.map((d) => `L ${d.x},${d.yPos}`).join(' ')} L ${clicks[clicks.length - 1]?.x || GRAPH_WIDTH},${COMBINED_GRAPH_HEIGHT} L ${GRAPH_PADDING},${COMBINED_GRAPH_HEIGHT} Z`}
+              fill="url(#clicksGradientCombined)"
+            />
+            
+            {/* Views line */}
+            <path
+              d={`M ${views[0]?.x || 0},${views[0]?.yPos || COMBINED_GRAPH_HEIGHT/2} ${views.map((d) => `L ${d.x},${d.yPos}`).join(' ')}`}
+              fill="none"
+              stroke={VIEWS_COLOR}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            
+            {/* Clicks line */}
+            <path
+              d={`M ${clicks[0]?.x || 0},${clicks[0]?.yPos || COMBINED_GRAPH_HEIGHT/2} ${clicks.map((d) => `L ${d.x},${d.yPos}`).join(' ')}`}
+              fill="none"
+              stroke={CLICKS_COLOR}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            
+            {/* Interactive hit areas */}
+            {views.map((d, i) => (
+              <circle
+                key={`hitarea-${i}`}
+                cx={d.x}
+                cy={(views[i].yPos + clicks[i].yPos) / 2}
+                r="14"
+                fill="transparent"
+                style={{ cursor: 'pointer', pointerEvents: 'all' }}
+                onMouseEnter={(e) => {
+                  e.stopPropagation();
+                  const data = dailyData[i];
+                  setActiveGraph('views');
+                  setTooltipData({
+                    x: d.x,
+                    y: d.yPos,
+                    date: d.date,
+                    profileViews: data.profile_views,
+                    linkClicks: data.link_clicks
+                  });
+                }}
+              />
+            ))}
+            
+            {/* Vertical line indicator when hovering */}
+            {tooltipData && (
+              <>
+                <line
+                  x1={tooltipData.x}
+                  y1={10}
+                  x2={tooltipData.x}
+                  y2={COMBINED_GRAPH_HEIGHT - 10}
+                  stroke="rgba(255,255,255,0.2)"
+                  strokeWidth="1"
+                  strokeDasharray="3,3"
+                />
+                {/* Views dot */}
+                <circle 
+                  cx={tooltipData.x} 
+                  cy={views.find(v => v.x === tooltipData.x)?.yPos || tooltipData.y} 
+                  r="5" 
+                  fill={VIEWS_COLOR}
+                  stroke="#fff"
+                  strokeWidth="2"
+                />
+                {/* Clicks dot */}
+                <circle 
+                  cx={tooltipData.x} 
+                  cy={clicks.find(c => c.x === tooltipData.x)?.yPos || COMBINED_GRAPH_HEIGHT/2} 
+                  r="5" 
+                  fill={CLICKS_COLOR}
+                  stroke="#fff"
+                  strokeWidth="2"
+                />
+              </>
+            )}
+            
+            {/* Pulsing dot for today (last point) */}
+            {!tooltipData && (
+              <>
+                <circle 
+                  cx={views[views.length - 1]?.x || GRAPH_WIDTH - GRAPH_PADDING} 
+                  cy={views[views.length - 1]?.yPos || COMBINED_GRAPH_HEIGHT/2} 
+                  r="3" 
+                  fill={VIEWS_COLOR}
+                >
+                  <animate attributeName="r" values="3;4.5;3" dur="2s" repeatCount="indefinite"/>
+                  <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+                </circle>
+                <circle 
+                  cx={clicks[clicks.length - 1]?.x || GRAPH_WIDTH - GRAPH_PADDING} 
+                  cy={clicks[clicks.length - 1]?.yPos || COMBINED_GRAPH_HEIGHT/2} 
+                  r="3" 
+                  fill={CLICKS_COLOR}
+                >
+                  <animate attributeName="r" values="3;4.5;3" dur="2s" repeatCount="indefinite" begin="0.5s"/>
+                  <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite" begin="0.5s"/>
+                </circle>
+              </>
+            )}
+          </>
+        )}
+      </svg>
+    );
+  };
+
   // Icons for labels - colored to match their graphs
   const EyeIcon = () => (
     <svg width="14" height="14" fill="none" stroke="#00C2FF" strokeWidth="1.5" viewBox="0 0 24 24">
@@ -624,12 +879,8 @@ export default function AnalyticsPage() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
-                padding: '10px 16px 10px 10px',
-                height: '54px',
-                borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                backgroundImage: 'linear-gradient(168deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-                boxShadow: 'inset 0px 1px 0px 0px rgba(255, 255, 255, 0.05)'
+                padding: '10px 0',
+                height: '54px'
               }}>
                 {/* Avatar - Profile Picture or First Letter */}
                 <div style={{
@@ -669,7 +920,7 @@ export default function AnalyticsPage() {
         </div>
         
                 {/* Name + Username */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', minWidth: 0 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0px', minWidth: 0 }}>
                   <span style={{
                     fontFamily: 'Inter, system-ui, sans-serif',
                     fontWeight: 700,
@@ -695,7 +946,7 @@ export default function AnalyticsPage() {
               
               {/* Right - Star Pass (fixed width) */}
               <Link href="/subscribe" style={{ textDecoration: 'none', flexShrink: 0 }}>
-      <div style={{
+                <div style={{
                   position: 'relative',
                   width: '147px',
                   height: '57px',
@@ -704,14 +955,11 @@ export default function AnalyticsPage() {
                   {/* Main progress container */}
                   <div style={{
                     position: 'absolute',
-        top: 0,
-                    left: 0,
+                    top: 0,
+                    right: 0,
                     width: '147px',
                     height: '57px',
-                    border: '2px solid rgba(0, 194, 255, 0.5)',
-                    borderRadius: '8px',
-                    backgroundImage: 'linear-gradient(158.806deg, rgba(0, 194, 255, 0.2) 0%, rgba(0, 150, 255, 0.1) 100%), linear-gradient(90deg, rgb(17, 17, 17) 0%, rgb(17, 17, 17) 100%)',
-                    boxShadow: '0px 4px 16px 0px rgba(0, 194, 255, 0.3), inset 0px 1px 0px 0px rgba(255, 255, 255, 0.1)'
+                    borderRadius: '8px'
                   }}>
                     {/* Progress bar background */}
                     <div style={{
@@ -719,7 +967,7 @@ export default function AnalyticsPage() {
                       top: '13px',
                       left: '23px',
                       width: '110px',
-              height: '32px',
+                      height: '32px',
                       border: '0.2px solid rgba(255, 255, 255, 0.1)',
                       borderRadius: '8px',
                       backgroundImage: 'linear-gradient(163.78deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
@@ -792,262 +1040,268 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-                    {/* Logo in diamond */}
-                    <img
-                      src="/webstar.svg"
-                      alt="webSTAR"
-                      width={28}
-                      height={28}
+                    {/* Gem icon in diamond - matches dashboard strip */}
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="white"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                       style={{
                         position: 'absolute',
                         left: '26.5px',
-                        top: '26.5px',
+                        top: '28.5px',
                         transform: 'translate(-50%, -50%)',
                         filter: 'brightness(0) saturate(100%) invert(22%) sepia(89%) saturate(1063%) hue-rotate(167deg) brightness(91%) contrast(101%)'
                       }}
-                    />
+                    >
+                      <path d="M6 3h12l4 6-10 12L2 9l4-6z" />
+                      <path d="M2 9h20" />
+                      <path d="M12 21L8.5 9 12 3l3.5 6L12 21z" />
+                    </svg>
         </div>
                 </div>
               </Link>
       </div>
 
+            {/* Tab Navigation - Instagram style */}
+            <div style={{ 
+              display: 'flex', 
+              gap: '12px',
+              marginTop: '16px',
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              scrollSnapType: 'x mandatory',
+              msOverflowStyle: 'none',
+              scrollbarWidth: 'none',
+              paddingBottom: '4px'
+            }}>
+              {/* Data Tab */}
+              <button
+                onClick={() => setActiveTab('data')}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  scrollSnapAlign: 'start',
+                  flexShrink: 0,
+                  padding: 0
+                }}
+              >
+                <div style={{
+                  width: '84px',
+                  height: '52px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: activeTab === 'data' ? '1.5px solid rgba(180, 220, 240, 0.4)' : '1px solid transparent',
+                  borderRadius: '12px',
+                  transition: 'all 0.2s ease'
+                }}>
+                  {/* Line Chart Icon - Apple style thick lines */}
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={activeTab === 'data' ? 'rgba(190, 230, 250, 0.95)' : 'rgba(255,255,255,0.45)'} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                  </svg>
+                </div>
+                <span style={{ 
+                  fontSize: '11px', 
+                  fontWeight: 600, 
+                  color: activeTab === 'data' ? 'rgba(190, 230, 250, 0.95)' : 'rgba(255,255,255,0.45)',
+                  letterSpacing: '0.02em'
+                }}>Data</span>
+              </button>
+
+              {/* Quiz Tab */}
+              <button
+                onClick={() => setActiveTab('quiz')}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  scrollSnapAlign: 'start',
+                  flexShrink: 0,
+                  padding: 0
+                }}
+              >
+                <div style={{
+                  width: '84px',
+                  height: '52px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: activeTab === 'quiz' ? '1.5px solid rgba(180, 220, 240, 0.4)' : '1px solid transparent',
+                  borderRadius: '12px',
+                  transition: 'all 0.2s ease'
+                }}>
+                  {/* Lightbulb/Idea Icon - Apple style thick lines */}
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={activeTab === 'quiz' ? 'rgba(190, 230, 250, 0.95)' : 'rgba(255,255,255,0.45)'} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 18h6" />
+                    <path d="M10 22h4" />
+                    <path d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2z" />
+                  </svg>
+                </div>
+                <span style={{ 
+                  fontSize: '11px', 
+                  fontWeight: 600, 
+                  color: activeTab === 'quiz' ? 'rgba(190, 230, 250, 0.95)' : 'rgba(255,255,255,0.45)',
+                  letterSpacing: '0.02em'
+                }}>Quiz</span>
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === 'data' && (
+            <>
             {/* Analytics Section - Views & Clicks */}
             <div style={{ marginTop: '12px' }}>
-              <div style={{
-                fontSize: '10px',
-                color: 'rgba(255, 255, 255, 0.4)',
-                marginBottom: '8px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px'
-              }}>
-                Analytics
-              </div>
               
-              {/* Views Card */}
+              {/* Combined Analytics Card */}
               <div 
                 style={{
-                  padding: '12px 16px',
+                  padding: '16px',
                   background: 'rgba(255, 255, 255, 0.03)',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
                   borderRadius: '12px'
                 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  {/* LEFT - 25% */}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header: Stat Blocks - Instagram style */}
+                <div style={{ 
+                  display: 'flex', 
+                  gap: '8px',
+                  marginBottom: '16px'
+                }}>
+                  {/* Views Block */}
                   <div style={{ 
-                    flex: '0 0 25%', 
-                    paddingRight: '12px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '6px'
+                    flex: 1,
+                    padding: '12px 14px',
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '10px'
                   }}>
                     <div style={{ 
                       display: 'flex', 
                       alignItems: 'center', 
                       gap: '6px',
-                      color: '#00C2FF'
+                      marginBottom: '6px'
                     }}>
-                      <EyeIcon />
-                </div>
-
-                    <div style={{ 
-                      fontSize: '24px', 
-                      fontWeight: '700', 
-                      color: '#fff',
-                      lineHeight: 1.1
-                    }}>
+                      <svg width="14" height="14" fill="none" stroke="#00C2FF" strokeWidth="1.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)' }}>Profile Views</span>
+                    </div>
+                    <div style={{ fontSize: '22px', fontWeight: '700', color: '#fff' }}>
                       {formatNumber(totalViews)}
                     </div>
-                    {/* GREEN color for +today */}
-                    <div style={{ 
-                      fontSize: '11px', 
-                      color: '#00FF87',
-                      fontWeight: '500'
-                    }}>
-                      +{viewsToday.toLocaleString()} today
-                </div>
-              </div>
-
-                  {/* RIGHT - 75% Graph */}
-                  <div style={{ flex: 1, position: 'relative', minWidth: 0 }}>
-                  {renderGraph(viewsGraphData, viewsGraphRef, 'views', '#00C2FF', 'blueGridViews', 'areaGradientViews')}
-
-                    {/* Tooltip - positioned beside the clicked point */}
-                    {tooltipData && activeGraph === 'views' && (() => {
-                      const pointPercent = (tooltipData.x / GRAPH_WIDTH) * 100;
-                      const showOnRight = pointPercent < 50;
-                      
-                      return (
-                        <div 
-                      style={{
-                        position: 'absolute',
-                            left: showOnRight ? `${pointPercent + 8}%` : 'auto',
-                            right: showOnRight ? 'auto' : `${100 - pointPercent + 8}%`,
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            background: 'rgba(17, 17, 17, 0.95)',
-                            border: '1px solid rgba(255, 255, 255, 0.12)',
-                            borderRadius: '8px',
-                            padding: '8px 12px',
-                            zIndex: 50,
-                            backdropFilter: 'blur(12px)',
-                            minWidth: '100px',
-                            pointerEvents: 'auto'
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        clearTooltip();
-                      }}
-                    >
-                          <div style={{ 
-                            fontSize: '11px', 
-                            fontWeight: '600', 
-                            color: '#fff',
-                            marginBottom: '6px'
-                          }}>
-                            {tooltipData.date}
-                      </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00C2FF' }}></span>
-                            <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.6)' }}>Views:</span>
-                            <span style={{ fontSize: '10px', fontWeight: '600', color: '#fff', marginLeft: 'auto' }}>
-                              {tooltipData.profileViews.toLocaleString()}
-                            </span>
-                      </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FF006B' }}></span>
-                            <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.6)' }}>Clicks:</span>
-                            <span style={{ fontSize: '10px', fontWeight: '600', color: '#fff', marginLeft: 'auto' }}>
-                              {tooltipData.linkClicks.toLocaleString()}
-                            </span>
-                    </div>
-                </div>
-                      );
-                    })()}
-              </div>
-            </div>
-          </div>
-
-              {/* Clicks Card */}
-              <div 
-                style={{
-                  marginTop: '8px',
-                  padding: '12px 16px',
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '12px'
-                }}
-            onClick={(e) => e.stopPropagation()}
-          >
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  {/* LEFT - 25% */}
+                  </div>
+                  
+                  {/* Clicks Block */}
                   <div style={{ 
-                    flex: '0 0 25%', 
-                    paddingRight: '12px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '6px'
+                    flex: 1,
+                    padding: '12px 14px',
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '10px'
                   }}>
                     <div style={{ 
                       display: 'flex', 
                       alignItems: 'center', 
                       gap: '6px',
-                      color: '#FF006B'
+                      marginBottom: '6px'
                     }}>
-                      <LinkIcon />
-                </div>
-
-                    <div style={{ 
-                      fontSize: '24px', 
-                      fontWeight: '700', 
-                      color: '#fff',
-                      lineHeight: 1.1
-                    }}>
+                      <svg width="14" height="14" fill="none" stroke="#FF006B" strokeWidth="1.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                      </svg>
+                      <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)' }}>Link Clicks</span>
+                    </div>
+                    <div style={{ fontSize: '22px', fontWeight: '700', color: '#fff' }}>
                       {formatNumber(totalClicks)}
                     </div>
-                    {/* GREEN color for +today */}
-                    <div style={{ 
-                      fontSize: '11px', 
-                      color: '#00FF87',
-                      fontWeight: '500'
-                    }}>
-                      +{clicksToday.toLocaleString()} today
+                  </div>
                 </div>
-              </div>
-
-                  {/* RIGHT - 75% Graph */}
-                  <div style={{ flex: 1, position: 'relative', minWidth: 0 }}>
-                  {renderGraph(clicksGraphData, clicksGraphRef, 'clicks', '#FF006B', 'pinkGrid', 'areaGradientClicks')}
-
-                    {/* Tooltip - positioned beside the clicked point */}
-                    {tooltipData && activeGraph === 'clicks' && (() => {
-                      const pointPercent = (tooltipData.x / GRAPH_WIDTH) * 100;
-                      const showOnRight = pointPercent < 50;
-                      
-                      return (
-                        <div 
-                      style={{
-                        position: 'absolute',
-                            left: showOnRight ? `${pointPercent + 8}%` : 'auto',
-                            right: showOnRight ? 'auto' : `${100 - pointPercent + 8}%`,
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            background: 'rgba(17, 17, 17, 0.95)',
-                            border: '1px solid rgba(255, 255, 255, 0.12)',
-                            borderRadius: '8px',
-                            padding: '8px 12px',
-                            zIndex: 50,
-                            backdropFilter: 'blur(12px)',
-                            minWidth: '100px',
-                            pointerEvents: 'auto'
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        clearTooltip();
-                      }}
-                    >
-                          <div style={{ 
-                            fontSize: '11px', 
-                            fontWeight: '600', 
-                            color: '#fff',
-                            marginBottom: '6px'
-                          }}>
-                            {tooltipData.date}
-                      </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00C2FF' }}></span>
-                            <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.6)' }}>Views:</span>
-                            <span style={{ fontSize: '10px', fontWeight: '600', color: '#fff', marginLeft: 'auto' }}>
-                              {tooltipData.profileViews.toLocaleString()}
-                            </span>
-                      </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FF006B' }}></span>
-                            <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.6)' }}>Clicks:</span>
-                            <span style={{ fontSize: '10px', fontWeight: '600', color: '#fff', marginLeft: 'auto' }}>
-                              {tooltipData.linkClicks.toLocaleString()}
-                            </span>
-                    </div>
+                
+                {/* Combined Graph */}
+                <div style={{ position: 'relative' }}>
+                  {renderCombinedGraph()}
+                  
+                  {/* Tooltip */}
+                  {tooltipData && (() => {
+                    const pointPercent = (tooltipData.x / GRAPH_WIDTH) * 100;
+                    const showOnRight = pointPercent < 50;
+                    
+                    return (
+                      <div 
+                        style={{
+                          position: 'absolute',
+                          left: showOnRight ? `${pointPercent + 5}%` : 'auto',
+                          right: showOnRight ? 'auto' : `${100 - pointPercent + 5}%`,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'rgba(17, 17, 17, 0.95)',
+                          border: '1px solid rgba(255, 255, 255, 0.12)',
+                          borderRadius: '8px',
+                          padding: '10px 14px',
+                          zIndex: 50,
+                          backdropFilter: 'blur(12px)',
+                          minWidth: '110px',
+                          pointerEvents: 'auto'
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          clearTooltip();
+                        }}
+                      >
+                        <div style={{ 
+                          fontSize: '12px', 
+                          fontWeight: '600', 
+                          color: '#fff',
+                          marginBottom: '8px'
+                        }}>
+                          {tooltipData.date}
                         </div>
-                      );
-                    })()}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <svg width="12" height="12" fill="none" stroke="#00C2FF" strokeWidth="1.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)' }}>Views</span>
+                          <span style={{ fontSize: '12px', fontWeight: '600', color: '#fff', marginLeft: 'auto' }}>
+                            {tooltipData.profileViews.toLocaleString()}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
+                          <svg width="12" height="12" fill="none" stroke="#FF006B" strokeWidth="1.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                          </svg>
+                          <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)' }}>Clicks</span>
+                          <span style={{ fontSize: '12px', fontWeight: '600', color: '#fff', marginLeft: 'auto' }}>
+                            {tooltipData.linkClicks.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
+                
               </div>
             </div>
-          </div>
 
             {/* Content Distribution - Single Row Trading Candles */}
             <div style={{ marginTop: '12px' }}>
-            <div style={{
-                fontSize: '10px',
-                color: 'rgba(255, 255, 255, 0.4)',
-                marginBottom: '8px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px'
-            }}>
-                Content
-            </div>
               <div style={{
                 display: 'flex',
                 gap: '2px',
@@ -1060,18 +1314,14 @@ export default function AnalyticsPage() {
                 {contentTypes.map(renderTradingCandle)}
               </div>
             </div>
+            </>
+            )}
 
-            {/* Quiz Library - Single Column Layout */}
+            {/* Quiz Tab Content */}
+            {activeTab === 'quiz' && (
+            <>
+            {/* Quiz Library */}
             <div style={{ marginTop: '12px' }}>
-              <div style={{
-                fontSize: '10px',
-                color: 'rgba(255, 255, 255, 0.4)',
-                marginBottom: '8px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px'
-              }}>
-                Quizzes
-              </div>
               
               {/* Container Block */}
               <div style={{
@@ -1321,6 +1571,8 @@ export default function AnalyticsPage() {
                 </div>
               </div>
             </div>
+            </>
+            )}
 
           </div>
         </div>
