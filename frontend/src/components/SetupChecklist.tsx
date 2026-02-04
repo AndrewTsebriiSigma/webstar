@@ -240,16 +240,17 @@ export default function SetupChecklist({
           width: `${size}px`,
           height: `${size}px`,
           padding: 0,
-          background: 'rgba(30, 30, 34, 0.75)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          border: 'none',
+          background: 'rgba(30, 30, 34, 0.55)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '50%',
           cursor: 'pointer',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.35)',
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          opacity: 0.9,
         }}
       >
         {/* Progress ring SVG */}
