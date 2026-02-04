@@ -396,9 +396,9 @@ export default function SetupChecklist({
             <div style={{ padding: '12px 16px 8px' }}>
               <div
                 style={{
-                  height: '10px',
+                  height: '8px',
                   background: 'rgba(255, 255, 255, 0.08)',
-                  borderRadius: '5px',
+                  borderRadius: '4px',
                   overflow: 'hidden',
                 }}
               >
@@ -407,7 +407,7 @@ export default function SetupChecklist({
                     width: `${progress}%`,
                     height: '100%',
                     background: 'linear-gradient(90deg, #00C2FF 0%, #00E5FF 100%)',
-                    borderRadius: '5px',
+                    borderRadius: '4px',
                     transition: 'width 0.5s ease',
                   }}
                 />
