@@ -228,13 +228,13 @@ export default function SetupChecklist({
 
   return (
     <>
-      {/* Trigger Button - Circular with progress ring border, aligned with bottom nav */}
+      {/* Trigger Button - Circular with progress ring border, above bottom nav */}
       <button
         onClick={openModal}
         className="transition-all active:scale-[0.94]"
         style={{
           position: 'fixed',
-          bottom: '24px',
+          bottom: '90px',
           left: '20px',
           zIndex: 998,
           width: `${size}px`,
