@@ -220,7 +220,7 @@ export default function SetupChecklist({
   };
 
   // Calculate SVG circle properties for progress ring
-  const size = 44;
+  const size = 47;
   const strokeWidth = 2.5;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -228,15 +228,15 @@ export default function SetupChecklist({
 
   return (
     <>
-      {/* Trigger Button - Circular with progress ring border, above bottom nav */}
+      {/* Trigger Button - Circular with progress ring border, aligned with bottom nav */}
       <button
         onClick={openModal}
         className="transition-all active:scale-[0.94]"
         style={{
           position: 'fixed',
-          bottom: '90px',
+          bottom: '24px',
           left: '20px',
-          zIndex: 998,
+          zIndex: 1002,
           width: `${size}px`,
           height: `${size}px`,
           padding: 0,
