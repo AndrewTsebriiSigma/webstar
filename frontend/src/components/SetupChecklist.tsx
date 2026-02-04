@@ -400,9 +400,9 @@ export default function SetupChecklist({
             <div style={{ padding: '16px 20px 8px' }}>
               <div
                 style={{
-                  height: '3px',
+                  height: '5px',
                   background: 'rgba(255, 255, 255, 0.08)',
-                  borderRadius: '2px',
+                  borderRadius: '3px',
                   overflow: 'hidden',
                 }}
               >
@@ -411,7 +411,7 @@ export default function SetupChecklist({
                     width: `${progress}%`,
                     height: '100%',
                     background: '#00C2FF',
-                    borderRadius: '2px',
+                    borderRadius: '3px',
                     transition: 'width 0.5s ease',
                   }}
                 />
@@ -420,14 +420,7 @@ export default function SetupChecklist({
 
             {/* Tasks list - Flat with subtle group dividers */}
             <div style={{ padding: '8px 16px 40px', overflowY: 'auto', maxHeight: 'calc(75vh - 100px)' }}>
-              <div
-                style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)',
-                  borderRadius: '14px',
-                  overflow: 'hidden',
-                }}
-              >
+              <div>
                 {tasks.map((task, index) => {
                   const prevTask = index > 0 ? tasks[index - 1] : null;
                   const isNewGroup = prevTask && prevTask.group !== task.group;
@@ -534,25 +527,21 @@ export default function SetupChecklist({
                           onClick={task.action}
                           className="transition-all active:scale-[0.98]"
                           style={{
-                            height: '36px',
-                            padding: '0 20px',
+                            height: '32px',
+                            padding: '0 16px',
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            gap: '6px',
                             background: '#00C2FF',
                             border: 'none',
-                            borderRadius: '8px',
+                            borderRadius: '7px',
                             color: '#fff',
-                            fontSize: '13px',
+                            fontSize: '12px',
                             fontWeight: '600',
                             cursor: 'pointer',
                           }}
                         >
                           {task.buttonLabel}
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="9 18 15 12 9 6"/>
-                          </svg>
                         </button>
                       </div>
                     )}
