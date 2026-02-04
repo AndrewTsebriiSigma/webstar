@@ -329,7 +329,7 @@ export default function SetupChecklist({
               left: '12px',
               right: '12px',
               maxHeight: 'calc(75vh - 32px)',
-              background: 'rgba(24, 24, 26, 0.95)',
+              background: 'rgba(28, 28, 30, 0.85)',
               backdropFilter: 'blur(40px)',
               WebkitBackdropFilter: 'blur(40px)',
               borderRadius: '20px',
