@@ -200,47 +200,6 @@ function AudioDisplayCompact({
         ))}
       </div>
 
-      {/* Single Play Button - Clickable to start mini-player */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          if (onPlayInMiniPlayer) {
-            onPlayInMiniPlayer(item);
-          }
-        }}
-        style={{
-          width: '56px',
-          height: '56px',
-        borderRadius: '50%',
-          background: isCurrentlyPlaying ? '#00C2FF' : '#0A84FF',
-          border: 'none',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-          boxShadow: isCurrentlyPlaying ? '0 8px 24px rgba(0, 194, 255, 0.4)' : '0 8px 24px rgba(10, 132, 255, 0.3)',
-          zIndex: 1,
-          cursor: 'pointer',
-          transition: 'all 150ms'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'scale(1.1)';
-          e.currentTarget.style.boxShadow = '0 10px 28px rgba(0, 194, 255, 0.5)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.boxShadow = isCurrentlyPlaying ? '0 8px 24px rgba(0, 194, 255, 0.4)' : '0 8px 24px rgba(10, 132, 255, 0.3)';
-        }}
-      >
-        {isCurrentlyPlaying ? (
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
-            <rect x="6" y="4" width="4" height="16" rx="1" />
-            <rect x="14" y="4" width="4" height="16" rx="1" />
-          </svg>
-        ) : (
-          <PlayIcon className="w-7 h-7" style={{ color: '#FFFFFF', marginLeft: '3px' }} />
-        )}
-      </button>
-
       {/* Track Title - Display file name if available */}
       <div style={{
         fontSize: '14px',

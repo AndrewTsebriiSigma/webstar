@@ -75,6 +75,7 @@ export interface PortfolioItem {
   aspect_ratio: string | null;
   attachment_url?: string | null;
   attachment_type?: string | null;
+  file_size?: number | null;
   is_draft: boolean;
   views: number;
   clicks: number;

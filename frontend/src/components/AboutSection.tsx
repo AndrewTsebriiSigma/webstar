@@ -964,7 +964,10 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
             >
             <textarea
               value={aboutText}
-              onChange={(e) => setAboutText(e.target.value)}
+              onChange={(e) => {
+                const newValue = e.target.value;
+                setAboutText(newValue);
+              }}
               maxLength={250}
               rows={4}
                 placeholder="Tell us your incredible story..."
@@ -998,8 +1001,9 @@ export default function AboutSection({ isOwnProfile, isCustomizeMode, profile, o
                   }
                 }}
               />
-              {/* Character count inside field - always visible */}
+              {/* Character count inside field - always visible - updates in real-time */}
               <span
+                key={`counter-${aboutText.length}`}
                 style={{
                   position: 'absolute',
                   bottom: '8px',

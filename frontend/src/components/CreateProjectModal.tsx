@@ -537,7 +537,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
               </h2>
             </div>
             {(() => {
-              const isDisabled = saving || uploadingCover || !title.trim() || (!coverFile && !coverPreview);
+              const isDisabled = saving || uploadingCover || !title.trim() || (!coverFile && !coverPreview) || description.length > 820;
               // Determine primary action based on context
               const isEditing = !!editingProjectId;
               const isDraftMode = defaultSaveAsDraft && !isEditing;
@@ -576,7 +576,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
             display: 'flex',
             flexDirection: 'column',
             gap: '16px',
-            paddingBottom: 'max(16px, env(safe-area-inset-bottom))'
+            paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
+            minHeight: 0
           }}
         >
             {/* Cover Image Upload Area */}
@@ -746,8 +747,9 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                   placeholder="Add a description..."
                   value={description}
                   onChange={(e) => {
-                    if (e.target.value.length <= 280) {
-                      setDescription(e.target.value);
+                    const newValue = e.target.value;
+                    if (newValue.length <= 820) {
+                      setDescription(newValue);
                     }
                   }}
                   onKeyDown={handleTextareaKeyDown}
@@ -767,7 +769,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                     }
                   }}
                   rows={3}
-                  maxLength={280}
+                  maxLength={820}
                   style={{ 
                     fontSize: '14px',
                     width: '100%',
@@ -789,10 +791,10 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                     bottom: '6px', 
                     right: '12px', 
                     fontSize: '11px', 
-                    color: description.length > 260 ? '#FF453A' : description.length > 220 ? '#FF9F0A' : 'rgba(255,255,255,0.4)'
+                    color: description.length > 800 ? '#FF453A' : description.length > 750 ? '#FF9F0A' : 'rgba(255,255,255,0.4)'
                   }}
                 >
-                  {description.length}/280
+                  {description.length}/820
                 </span>
               </div>
             </div>
@@ -806,7 +808,11 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                 border: '1px solid rgba(255, 255, 255, 0.08)',
                 borderRadius: '16px',
                 overflow: 'hidden',
-                opacity: (saving || uploadingCover) ? 0.5 : 1
+                opacity: (saving || uploadingCover) ? 0.5 : 1,
+                position: 'sticky',
+                bottom: 0,
+                zIndex: 10,
+                marginTop: 'auto'
               }}
             >
               {/* Header - Click to expand/collapse */}
@@ -872,6 +878,25 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                 }}
               >
                 <div className="grid grid-cols-2 gap-2">
+                  {/* Upload New - Click to show 4 types */}
+                  <button
+                    onClick={() => setUploadTypeExpanded(true)}
+                    className="flex items-center gap-2.5 p-2.5 rounded-[10px] transition-all duration-150"
+                    style={{ background: 'transparent' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <div 
+                      className="w-11 h-11 rounded-[10px] flex items-center justify-center flex-shrink-0"
+                      style={{ background: 'linear-gradient(135deg, rgba(20, 90, 50, 0.8) 0%, rgba(10, 60, 35, 0.9) 100%)' }}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="#30D158" strokeWidth={1.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                      </svg>
+                    </div>
+                    <span className="text-[13px] font-semibold text-white">Upload New</span>
+                  </button>
+
                   {/* Add Existing */}
                   <button
                     onClick={() => {
@@ -893,25 +918,6 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                       </svg>
                     </div>
                     <span className="text-[13px] font-semibold text-white">Add Existing</span>
-                  </button>
-
-                  {/* Upload New - Click to show 4 types */}
-                  <button
-                    onClick={() => setUploadTypeExpanded(true)}
-                    className="flex items-center gap-2.5 p-2.5 rounded-[10px] transition-all duration-150"
-                    style={{ background: 'transparent' }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <div 
-                      className="w-11 h-11 rounded-[10px] flex items-center justify-center flex-shrink-0"
-                      style={{ background: 'linear-gradient(135deg, rgba(20, 90, 50, 0.8) 0%, rgba(10, 60, 35, 0.9) 100%)' }}
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="#30D158" strokeWidth={1.5} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                      </svg>
-                    </div>
-                    <span className="text-[13px] font-semibold text-white">Upload New</span>
                   </button>
                 </div>
               </div>
@@ -1080,14 +1086,25 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
               backdropFilter: 'blur(10px)'
             }}
           >
-            {/* Simple spinning spinner */}
-            <div 
-              className="animate-spin rounded-full border-4 border-transparent border-t-[#00C2FF]"
-              style={{ 
-                width: '48px', 
-                height: '48px'
-              }}
-            />
+            {/* Spinner with percentage */}
+            <div className="flex flex-col items-center gap-4">
+              <div 
+                className="animate-spin rounded-full border-4 border-transparent border-t-[#00C2FF]"
+                style={{ 
+                  width: '48px', 
+                  height: '48px'
+                }}
+              />
+              <span 
+                style={{
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: '#00C2FF'
+                }}
+              >
+                {uploadProgress}%
+              </span>
+            </div>
           </div>
         )}
 
@@ -1243,6 +1260,27 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, editing
                             src={item.content_url}
                             className="w-full h-full object-cover"
                           />
+                        )}
+                        {item.content_type === 'audio' && (
+                          <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.12), rgba(0, 194, 255, 0.08))' }}>
+                            <svg className="w-8 h-8" fill="none" stroke="#00C2FF" strokeWidth={2} viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v14M9 19c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm12 0c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z" />
+                            </svg>
+                          </div>
+                        )}
+                        {item.content_type === 'pdf' && (
+                          <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(0, 194, 255, 0.08), rgba(0, 194, 255, 0.04))' }}>
+                            <svg className="w-8 h-8" fill="none" stroke="#00C2FF" strokeWidth={2} viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                            </svg>
+                          </div>
+                        )}
+                        {item.content_type === 'text' && (
+                          <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.05), rgba(118, 75, 162, 0.05))' }}>
+                            <svg className="w-8 h-8" fill="none" stroke="#A78BFA" strokeWidth={2} viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                            </svg>
+                          </div>
                         )}
                         {isSelected && (
                           <div 

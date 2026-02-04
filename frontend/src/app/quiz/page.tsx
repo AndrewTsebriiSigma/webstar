@@ -590,11 +590,11 @@ export default function QuizPage() {
         </div>
       )}
 
-      <div 
-        className="min-h-screen min-h-screen-safe flex flex-col items-center px-4 sm:px-6 py-6 sm:py-8 relative overflow-hidden"
-        style={{ background: 'radial-gradient(ellipse at center, #0B0B0C 0%, #050506 100%)' }}
-      >
-        <FloatingOrbs />
+    <div 
+      className="min-h-screen min-h-screen-safe flex flex-col items-center px-4 sm:px-6 py-6 sm:py-8 relative overflow-hidden"
+      style={{ background: 'radial-gradient(ellipse at center, #0B0B0C 0%, #050506 100%)' }}
+    >
+      <FloatingOrbs />
 
       {/* Progress Bar */}
       <div className="w-full max-w-md mb-8 relative z-10">
@@ -723,7 +723,7 @@ export default function QuizPage() {
           </div>
         </div>
       </div>
-      </div>
+    </div>
     </>
   );
 }

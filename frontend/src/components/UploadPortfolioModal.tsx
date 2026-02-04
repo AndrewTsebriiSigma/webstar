@@ -899,7 +899,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
             {/* Simple spinning spinner */}
             <div 
               className="animate-spin rounded-full border-4 border-transparent border-t-[#00C2FF]"
-              style={{ 
+                style={{
                 width: '48px', 
                 height: '48px'
               }}

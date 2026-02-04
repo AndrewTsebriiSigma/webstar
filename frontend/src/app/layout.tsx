@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
+import { AudioProvider } from '@/context/AudioContext';
 import { Toaster } from 'react-hot-toast';
+import GlobalAudioPlayer from '@/components/GlobalAudioPlayer';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -36,8 +38,11 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className} style={{ background: '#111111', color: 'rgba(255, 255, 255, 0.95)' }}>
         <AuthProvider>
-          {children}
-          <Toaster position="top-right" />
+          <AudioProvider>
+            {children}
+            <GlobalAudioPlayer />
+            <Toaster position="top-center" />
+          </AudioProvider>
         </AuthProvider>
       </body>
     </html>

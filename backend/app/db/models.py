@@ -112,6 +112,9 @@ class Profile(SQLModel, table=True):
     # Portfolio customization settings (JSON string)
     portfolio_customization: Optional[str] = None  # Store as JSON: {gridColumns, gridGap, gridRadius, layoutMode, gridAspectRatio}
     
+    # Action buttons customization settings (JSON string)
+    action_buttons: Optional[str] = None  # Store as JSON: {button settings}
+    
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

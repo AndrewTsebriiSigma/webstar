@@ -87,6 +87,28 @@ def create_db_and_tables():
                     session.exec(text("ALTER TABLE profiles ADD COLUMN portfolio_customization VARCHAR"))
                     session.commit()
                     print("✅ Added portfolio_customization column to profiles table")
+                
+                # Add action_buttons column if missing
+                result3 = session.exec(text("""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_name = 'profiles' AND column_name = 'action_buttons'
+                """))
+                if not result3.fetchone():
+                    session.exec(text("ALTER TABLE profiles ADD COLUMN action_buttons VARCHAR"))
+                    session.commit()
+                    print("✅ Added action_buttons column to profiles table")
+                
+                # Add file_size column to portfolio_items if missing
+                result_portfolio = session.exec(text("""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_name = 'portfolio_items' AND column_name = 'file_size'
+                """))
+                if not result_portfolio.fetchone():
+                    session.exec(text("ALTER TABLE portfolio_items ADD COLUMN file_size INTEGER"))
+                    session.commit()
+                    print("✅ Added file_size column to portfolio_items table")
             else:
                 # SQLite - check if columns exist
                 result = session.exec(text("PRAGMA table_info(profiles)"))
@@ -115,6 +137,20 @@ def create_db_and_tables():
                     session.exec(text("ALTER TABLE profiles ADD COLUMN portfolio_customization TEXT"))
                     session.commit()
                     print("✅ Added portfolio_customization column to profiles table")
+                
+                # Add action_buttons column if missing
+                if 'action_buttons' not in columns:
+                    session.exec(text("ALTER TABLE profiles ADD COLUMN action_buttons TEXT"))
+                    session.commit()
+                    print("✅ Added action_buttons column to profiles table")
+                
+                # Add file_size column to portfolio_items if missing
+                result_portfolio = session.exec(text("PRAGMA table_info(portfolio_items)"))
+                portfolio_columns = [row[1] for row in result_portfolio.fetchall()]
+                if 'file_size' not in portfolio_columns:
+                    session.exec(text("ALTER TABLE portfolio_items ADD COLUMN file_size INTEGER"))
+                    session.commit()
+                    print("✅ Added file_size column to portfolio_items table")
     except Exception as e:
         print(f"Migration note: {e}")
         # If it fails, columns might already exist

@@ -108,6 +108,14 @@ function FloatingOrb({
   initialY: string; 
   duration: number;
 }) {
+  // Use useState to ensure animation delay is only set on client side (fixes hydration mismatch)
+  const [animationDelay, setAnimationDelay] = useState<string>('0s');
+  
+  useEffect(() => {
+    // Set random delay only on client side
+    setAnimationDelay(`${Math.random() * duration}s`);
+  }, [duration]);
+  
   return (
     <div
       className="absolute rounded-full pointer-events-none floating-orb"
@@ -119,7 +127,7 @@ function FloatingOrb({
         background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
         filter: 'blur(40px)',
         animation: `float ${duration}s ease-in-out infinite`,
-        animationDelay: `${Math.random() * duration}s`
+        animationDelay: animationDelay
       }}
     />
   );

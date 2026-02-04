@@ -455,6 +455,15 @@ export default function ProfilePage({ params }: { params: { username: string } }
     }
   };
 
+  // Format file size helper
+  const formatFileSize = (bytes: number | null | undefined): string => {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+  };
+
   // Handle right-click context menu for size picker
   const handleItemContextMenu = (e: React.MouseEvent, item: PortfolioItem) => {
     if (isOwnProfile && showCustomizePanel) {
@@ -506,16 +515,26 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const handlePortfolioDragStart = (e: React.DragEvent, itemId: number) => {
     if (!showCustomizePanel || !isOwnProfile) return;
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', itemId.toString());
     setDraggedItemId(itemId);
     setIsDraggingPortfolio(true);
-    // Add visual feedback
-    const target = e.currentTarget as HTMLElement;
-    target.style.opacity = '0.5';
+    // Add visual feedback to the parent portfolio item
+    const target = e.currentTarget.closest('.portfolio-grid-item') as HTMLElement;
+    if (target) {
+      target.style.opacity = '0.5';
+    }
   };
 
   const handlePortfolioDragEnd = (e: React.DragEvent) => {
-    const target = e.currentTarget as HTMLElement;
-    target.style.opacity = '1';
+    // Reset opacity on all items
+    const target = e.currentTarget.closest('.portfolio-grid-item') as HTMLElement;
+    if (target) {
+      target.style.opacity = '1';
+    }
+    // Also reset any other items that might have been affected
+    document.querySelectorAll('.portfolio-grid-item').forEach((el) => {
+      (el as HTMLElement).style.opacity = '1';
+    });
     setDraggedItemId(null);
     setDragOverItemId(null);
     setIsDraggingPortfolio(false);
@@ -2946,10 +2965,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   <div 
                     key={item.id} 
                       className={`portfolio-grid-item ${showCustomizePanel && isOwnProfile ? 'customize-mode' : ''} ${selectedItemForResize?.id === item.id ? 'selected-for-resize' : ''} ${dragOverItemId === item.id ? 'drag-over' : ''}`}
-                      // Drag & drop handlers (customize mode only)
-                      draggable={showCustomizePanel && isOwnProfile}
-                      onDragStart={(e) => showCustomizePanel && isOwnProfile && handlePortfolioDragStart(e, item.id)}
-                      onDragEnd={handlePortfolioDragEnd}
+                      // Drag & drop handlers (customize mode only) - drop target only, drag initiated from blue line
+                      draggable={false}
                       onDragOver={(e) => showCustomizePanel && isOwnProfile && handlePortfolioDragOver(e, item.id)}
                       onDragLeave={handlePortfolioDragLeave}
                       onDrop={(e) => showCustomizePanel && isOwnProfile && handlePortfolioDrop(e, item.id)}
@@ -2959,15 +2976,28 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       onTouchMove={handleLongPressEnd}
                     onClick={(e) => {
                         if (showCustomizePanel && isOwnProfile) {
-                          // In customize mode: show size picker on click
-                          e.stopPropagation();
-                          setSelectedItemForResize(item);
-                          setShowSizePicker(true);
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          setSizePickerPosition({ 
-                            x: Math.min(rect.left + rect.width / 2 - 90, window.innerWidth - 180), 
-                            y: Math.min(rect.bottom + 8, window.innerHeight - 200)
-                          });
+                          // In customize mode: check which area was clicked
+                          const target = e.target as HTMLElement;
+                          const isFileSizeClick = target.closest('.file-size-badge');
+                          const isSizeBadgeClick = target.closest('.size-badge');
+                          const isDragHandleClick = target.closest('.drag-handle-line');
+                          
+                          // If clicking on file size or size badge, open shape menu
+                          if (isFileSizeClick || isSizeBadgeClick) {
+                            e.stopPropagation();
+                            setSelectedItemForResize(item);
+                            setShowSizePicker(true);
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setSizePickerPosition({ 
+                              x: Math.min(rect.left + rect.width / 2 - 90, window.innerWidth - 180), 
+                              y: Math.min(rect.bottom + 8, window.innerHeight - 200)
+                            });
+                          } else if (!isDragHandleClick) {
+                            // Clicking between blue line and size numbers opens edit/resize/delete menu
+                            e.stopPropagation();
+                            handleItemContextMenu(e, item);
+                          }
+                          // Drag handle click is handled by onMouseDown
                         } else if (!showActionMenu) {
                           // Normal mode: open feed modal
                       setFeedInitialPostId(item.id);
@@ -3009,40 +3039,113 @@ export default function ProfilePage({ params }: { params: { username: string } }
                         onToggleMiniPlayerMute={() => setIsMiniPlayerMuted(!isMiniPlayerMuted)}
                       />
                       
-                      {/* Customize mode overlay - drag handle and size badge */}
+                      {/* Customize mode overlay - file size, blue line, and size badge */}
                       {showCustomizePanel && (
                         <>
-                          {/* Drag handle indicator at top */}
-                          <div style={{
-                            position: 'absolute',
-                            top: '8px',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            width: '40px',
-                            height: '4px',
-                            background: 'rgba(0, 194, 255, 0.6)',
-                            borderRadius: '2px',
-                            cursor: 'grab',
-                            pointerEvents: 'none'
-                          }} />
+                          {/* File size display at top */}
+                          {item.file_size && (
+                            <div 
+                              className="file-size-badge"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Holding size numbers opens shape menu
+                                setSelectedItemForResize(item);
+                                setShowSizePicker(true);
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setSizePickerPosition({ 
+                                  x: Math.min(rect.left + rect.width / 2 - 90, window.innerWidth - 180), 
+                                  y: Math.min(rect.bottom + 8, window.innerHeight - 200)
+                                });
+                              }}
+                              style={{
+                                position: 'absolute',
+                                top: '8px',
+                                right: '8px',
+                                background: 'rgba(0, 0, 0, 0.7)',
+                                backdropFilter: 'blur(8px)',
+                                padding: '4px 8px',
+                                borderRadius: '8px',
+                                fontSize: '10px',
+                                fontWeight: 600,
+                                color: '#00C2FF',
+                                cursor: 'pointer',
+                                zIndex: 10,
+                                pointerEvents: 'auto'
+                              }}
+                            >
+                              {formatFileSize(item.file_size)}
+                            </div>
+                          )}
                           
-                          {/* Size badge showing current aspect ratio */}
-                          <div style={{
-                            position: 'absolute',
-                            bottom: '8px',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            background: 'rgba(0, 0, 0, 0.7)',
-                            backdropFilter: 'blur(8px)',
-                            padding: '4px 10px',
-                            borderRadius: '12px',
-                            fontSize: '11px',
-                            fontWeight: 600,
-                            color: '#00C2FF',
-                            pointerEvents: 'none'
-                          }}>
+                          {/* Blue straight line - drag handle at bottom */}
+                          <div 
+                            className="drag-handle-line"
+                            draggable={showCustomizePanel && isOwnProfile}
+                            onDragStart={(e) => {
+                              if (showCustomizePanel && isOwnProfile) {
+                                e.stopPropagation();
+                                // Enable drag when holding blue line
+                                handlePortfolioDragStart(e, item.id);
+                              }
+                            }}
+                            onDragEnd={(e) => {
+                              if (showCustomizePanel && isOwnProfile) {
+                                e.stopPropagation();
+                                handlePortfolioDragEnd(e);
+                              }
+                            }}
+                            onClick={(e) => {
+                              // Prevent click from bubbling to parent
+                              e.stopPropagation();
+                            }}
+                            style={{
+                              position: 'absolute',
+                              bottom: '8px',
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              width: '60px',
+                              height: '3px',
+                              background: '#00C2FF',
+                              borderRadius: '2px',
+                              cursor: 'grab',
+                              zIndex: 10,
+                              pointerEvents: 'auto'
+                            }} 
+                          />
+                          
+                          {/* Size badge showing current aspect ratio - at top center */}
+                          <div 
+                            className="size-badge"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Holding size numbers opens shape menu
+                              setSelectedItemForResize(item);
+                              setShowSizePicker(true);
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setSizePickerPosition({ 
+                                x: Math.min(rect.left + rect.width / 2 - 90, window.innerWidth - 180), 
+                                y: Math.min(rect.bottom + 8, window.innerHeight - 200)
+                              });
+                            }}
+                            style={{
+                              position: 'absolute',
+                              top: '8px',
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              background: 'rgba(0, 0, 0, 0.7)',
+                              backdropFilter: 'blur(8px)',
+                              padding: '4px 10px',
+                              borderRadius: '12px',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              color: '#00C2FF',
+                              cursor: 'pointer',
+                              zIndex: 10,
+                              pointerEvents: 'auto'
+                            }}
+                          >
                             {getSizeLabel((item.aspect_ratio as WidgetSize) || '4x5')}
-                  </div>
+                          </div>
                         </>
                       )}
                     </div>
