@@ -303,7 +303,7 @@ export default function SetupChecklist({
       {/* Modal */}
       {isOpen && (
         <>
-          {/* Backdrop - Glassy */}
+          {/* Backdrop - Dark overlay, no blur */}
           <div
             onClick={closeModal}
             style={{
@@ -312,9 +312,7 @@ export default function SetupChecklist({
               left: 0,
               right: 0,
               bottom: 0,
-              background: 'rgba(0, 0, 0, 0.4)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
+              background: 'rgba(0, 0, 0, 0.65)',
               zIndex: 9998,
               opacity: modalVisible ? 1 : 0,
               transition: 'opacity 0.2s ease',
