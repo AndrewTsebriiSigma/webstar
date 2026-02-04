@@ -418,8 +418,17 @@ export default function SetupChecklist({
               </div>
             </div>
 
-            {/* Tasks list - Flat with subtle group dividers */}
-            <div style={{ padding: '8px 16px 40px', overflowY: 'auto', maxHeight: 'calc(75vh - 100px)' }}>
+            {/* Tasks list - Flat with subtle group dividers, glassy feel */}
+            <div 
+              style={{ 
+                padding: '8px 16px 40px', 
+                overflowY: 'auto', 
+                maxHeight: 'calc(75vh - 100px)',
+                background: 'rgba(255, 255, 255, 0.02)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+              }}
+            >
               <div>
                 {tasks.map((task, index) => {
                   const prevTask = index > 0 ? tasks[index - 1] : null;
