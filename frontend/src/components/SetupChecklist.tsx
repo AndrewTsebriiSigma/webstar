@@ -303,7 +303,7 @@ export default function SetupChecklist({
       {/* Modal */}
       {isOpen && (
         <>
-          {/* Backdrop - Slight blur */}
+          {/* Backdrop - Strong opacity with blur */}
           <div
             onClick={closeModal}
             style={{
@@ -312,7 +312,7 @@ export default function SetupChecklist({
               left: 0,
               right: 0,
               bottom: 0,
-              background: 'rgba(0, 0, 0, 0.5)',
+              background: 'rgba(0, 0, 0, 0.7)',
               backdropFilter: 'blur(8px)',
               WebkitBackdropFilter: 'blur(8px)',
               zIndex: 9998,
@@ -519,7 +519,8 @@ export default function SetupChecklist({
                     {expandedTask === task.id && !task.isComplete && (
                       <div
                         style={{
-                          padding: '2px 16px 14px 46px',
+                          padding: '0 16px 14px 46px',
+                          marginTop: '-8px',
                           animation: 'fadeIn 0.2s ease',
                         }}
                       >
@@ -528,7 +529,7 @@ export default function SetupChecklist({
                             fontSize: '12px',
                             color: 'rgba(255, 255, 255, 0.4)',
                             lineHeight: 1.4,
-                            margin: '0 0 10px 0',
+                            margin: '0 0 12px 0',
                           }}
                         >
                           {task.description}
