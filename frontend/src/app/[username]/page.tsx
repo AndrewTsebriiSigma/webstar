@@ -1769,13 +1769,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
           }}
           onMouseEnter={(e) => {
             if (!showCustomizePanel) {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-              e.currentTarget.style.transform = 'scale(1.01)';
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.09)';
             }
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-            e.currentTarget.style.transform = 'scale(1)';
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
@@ -1810,7 +1808,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
-                  lineHeight: '1'
+                  lineHeight: '1',
+                  filter: 'drop-shadow(0 0 8px rgba(0, 194, 255, 0.15))'
                 }}
               >
                 {totalViews.toLocaleString()}
