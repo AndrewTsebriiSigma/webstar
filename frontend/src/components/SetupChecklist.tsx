@@ -303,7 +303,7 @@ export default function SetupChecklist({
       {/* Modal */}
       {isOpen && (
         <>
-          {/* Backdrop - Dark overlay, no blur */}
+          {/* Backdrop - Slight blur */}
           <div
             onClick={closeModal}
             style={{
@@ -312,7 +312,9 @@ export default function SetupChecklist({
               left: 0,
               right: 0,
               bottom: 0,
-              background: 'rgba(0, 0, 0, 0.65)',
+              background: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
               zIndex: 9998,
               opacity: modalVisible ? 1 : 0,
               transition: 'opacity 0.2s ease',
@@ -437,9 +439,9 @@ export default function SetupChecklist({
                   <div
                     key={task.id}
                     style={{
-                      borderTop: isNewGroup ? '1px solid rgba(255, 255, 255, 0.08)' : 'none',
-                      marginTop: isNewGroup ? '8px' : 0,
-                      paddingTop: isNewGroup ? '8px' : 0,
+                      borderTop: isNewGroup ? '1px solid rgba(255, 255, 255, 0.06)' : 'none',
+                      marginTop: isNewGroup ? '12px' : 0,
+                      paddingTop: isNewGroup ? '4px' : 0,
                     }}
                   >
                     {/* Task header (always visible) */}
@@ -495,11 +497,11 @@ export default function SetupChecklist({
                       {/* Chevron (only for incomplete tasks) */}
                       {!task.isComplete && (
                         <svg
-                          width="14"
-                          height="14"
+                          width="16"
+                          height="16"
                           viewBox="0 0 24 24"
                           fill="none"
-                          stroke="rgba(255, 255, 255, 0.3)"
+                          stroke="rgba(255, 255, 255, 0.35)"
                           strokeWidth="2"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -517,8 +519,7 @@ export default function SetupChecklist({
                     {expandedTask === task.id && !task.isComplete && (
                       <div
                         style={{
-                          padding: '0 16px 12px 46px',
-                          marginTop: '-4px',
+                          padding: '2px 16px 14px 46px',
                           animation: 'fadeIn 0.2s ease',
                         }}
                       >
@@ -526,7 +527,7 @@ export default function SetupChecklist({
                           style={{
                             fontSize: '12px',
                             color: 'rgba(255, 255, 255, 0.4)',
-                            lineHeight: 1.35,
+                            lineHeight: 1.4,
                             margin: '0 0 10px 0',
                           }}
                         >
