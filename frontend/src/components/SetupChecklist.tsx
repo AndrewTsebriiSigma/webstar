@@ -447,10 +447,10 @@ export default function SetupChecklist({
                       onClick={() => !task.isComplete && toggleTask(task.id)}
                       style={{
                         width: '100%',
-                        padding: '14px 16px',
+                        padding: '12px 16px',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '12px',
+                        gap: '10px',
                         background: 'transparent',
                         border: 'none',
                         cursor: task.isComplete ? 'default' : 'pointer',
@@ -483,7 +483,7 @@ export default function SetupChecklist({
                       <span
                         style={{
                           flex: 1,
-                          fontSize: '14px',
+                          fontSize: '15px',
                           fontWeight: '500',
                           color: task.isComplete ? 'rgba(255, 255, 255, 0.4)' : '#fff',
                           textDecoration: task.isComplete ? 'line-through' : 'none',
@@ -517,16 +517,17 @@ export default function SetupChecklist({
                     {expandedTask === task.id && !task.isComplete && (
                       <div
                         style={{
-                          padding: '0 16px 14px 48px',
+                          padding: '0 16px 12px 46px',
+                          marginTop: '-4px',
                           animation: 'fadeIn 0.2s ease',
                         }}
                       >
                         <p
                           style={{
-                            fontSize: '13px',
-                            color: 'rgba(255, 255, 255, 0.45)',
-                            lineHeight: 1.4,
-                            margin: '0 0 12px 0',
+                            fontSize: '12px',
+                            color: 'rgba(255, 255, 255, 0.4)',
+                            lineHeight: 1.35,
+                            margin: '0 0 10px 0',
                           }}
                         >
                           {task.description}
@@ -535,16 +536,16 @@ export default function SetupChecklist({
                           onClick={task.action}
                           className="transition-all active:scale-[0.98]"
                           style={{
-                            height: '32px',
-                            padding: '0 16px',
+                            height: '28px',
+                            padding: '0 14px',
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             background: '#00C2FF',
                             border: 'none',
-                            borderRadius: '7px',
+                            borderRadius: '6px',
                             color: '#fff',
-                            fontSize: '12px',
+                            fontSize: '11px',
                             fontWeight: '600',
                             cursor: 'pointer',
                           }}
