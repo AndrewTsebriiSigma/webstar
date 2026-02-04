@@ -1685,7 +1685,7 @@ export default function AnalyticsPage() {
           {/* Bottom Slider Content */}
           <div 
             className={`bottom-slider-content ${quizModalVisible ? 'entering' : 'exiting'}`}
-                    style={{
+            style={{
               position: 'fixed',
               bottom: 0,
               left: 0,
@@ -1698,85 +1698,93 @@ export default function AnalyticsPage() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header - Back Arrow on LEFT */}
-                    <div style={{
+            {/* Header - X on left, title centered (matching project page) */}
+            <div style={{
               position: 'sticky',
               top: 0,
               zIndex: 10,
-              padding: '16px 20px',
+              height: '55px',
               background: 'rgba(17, 17, 17, 0.95)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
               borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-                      display: 'flex',
+              display: 'flex',
               alignItems: 'center',
-              gap: '12px'
+              justifyContent: 'center',
             }}>
+              {/* Close button - left */}
               <button
                 onClick={() => { setQuizModalVisible(false); setTimeout(() => setExpandedQuiz(null), 150); }}
                 style={{
-                  width: '28px',
-                  height: '28px',
+                  position: 'absolute',
+                  left: '16px',
+                  width: '32px',
+                  height: '32px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   background: 'transparent',
                   border: 'none',
                   cursor: 'pointer',
-                  borderRadius: '6px',
-                  marginLeft: '-4px'
+                  borderRadius: '8px',
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  transition: 'opacity 0.15s ease'
                 }}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
+                <XMarkIcon style={{ width: '22px', height: '22px' }} />
               </button>
-              <span style={{ fontSize: '17px', fontWeight: '600', color: '#fff' }}>
+              
+              {/* Centered title */}
+              <span style={{ 
+                fontSize: '15px', 
+                fontWeight: '600', 
+                color: '#fff',
+                letterSpacing: '-0.2px'
+              }}>
                 Clarity Boost
-                      </span>
-                    </div>
+              </span>
+            </div>
             
-            {/* Content - 30/70 Layout */}
+            {/* Content */}
             <div style={{ padding: '20px' }}>
-              {/* Top Row: Icon | Info - reduced gaps */}
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-                {/* Icon - larger, full fit */}
+              {/* Icon + Title Row */}
+              <div style={{ display: 'flex', gap: '14px', marginBottom: '20px' }}>
+                {/* Icon - refined proportions */}
                 <div style={{
-                  width: '80px',
-                  height: '80px',
-                  borderRadius: '18px',
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '14px',
                   background: expandedQuiz === 'hidden-skills' 
-                    ? 'linear-gradient(135deg, rgba(0, 194, 255, 0.25) 0%, rgba(0, 150, 255, 0.15) 100%)'
+                    ? 'rgba(0, 194, 255, 0.12)'
                     : expandedQuiz === 'brand-strategy'
-                    ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.25) 0%, rgba(102, 126, 234, 0.15) 100%)'
-                    : 'linear-gradient(135deg, rgba(255, 0, 107, 0.25) 0%, rgba(255, 0, 107, 0.15) 100%)',
+                    ? 'rgba(102, 126, 234, 0.12)'
+                    : 'rgba(255, 0, 107, 0.12)',
                   border: expandedQuiz === 'hidden-skills'
-                    ? '1px solid rgba(0, 194, 255, 0.3)'
+                    ? '1px solid rgba(0, 194, 255, 0.25)'
                     : expandedQuiz === 'brand-strategy'
-                    ? '1px solid rgba(102, 126, 234, 0.3)'
-                    : '1px solid rgba(255, 0, 107, 0.3)',
+                    ? '1px solid rgba(102, 126, 234, 0.25)'
+                    : '1px solid rgba(255, 0, 107, 0.25)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '40px',
                   flexShrink: 0
                 }}>
                   {expandedQuiz === 'hidden-skills' && (
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10"/>
                       <circle cx="12" cy="12" r="6"/>
                       <circle cx="12" cy="12" r="2"/>
                     </svg>
                   )}
                   {expandedQuiz === 'brand-strategy' && (
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#667eea" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#667eea" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M9 18h6"/>
                       <path d="M10 22h4"/>
                       <path d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2z"/>
                     </svg>
                   )}
                   {expandedQuiz === 'visual-language' && (
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#FF006B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FF006B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="13.5" cy="6.5" r="1.5"/>
                       <circle cx="17.5" cy="10.5" r="1.5"/>
                       <circle cx="8.5" cy="7.5" r="1.5"/>
@@ -1786,72 +1794,35 @@ export default function AnalyticsPage() {
                   )}
                 </div>
                 
-                {/* Title & Short Info */}
+                {/* Title & Subtitle */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#fff', margin: 0 }}>
+                  <h2 style={{ fontSize: '17px', fontWeight: '600', color: '#fff', margin: 0, letterSpacing: '-0.2px' }}>
                     {expandedQuiz === 'hidden-skills' && 'Hidden Skills'}
                     {expandedQuiz === 'brand-strategy' && 'Brand Strategy'}
                     {expandedQuiz === 'visual-language' && 'Visual Language'}
                   </h2>
-                  <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.5)', margin: '4px 0 0 0', lineHeight: 1.4 }}>
+                  <p style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.45)', margin: '3px 0 0 0', lineHeight: 1.4 }}>
                     {expandedQuiz === 'hidden-skills' && 'Discover your unique skill combination'}
                     {expandedQuiz === 'brand-strategy' && 'Find your ideal positioning'}
                     {expandedQuiz === 'visual-language' && 'Define your aesthetic style'}
                   </p>
-                  {/* Status */}
-                  {(() => {
-                    const result = expandedQuiz === 'hidden-skills' 
-                      ? quizResults.find(r => r.quiz_title?.toLowerCase().includes('hidden') || r.quiz_id === 1)
-                      : expandedQuiz === 'brand-strategy'
-                      ? quizResults.find(r => r.quiz_title?.toLowerCase().includes('brand') || r.quiz_id === 2)
-                      : quizResults.find(r => r.quiz_title?.toLowerCase().includes('visual') || r.quiz_id === 3);
-                    return result ? (
-                      <div style={{
-                        fontSize: '11px',
-                        fontWeight: '600',
-                        color: expandedQuiz === 'hidden-skills' ? '#00C2FF' : expandedQuiz === 'brand-strategy' ? '#667eea' : '#FF006B',
-                        marginTop: '8px'
-                      }}>
-                        ✓ Completed
-                      </div>
-                    ) : null;
-                  })()}
                 </div>
               </div>
               
-              {/* Extended Description - no frame, just flowing text */}
-              <div style={{ marginBottom: '20px' }}>
-                {expandedQuiz === 'hidden-skills' && (
-                  <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.65)', lineHeight: 1.7 }}>
-                    <p style={{ margin: '0 0 12px 0' }}>
-                      This quiz analyzes your strengths, creative approach, and problem-solving style to reveal what makes you uniquely valuable.
-                    </p>
-                    <p style={{ margin: 0 }}>
-                      Understanding your hidden skills helps you position yourself effectively in the creator economy and communicate your unique value to potential collaborators and clients.
-                    </p>
-                  </div>
-                )}
-                {expandedQuiz === 'brand-strategy' && (
-                  <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.65)', lineHeight: 1.7 }}>
-                    <p style={{ margin: '0 0 12px 0' }}>
-                      Discover your authentic brand positioning by exploring your values, target audience, and unique selling points.
-                    </p>
-                    <p style={{ margin: 0 }}>
-                      This quiz helps you clarify who you serve, what problems you solve, and how to communicate your value proposition effectively.
-                    </p>
-                  </div>
-                )}
-                {expandedQuiz === 'visual-language' && (
-                  <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.65)', lineHeight: 1.7 }}>
-                    <p style={{ margin: '0 0 12px 0' }}>
-                      Define your visual identity by exploring color preferences, typography styles, and aesthetic directions.
-                    </p>
-                    <p style={{ margin: 0 }}>
-                      This quiz helps you establish a consistent visual language that resonates with your audience and reflects your brand personality.
-                    </p>
-            </div>
-          )}
-              </div>
+              {/* Description */}
+              <p style={{ 
+                fontSize: '13px', 
+                color: 'rgba(255, 255, 255, 0.55)', 
+                lineHeight: 1.6,
+                margin: '0 0 20px 0'
+              }}>
+                {expandedQuiz === 'hidden-skills' && 
+                  'This quiz analyzes your strengths, creative approach, and problem-solving style to reveal what makes you uniquely valuable in the creator economy.'}
+                {expandedQuiz === 'brand-strategy' && 
+                  'Discover your authentic brand positioning by exploring your values, target audience, and how to communicate your unique value proposition.'}
+                {expandedQuiz === 'visual-language' && 
+                  'Define your visual identity by exploring color preferences, typography styles, and aesthetic directions that reflect your brand personality.'}
+              </p>
               
               {/* Results Block (if completed) */}
               {(() => {
@@ -1865,45 +1836,42 @@ export default function AnalyticsPage() {
                 
                 const color = expandedQuiz === 'hidden-skills' ? '0, 194, 255' : expandedQuiz === 'brand-strategy' ? '102, 126, 234' : '255, 0, 107';
                 const completedDate = result.created_at ? new Date(result.created_at) : new Date();
-                const dateStr = completedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const dateStr = completedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 
                 return (
-              <div style={{
-                    padding: '16px',
-                    background: `rgba(${color}, 0.08)`,
-                    border: `1px solid rgba(${color}, 0.2)`,
+                  <div style={{
+                    padding: '14px',
+                    background: `rgba(${color}, 0.06)`,
+                    border: `1px solid rgba(${color}, 0.15)`,
                     borderRadius: '12px',
-                    marginBottom: '16px'
+                    marginBottom: '20px'
                   }}>
-                    {/* Header with title and date badge */}
+                    {/* Header */}
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       marginBottom: '10px'
                     }}>
-                      <div style={{
-                        fontSize: '10px',
-                        color: 'rgba(255, 255, 255, 0.4)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px'
-              }}>
-                        Your Result
-              </div>
-              <div style={{
-                        fontSize: '10px',
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: '600',
                         color: `rgb(${color})`,
-                        background: `rgba(${color}, 0.15)`,
-                        padding: '4px 8px',
-                        borderRadius: '6px',
-                        fontWeight: '500'
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        ✓ Your Result
+                      </span>
+                      <span style={{
+                        fontSize: '11px',
+                        color: 'rgba(255, 255, 255, 0.4)',
                       }}>
                         {dateStr}
-                      </div>
+                      </span>
                     </div>
-                <p style={{
-                      fontSize: '14px',
-                      color: 'rgba(255, 255, 255, 0.85)',
+                    <p style={{
+                      fontSize: '13px',
+                      color: 'rgba(255, 255, 255, 0.8)',
                       lineHeight: 1.5,
                       margin: 0
                     }}>
@@ -1914,53 +1882,43 @@ export default function AnalyticsPage() {
               })()}
               
               {/* Action Button */}
-                <Link
-                  href="/quiz"
-                  style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '100%',
-                  padding: '14px',
-                  borderRadius: '12px',
-                  fontSize: '15px',
-                    fontWeight: '600',
-                  background: (() => {
-                    const result = expandedQuiz === 'hidden-skills' 
-                      ? quizResults.find(r => r.quiz_title?.toLowerCase().includes('hidden') || r.quiz_id === 1)
-                      : expandedQuiz === 'brand-strategy'
-                      ? quizResults.find(r => r.quiz_title?.toLowerCase().includes('brand') || r.quiz_id === 2)
-                      : quizResults.find(r => r.quiz_title?.toLowerCase().includes('visual') || r.quiz_id === 3);
-                    if (result) return 'rgba(255, 255, 255, 0.06)';
-                    if (expandedQuiz === 'hidden-skills') return 'linear-gradient(135deg, rgba(0, 194, 255, 0.9) 0%, rgba(0, 160, 210, 0.95) 100%)';
-                    if (expandedQuiz === 'brand-strategy') return 'linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(102, 126, 234, 0.8) 100%)';
-                    return 'linear-gradient(135deg, rgba(255, 0, 107, 0.9) 0%, rgba(200, 0, 85, 0.9) 100%)';
-                  })(),
-                  border: (() => {
-                    const result = expandedQuiz === 'hidden-skills' 
-                      ? quizResults.find(r => r.quiz_title?.toLowerCase().includes('hidden') || r.quiz_id === 1)
-                      : expandedQuiz === 'brand-strategy'
-                      ? quizResults.find(r => r.quiz_title?.toLowerCase().includes('brand') || r.quiz_id === 2)
-                      : quizResults.find(r => r.quiz_title?.toLowerCase().includes('visual') || r.quiz_id === 3);
-                    return result ? '1px solid rgba(255, 255, 255, 0.1)' : 'none';
-                  })(),
-                    color: '#fff',
-                  textDecoration: 'none'
-                }}
-              >
-                {(() => {
-                  const result = expandedQuiz === 'hidden-skills' 
-                    ? quizResults.find(r => r.quiz_title?.toLowerCase().includes('hidden') || r.quiz_id === 1)
-                    : expandedQuiz === 'brand-strategy'
-                    ? quizResults.find(r => r.quiz_title?.toLowerCase().includes('brand') || r.quiz_id === 2)
-                    : quizResults.find(r => r.quiz_title?.toLowerCase().includes('visual') || r.quiz_id === 3);
-                  return result ? 'Retake Quiz' : 'Take Quiz';
-                })()}
-                </Link>
-              </div>
+              {(() => {
+                const result = expandedQuiz === 'hidden-skills' 
+                  ? quizResults.find(r => r.quiz_title?.toLowerCase().includes('hidden') || r.quiz_id === 1)
+                  : expandedQuiz === 'brand-strategy'
+                  ? quizResults.find(r => r.quiz_title?.toLowerCase().includes('brand') || r.quiz_id === 2)
+                  : quizResults.find(r => r.quiz_title?.toLowerCase().includes('visual') || r.quiz_id === 3);
+                const isCompleted = !!result;
+                const color = expandedQuiz === 'hidden-skills' ? '#00C2FF' : expandedQuiz === 'brand-strategy' ? '#667eea' : '#FF006B';
+                
+                return (
+                  <Link
+                    href="/quiz"
+                    className="transition-all active:scale-[0.98]"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '100%',
+                      height: '48px',
+                      borderRadius: '12px',
+                      fontSize: '15px',
+                      fontWeight: '600',
+                      background: isCompleted ? 'rgba(255, 255, 255, 0.06)' : color,
+                      border: isCompleted ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+                      color: '#fff',
+                      textDecoration: 'none',
+                      letterSpacing: '-0.2px'
+                    }}
+                  >
+                    {isCompleted ? 'Retake Quiz' : 'Start Quiz'}
+                  </Link>
+                );
+              })()}
             </div>
+          </div>
         </>
-          )}
+      )}
 
       {/* Bottom swipe zone + fade gradient */}
       <div
