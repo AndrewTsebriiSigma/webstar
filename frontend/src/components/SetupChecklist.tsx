@@ -303,7 +303,7 @@ export default function SetupChecklist({
       {/* Modal */}
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop - Glassy */}
           <div
             onClick={closeModal}
             style={{
@@ -312,9 +312,9 @@ export default function SetupChecklist({
               left: 0,
               right: 0,
               bottom: 0,
-              background: 'rgba(0, 0, 0, 0.6)',
-              backdropFilter: 'blur(4px)',
-              WebkitBackdropFilter: 'blur(4px)',
+              background: 'rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
               zIndex: 9998,
               opacity: modalVisible ? 1 : 0,
               transition: 'opacity 0.2s ease',
@@ -400,9 +400,9 @@ export default function SetupChecklist({
             <div style={{ padding: '16px 20px 8px' }}>
               <div
                 style={{
-                  height: '5px',
+                  height: '8px',
                   background: 'rgba(255, 255, 255, 0.08)',
-                  borderRadius: '3px',
+                  borderRadius: '4px',
                   overflow: 'hidden',
                 }}
               >
@@ -411,7 +411,7 @@ export default function SetupChecklist({
                     width: `${progress}%`,
                     height: '100%',
                     background: '#00C2FF',
-                    borderRadius: '3px',
+                    borderRadius: '4px',
                     transition: 'width 0.5s ease',
                   }}
                 />
