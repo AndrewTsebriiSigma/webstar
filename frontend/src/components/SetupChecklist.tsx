@@ -220,33 +220,33 @@ export default function SetupChecklist({
   };
 
   // Calculate SVG circle properties for progress ring
-  const size = 52;
-  const strokeWidth = 3;
+  const size = 44;
+  const strokeWidth = 2.5;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const progressOffset = circumference - (progress / 100) * circumference;
 
   return (
     <>
-      {/* Trigger Button - Circular with progress ring border */}
+      {/* Trigger Button - Circular with progress ring border, aligned with bottom nav */}
       <button
         onClick={openModal}
         className="transition-all active:scale-[0.94]"
         style={{
           position: 'fixed',
-          bottom: '100px',
+          bottom: '24px',
           left: '20px',
           zIndex: 998,
           width: `${size}px`,
           height: `${size}px`,
           padding: 0,
-          background: 'rgba(20, 20, 24, 0.85)',
+          background: 'rgba(30, 30, 34, 0.75)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           border: 'none',
           borderRadius: '50%',
           cursor: 'pointer',
-          boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.35)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -289,10 +289,10 @@ export default function SetupChecklist({
         {/* Percentage text */}
         <span
           style={{
-            fontSize: '13px',
+            fontSize: '11px',
             fontWeight: '700',
             color: '#fff',
-            letterSpacing: '-0.3px',
+            letterSpacing: '-0.2px',
             zIndex: 1,
           }}
         >
