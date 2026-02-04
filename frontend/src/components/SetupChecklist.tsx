@@ -58,14 +58,16 @@ export default function SetupChecklist({
     }
   })() : 0;
 
-  // Define all tasks - flat list, no categories
-  const tasks: SetupTask[] = [
+  // Define all tasks with group info for subtle dividers
+  const tasks: (SetupTask & { group: number })[] = [
+    // Group 1: Profile basics
     {
       id: 'avatar',
       title: 'Add your avatar',
       description: 'Upload a profile photo that represents you.',
       buttonLabel: 'Upload Avatar',
       isComplete: !!profile?.profile_picture,
+      group: 1,
       action: () => {
         setIsOpen(false);
         setTimeout(() => router.push('/settings'), 200);
@@ -77,17 +79,20 @@ export default function SetupChecklist({
       description: 'Add a banner image to make your profile stand out.',
       buttonLabel: 'Upload Banner',
       isComplete: !!profile?.banner_image,
+      group: 1,
       action: () => {
         setIsOpen(false);
         setTimeout(() => router.push('/settings'), 200);
       },
     },
+    // Group 2: About you
     {
       id: 'story',
       title: 'Tell your story',
       description: 'Share who you are in a few sentences.',
       buttonLabel: 'Write Story',
       isComplete: (profile?.about?.length || 0) > 10,
+      group: 2,
       action: () => {
         setIsOpen(false);
         setTimeout(() => {
@@ -102,6 +107,7 @@ export default function SetupChecklist({
       description: 'Showcase your journey and career milestones.',
       buttonLabel: 'Add Experience',
       isComplete: experiences > 0,
+      group: 2,
       action: () => {
         setIsOpen(false);
         setTimeout(() => {
@@ -116,6 +122,7 @@ export default function SetupChecklist({
       description: 'Add your top skills so others know what you bring.',
       buttonLabel: 'Add Skills',
       isComplete: skills >= 3,
+      group: 2,
       action: () => {
         setIsOpen(false);
         setTimeout(() => {
@@ -130,6 +137,7 @@ export default function SetupChecklist({
       description: 'Connect your social profiles.',
       buttonLabel: 'Add Socials',
       isComplete: socialLinks >= 2,
+      group: 2,
       action: () => {
         setIsOpen(false);
         setTimeout(() => {
@@ -138,12 +146,14 @@ export default function SetupChecklist({
         }, 200);
       },
     },
+    // Group 3: Content
     {
       id: 'posts',
       title: 'Share your work',
       description: `Upload your best pieces. ${portfolioItems.length}/5 posts.`,
       buttonLabel: 'Add Posts',
       isComplete: portfolioItems.length >= 5,
+      group: 3,
       action: () => {
         setIsOpen(false);
         setTimeout(() => {
@@ -158,6 +168,7 @@ export default function SetupChecklist({
       description: 'Group related work into a project.',
       buttonLabel: 'Create Project',
       isComplete: projects.length >= 1,
+      group: 3,
       action: () => {
         setIsOpen(false);
         setTimeout(() => {
@@ -166,12 +177,14 @@ export default function SetupChecklist({
         }, 200);
       },
     },
+    // Group 4: Growth
     {
       id: 'quiz',
       title: 'Discover your strengths',
       description: 'Take a quick quiz to define your brand.',
       buttonLabel: 'Take Quiz',
       isComplete: quizResults.length >= 1,
+      group: 4,
       action: () => {
         setIsOpen(false);
         setTimeout(() => router.push('/analytics'), 200);
@@ -405,7 +418,7 @@ export default function SetupChecklist({
               </div>
             </div>
 
-            {/* Tasks list - Flat, no categories */}
+            {/* Tasks list - Flat with subtle group dividers */}
             <div style={{ padding: '8px 16px 40px', overflowY: 'auto', maxHeight: 'calc(75vh - 100px)' }}>
               <div
                 style={{
@@ -415,11 +428,17 @@ export default function SetupChecklist({
                   overflow: 'hidden',
                 }}
               >
-                {tasks.map((task, index) => (
+                {tasks.map((task, index) => {
+                  const prevTask = index > 0 ? tasks[index - 1] : null;
+                  const isNewGroup = prevTask && prevTask.group !== task.group;
+                  
+                  return (
                   <div
                     key={task.id}
                     style={{
-                      borderBottom: index < tasks.length - 1 ? '1px solid rgba(255, 255, 255, 0.06)' : 'none',
+                      borderTop: isNewGroup ? '1px solid rgba(255, 255, 255, 0.08)' : 'none',
+                      marginTop: isNewGroup ? '8px' : 0,
+                      paddingTop: isNewGroup ? '8px' : 0,
                     }}
                   >
                     {/* Task header (always visible) */}
@@ -538,7 +557,8 @@ export default function SetupChecklist({
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
