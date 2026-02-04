@@ -1810,8 +1810,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
-                  lineHeight: '1',
-                  filter: 'drop-shadow(0 0 8px rgba(0, 194, 255, 0.15))'
+                  lineHeight: '1'
                 }}
               >
                 {totalViews.toLocaleString()}
