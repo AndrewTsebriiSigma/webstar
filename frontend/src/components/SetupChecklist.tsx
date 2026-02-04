@@ -303,7 +303,7 @@ export default function SetupChecklist({
       {/* Modal */}
       {isOpen && (
         <>
-          {/* Backdrop - Strong opacity with blur */}
+          {/* Backdrop - Subtle blur */}
           <div
             onClick={closeModal}
             style={{
@@ -312,101 +312,93 @@ export default function SetupChecklist({
               left: 0,
               right: 0,
               bottom: 0,
-              background: 'rgba(0, 0, 0, 0.7)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
+              background: 'rgba(0, 0, 0, 0.6)',
+              backdropFilter: 'blur(3px)',
+              WebkitBackdropFilter: 'blur(3px)',
               zIndex: 9998,
               opacity: modalVisible ? 1 : 0,
               transition: 'opacity 0.2s ease',
             }}
           />
 
-          {/* Bottom Sheet - Glassy like notifications */}
+          {/* Bottom Sheet - Card with gaps from sides */}
           <div
             style={{
               position: 'fixed',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              maxHeight: '75vh',
-              background: 'rgba(20, 20, 20, 0.88)',
+              bottom: '16px',
+              left: '12px',
+              right: '12px',
+              maxHeight: 'calc(75vh - 32px)',
+              background: 'rgba(24, 24, 26, 0.95)',
               backdropFilter: 'blur(40px)',
               WebkitBackdropFilter: 'blur(40px)',
-              borderRadius: '20px 20px 0 0',
+              borderRadius: '20px',
               border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderBottom: 'none',
               zIndex: 9999,
               overflow: 'hidden',
-              transform: modalVisible ? 'translateY(0)' : 'translateY(100%)',
+              transform: modalVisible ? 'translateY(0)' : 'translateY(calc(100% + 32px))',
               transition: 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
             }}
           >
-            {/* Header - Glassy like notifications */}
+            {/* Header - Title with badge, X on right, no divider */}
             <div
               style={{
-                position: 'sticky',
-                top: 0,
-                zIndex: 10,
-                height: '55px',
-                background: 'rgba(20, 20, 20, 0.8)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                padding: '16px 16px 0',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
+                justifyContent: 'space-between',
               }}
             >
+              {/* Title with badge */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '16px', fontWeight: '600', color: '#fff', letterSpacing: '-0.2px' }}>
+                  Your profile checklist
+                </span>
+                <span
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    color: '#00C2FF',
+                    background: 'rgba(0, 194, 255, 0.12)',
+                    padding: '3px 8px',
+                    borderRadius: '10px',
+                  }}
+                >
+                  {completedCount}/{totalTasks}
+                </span>
+              </div>
+
               {/* Close button */}
               <button
                 onClick={closeModal}
                 style={{
-                  position: 'absolute',
-                  left: '16px',
-                  width: '32px',
-                  height: '32px',
+                  width: '28px',
+                  height: '28px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  background: 'transparent',
+                  background: 'rgba(255, 255, 255, 0.08)',
                   border: 'none',
                   cursor: 'pointer',
-                  borderRadius: '8px',
-                  color: 'rgba(255, 255, 255, 0.7)',
+                  borderRadius: '50%',
+                  color: 'rgba(255, 255, 255, 0.6)',
                 }}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"/>
                   <line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
               </button>
-
-              {/* Title */}
-              <span style={{ fontSize: '15px', fontWeight: '600', color: '#fff', letterSpacing: '-0.2px' }}>
-                Profile Setup
-              </span>
-
-              {/* Progress badge */}
-              <span
-                style={{
-                  position: 'absolute',
-                  right: '16px',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  color: '#00C2FF',
-                }}
-              >
-                {completedCount}/{totalTasks}
-              </span>
             </div>
 
-            {/* Progress bar */}
-            <div style={{ padding: '16px 20px 12px' }}>
+            {/* Progress bar - right below header */}
+            <div style={{ padding: '12px 16px 8px' }}>
               <div
                 style={{
-                  height: '8px',
+                  height: '6px',
                   background: 'rgba(255, 255, 255, 0.08)',
-                  borderRadius: '4px',
+                  borderRadius: '3px',
                   overflow: 'hidden',
                 }}
               >
@@ -414,8 +406,8 @@ export default function SetupChecklist({
                   style={{
                     width: `${progress}%`,
                     height: '100%',
-                    background: '#00C2FF',
-                    borderRadius: '4px',
+                    background: 'linear-gradient(90deg, #00C2FF 0%, #00E5FF 100%)',
+                    borderRadius: '3px',
                     transition: 'width 0.5s ease',
                   }}
                 />
@@ -425,9 +417,9 @@ export default function SetupChecklist({
             {/* Tasks list - Flat with subtle group dividers */}
             <div 
               style={{ 
-                padding: '0 16px 40px', 
+                padding: '4px 8px 24px', 
                 overflowY: 'auto', 
-                maxHeight: 'calc(75vh - 100px)',
+                maxHeight: 'calc(75vh - 120px)',
               }}
             >
               <div>
