@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { profileAPI, portfolioAPI, projectsAPI, economyAPI, analyticsAPI } from '@/lib/api';
+import { profileAPI, portfolioAPI, projectsAPI, economyAPI, analyticsAPI, quizAPI } from '@/lib/api';
 import { Profile, PortfolioItem, Project, PointsBalance, ProfileMetrics } from '@/lib/types';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
@@ -14,6 +14,7 @@ import EditAboutModal from '@/components/EditAboutModal';
 import PortfolioDetailModal from '@/components/PortfolioDetailModal';
 import ProjectDetailModal from '@/components/ProjectDetailModal';
 import AboutSection from '@/components/AboutSection';
+import SetupChecklist from '@/components/SetupChecklist';
 import CreateContentModal from '@/components/CreateContentModal';
 import NotificationsPanel from '@/components/NotificationsPanel';
 import ContentDisplay from '@/components/ContentDisplay';
@@ -147,6 +148,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [showProjectDetail, setShowProjectDetail] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [navPushUp, setNavPushUp] = useState(0);
+  
+  // Quiz results for setup checklist
+  const [quizResults, setQuizResults] = useState<Array<{ id: number }>>([]);
   
   // Customization panel state
   const [showCustomizePanel, setShowCustomizePanel] = useState(false);
@@ -387,6 +391,21 @@ export default function ProfilePage({ params }: { params: { username: string } }
         }
       };
       fetchAnalytics();
+    }
+  }, [isOwnProfile]);
+
+  // Load quiz results for setup checklist
+  useEffect(() => {
+    if (isOwnProfile) {
+      const loadQuizResults = async () => {
+        try {
+          const response = await quizAPI.getResults();
+          setQuizResults(response.data || []);
+        } catch (error) {
+          console.error('Failed to load quiz results:', error);
+        }
+      };
+      loadQuizResults();
     }
   }, [isOwnProfile]);
 
@@ -4060,6 +4079,18 @@ export default function ProfilePage({ params }: { params: { username: string } }
             />
           </button>
         </>
+      )}
+
+      {/* Setup Checklist - Only for own profile */}
+      {isOwnProfile && (
+        <SetupChecklist
+          profile={profile}
+          portfolioItems={portfolioItems}
+          projects={projects}
+          quizResults={quizResults}
+          onNavigateTab={(tab) => setActiveTab(tab)}
+          onActivateCustomize={() => setShowCustomizePanel(true)}
+        />
       )}
       
     </div>
