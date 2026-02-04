@@ -319,7 +319,7 @@ export default function SetupChecklist({
             }}
           />
 
-          {/* Bottom Sheet */}
+          {/* Bottom Sheet - Glassy like notifications */}
           <div
             style={{
               position: 'fixed',
@@ -327,22 +327,26 @@ export default function SetupChecklist({
               left: 0,
               right: 0,
               maxHeight: '75vh',
-              background: '#111111',
+              background: 'rgba(20, 20, 20, 0.88)',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
               borderRadius: '20px 20px 0 0',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderBottom: 'none',
               zIndex: 9999,
               overflow: 'hidden',
               transform: modalVisible ? 'translateY(0)' : 'translateY(100%)',
               transition: 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
             }}
           >
-            {/* Header */}
+            {/* Header - Glassy like notifications */}
             <div
               style={{
                 position: 'sticky',
                 top: 0,
                 zIndex: 10,
                 height: '55px',
-                background: 'rgba(17, 17, 17, 0.95)',
+                background: 'rgba(20, 20, 20, 0.8)',
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)',
                 borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
@@ -395,7 +399,7 @@ export default function SetupChecklist({
             </div>
 
             {/* Progress bar */}
-            <div style={{ padding: '16px 20px 8px' }}>
+            <div style={{ padding: '16px 20px 12px' }}>
               <div
                 style={{
                   height: '8px',
@@ -416,15 +420,12 @@ export default function SetupChecklist({
               </div>
             </div>
 
-            {/* Tasks list - Flat with subtle group dividers, glassy feel */}
+            {/* Tasks list - Flat with subtle group dividers */}
             <div 
               style={{ 
-                padding: '8px 16px 40px', 
+                padding: '0 16px 40px', 
                 overflowY: 'auto', 
                 maxHeight: 'calc(75vh - 100px)',
-                background: 'rgba(255, 255, 255, 0.02)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
               }}
             >
               <div>
