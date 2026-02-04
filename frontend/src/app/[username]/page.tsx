@@ -1762,7 +1762,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             borderRadius: showCustomizePanel ? '16px 16px 0 0' : '16px',
             cursor: showCustomizePanel ? 'default' : 'pointer',
             transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-            padding: '10px 16px 10px 24px',
+            padding: '10px 16px',
             margin: showCustomizePanel ? '0 16px 0' : '0 16px 8px',
             width: 'calc(100% - 32px)',
             height: '60px'
@@ -1778,19 +1778,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
             e.currentTarget.style.transform = 'scale(1)';
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-            <img 
-              src="/webstar-logo.png"
-              alt="webSTAR"
-              className="dashboard-logo"
-              style={{ 
-                width: '36px',
-                height: '36px',
-                objectFit: 'contain',
-                filter: 'drop-shadow(0 0 12px rgba(0, 194, 255, 0.2))',
-                flexShrink: 0
-              }}
-            />
+          <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
             <div 
               className="dashboard-info"
               style={{ 
