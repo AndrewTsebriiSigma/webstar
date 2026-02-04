@@ -1769,7 +1769,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
           }}
           onMouseEnter={(e) => {
             if (!showCustomizePanel) {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.09)';
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
             }
           }}
           onMouseLeave={(e) => {
