@@ -9,12 +9,17 @@ import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
-export default function ProjectPage({ params }: { params: { slug: string[] } }) {
+export default function ProjectPage({ params }: { params: { params: string[] } }) {
   const router = useRouter();
   const { user } = useAuth();
-  // First slug is username, second slug is project slug
-  const username = params.slug[0];
-  const slug = params.slug[1];
+  
+  // Handle both cases:
+  // - /projects/slug -> params.params = ['slug']
+  // - /projects/username/slug -> params.params = ['username', 'slug']
+  const paramsArray = params.params || [];
+  const isNestedRoute = paramsArray.length === 2;
+  const username = isNestedRoute ? paramsArray[0] : null;
+  const slug = isNestedRoute ? paramsArray[1] : paramsArray[0];
   
   const [project, setProject] = useState<Project | null>(null);
   const [projectMedia, setProjectMedia] = useState<ProjectMedia[]>([]);
@@ -34,21 +39,55 @@ export default function ProjectPage({ params }: { params: { slug: string[] } }) 
     const loadProject = async () => {
       setLoading(true);
       try {
-        // Use public endpoint to get user's projects (works for guests)
-        const response = await projectsAPI.getUserProjects(username);
-        const projects = response.data || [];
+        let foundProject: Project | null = null;
         
-        // Find project by slug match (title converted to slug)
-        const foundProject = projects.find((p: Project) => {
-          const projectSlug = p.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-          const searchSlug = slug.toLowerCase();
-          return projectSlug === searchSlug || p.id.toString() === slug;
-        });
+        // If nested route (username/slug), use public endpoint
+        if (isNestedRoute && username) {
+          try {
+            const response = await projectsAPI.getUserProjects(username);
+            const projects = response.data || [];
+            
+            // Find project by slug match (title converted to slug)
+            foundProject = projects.find((p: Project) => {
+              const projectSlug = p.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+              const searchSlug = slug.toLowerCase();
+              return projectSlug === searchSlug || p.id.toString() === slug;
+            }) || null;
+          } catch (err) {
+            console.error('Failed to load user projects:', err);
+          }
+        } else {
+          // Single slug format - try to find project
+          // Fallback: Try authenticated endpoint if user is logged in
+          if (user) {
+            try {
+              const response = await projectsAPI.getProjects();
+              const projects = response.data || [];
+              
+              foundProject = projects.find((p: Project) => {
+                const pSlug = p.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+                return pSlug === slug.toLowerCase() || p.id.toString() === slug;
+              }) || null;
+            } catch (err) {
+              console.error('Failed to load projects:', err);
+            }
+          }
+          
+          // Try getting by ID if slug is numeric
+          if (!foundProject && /^\d+$/.test(slug)) {
+            try {
+              const response = await projectsAPI.getProject(parseInt(slug));
+              foundProject = response.data;
+            } catch (err) {
+              // Project not found by ID, continue
+            }
+          }
+        }
 
         if (foundProject) {
           setProject(foundProject);
           
-          // Load project media (public endpoint, no auth required)
+          // Load project media
           try {
             const mediaResponse = await projectsAPI.getProjectMedia(foundProject.id);
             setProjectMedia(mediaResponse.data || []);
@@ -67,8 +106,10 @@ export default function ProjectPage({ params }: { params: { slug: string[] } }) 
       }
     };
 
-    loadProject();
-  }, [username, slug]);
+    if (slug) {
+      loadProject();
+    }
+  }, [slug, username, isNestedRoute, user]);
 
   // Close menu when clicking outside
   useEffect(() => {
