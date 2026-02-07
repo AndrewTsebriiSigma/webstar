@@ -9,10 +9,10 @@ import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
-export default function ProjectPage({ params }: { params: { slug: string } }) {
+export default function ProjectPage({ params }: { params: { username: string; slug: string } }) {
   const router = useRouter();
   const { user } = useAuth();
-  const { slug } = params;
+  const { username, slug } = params;
   
   const [project, setProject] = useState<Project | null>(null);
   const [projectMedia, setProjectMedia] = useState<ProjectMedia[]>([]);
@@ -24,9 +24,6 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-
-  // Decode slug to get project title (replace hyphens with spaces)
-  const projectTitle = decodeURIComponent(slug).replace(/-/g, ' ');
   
   // Check if current user owns this project
   const isOwner = user && project && user.id === project.user_id;
@@ -35,49 +32,21 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
     const loadProject = async () => {
       setLoading(true);
       try {
-        // Check if slug contains username (format: username/project-slug)
-        // If it does, redirect to the proper nested route
-        const slugParts = slug.split('/');
-        if (slugParts.length >= 2) {
-          // This is a username/slug format - redirect to the nested route
-          const username = slugParts[0];
-          const projectSlug = slugParts.slice(1).join('/');
-          router.replace(`/projects/${encodeURIComponent(username)}/${encodeURIComponent(projectSlug)}`);
-          return;
-        }
+        // Use public endpoint to get user's projects (works for guests)
+        const response = await projectsAPI.getUserProjects(username);
+        const projects = response.data || [];
         
-        // Single slug format - try to find project
-        let foundProject: Project | null = null;
-        
-        // Fallback: Try authenticated endpoint if user is logged in
-        if (user) {
-          try {
-            const response = await projectsAPI.getProjects();
-            const projects = response.data || [];
-            
-            foundProject = projects.find((p: Project) => {
-              const pSlug = p.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-              return pSlug === slug.toLowerCase() || p.id.toString() === slug;
-            }) || null;
-          } catch (err) {
-            console.error('Failed to load projects:', err);
-          }
-        }
-        
-        // Try getting by ID if slug is numeric
-        if (!foundProject && /^\d+$/.test(slug)) {
-          try {
-            const response = await projectsAPI.getProject(parseInt(slug));
-            foundProject = response.data;
-          } catch (err) {
-            // Project not found by ID, continue
-          }
-        }
+        // Find project by slug match (title converted to slug)
+        const foundProject = projects.find((p: Project) => {
+          const projectSlug = p.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+          const searchSlug = slug.toLowerCase();
+          return projectSlug === searchSlug || p.id.toString() === slug;
+        });
 
         if (foundProject) {
           setProject(foundProject);
           
-          // Load project media
+          // Load project media (public endpoint, no auth required)
           try {
             const mediaResponse = await projectsAPI.getProjectMedia(foundProject.id);
             setProjectMedia(mediaResponse.data || []);
@@ -97,7 +66,7 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
     };
 
     loadProject();
-  }, [slug, user, router]);
+  }, [username, slug]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -716,4 +685,3 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
     </div>
   );
 }
-

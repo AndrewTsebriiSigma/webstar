@@ -74,15 +74,39 @@ export default function MiniPlayer({
     
     if (track && audioRef.current) {
       lastTrackId.current = track.id;
+      
+      // Load the new source first to prevent "play() interrupted" error
+      const handleCanPlay = () => {
+        if (audioRef.current && track) {
+          // Set start time if resuming from saved position
+          if (track.startTime && track.startTime > 0) {
+            audioRef.current.currentTime = track.startTime;
+          }
+          
+          // Play with error handling
+          audioRef.current.play().then(() => {
+            setIsPlaying(true);
+          }).catch((error) => {
+            console.warn('Audio play failed:', error);
+            // Don't set isPlaying if play fails
+          });
+        }
+      };
+      
+      audioRef.current.addEventListener('canplay', handleCanPlay, { once: true });
+      audioRef.current.load(); // Load first
       audioRef.current.src = track.url;
       
-      // Set start time if resuming from saved position
-      if (track.startTime && track.startTime > 0) {
-        audioRef.current.currentTime = track.startTime;
-      }
-      
-      audioRef.current.play();
-      setIsPlaying(true);
+      return () => {
+        if (audioRef.current) {
+          audioRef.current.removeEventListener('canplay', handleCanPlay);
+        }
+      };
+    } else if (!track && audioRef.current) {
+      // Stop audio when track is cleared
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      setIsPlaying(false);
     }
   }, [track, onPositionChange]);
 

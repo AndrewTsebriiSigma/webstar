@@ -158,6 +158,139 @@ export default function OnboardingPage() {
   // Total steps: Talent(1) → Name(2) → Location(3) → Role+Expertise(4) → Username(5)
   const TOTAL_STEPS = 5;
 
+  // Save progress to localStorage
+  const saveProgressToLocal = (data: typeof formData, currentStep: number) => {
+    try {
+      localStorage.setItem('onboarding_progress', JSON.stringify({
+        formData: data,
+        step: currentStep,
+        timestamp: Date.now()
+      }));
+    } catch (err) {
+      console.error('Failed to save progress to localStorage:', err);
+    }
+  };
+
+  // Load progress from localStorage
+  const loadProgressFromLocal = () => {
+    try {
+      const saved = localStorage.getItem('onboarding_progress');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Only restore if saved within last 7 days
+        if (parsed.timestamp && Date.now() - parsed.timestamp < 7 * 24 * 60 * 60 * 1000) {
+          return parsed;
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load progress from localStorage:', err);
+    }
+    return null;
+  };
+
+  // Load progress from backend
+  const loadProgressFromBackend = async () => {
+    try {
+      const status = await onboardingAPI.getStatus();
+      return status.data;
+    } catch (err) {
+      console.error('Failed to load progress from backend:', err);
+      return null;
+    }
+  };
+
+  // Save step to backend (non-blocking)
+  const saveStepToBackend = async (stepData: { archetype?: string; role?: string; expertise_level?: string }) => {
+    try {
+      if (stepData.archetype) {
+        const archetypeMap: Record<string, string> = {
+          'engineer': 'Engineer',
+          'artist': 'Artist',
+          'sound': 'Sound-Maker',
+          'communicator': 'Communicator'
+        };
+        if (archetypeMap[stepData.archetype]) {
+          await onboardingAPI.setArchetype(archetypeMap[stepData.archetype]);
+        }
+      }
+      if (stepData.role) {
+        await onboardingAPI.setRole(stepData.role);
+      }
+      if (stepData.expertise_level) {
+        await onboardingAPI.setExpertise(stepData.expertise_level);
+      }
+    } catch (err) {
+      // Silently fail - progress is saved in localStorage as backup
+      console.error('Failed to save step to backend:', err);
+    }
+  };
+
+  // Load saved progress on mount
+  useEffect(() => {
+    const loadProgress = async () => {
+      // First, try to load from backend
+      const backendProgress = await loadProgressFromBackend();
+      
+      // Then, try to load from localStorage
+      const localProgress = loadProgressFromLocal();
+      
+      // Merge both sources (backend takes precedence for data, localStorage for step)
+      if (backendProgress || localProgress) {
+        const mergedData = {
+          fullName: localProgress?.formData?.fullName || '',
+          archetype: backendProgress?.archetype?.toLowerCase() || localProgress?.formData?.archetype || '',
+          role: backendProgress?.role || localProgress?.formData?.role || '',
+          headline: localProgress?.formData?.headline || '',
+          expertise: localProgress?.formData?.expertise || 50,
+          location: localProgress?.formData?.location || '',
+          username: localProgress?.formData?.username || '',
+          avatarUrl: localProgress?.formData?.avatarUrl || ''
+        };
+        
+        // Map backend archetype to frontend format
+        if (backendProgress?.archetype) {
+          const archetypeMap: Record<string, string> = {
+            'Engineer': 'engineer',
+            'Artist': 'artist',
+            'Sound-Maker': 'sound',
+            'Communicator': 'communicator'
+          };
+          mergedData.archetype = archetypeMap[backendProgress.archetype] || mergedData.archetype;
+        }
+        
+        // Map backend expertise to slider value
+        if (backendProgress?.expertise_level) {
+          const expertiseMap: Record<string, number> = {
+            'Beginner': 12,
+            'Intermediate': 37,
+            'Advanced': 62,
+            'Maestro': 87
+          };
+          mergedData.expertise = expertiseMap[backendProgress.expertise_level] || mergedData.expertise;
+        }
+        
+        setFormData(mergedData);
+        
+        // Determine the current step based on saved data
+        let currentStep = 1;
+        if (mergedData.archetype) currentStep = 2;
+        if (mergedData.fullName) currentStep = 3;
+        if (mergedData.location) currentStep = 4;
+        if (mergedData.role) currentStep = 5;
+        if (mergedData.username) currentStep = 5;
+        
+        // Use localStorage step if available and more recent
+        if (localProgress?.step && localProgress.step > currentStep) {
+          currentStep = localProgress.step;
+        }
+        
+        setStep(currentStep);
+      }
+    };
+    
+    loadProgress();
+  }, []);
+
   // Finale lines
   const finaleLines = [
     'Loading your universe...',
@@ -219,7 +352,9 @@ export default function OnboardingPage() {
   };
 
   const handleLocationSelect = (placeName: string) => {
-    setFormData(prev => ({ ...prev, location: placeName }));
+    const newData = { ...formData, location: placeName };
+    setFormData(newData);
+    saveProgressToLocal(newData, step);
     setShowLocationDropdown(false);
     setLocationSuggestions([]);
   };
@@ -258,7 +393,9 @@ export default function OnboardingPage() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, avatarUrl: reader.result as string }));
+        const newData = { ...formData, avatarUrl: reader.result as string };
+        setFormData(newData);
+        saveProgressToLocal(newData, step);
       };
       reader.readAsDataURL(file);
     }
@@ -323,6 +460,9 @@ export default function OnboardingPage() {
         full_name: formData.fullName || undefined,
         location: formData.location || undefined
       });
+
+      // Clear saved progress from localStorage since onboarding is complete
+      localStorage.removeItem('onboarding_progress');
 
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       user.full_name = formData.fullName;
@@ -569,8 +709,12 @@ export default function OnboardingPage() {
                 {TALENTS.map(talent => (
                   <button
                     key={talent.id}
-                    onClick={() => {
-                      setFormData(prev => ({ ...prev, archetype: talent.id }));
+                    onClick={async () => {
+                      const newData = { ...formData, archetype: talent.id };
+                      setFormData(newData);
+                      saveProgressToLocal(newData, 2);
+                      // Save to backend in background
+                      saveStepToBackend({ archetype: talent.id });
                       setTimeout(() => setStep(2), 300);
                     }}
                     className="p-4 rounded-xl transition"
@@ -609,7 +753,9 @@ export default function OnboardingPage() {
                   value={formData.fullName}
                   onChange={(e) => {
                     if (e.target.value.length <= 30) {
-                      setFormData(prev => ({ ...prev, fullName: e.target.value }));
+                      const newData = { ...formData, fullName: e.target.value };
+                      setFormData(newData);
+                      saveProgressToLocal(newData, step);
                     }
                   }}
                   onFocus={() => setNameFocused(true)}
@@ -627,7 +773,12 @@ export default function OnboardingPage() {
               </InputWrapper>
 
               <button
-                onClick={() => formData.fullName && setStep(3)}
+                onClick={() => {
+                  if (formData.fullName) {
+                    saveProgressToLocal(formData, 3);
+                    setStep(3);
+                  }
+                }}
                 disabled={!formData.fullName}
                 className="w-full mt-4 py-4 font-semibold rounded-xl transition disabled:opacity-50"
                 style={{
@@ -658,7 +809,9 @@ export default function OnboardingPage() {
                     value={formData.location}
                     onChange={(e) => {
                       if (e.target.value.length <= 50) {
-                        setFormData(prev => ({ ...prev, location: e.target.value }));
+                        const newData = { ...formData, location: e.target.value };
+                        setFormData(newData);
+                        saveProgressToLocal(newData, step);
                         searchLocation(e.target.value);
                       }
                     }}
@@ -723,7 +876,12 @@ export default function OnboardingPage() {
               </InputWrapper>
 
               <button
-                onClick={() => formData.location && setStep(4)}
+                onClick={() => {
+                  if (formData.location) {
+                    saveProgressToLocal(formData, 4);
+                    setStep(4);
+                  }
+                }}
                 disabled={!formData.location}
                 className="w-full mt-4 py-4 font-semibold rounded-xl transition disabled:opacity-50"
                 style={{
@@ -751,9 +909,16 @@ export default function OnboardingPage() {
                   type="text"
                   placeholder="e.g., Product Designer"
                   value={formData.role}
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     if (e.target.value.length <= 30) {
-                      setFormData(prev => ({ ...prev, role: e.target.value }));
+                      const newData = { ...formData, role: e.target.value };
+                      setFormData(newData);
+                      saveProgressToLocal(newData, step);
+                      // Save to backend in background when role is set
+                      if (e.target.value.trim()) {
+                        const expertiseLabel = getExpertiseLabel(formData.expertise);
+                        saveStepToBackend({ role: e.target.value, expertise_level: expertiseLabel });
+                      }
                     }
                   }}
                   onFocus={() => setRoleFocused(true)}
@@ -775,7 +940,14 @@ export default function OnboardingPage() {
                   {POPULAR_ROLES.map(role => (
                     <button
                       key={role}
-                      onClick={() => setFormData(prev => ({ ...prev, role }))}
+                      onClick={async () => {
+                        const newData = { ...formData, role };
+                        setFormData(newData);
+                        saveProgressToLocal(newData, step);
+                        // Save to backend in background
+                        const expertiseLabel = getExpertiseLabel(formData.expertise);
+                        saveStepToBackend({ role, expertise_level: expertiseLabel });
+                      }}
                       className="px-3 py-1.5 text-xs rounded-lg transition"
                       style={{
                         background: formData.role === role 
@@ -811,7 +983,17 @@ export default function OnboardingPage() {
                   max="100"
                   step="1"
                   value={formData.expertise}
-                  onChange={(e) => setFormData(prev => ({ ...prev, expertise: parseInt(e.target.value) }))}
+                  onChange={(e) => {
+                    const newExpertise = parseInt(e.target.value);
+                    const newData = { ...formData, expertise: newExpertise };
+                    setFormData(newData);
+                    saveProgressToLocal(newData, step);
+                    // Save to backend in background when expertise changes
+                    if (formData.role) {
+                      const expertiseLabel = getExpertiseLabel(newExpertise);
+                      saveStepToBackend({ role: formData.role, expertise_level: expertiseLabel });
+                    }
+                  }}
                   className="w-full h-2 rounded-full appearance-none cursor-pointer"
                   style={{
                         background: `linear-gradient(to right, 
@@ -847,7 +1029,12 @@ export default function OnboardingPage() {
               )}
 
               <button
-                onClick={() => formData.role && setStep(5)}
+                onClick={() => {
+                  if (formData.role) {
+                    saveProgressToLocal(formData, 5);
+                    setStep(5);
+                  }
+                }}
                 disabled={!formData.role}
                 className="w-full mt-6 py-4 font-semibold rounded-xl transition disabled:opacity-50"
                 style={{
@@ -888,7 +1075,9 @@ export default function OnboardingPage() {
                   onChange={(e) => {
                     const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
                       if (value.length <= 15) {
-                    setFormData(prev => ({ ...prev, username: value }));
+                        const newData = { ...formData, username: value };
+                        setFormData(newData);
+                        saveProgressToLocal(newData, step);
                       }
                   }}
                     onFocus={() => setUsernameFocused(true)}
@@ -947,7 +1136,11 @@ export default function OnboardingPage() {
         {/* Back button - BELOW the frame */}
         {step > 1 && (
           <button
-            onClick={() => setStep(step - 1)}
+            onClick={() => {
+              const newStep = step - 1;
+              saveProgressToLocal(formData, newStep);
+              setStep(newStep);
+            }}
             className="w-full mt-4 py-2 text-sm transition"
             style={{ color: 'rgba(255, 255, 255, 0.25)' }}
           >

@@ -116,8 +116,12 @@ export default function AnalyticsPage() {
     try {
       const response = await quizAPI.getResults();
       setQuizResults(response.data || []);
-    } catch (error) {
-      console.error('Failed to load quiz results:', error);
+    } catch (error: any) {
+      // Silently handle 404 or other errors - quiz results are optional
+      if (error.response?.status !== 404) {
+        console.error('Failed to load quiz results:', error);
+      }
+      setQuizResults([]);
     }
   };
 

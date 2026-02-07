@@ -52,12 +52,13 @@ function GoogleCallbackContent() {
       toast.success('Welcome! Successfully signed in with Google');
 
       // Redirect based on setup status
-      // Priority: Profile Setup -> Onboarding -> Return URL -> Profile Page
-      if (!profileSetupCompleted) {
-        // New OAuth user needs to set username/name
+      // Priority: Profile Setup (only if username/name missing) -> Onboarding -> Return URL -> Profile Page
+      // Skip setup-profile if username and full_name are already available from Google
+      if (!profileSetupCompleted && (!username || !fullName)) {
+        // New OAuth user needs to set username/name (only if missing)
         window.location.href = '/auth/setup-profile';
       } else if (!onboardingCompleted) {
-        // Profile set up, but onboarding not complete
+        // Profile set up (or username/name already available), but onboarding not complete
         window.location.href = '/onboarding';
       } else {
         // Everything complete - check for return URL (e.g., from clicking Follow as guest)

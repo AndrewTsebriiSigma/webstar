@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useAudio } from '@/context/AudioContext';
 import { profileAPI, portfolioAPI, projectsAPI, economyAPI, analyticsAPI, quizAPI } from '@/lib/api';
 import { Profile, PortfolioItem, Project, PointsBalance, ProfileMetrics } from '@/lib/types';
 import toast from 'react-hot-toast';
@@ -19,7 +20,6 @@ import CreateContentModal from '@/components/CreateContentModal';
 import NotificationsPanel from '@/components/NotificationsPanel';
 import ContentDisplay from '@/components/ContentDisplay';
 import FeedModal from '@/components/FeedModal';
-import MiniPlayer from '@/components/MiniPlayer';
 import { 
   Cog6ToothIcon, 
   EyeIcon, 
@@ -58,6 +58,7 @@ interface ActionButton {
 
 export default function ProfilePage({ params }: { params: { username: string } }) {
   const { username } = params;
+  const { playTrack, stopTrack, toggleMute, isMuted, currentTrack, showPlayerUI, updateShowPlayerUI, savePosition, getPosition } = useAudio();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, logout } = useAuth();
@@ -140,10 +141,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [showGuestMenu, setShowGuestMenu] = useState(false);
   const [feedInitialPostId, setFeedInitialPostId] = useState<number | undefined>(undefined);
-  const [currentAudioTrack, setCurrentAudioTrack] = useState<any>(null);
-  const [isMiniPlayerMuted, setIsMiniPlayerMuted] = useState(true); // Default muted (red button)
-  const [showMiniPlayerUI, setShowMiniPlayerUI] = useState(false); // Hide mini player UI by default
-  const [audioPlaybackPositions, setAudioPlaybackPositions] = useState<Record<number, number>>({}); // Track audio positions for resume
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showProjectDetail, setShowProjectDetail] = useState(false);
   const [scrollY, setScrollY] = useState(0);
@@ -669,29 +666,20 @@ export default function ProfilePage({ params }: { params: { username: string } }
       // Use provided startTime if > 0, otherwise check saved position
       const resumeTime = (startTime !== undefined && startTime > 0) 
         ? startTime 
-        : (audioPlaybackPositions[item.id] ?? 0);
+        : getPosition(item.id);
       
-      setCurrentAudioTrack({
+      const audioUrl = item.content_url.startsWith('http') 
+        ? item.content_url 
+        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`;
+      
+      playTrack({
         id: item.id,
         title: item.title || (item.content_type === 'video' ? 'Video' : 'Audio Track'),
-        url: item.content_url.startsWith('http') 
-          ? item.content_url 
-          : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`,
+        url: audioUrl,
         thumbnail: item.thumbnail_url || undefined,
-        startTime: resumeTime // Pass resume position to MiniPlayer
-      });
-      setShowMiniPlayerUI(showUI);
-      // Unmute when playing
-      setIsMiniPlayerMuted(false);
+        startTime: resumeTime
+      }, showUI);
     }
-  };
-  
-  // Callback to save audio position when track is paused/stopped
-  const handleAudioPositionChange = (trackId: number, position: number) => {
-    setAudioPlaybackPositions(prev => ({
-      ...prev,
-      [trackId]: position
-    }));
   };
 
   const loadProfile = async (forceRefresh = false) => {
@@ -810,8 +798,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
   // Action button handlers
   const handleAddButton = () => {
-    if (actionButtons.length >= 4) {
-      toast.error('Maximum 4 buttons allowed');
+    if (actionButtons.length >= 2) {
+      toast.error('Maximum 2 buttons allowed');
       return;
     }
     const newButton: ActionButton = {
@@ -1235,11 +1223,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
                     </button>
                     <button
                       onClick={() => {
-                        if (!user) {
-                          sessionStorage.setItem('returnAfterAuth', `/${username}`);
-                          router.push('/auth');
-                          return;
-                        }
                         setShowReportModal(true);
                         setShowGuestMenu(false);
                       }}
@@ -1274,6 +1257,84 @@ export default function ProfilePage({ params }: { params: { username: string } }
             </div>
           )}
         </header>
+      )}
+
+      {/* Guest Mode Watermark - Horizontal line/banner positioned right side under top-nav */}
+      {!isOwnProfile && (
+        <div 
+          className="flex items-center justify-center"
+          style={{
+            position: 'absolute',
+            top: '66px', // Height of top-nav header (54px) + spacing (12px)
+            right: '16px', // Position on the right side
+            height: '40px',
+            background: 'rgba(17, 17, 17, 0.95)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '10px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '0 12px',
+            whiteSpace: 'nowrap',
+            zIndex: 16
+          }}
+        >
+          {/* Username Link */}
+          <Link 
+            href={`/${username}`}
+            className="text-white hover:text-[#00C2FF] transition-colors"
+            style={{
+              fontSize: '12px',
+              fontWeight: 600,
+              textDecoration: 'none',
+              color: 'rgba(255, 255, 255, 0.95)'
+            }}
+          >
+            @{username}
+          </Link>
+
+          {/* Create Space Button */}
+          <button
+            onClick={() => router.push('/auth')}
+            className="text-white transition-all"
+            style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              background: 'rgba(0, 194, 255, 0.2)',
+              border: '1px solid rgba(0, 194, 255, 0.3)',
+              borderRadius: '6px',
+              padding: '4px 10px',
+              cursor: 'pointer',
+              color: 'rgba(255, 255, 255, 0.95)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(0, 194, 255, 0.3)';
+              e.currentTarget.style.borderColor = 'rgba(0, 194, 255, 0.5)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(0, 194, 255, 0.2)';
+              e.currentTarget.style.borderColor = 'rgba(0, 194, 255, 0.3)';
+            }}
+          >
+            Create Space
+          </button>
+
+          {/* WebSTAR Logo */}
+          <img 
+            src="/favicon.ico"
+            alt="WebSTAR"
+            style={{
+              width: '24px',
+              height: '24px',
+              objectFit: 'contain',
+              flexShrink: 0
+            }}
+          />
+        </div>
       )}
 
       {/* Hidden file inputs for image uploads */}
@@ -2415,8 +2476,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
               </button>
               ))}
               
-              {/* Add Button - shows as a button slot when < 4 buttons */}
-              {showCustomizePanel && actionButtons.length < 4 && (
+              {/* Add Button - shows as a button slot when < 2 buttons */}
+              {showCustomizePanel && actionButtons.length < 2 && (
               <button 
                   onClick={(e) => {
                     e.stopPropagation();
@@ -2662,11 +2723,6 @@ export default function ProfilePage({ params }: { params: { username: string } }
             ))}
             <button 
               onClick={() => {
-                if (!user) {
-                  sessionStorage.setItem('returnAfterAuth', `/${username}`);
-                  router.push('/auth');
-                  return;
-                }
                 setShowReportModal(true);
               }}
               className="w-10 h-10 flex items-center justify-center rounded-xl transition"
@@ -2702,7 +2758,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
           {['Portfolio', 'Projects', 'About'].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab.toLowerCase())}
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveTab(tab.toLowerCase());
+              }}
               className={`flex-1 py-3 text-base font-semibold ${
                 activeTab === tab.toLowerCase()
                   ? 'text-white'
@@ -3034,9 +3093,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       showAttachments={false}
                         customRadius={gridRadius}
                         onPlayInMiniPlayer={handlePlayInMiniPlayer}
-                        currentPlayingTrackId={currentAudioTrack?.id}
-                        isMiniPlayerMuted={isMiniPlayerMuted}
-                        onToggleMiniPlayerMute={() => setIsMiniPlayerMuted(!isMiniPlayerMuted)}
+                        currentPlayingTrackId={currentTrack?.id}
+                        isMiniPlayerMuted={isMuted}
+                        onToggleMiniPlayerMute={toggleMute}
                       />
                       
                       {/* Customize mode overlay - file size, blue line, and size badge */}
@@ -3144,7 +3203,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
                               pointerEvents: 'auto'
                             }}
                           >
-                            {getSizeLabel((item.aspect_ratio as WidgetSize) || '4x5')}
+                            {getSizeLabel(
+                              layoutMode === 'uniform' 
+                                ? gridAspectRatio 
+                                : ((item.aspect_ratio as WidgetSize) || '4x5')
+                            )}
                           </div>
                         </>
                       )}
@@ -3235,9 +3298,10 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   <div 
                     key={project.id} 
                     onClick={() => {
-                      // Navigate to project page with slug URL
+                      // Navigate to project page with slug URL and username
                       const projectSlug = project.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-                      router.push(`/projects/${projectSlug}`);
+                      // Use the nested route structure: /projects/[username]/[slug]
+                      router.push(`/projects/${encodeURIComponent(username)}/${encodeURIComponent(projectSlug)}`);
                     }}
                     className="cursor-pointer transition-all active:scale-[0.97]"
                     style={{
@@ -3249,15 +3313,31 @@ export default function ProfilePage({ params }: { params: { username: string } }
                     {/* Image Container with Badge - 4:3 aspect ratio */}
                     <div style={{ position: 'relative', aspectRatio: '4 / 3' }}>
                       {project.cover_image ? (
-                      <img
-                        src={project.cover_image}
-                        alt={project.title}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover'
-                          }}
-                        />
+                        // Check if it's a GIF and render as video for looping, otherwise use img
+                        project.cover_image.toLowerCase().endsWith('.gif') || project.cover_image.toLowerCase().includes('.gif?') ? (
+                          <video
+                            src={project.cover_image}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover'
+                            }}
+                            loop
+                            playsInline
+                            autoPlay
+                            muted
+                          />
+                        ) : (
+                          <img
+                            src={project.cover_image}
+                            alt={project.title}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover'
+                            }}
+                          />
+                        )
                       ) : (
                         <div 
                           style={{
@@ -3478,11 +3558,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
         posts={portfolioItems}
         initialPostId={feedInitialPostId}
         profile={profile}
-        currentAudioTrack={currentAudioTrack}
-        onAudioTrackChange={setCurrentAudioTrack}
         onPlayInMiniPlayer={handlePlayInMiniPlayer}
-        isMiniPlayerMuted={isMiniPlayerMuted}
-        onToggleMiniPlayerMute={() => setIsMiniPlayerMuted(!isMiniPlayerMuted)}
+        isMiniPlayerMuted={isMuted}
+        onToggleMiniPlayerMute={toggleMute}
       />
 
       {/* Project Detail Modal */}
@@ -3498,52 +3576,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
         onDelete={handleDeleteProject}
       />
 
-      {/* Mini Audio Player - Persistent at page level */}
-      {currentAudioTrack && (
-        <MiniPlayer
-          track={currentAudioTrack}
-          onClose={() => setCurrentAudioTrack(null)}
-          onPositionChange={handleAudioPositionChange}
-          onThumbnailClick={() => {
-            // Open feed modal at the current audio track
-            setFeedInitialPostId(currentAudioTrack.id);
-            setShowFeedModal(true);
-          }}
-          onNext={() => {
-            // Find next audio track
-            const currentIndex = portfolioItems.findIndex(p => p.id === currentAudioTrack.id);
-            const nextAudio = portfolioItems.slice(currentIndex + 1).find(p => p.content_type === 'audio');
-            if (nextAudio && nextAudio.content_url) {
-              setCurrentAudioTrack({
-                id: nextAudio.id,
-                title: nextAudio.title || 'Audio Track',
-                url: nextAudio.content_url.startsWith('http') 
-                  ? nextAudio.content_url 
-                  : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${nextAudio.content_url}`,
-                thumbnail: nextAudio.thumbnail_url || undefined
-              });
-            }
-          }}
-          onPrevious={() => {
-            // Find previous audio track
-            const currentIndex = portfolioItems.findIndex(p => p.id === currentAudioTrack.id);
-            const prevAudio = portfolioItems.slice(0, currentIndex).reverse().find(p => p.content_type === 'audio');
-            if (prevAudio && prevAudio.content_url) {
-              setCurrentAudioTrack({
-                id: prevAudio.id,
-                title: prevAudio.title || 'Audio Track',
-                url: prevAudio.content_url.startsWith('http') 
-                  ? prevAudio.content_url 
-                  : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${prevAudio.content_url}`,
-                thumbnail: prevAudio.thumbnail_url || undefined
-              });
-            }
-          }}
-          isMuted={isMiniPlayerMuted}
-          onMuteChange={setIsMiniPlayerMuted}
-          hidden={!showMiniPlayerUI}
-        />
-      )}
+      {/* Mini Audio Player is now handled by GlobalAudioPlayer in layout.tsx */}
 
       {/* Report Profile Modal */}
       {showReportModal && (
@@ -4055,7 +4088,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
           <div
             style={{
               position: 'fixed',
-              bottom: '24px',
+              // Move up when mini player is visible to give space for the player
+              // Desktop: player is ~88px tall at bottom: 24px, so move menu to 140px (88px + 52px spacing)
+              // Mobile: player is at bottom: 0 and ~80px tall, so move menu to 130px (80px + 50px spacing)
+              // Using 135px to give more space and ensure no overlap
+              bottom: showPlayerUI ? '135px' : '24px',
               left: '50%',
               transform: 'translateX(-50%)',
               display: 'flex',
@@ -4069,7 +4106,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
               borderRadius: '18px',
               border: '1px solid rgba(255, 255, 255, 0.1)',
               boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
-              zIndex: 1000
+              zIndex: 1000,
+              transition: 'bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)' // Smooth transition
             }}
           >
             {/* Profile Button - ACTIVE (blue) */}
@@ -4125,7 +4163,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
             onClick={() => setShowCreateContentModal(true)}
             style={{
               position: 'fixed',
-              bottom: '20px',
+              // Move up when mini player is visible to give space for the player
+              // Menu bar is at 135px when player is visible, so button should be at 125px (10px above menu)
+              bottom: showPlayerUI ? '125px' : '20px',
               left: '50%',
               transform: 'translateX(-50%)',
               width: '58px',
@@ -4137,7 +4177,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              transition: 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
               animation: 'createButtonPulse 3s ease-in-out infinite',
               zIndex: 1001
             }}

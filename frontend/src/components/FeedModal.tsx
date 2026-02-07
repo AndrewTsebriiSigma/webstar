@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { PortfolioItem, Profile } from '@/lib/types';
 import ContentDisplay from './ContentDisplay';
+import { useAudio } from '@/context/AudioContext';
 
 // Platform detection utility
 const detectPlatform = () => {
@@ -32,8 +33,6 @@ interface FeedModalProps {
   posts: PortfolioItem[];
   initialPostId?: number;
   profile?: Profile;
-  currentAudioTrack?: AudioTrack | null;
-  onAudioTrackChange?: (track: AudioTrack | null) => void;
   onPlayInMiniPlayer?: (item: PortfolioItem, showUI?: boolean, startTime?: number) => void;
   isMiniPlayerMuted?: boolean;
   onToggleMiniPlayerMute?: () => void;
@@ -45,12 +44,11 @@ export default function FeedModal({
   posts,
   initialPostId,
   profile,
-  currentAudioTrack,
-  onAudioTrackChange,
   onPlayInMiniPlayer,
   isMiniPlayerMuted,
   onToggleMiniPlayerMute
 }: FeedModalProps) {
+  const { currentTrack, isMuted, toggleMute, playTrack, savePosition, getPosition } = useAudio();
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -334,41 +332,58 @@ export default function FeedModal({
                 isActive={index === currentIndex}
                 platform={platform}
                 onAudioClick={(audioPost) => {
-                  // Handle audio click - set the track for mini player
-                  if (onAudioTrackChange && audioPost.content_url) {
-                    const startTime = getPlaybackPosition(audioPost.id);
-                    onAudioTrackChange({
+                  // Handle audio click - play in mini-player using AudioContext
+                  if (audioPost.content_url) {
+                    const resumeTime = getPosition(audioPost.id);
+                    const audioUrl = audioPost.content_url.startsWith('http') 
+                      ? audioPost.content_url 
+                      : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${audioPost.content_url}`;
+                    
+                    playTrack({
                       id: audioPost.id,
                       title: audioPost.title || 'Audio Track',
-                      url: audioPost.content_url.startsWith('http') 
-                        ? audioPost.content_url 
-                        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${audioPost.content_url}`,
+                      url: audioUrl,
                       thumbnail: audioPost.thumbnail_url || undefined,
-                      startTime: startTime
-                    });
+                      startTime: resumeTime
+                    }, true); // Show UI when clicking audio
                   }
                 }}
                 onPlayInMiniPlayer={(item, showUI, startTime) => {
-                  // For video, use FeedModal's locally saved position
-                  // For audio, let the page handle it (page tracks audio positions via MiniPlayer)
-                  if (item.content_type === 'video') {
-                    const videoPosition = getPlaybackPosition(item.id);
-                    onPlayInMiniPlayer?.(item, showUI, videoPosition > 0 ? videoPosition : startTime);
-                  } else {
-                    // Audio - don't override, let page use its own saved position
-                    onPlayInMiniPlayer?.(item, showUI, startTime);
+                  // Use AudioContext to play track
+                  if (item.content_url) {
+                    const resumeTime = startTime !== undefined && startTime > 0 
+                      ? startTime 
+                      : getPosition(item.id);
+                    
+                    const audioUrl = item.content_url.startsWith('http') 
+                      ? item.content_url 
+                      : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.content_url}`;
+                    
+                    playTrack({
+                      id: item.id,
+                      title: item.title || (item.content_type === 'video' ? 'Video' : 'Audio Track'),
+                      url: audioUrl,
+                      thumbnail: item.thumbnail_url || undefined,
+                      startTime: resumeTime
+                    }, showUI);
+                  }
+                  
+                  // Also call the prop callback if provided (for backward compatibility)
+                  if (onPlayInMiniPlayer) {
+                    onPlayInMiniPlayer(item, showUI, startTime);
                   }
                 }}
-                currentPlayingTrackId={currentAudioTrack?.id}
-                isMiniPlayerMuted={isMiniPlayerMuted}
-                onToggleMiniPlayerMute={onToggleMiniPlayerMute}
+                currentPlayingTrackId={currentTrack?.id}
+                isMiniPlayerMuted={isMiniPlayerMuted ?? isMuted}
+                onToggleMiniPlayerMute={onToggleMiniPlayerMute ?? toggleMute}
                 onStopAudio={() => {
-                  // Save current audio position before stopping
-                  // The MiniPlayer will provide the current time via a callback
-                  onAudioTrackChange?.(null);
+                  // Stop audio is handled by AudioContext
                 }}
                 savedPosition={getPlaybackPosition(post.id)}
-                onSavePosition={savePlaybackPosition}
+                onSavePosition={(postId, position) => {
+                  savePosition(postId, position);
+                  savePlaybackPosition(postId, position);
+                }}
               />
             </div>
           </div>
@@ -405,14 +420,18 @@ function FeedPostContent({
   onSavePosition?: (postId: number, position: number) => void;
   platform: 'ios' | 'android' | 'desktop';
 }) {
+  const { currentTrack, isMuted, toggleMute, showPlayerUI } = useAudio();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [showAttachmentPdfModal, setShowAttachmentPdfModal] = useState(false);
   const [showPhotoAttachmentModal, setShowPhotoAttachmentModal] = useState(false);
 
-  // Check if this post is currently playing in mini-player
-  const isCurrentlyPlaying = currentPlayingTrackId === post.id;
+  // Check if this post is currently playing in mini-player (use AudioContext if available)
+  const isCurrentlyPlaying = (currentPlayingTrackId ?? currentTrack?.id) === post.id;
+  const actualIsMuted = isMiniPlayerMuted ?? isMuted;
+  // Only show mute button as active if player UI is shown
+  const shouldShowMuteButton = showPlayerUI && isCurrentlyPlaying;
   
   // Auto-play video when it becomes active (starts muted), restore position
   useEffect(() => {
@@ -470,14 +489,17 @@ function FeedPostContent({
 
   const handleSoundToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isCurrentlyPlaying && onToggleMiniPlayerMute) {
-      // Track is playing - just toggle mute
-      onToggleMiniPlayerMute();
-    } else if (onPlayInMiniPlayer) {
-      // Track not playing - play audio WITHOUT showing mini player UI
-      // Pass saved position to resume from where it left off
-      onPlayInMiniPlayer(post, false, savedPosition);
+    // Only allow mute toggle if player UI is already shown
+    // If player UI is not shown, do nothing (don't start playing)
+    if (isCurrentlyPlaying && showPlayerUI) {
+      // Track is playing AND player UI is shown - just toggle mute
+      if (onToggleMiniPlayerMute) {
+        onToggleMiniPlayerMute();
+      } else {
+        toggleMute();
+      }
     }
+    // If player UI is not shown, do nothing - user must click "Play in mini-player" first
   };
 
   const renderPrimaryContent = () => {
@@ -672,11 +694,11 @@ function FeedPostContent({
               }}
               style={{
                 width: '100%',
-                aspectRatio: '4 / 5',
-                borderRadius: '20px',
-                background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.12), rgba(0, 194, 255, 0.08))',
-                border: '1px solid rgba(10, 132, 255, 0.25)',
-                padding: '32px 24px',
+                aspectRatio: '1 / 1',
+                borderRadius: 'var(--radius-lg)',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                padding: '48px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -684,8 +706,9 @@ function FeedPostContent({
                 gap: '24px',
                 position: 'relative',
                 overflow: 'hidden',
-                transition: 'all 180ms cubic-bezier(0.25, 0.8, 0.25, 1)',
-                cursor: onAudioClick ? 'pointer' : 'default'
+                transition: 'all 150ms',
+                cursor: onAudioClick ? 'pointer' : 'default',
+                transform: 'scale(1)'
               }}
               onMouseEnter={(e) => {
                 if (onAudioClick) {
@@ -725,34 +748,6 @@ function FeedPostContent({
                 ))}
               </div>
 
-              {/* Audio Icon */}
-              <div style={{
-                width: '80px',
-                height: '80px',
-                borderRadius: '50%',
-                background: 'rgba(10, 132, 255, 0.2)',
-                border: '2px solid rgba(10, 132, 255, 0.4)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative',
-                zIndex: 1
-              }}>
-                <svg
-                  width="36"
-                  height="36"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#00C2FF"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M9 18V5l12-2v13" />
-                  <circle cx="6" cy="18" r="3" />
-                  <circle cx="18" cy="16" r="3" />
-                </svg>
-              </div>
 
               {/* Title */}
               {post.title && (
@@ -784,59 +779,18 @@ function FeedPostContent({
                 gap: '8px',
                 zIndex: 10
               }}>
-                {/* Mute Button - Always visible for quick mute */}
-                <button
-                  onClick={handleSoundToggle}
-                  style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '50%',
-                    background: isMiniPlayerMuted ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.5)',
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    border: isMiniPlayerMuted ? '1px solid rgba(255, 100, 100, 0.4)' : '1px solid rgba(255, 255, 255, 0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 150ms'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(0, 0, 0, 0.8)';
-                    e.currentTarget.style.transform = 'scale(1.1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = isMiniPlayerMuted ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.5)';
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }}
-                  title={isMiniPlayerMuted ? 'Unmute' : 'Mute'}
-                >
-                  {isMiniPlayerMuted ? (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#FF6B6B">
-                      <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
-                    </svg>
-                  ) : (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-                      <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-                    </svg>
-                  )}
-                </button>
-
-                {/* Add to Player Button - For audio posts */}
-                {onAudioClick && (
+                {/* Mute Button - Only visible when player UI is shown */}
+                {shouldShowMuteButton && (
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAudioClick(post);
-                    }}
+                    onClick={handleSoundToggle}
                     style={{
                       width: '44px',
                       height: '44px',
                       borderRadius: '50%',
-                      background: isCurrentlyPlaying ? 'rgba(0, 194, 255, 0.3)' : 'rgba(0, 0, 0, 0.5)',
+                      background: actualIsMuted ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.5)',
                       backdropFilter: 'blur(10px)',
                       WebkitBackdropFilter: 'blur(10px)',
-                      border: isCurrentlyPlaying ? '1px solid rgba(0, 194, 255, 0.5)' : '1px solid rgba(255, 255, 255, 0.2)',
+                      border: actualIsMuted ? '1px solid rgba(255, 100, 100, 0.4)' : '1px solid rgba(255, 255, 255, 0.2)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -844,16 +798,57 @@ function FeedPostContent({
                       transition: 'all 150ms'
                     }}
                     onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(0, 0, 0, 0.8)';
+                      e.currentTarget.style.transform = 'scale(1.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = actualIsMuted ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.5)';
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                    title={actualIsMuted ? 'Unmute' : 'Mute'}
+                  >
+                    {actualIsMuted ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="#FF6B6B">
+                        <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                      </svg>
+                    )}
+                  </button>
+                )}
+
+                {/* Player Button - Spawns mini-player */}
+                {onPlayInMiniPlayer && (
+                  <button
+                    onClick={handleMiniPlayerClick}
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '50%',
+                      background: 'rgba(0, 0, 0, 0.5)',
+                      backdropFilter: 'blur(10px)',
+                      WebkitBackdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: '150ms',
+                      transform: 'scale(1)'
+                    }}
+                    onMouseEnter={(e) => {
                       e.currentTarget.style.background = 'rgba(0, 194, 255, 0.3)';
                       e.currentTarget.style.borderColor = 'rgba(0, 194, 255, 0.5)';
                       e.currentTarget.style.transform = 'scale(1.1)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = isCurrentlyPlaying ? 'rgba(0, 194, 255, 0.3)' : 'rgba(0, 0, 0, 0.5)';
-                      e.currentTarget.style.borderColor = isCurrentlyPlaying ? 'rgba(0, 194, 255, 0.5)' : 'rgba(255, 255, 255, 0.2)';
+                      e.currentTarget.style.background = 'rgba(0, 0, 0, 0.5)';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
                       e.currentTarget.style.transform = 'scale(1)';
                     }}
-                    title={isCurrentlyPlaying ? 'Playing in mini-player' : 'Add to player'}
+                    title="Play in mini-player"
                   >
                     {/* Equalizer icon */}
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
@@ -873,11 +868,18 @@ function FeedPostContent({
         return (
           <div 
             style={{
-              padding: '32px',
+              padding: '48px',
               borderRadius: 'var(--radius-lg)',
-              background: 'linear-gradient(135deg, rgba(0, 194, 255, 0.08), rgba(118, 75, 162, 0.08))',
+              background: 'rgba(255, 255, 255, 0.03)',
               border: '1px solid rgba(255, 255, 255, 0.08)',
-              marginBottom: '16px'
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              marginBottom: '16px',
+              cursor: 'pointer',
+              transition: '150ms',
+              transform: 'scale(1)',
+              aspectRatio: '1 / 1'
             }}
           >
             <div 
@@ -911,9 +913,14 @@ function FeedPostContent({
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
+                justifyContent: 'center',
                 marginBottom: '16px',
                 cursor: 'pointer',
-                transition: 'all 150ms'
+                transition: '150ms',
+                transform: 'scale(1)',
+                aspectRatio: '1 / 1',
+                overflow: 'hidden',
+                position: 'relative'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
@@ -924,39 +931,47 @@ function FeedPostContent({
                 e.currentTarget.style.transform = 'scale(1)';
               }}
             >
-              <div 
-                style={{
-                  width: '80px',
-                  height: '80px',
-                  borderRadius: '50%',
-                  background: 'rgba(0, 194, 255, 0.15)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '16px'
-                }}
-              >
-                <svg 
-                  className="w-10 h-10" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="#00C2FF"
-                  strokeWidth={2}
+              {/* PDF First Page Preview */}
+              {pdfUrl ? (
+                <iframe
+                  src={`${pdfUrl}#page=1&toolbar=0&navpanes=0&scrollbar=0&zoom=fit`}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    borderRadius: '8px',
+                    background: '#FFFFFF',
+                    pointerEvents: 'none' // Prevent interaction with iframe, allow click on parent
+                  }}
+                  title="PDF Preview"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowPdfModal(true);
+                  }}
+                />
+              ) : (
+                <div 
+                  style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '50%',
+                    background: 'rgba(0, 194, 255, 0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div style={{
-                padding: '12px 24px',
-                borderRadius: '20px',
-                background: '#00C2FF',
-                color: '#000000',
-                fontWeight: 600,
-                fontSize: '14px',
-                opacity: post.content_url ? 1 : 0.5
-              }}>
-                View Document
-              </div>
+                  <svg 
+                    className="w-10 h-10" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="#00C2FF"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+              )}
             </div>
             
             {/* PDF Preview Modal */}
@@ -1053,7 +1068,7 @@ function FeedPostContent({
                     className="pdf-viewer-container"
                   >
                     <iframe
-                      src={pdfUrl ? `${pdfUrl}#toolbar=1&navpanes=1&scrollbar=0` : ''}
+                      src={pdfUrl ? `${pdfUrl}#page=1&toolbar=0&navpanes=0&scrollbar=0` : ''}
                       style={{
                         width: '100%',
                         height: '100%',

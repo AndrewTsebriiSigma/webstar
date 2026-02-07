@@ -12,7 +12,6 @@ export default function SetupProfilePage() {
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
 
   useEffect(() => {
     // Get user data from localStorage
@@ -31,15 +30,18 @@ export default function SetupProfilePage() {
       return;
     }
 
-    // Set email and pre-fill name from Google
-    setEmail(user.email);
+    // Pre-fill name from Google if available
     if (user.full_name) {
       setFullName(user.full_name);
     }
     
-    // Suggest username from email
-    const suggestedUsername = user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '');
-    setUsername(suggestedUsername);
+    // Suggest username from email if available, otherwise generate a default
+    if (user.email) {
+      const suggestedUsername = user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '');
+      setUsername(suggestedUsername || `user_${Date.now()}`);
+    } else {
+      setUsername(`user_${Date.now()}`);
+    }
   }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -123,20 +125,6 @@ export default function SetupProfilePage() {
         {/* Form Card */}
         <div className="bg-gray-900 rounded-2xl p-8 shadow-2xl border border-gray-800">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email (Read-only) */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                disabled
-                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 cursor-not-allowed opacity-60"
-              />
-              <p className="text-xs text-gray-500 mt-1">From your Google account</p>
-            </div>
-
             {/* Username */}
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">

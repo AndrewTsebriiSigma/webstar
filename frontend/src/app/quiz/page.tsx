@@ -179,7 +179,11 @@ export default function QuizPage() {
       const quizResult = results.find((r: any) => r.quiz_id === quiz.id);
       setHasCompletedQuiz(!!quizResult);
     } catch (err: any) {
-      console.error('Failed to check quiz completion:', err);
+      // Silently handle 404 or other errors - quiz results are optional
+      if (err.response?.status !== 404) {
+        console.error('Failed to check quiz completion:', err);
+      }
+      setHasCompletedQuiz(false);
     }
   };
 

@@ -376,15 +376,31 @@ export default function ProjectDetailModal({
               overflow: 'hidden'
             }}
           >
-            <img
-              src={project.cover_image}
-              alt={project.title}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover'
-              }}
-            />
+            {/* Check if it's a GIF and render as video for looping, otherwise use img */}
+            {project.cover_image.toLowerCase().endsWith('.gif') || project.cover_image.toLowerCase().includes('.gif?') ? (
+              <video
+                src={project.cover_image}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+                loop
+                playsInline
+                autoPlay
+                muted
+              />
+            ) : (
+              <img
+                src={project.cover_image}
+                alt={project.title}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+              />
+            )}
             {/* Gradient overlay with title */}
             <div 
               style={{

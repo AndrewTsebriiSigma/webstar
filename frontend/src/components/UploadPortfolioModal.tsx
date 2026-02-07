@@ -37,6 +37,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
   const [isRemovingAttachment, setIsRemovingAttachment] = useState(false);
   const [existingAttachmentUrl, setExistingAttachmentUrl] = useState<string>('');
   const [showPdfPopup, setShowPdfPopup] = useState(false);
+  const [showFullScreenPreview, setShowFullScreenPreview] = useState(false);
   
   // Drag & drop state
   const [isDragging, setIsDragging] = useState(false);
@@ -887,7 +888,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
         className={`bottom-slider-content ${isVisible ? 'entering' : 'exiting'}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Upload overlay - simple spinner */}
+        {/* Upload overlay - spinner with percentage */}
         {uploading && (
           <div 
             className="absolute inset-0 z-20 flex flex-col items-center justify-center"
@@ -896,14 +897,25 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               borderRadius: '16px',
             }}
           >
-            {/* Simple spinning spinner */}
+            {/* Spinning spinner */}
             <div 
               className="animate-spin rounded-full border-4 border-transparent border-t-[#00C2FF]"
-                style={{
+              style={{
                 width: '48px', 
                 height: '48px'
               }}
             />
+            {/* Percentage display */}
+            <div
+              style={{
+                marginTop: '16px',
+                fontSize: '14px',
+                fontWeight: 600,
+                color: '#00C2FF'
+              }}
+            >
+              {Math.round(displayProgress)}%
+            </div>
           </div>
         )}
 
@@ -1016,20 +1028,22 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                           /* Video Preview */
                           <video
                             src={preview}
-                            className="w-full object-cover"
+                            className="w-full object-cover cursor-pointer"
                             style={{ maxHeight: '300px', borderRadius: '16px' }}
                             muted
                             loop
                             playsInline
                             autoPlay
+                            onClick={() => setShowFullScreenPreview(true)}
                           />
                         ) : preview ? (
                           /* Image Preview */
                           <img
                             src={preview}
                             alt="Preview"
-                            className="w-full object-cover"
+                            className="w-full object-cover cursor-pointer"
                             style={{ maxHeight: '300px', borderRadius: '16px' }}
+                            onClick={() => setShowFullScreenPreview(true)}
                           />
                         ) : isPdfPreview && pdfPreviewUrl ? (
                           /* PDF Preview - Show first page */
@@ -1294,7 +1308,7 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                   {/* Attachment Display - Apple-like 8px spacing, 44px height, swipe to delete */}
                   {(attachmentFile || existingAttachmentUrl) && attachmentType && (
                     <div 
-                      className="relative overflow-hidden" 
+                      className="relative overflow-hidden group" 
                       style={{ 
                         marginTop: '8px', 
                         borderRadius: '10px',
@@ -1304,6 +1318,42 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
                         transition: 'opacity 0.25s ease-out, transform 0.25s ease-out',
                       }}
                     >
+                      {/* Delete button - cross icon for photo and audio, absolute top-1 right-1, opacity-0 group-hover:opacity-100 */}
+                      {attachmentType === 'audio' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeAttachment();
+                          }}
+                          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          style={{
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '50%',
+                            background: 'rgba(0, 0, 0, 0.7)',
+                            backdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            zIndex: 10,
+                            transition: 'all 0.15s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 69, 58, 0.9)';
+                            e.currentTarget.style.borderColor = 'rgba(255, 69, 58, 1)';
+                            e.currentTarget.style.transform = 'scale(1.1)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(0, 0, 0, 0.7)';
+                            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                            e.currentTarget.style.transform = 'scale(1)';
+                          }}
+                        >
+                          <XMarkIcon className="w-4 h-4 text-white" />
+                        </button>
+                      )}
                       {/* Delete button - tappable, Apple physics */}
                       <button 
                         onClick={handleDeleteTap}
@@ -1701,6 +1751,95 @@ export default function UploadPortfolioModal({ isOpen, onClose, onSuccess, initi
               }}
               title="PDF Preview"
             />
+          </div>
+        </div>
+      )}
+
+      {/* Full-Screen Preview Modal */}
+      {showFullScreenPreview && (preview || file) && (
+        <div
+          onClick={() => setShowFullScreenPreview(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 10000,
+            background: 'rgba(0, 0, 0, 0.95)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setShowFullScreenPreview(false)}
+            style={{
+              position: 'absolute',
+              top: '20px',
+              right: '20px',
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              zIndex: 10,
+              transition: 'all 0.15s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+              e.currentTarget.style.transform = 'scale(1.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+          >
+            <XMarkIcon className="w-6 h-6 text-white" />
+          </button>
+
+          {/* Preview content */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: '90vw',
+              maxHeight: '90vh',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            {isVideoPreview && preview ? (
+              <video
+                src={preview}
+                controls
+                autoPlay
+                loop
+                playsInline
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '90vh',
+                  borderRadius: '12px',
+                  background: '#000'
+                }}
+              />
+            ) : preview ? (
+              <img
+                src={preview}
+                alt="Preview"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '90vh',
+                  borderRadius: '12px',
+                  objectFit: 'contain'
+                }}
+              />
+            ) : null}
           </div>
         </div>
       )}
