@@ -9,10 +9,12 @@ import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
-export default function ProjectPage({ params }: { params: { username: string; slug: string } }) {
+export default function ProjectPage({ params }: { params: { slug: string[] } }) {
   const router = useRouter();
   const { user } = useAuth();
-  const { username, slug } = params;
+  // First slug is username, second slug is project slug
+  const username = params.slug[0];
+  const slug = params.slug[1];
   
   const [project, setProject] = useState<Project | null>(null);
   const [projectMedia, setProjectMedia] = useState<ProjectMedia[]>([]);
